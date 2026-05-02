@@ -353,9 +353,16 @@ def _download_one_registered(
     scan_radius_s: int,
     scan_step_s: int,
     inter_delay_s: float,
+    manifest_url: str | None = None,
 ) -> tuple[DownloadResult, dict | None]:
     """
-    For a satellite that has a registry entry: scan for today's URL, download.
+    For a satellite that has a registry entry: resolve today's URL and download.
+
+    URL resolution priority:
+      1. manifest_url  — passed in from a fresh MANIFEST.txt fetch (preferred)
+      2. last_url      — the previously known URL (still served for ~24 h)
+      3. time-scan     — ±scan_radius_s around last_gps_stop+86400 (slow fallback)
+
     Returns (DownloadResult, updated_registry_entry_or_None).
     """
     norad_id   = int(reg_row["norad_id"])
@@ -364,18 +371,22 @@ def _download_one_registered(
     status     = str(reg_row.get("status", "Operational"))
     last_stop  = int(reg_row["last_gps_stop"])
 
-    # First try yesterday's known URL (it might still be served)
-    last_url = str(reg_row.get("last_url", ""))
     url: str | None = None
-    if last_url and _head_ok(last_url, timeout=8):
-        url = last_url
+
+    if manifest_url:
+        # Manifest always reflects currently-served files — use it directly.
+        url = manifest_url
     else:
-        url = scan_for_new_url(
-            norad_id, sat_name, obj_id, last_stop,
-            status=status,
-            radius_s=scan_radius_s, step_s=scan_step_s,
-            inter_delay_s=inter_delay_s,
-        )
+        last_url = str(reg_row.get("last_url", ""))
+        if last_url and _head_ok(last_url, timeout=8):
+            url = last_url
+        else:
+            url = scan_for_new_url(
+                norad_id, sat_name, obj_id, last_stop,
+                status=status,
+                radius_s=scan_radius_s, step_s=scan_step_s,
+                inter_delay_s=inter_delay_s,
+            )
 
     if url is None:
         return (
@@ -441,6 +452,27 @@ def run_daily_batch(
     results: list[DownloadResult] = []
     registry_updates: list[dict] = []
 
+    # Fetch live manifest once → {norad_id: url} for currently-served files
+    print("[batch] Fetching live manifest for current URLs …")
+    live_manifest: dict[int, str] = {}
+    try:
+        for fname in fetch_manifest():
+            p = parse_meme_url(EPHEMERIS_BASE + fname)
+            if p and p["norad_id"] < 200_000:
+                nid = p["norad_id"]
+                gps = p["gps_stop"]
+                # keep the entry with the highest gps_stop (most recent file)
+                existing_url = live_manifest.get(nid)
+                if existing_url is None:
+                    live_manifest[nid] = EPHEMERIS_BASE + fname
+                else:
+                    existing_gps = int(existing_url.split("_")[-2])
+                    if gps > existing_gps:
+                        live_manifest[nid] = EPHEMERIS_BASE + fname
+        print(f"[batch] Manifest has {len(live_manifest)} active satellites.")
+    except Exception as exc:
+        logger.warning("Manifest fetch failed (%s) — falling back to scan.", exc)
+
     # Satellites with no registry entry → immediate no_registry
     unregistered = [(int(r["norad_id"]), str(r["mission_batch"]))
                     for _, r in catalog.iterrows() if int(r["norad_id"]) not in reg_map]
@@ -448,7 +480,7 @@ def run_daily_batch(
         results.append(DownloadResult(norad_id=nid, mission_batch=batch,
                                       status="no_registry"))
 
-    # Registered satellites → parallel scan + download
+    # Registered satellites → parallel download
     registered_rows = [(reg_map[int(r["norad_id"])], str(r["mission_batch"]))
                        for _, r in catalog.iterrows() if int(r["norad_id"]) in reg_map]
 
@@ -460,6 +492,7 @@ def run_daily_batch(
                 _download_one_registered,
                 reg_row, batch, data_root, download_timeout,
                 scan_radius_s, scan_step_s, inter_request_delay_s,
+                live_manifest.get(int(reg_row["norad_id"])),
             ): int(reg_row["norad_id"])
             for reg_row, batch in registered_rows
         }
