@@ -1,0 +1,2 @@
+alt_km,inc_deg,ecc,inc_family_enc,bstar_mean,bstar_std,net_da_km,max_da_km,da_std,da_abs_mean,max_di_deg,max_draan_res_deg,neg_streak,total_drop_km,monotone_decay,n_transitions,n_flagged,flag_rate,burn_freq_per_day,n_windows_flagged,n_tle,mean_tle_gap_h,max_tle_gap_h,dv_net_ms,_window_start,_window_end,_n_tle_raw,p_maneuver,alert
+241.25,53.0332,0.000713,1,,,-94.818,29.821,6.8002,5.5801,0.004,0.0297,10,94.818,1,17,12,0.7059,0.4615,1,18,8.79,23.73,55.578,2026-05-01T00:00:00,2026-05-27T00:00:00,18,0.01700607072096673,0

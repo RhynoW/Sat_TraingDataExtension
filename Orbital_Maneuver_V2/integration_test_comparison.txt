@@ -1,0 +1,111 @@
+integration_test.py 修改前 vs 修改後對比
+==========================================
+記錄日期：2026-05-23
+
+════════════════════════════════════════════
+一、設定層變更
+════════════════════════════════════════════
+
+修改前
+------
+_TRAIN_NORAD_IDS = [68075, 65878, 68076, 68262, 68079, 56105, 64479, 60104]  # 8 顆
+_PREDICT_NORAD   = 64479  # 單一 int
+
+修改後
+------
+_TRAIN_NORAD_IDS = [
+    68075, 65878, 68076, 68262, 68079, 56105, 64479, 60104,   # 原有 8 顆
+    64718, 60315, 64030, 58388, 64475, 64706, 64716, 64037,   # 新增 8 顆
+]  # 共 16 顆
+_PREDICT_NORAD_IDS = [64479, 56105, 68075, 65878, 68076, 68262, 68079, 60104]  # 8 顆 list
+
+════════════════════════════════════════════
+二、測試規模對比
+════════════════════════════════════════════
+
+項目                        修改前（8+1）    修改後（16+8）
+------------------------------------------------------------
+訓練衛星數                  8 顆             16 顆
+預測衛星數                  1 顆             8 顆
+predict 執行次數（Steps 4-6） 3 次            24 次（8 顆 × 3 步驟）
+CSV 內容驗證數              3 組 × 4 = 12    8 顆 × 3 組 × 4 = 96
+總 check 數                 27               153
+通過數                      27/27            153/153
+失敗數                      0                0（修正 bug 後）
+
+════════════════════════════════════════════
+三、執行結果
+════════════════════════════════════════════
+
+修改前（首次執行）
+------------------
+  pytest          : PASS  (56 tests, 0.73s)
+  train.py        : PASS  (8 衛星)
+  Artifact checks : PASS  (pkl / feature_names.json / threshold.json)
+  predict:default : PASS
+  predict:--auto  : PASS
+  predict:--t0.30 : PASS
+  CSV checks      : PASS  (12 checks)
+  結論            : 27/27 passed (0 failed)
+
+修改後（初次執行，含 bug）
+--------------------------
+  pytest          : PASS  (56 tests)
+  train.py        : PASS  (16 衛星)
+  Artifact checks : PASS
+  predict × 8 衛星:
+    NORAD 64479   : PASS（全部 3 步驟 × 4 checks）
+    NORAD 56105   : FAIL（Steps 4/5/6 CSV 偵測失敗 + Step 7 file missing × 3）
+    NORAD 68075~  : PASS
+  結論            : 138/144 passed (6 failed)
+
+修改後（修正 bug 後執行）
+--------------------------
+  所有衛星全部通過
+  結論            : 153/153 passed (0 failed)
+
+════════════════════════════════════════════
+四、發現並修正的 Bug
+════════════════════════════════════════════
+
+問題根源
+--------
+原版 CSV 偵測邏輯（_collect_new_csv）使用集合差集：
+  known_before = set(Path(".").glob(f"predictions_{norad}_*.csv"))
+  # 執行 predict.py
+  new_csv = [p for p in glob(...) if p not in known_before]
+
+若先前已有同日期 CSV（如手動執行 predict.py 留下的 predictions_56105_20260523.csv），
+predict.py 執行後只是覆寫同名檔，集合差集為空 → new_csv = None →
+無法 rename → CSV created 檢查 FAIL → Step 7 也 FAIL（file missing）。
+
+受影響衛星：56105（6 個 check 全部 FAIL）
+
+修正方式
+--------
+改為「執行前先刪 today's CSV → 執行後直接 rename 指定檔名」：
+
+  def _run_predict_and_rename(label, norad, pkl_path, target, *, extra_args=None):
+      today_str = date.today().strftime("%Y%m%d")
+      src_csv = Path(f"predictions_{norad}_{today_str}.csv")
+      if src_csv.exists():
+          src_csv.unlink()          # 刪除舊檔，確保 predict.py 建立的是全新檔案
+      _run(label, cmd)
+      if src_csv.exists():
+          src_csv.rename(target)    # 直接 rename 到指定名稱
+      return ok and target.exists()
+
+此方式完全繞開集合差集偵測問題，適用於任何預先存在同名檔的情況。
+
+════════════════════════════════════════════
+五、Step 說明（修改後版本）
+════════════════════════════════════════════
+
+Step 1 — Unit tests          pytest tests/ -v --tb=short（56 個單元測試）
+Step 2 — Mini training       16 顆衛星 → models_itest/
+Step 3 — Artifact checks     pkl / feature_names.json / threshold.json 存在且內容正確
+Step 4 — predict: default    8 顆衛星，自動讀取 threshold.json
+Step 5 — predict: --auto     8 顆衛星，--auto-threshold
+Step 6 — predict: --t0.30    8 顆衛星，--threshold 0.30
+Step 7 — CSV content checks  8 顆 × 3 種 threshold × 4 checks = 96 個驗證
+Step 8 — Summary + cleanup   刪除 models_itest/ 及所有暫存 CSV

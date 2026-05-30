@@ -1,0 +1,284 @@
+﻿衛星名稱,NORAD ID,軌道,型號,發射日期,物理尺寸,重量,通訊載荷,動力系統
+STARLINK-31718,59556,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31699,59551,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31730,59555,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-5367,55501,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31741,59550,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31723,59553,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31750,59552,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31724,59554,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31319,59457,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31631,59459,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31622,59456,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-30952,58405,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30906,58408,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30964,58402,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30925,58406,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31625,59458,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-30844,58403,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-11444,62409,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-6083,56109,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-6075,56102,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-6081,56108,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-6030,56107,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-6096,56103,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-6076,56100,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-6062,56104,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-6095,56101,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-6066,56105,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30837,58212,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30813,58213,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30835,58219,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30846,58210,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30818,58217,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30838,58211,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30794,58218,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30851,58215,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30805,58214,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31156,58743,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31557,59357,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-30201,57301,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31042,58739,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31101,58737,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30233,57302,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-32660,62205,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-30236,57300,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31176,58745,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31148,58741,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31157,58735,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30235,57294,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31164,58733,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-32664,62204,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32784,62607,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31852,59841,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31413,59353,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31501,59359,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32665,62203,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31859,59848,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32767,62601,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31889,59847,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32675,62208,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-30864,58243,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31922,59846,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32671,62209,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32742,62605,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32747,62600,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31857,59843,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-30881,58251,43deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-31555,59351,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31559,59358,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32667,62201,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32710,62604,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32448,62206,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31903,59845,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32769,62602,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31906,59842,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32655,62202,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32783,62606,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31593,59350,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31416,59355,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31422,59354,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31895,59849,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31552,59356,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32647,62200,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31851,59844,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32778,62603,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31561,59352,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32430,62207,43deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-35464,65881,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-31772,59430,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-35418,65879,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-31700,59436,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31773,59429,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31706,59437,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31613,59431,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-35462,65877,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-31696,59435,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-34688,65875,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-31580,59434,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31740,59433,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-35445,65880,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34438,65876,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35453,65878,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-31780,59432,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-11237,60934,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-11207,60933,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-11251,60930,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-11241,60936,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-11253,60935,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-11246,60932,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-11204,60931,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37029,68271,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37103,68267,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-36962,68269,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37163,68264,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-36999,68268,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37042,68266,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37162,68262,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-32191,60314,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32199,60320,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37133,68265,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-32190,60318,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32848,62808,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37156,68263,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-32192,60316,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32883,62806,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37028,68270,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-32194,60315,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32886,62807,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-32189,60317,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32787,62809,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-32182,60319,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-30913,58388,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30934,58395,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30916,58391,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30882,58379,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-35270,65882,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-30923,58381,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-35367,65883,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-30930,58385,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30921,58383,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30898,58387,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30939,58393,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-35384,65884,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-30938,58389,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-32009,60104,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32035,60107,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32040,60109,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32042,60108,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32013,60103,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-31954,60102,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32015,60111,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32001,60110,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32045,60106,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32018,60105,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-32262,60938,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-35148,65844,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35276,66009,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35308,65848,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35336,66006,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35290,65846,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35262,65847,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35302,65845,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35231,65849,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34849,66005,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35236,66008,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35301,65843,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35364,65840,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35196,66007,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35298,65842,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-11205,60313,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-11206,60312,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-34528,64479,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34375,64477,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34523,64475,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34496,64476,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34490,64478,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34493,64472,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-32259,60937,53deg,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-34518,64480,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34492,64473,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34526,64481,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34474,64474,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37051,68080,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37066,68081,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37036,68077,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37037,68084,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37065,68083,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37063,68079,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34797,65363,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37026,68075,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34817,65362,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34782,65358,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-36973,68078,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34823,65355,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34860,65357,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34800,65361,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34393,64724,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34760,65359,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34729,65364,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34680,65356,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34826,65360,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-37023,68076,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-30320,57678,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-37054,68082,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35031,65404,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35022,65409,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35323,66071,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34801,66076,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35129,66077,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-30321,57679,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30273,57681,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-35131,66075,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-30297,57682,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30313,57676,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-30283,57680,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-35008,65408,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34830,65405,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35402,66079,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35299,66072,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35274,66073,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-30295,57683,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-35295,66070,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35035,65407,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35116,66078,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-35321,66074,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-30303,57677,53deg,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-35036,65406,53deg,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34559,64706,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34405,64704,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34548,64716,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34546,64718,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34572,64720,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34447,64710,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34515,64712,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34574,64714,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-5841,56493,70deg-B,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-34008,64037,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34046,64035,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-33860,64033,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-5846,56492,70deg-B,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-34088,64025,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34030,64030,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-5873,56490,70deg-B,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-33946,64034,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-5526,56496,70deg-B,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-34024,64031,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-5529,56495,70deg-B,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-34079,64038,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-34019,64032,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-5038,56472,70deg-B,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-34085,64036,70deg-B,Starlink v2 Mini DTC,2024-01-15,展開寬度~4m,800 kg,直達手機(DTC)通訊載荷,氬氣Hall推進器（2.4倍推力）
+STARLINK-5522,56498,70deg-B,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-5541,56475,70deg-B,Starlink v1.5,2021-01-24,2.8m × 1.4m × 0.2m,310 kg,改進K-band天線系統,氪氣Hall推進器
+STARLINK-36385,67717,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36705,67712,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36702,67714,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36718,67715,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36708,67713,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36715,67716,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36687,67711,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36382,67807,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36389,67806,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36795,67809,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36782,67805,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36354,67800,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36768,67803,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36739,67802,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36792,67804,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36811,67808,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36773,67801,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37366,68807,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37446,68808,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37473,68804,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-36832,68805,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37370,68806,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37471,68802,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37447,68810,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37405,68809,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37442,68811,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37460,68803,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-37213,68686,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-34848,65402,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-34909,65401,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）
+STARLINK-34876,65400,SSO,Starlink v2 Mini,2023-02-27,展開寬度~4m,800 kg,四倍容量Ka/Ku頻段多波束天線,氬氣Hall推進器（2.4倍推力）

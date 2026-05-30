@@ -1,0 +1,5 @@
+model,precision,recall,f1,auc_roc,threshold
+Naive (flag_rate>0.05),67.05,35.12,46.09,0.9766,flag_rate>0.05
+Random Forest,73.54,97.62,83.89,0.9921,0.2733333333333333
+XGBoost,70.94,98.81,82.59,0.993,0.007820249535143375
+LightGBM (ours),85.91,76.19,80.76,0.9934,0.9180456865596347
