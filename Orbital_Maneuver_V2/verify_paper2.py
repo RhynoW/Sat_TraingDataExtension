@@ -61,6 +61,9 @@ print("3. LightGBM 指標重算")
 print("=" * 60)
 
 model = joblib.load("models_plan_b/lgbm_maneuver_v1.pkl")
+with open("models_plan_b/threshold.json", encoding="utf-8") as _f:
+    thr = float(json.load(_f)["threshold"])
+
 X_test = test_df[[c for c in saved_feats if c in test_df.columns]].copy()
 for c in saved_feats:
     if c not in X_test.columns:
@@ -69,8 +72,8 @@ X_test = X_test[saved_feats]
 y = test_df[label_col].values.astype(int)
 proba = model.predict_proba(X_test)[:, 1]
 
-thr = 0.9180
 pred = (proba >= thr).astype(int)
+print(f"threshold (from threshold.json): {thr:.4f}")
 
 prec_val = precision_score(y, pred)
 rec_val  = recall_score(y, pred)
@@ -82,7 +85,7 @@ fp = int(((y==0)&(pred==1)).sum())
 fn = int(((y==1)&(pred==0)).sum())
 tn = int(((y==0)&(pred==0)).sum())
 
-CLAIMED = {"Precision": 0.859, "Recall": 0.762, "F1": 0.808, "AUC-ROC": 0.9934}
+CLAIMED = {"Precision": 0.856, "Recall": 0.740, "F1": 0.794, "AUC-ROC": 0.9929}
 ACTUAL  = {"Precision": prec_val, "Recall": rec_val, "F1": f1_val, "AUC-ROC": auc_val}
 
 print(f"{'指標':<12} {'聲稱':>8}  {'實際':>8}  {'差值':>8}  {'判定'}")
@@ -111,9 +114,9 @@ try:
     mean_abs = np.abs(sv).mean(axis=0)
     total = float(mean_abs.sum())
     order = np.argsort(-mean_abs)
-    CLAIMED_SHAP = {
-        "n_flagged": 40.7, "flag_rate": 19.4, "da_std": 8.0,
-        "alt_km": 6.3, "mean_tle_gap_h": 3.5
+    CLAIMED_SHAP = {  # v2: 1127 pos, 423 trees, thr=0.9018
+        "n_flagged": 30.8, "flag_rate": 19.5, "da_std": 5.7,
+        "alt_km": 5.4, "mean_tle_gap_h": 3.9
     }
     print(f"{'Rank':<4}  {'特徵':<22}  {'mean|SHAP|':>12}  {'%':>7}  {'聲稱%':>7}  {'判定'}")
     print("-" * 72)
@@ -214,9 +217,9 @@ results.append({
 
 CLAIMED_MODELS = {
     "Naive (flag_rate>0.05)": (0.670, 0.351, 0.461, 0.9766),
-    "Random Forest":          (0.735, 0.976, 0.839, 0.9921),
-    "XGBoost":                (0.709, 0.988, 0.826, 0.9930),
-    "LightGBM (ours)":        (0.859, 0.762, 0.808, 0.9934),
+    "Random Forest":          (0.732, 0.970, 0.835, 0.9921),
+    "XGBoost":                (0.703, 0.994, 0.824, 0.9930),
+    "LightGBM (ours)":        (0.856, 0.740, 0.794, 0.9929),  # v2: 1127 pos, thr=0.9018
 }
 
 print(f"{'模型':<28} {'Prec':>7} {'Rec':>7} {'F1':>7} {'AUC':>8}  {'判定'}")

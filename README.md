@@ -41,10 +41,10 @@ Trains a LightGBM binary classifier on 22 satellite-level aggregate features ext
 
 | Model | Precision | Recall | F1 | AUC-ROC |
 |-------|-----------|--------|----|---------|
-| Naive threshold (flag_rate > 0.05) | 67.0% | 35.1% | 46.1% | 0.977 |
-| Random Forest | 73.5% | 97.6% | 83.9% | 0.992 |
-| XGBoost | 70.9% | 98.8% | 82.6% | 0.993 |
-| **LightGBM (ours)** | **85.9%** | **76.2%** | **80.8%** | **0.993** |
+| Naive threshold (flag_rate > 0.05) | 68.1% | 36.7% | 47.7% | 0.977 |
+| Random Forest | 73.2% | 97.0% | 83.5% | 0.992 |
+| XGBoost | 70.3% | 99.4% | 82.4% | 0.993 |
+| **LightGBM (ours)** | **85.6%** | **74.0%** | **79.4%** | **0.993** |
 
 LightGBM achieves the highest precision (85.9%) and AUC-ROC (0.9934), making it best suited for precision-critical space situational awareness applications.
 
@@ -52,11 +52,11 @@ LightGBM achieves the highest precision (85.9%) and AUC-ROC (0.9934), making it 
 
 | Rank | Feature | Contribution | Physical Meaning |
 |------|---------|-------------|------------------|
-| 1 | `n_flagged` | 40.7% | Number of TLE transitions exceeding detection threshold |
-| 2 | `flag_rate` | 19.4% | Flagging rate over observation window |
-| 3 | `da_std` | 8.0% | Standard deviation of Δa — irregularity of maneuvers |
-| 4 | `alt_km` | 6.3% | Orbital altitude (affects drag/noise floor) |
-| 5 | `mean_tle_gap_h` | 3.5% | TLE update frequency |
+| 1 | `n_flagged` | 30.8% | Number of TLE transitions exceeding detection threshold |
+| 2 | `flag_rate` | 19.5% | Flagging rate over observation window |
+| 3 | `da_std` | 5.7% | Standard deviation of Δa — irregularity of maneuvers |
+| 4 | `alt_km` | 5.4% | Orbital altitude (affects drag/noise floor) |
+| 5 | `mean_tle_gap_h` | 3.9% | TLE update frequency |
 
 **Key files:** `Orbital_Maneuver_V2/`, `build_training_dataset.py`
 
