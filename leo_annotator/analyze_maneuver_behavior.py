@@ -23,8 +23,8 @@ OUT_MD     = r"output/maneuver_behavior_report.md"
 OUT_CSV    = r"output/maneuver_behavior_classified.csv"
 
 DATE_START = "2026-05-01"
-DATE_END   = "2026-05-27"
-OBS_DAYS   = 26.0   # DATE_END - DATE_START 的天數差
+DATE_END   = "2026-05-30"
+OBS_DAYS   = 30.0   # DATE_END - DATE_START 的天數差
 
 THR_DA_SM  = 1.0
 THR_DI     = 0.02

@@ -22,7 +22,7 @@ OUT_CSV     = str(_HERE / "output" / "validation_full.csv")
 OUT_REPORT  = str(_HERE / "output" / "validation_report_full.txt")
 
 DATE_START  = "2026-05-01"
-DATE_END    = "2026-05-27"
+DATE_END    = "2026-05-30"
 SEED        = 42
 
 # 機動偵測閾值（與 detect_maneuvers.py 一致）

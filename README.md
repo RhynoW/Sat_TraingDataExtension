@@ -35,16 +35,16 @@ Detects orbital maneuvers from consecutive TLE pairs using Keplerian element dif
 
 Trains a LightGBM binary classifier on 22 satellite-level aggregate features extracted from 26-day TLE observation windows. Uses a satellite-level stratified random split to prevent data leakage.
 
-**Dataset (Plan B):** 14,019 satellites × 22 features, class ratio ≈ 1:11.5 (1,124 positive)
+**Dataset (Plan B):** 14,019 satellites × 22 features, class ratio ≈ 1:11.5 (1,127 positive), **30-day observation window** (2026-05-01 to 2026-05-30)
 
 **Results:**
 
 | Model | Precision | Recall | F1 | AUC-ROC |
 |-------|-----------|--------|----|---------|
-| Naive threshold (flag_rate > 0.05) | 68.1% | 36.7% | 47.7% | 0.977 |
-| Random Forest | 73.2% | 97.0% | 83.5% | 0.992 |
-| XGBoost | 70.3% | 99.4% | 82.4% | 0.993 |
-| **LightGBM (ours)** | **85.6%** | **74.0%** | **79.4%** | **0.993** |
+| Naive threshold (flag_rate > 0.05) | 64.7% | 32.5% | 43.3% | 0.974 |
+| Random Forest | 66.4% | 99.4% | 79.6% | 0.988 |
+| XGBoost | 64.3% | 98.2% | 77.8% | 0.990 |
+| **LightGBM (ours)** | **81.6%** | **68.0%** | **74.2%** | **0.990** |
 
 LightGBM achieves the highest precision (85.9%) and AUC-ROC (0.9934), making it best suited for precision-critical space situational awareness applications.
 
@@ -52,11 +52,11 @@ LightGBM achieves the highest precision (85.9%) and AUC-ROC (0.9934), making it 
 
 | Rank | Feature | Contribution | Physical Meaning |
 |------|---------|-------------|------------------|
-| 1 | `n_flagged` | 30.8% | Number of TLE transitions exceeding detection threshold |
-| 2 | `flag_rate` | 19.5% | Flagging rate over observation window |
-| 3 | `da_std` | 5.7% | Standard deviation of Δa — irregularity of maneuvers |
-| 4 | `alt_km` | 5.4% | Orbital altitude (affects drag/noise floor) |
-| 5 | `mean_tle_gap_h` | 3.9% | TLE update frequency |
+| 1 | `flag_rate` | 42.6% | Flagging rate — dominant signal in 30-day window |
+| 2 | `max_di_deg` | 6.8% | Max inclination change (requires active thrust) |
+| 3 | `mean_tle_gap_h` | 6.4% | TLE update frequency (active sats updated more often) |
+| 4 | `max_draan_res_deg` | 6.2% | Max J2-corrected RAAN anomaly |
+| 5 | `alt_km` | 5.8% | Orbital altitude (affects drag/noise floor) |
 
 **Key files:** `Orbital_Maneuver_V2/`, `build_training_dataset.py`
 

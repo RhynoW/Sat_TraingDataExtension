@@ -339,7 +339,7 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     model = lgb.LGBMClassifier(
-        n_estimators=500,
+        n_estimators=1000,
         learning_rate=0.05,
         num_leaves=15,
         min_child_samples=10,

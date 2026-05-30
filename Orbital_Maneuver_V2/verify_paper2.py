@@ -85,7 +85,7 @@ fp = int(((y==0)&(pred==1)).sum())
 fn = int(((y==1)&(pred==0)).sum())
 tn = int(((y==0)&(pred==0)).sum())
 
-CLAIMED = {"Precision": 0.856, "Recall": 0.740, "F1": 0.794, "AUC-ROC": 0.9929}
+CLAIMED = {"Precision": 0.816, "Recall": 0.681, "F1": 0.742, "AUC-ROC": 0.9901}  # 30-day window, 561 trees
 ACTUAL  = {"Precision": prec_val, "Recall": rec_val, "F1": f1_val, "AUC-ROC": auc_val}
 
 print(f"{'指標':<12} {'聲稱':>8}  {'實際':>8}  {'差值':>8}  {'判定'}")
@@ -114,9 +114,9 @@ try:
     mean_abs = np.abs(sv).mean(axis=0)
     total = float(mean_abs.sum())
     order = np.argsort(-mean_abs)
-    CLAIMED_SHAP = {  # v2: 1127 pos, 423 trees, thr=0.9018
-        "n_flagged": 30.8, "flag_rate": 19.5, "da_std": 5.7,
-        "alt_km": 5.4, "mean_tle_gap_h": 3.9
+    CLAIMED_SHAP = {  # v3: 30-day window, 561 trees, thr=0.8901
+        "flag_rate": 42.6, "max_di_deg": 6.8, "mean_tle_gap_h": 6.4,
+        "max_draan_res_deg": 6.2, "alt_km": 5.8
     }
     print(f"{'Rank':<4}  {'特徵':<22}  {'mean|SHAP|':>12}  {'%':>7}  {'聲稱%':>7}  {'判定'}")
     print("-" * 72)
@@ -216,10 +216,10 @@ results.append({
 })
 
 CLAIMED_MODELS = {
-    "Naive (flag_rate>0.05)": (0.670, 0.351, 0.461, 0.9766),
-    "Random Forest":          (0.732, 0.970, 0.835, 0.9921),
-    "XGBoost":                (0.703, 0.994, 0.824, 0.9930),
-    "LightGBM (ours)":        (0.856, 0.740, 0.794, 0.9929),  # v2: 1127 pos, thr=0.9018
+    "Naive (flag_rate>0.05)": (0.647, 0.325, 0.433, 0.9737),
+    "Random Forest":          (0.664, 0.994, 0.796, 0.9884),
+    "XGBoost":                (0.643, 0.982, 0.778, 0.9895),
+    "LightGBM (ours)":        (0.816, 0.680, 0.742, 0.9901),  # v3: 30-day window, 561 trees, thr=0.8901
 }
 
 print(f"{'模型':<28} {'Prec':>7} {'Rec':>7} {'F1':>7} {'AUC':>8}  {'判定'}")

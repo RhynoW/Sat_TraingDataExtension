@@ -49,8 +49,8 @@ OUT_PQ     = BASE / "data/maneuvers/training_dataset_final.parquet"
 MODEL_VER_B = "v1.0-tle-annotation-plan-b"
 
 DATE_START_B = "2026-05-01"
-DATE_END_B   = "2026-05-27"
-OBS_DAYS_B   = 26.0
+DATE_END_B   = "2026-05-30"
+OBS_DAYS_B   = 30.0
 
 # 偵測閾值（與 validate_annotations.py 一致）
 THR_DI    = 0.02
