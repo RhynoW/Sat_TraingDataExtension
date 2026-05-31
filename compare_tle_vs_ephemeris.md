@@ -6,10 +6,10 @@
 
 本程式有**兩個獨立模式**，可同時啟用：
 
-| 模式 | 旗標 | 功能 |
-|------|------|------|
-| **殘差比較**（預設） | —（無需額外旗標） | TLE 傳播 vs MEME 星曆的逐點位置/速度殘差；輸出 RTN 圖表與統計摘要 |
-| **機動偵測評估** | `--maneuver-detection` | 從 MEME 快照序列提取軌道機動地面真相，並評估 TLE 差分偵測器的 TPR/FPR/ROC-AUC/F1 |
+| 模式 | 旗標 | 預設狀態 | 功能 |
+|------|------|:--------:|------|
+| **殘差比較** | *(無)* | ✅ 啟用 | TLE 傳播 vs MEME 星曆的逐點位置/速度殘差；輸出 RTN 圖表與統計摘要 |
+| **機動偵測評估** | `--maneuver-detection` | ❌ 停用 | 從 MEME 快照序列提取軌道機動地面真相，並評估 TLE 差分偵測器的 TPR/FPR/ROC-AUC/F1 |
 
 **v2（2026-05-09）起的重要改變**：每顆衛星現在預設處理**全部**星曆檔案（而非只取最新一個）。每個檔案涵蓋 72 小時、1 分鐘間隔共 4,321 個狀態向量；相鄰檔案以 ~8 h 為間隔，彼此重疊約 88%。19 個檔案去重後提供 13,533 個唯一時間戳、跨越 9 天，是單檔的 3 倍資料量。每個時間戳均獨立選取最近的先行 TLE 傳播，消除長期外推累積誤差。
 
@@ -45,7 +45,7 @@ pip install duckdb numpy pandas skyfield matplotlib
 
 | 資料 | 路徑（預設） | 說明 |
 |------|-------------|------|
-| MEME 星曆 | `data/raw/{sat_name}/*.txt` | SpaceX OEM 格式；每個檔案 72 h、1 min 間隔（4,321 行），以 UTC 時間戳命名 |
+| MEME 星曆 | `data/raw/{sat_name}/*.txt` | SpaceX OEM 格式；每個檔案 72 h、1 min 間隔（4,321 行），以**發布** UTC 時間戳命名（格式：`YYYY-MM-DDTHH-MM-SSZ`），與檔案內的資料時間範圍不同 |
 | TLE 資料庫 | `space_db.duckdb` | DuckDB，含 `raw_tle_archive` 資料表 |
 | 衛星名稱對照 | `data/url_registry.csv` | `norad_id` ↔ `sat_name` 對照表 |
 
@@ -120,8 +120,8 @@ python compare_tle_vs_ephemeris.py --latest-only
 | `--registry` | `{data-root}/url_registry.csv` | 衛星名稱對照 CSV |
 | `--out-dir` | `{data-root}/comparison/` | 輸出目錄 |
 | `--max-sats` | 不限 | 限制處理衛星數（測試用） |
-| `--no-residuals` | 停用 | 略過殘差 CSV 輸出 |
-| `--no-plot` | 停用 | 略過所有圖表輸出 |
+| `--no-residuals` | 預設**輸出** CSV | 加上此旗標則略過殘差 CSV 輸出（加速執行） |
+| `--no-plot` | 預設**產生**圖表 | 加上此旗標則略過所有圖表輸出 |
 | `--rtn-top N` | `5` | 為誤差最大的 N 顆衛星產生 RTN 圖；`0` 略過 |
 | `--latest-only` | 停用 | 只用最新一個星曆檔（legacy 模式），每顆衛星配一個 TLE |
 | **`--maneuver-detection`** | 停用 | 啟用機動偵測模組：MEME 快照差分 + TLE 差分，以 MEME 為地面真相，計算 TPR/FPR/ROC-AUC/AP/F1 |
@@ -146,7 +146,9 @@ python compare_tle_vs_ephemeris.py --latest-only
         ↓
 5. 逐顆衛星處理（process_satellite）：
    a. load_all_meme：concat 所有星曆檔，去重保留最新預測
-   b. propagate_with_best_tles：每個時間戳選最近先行 TLE，按 TLE 分組批次 SGP4 傳播
+   b. propagate_with_best_tles：np.searchsorted 向量化找最近先行 TLE；
+      按 TLE index 分組後，覆蓋同一段的時間戳批次傳播（每 TLE 只呼叫一次
+      propagate_tle，避免逐點建立 SGP4 物件的效能損耗）
    c. compute_residuals：inner join，計算 ECI 殘差 + RTN 分解
    d. 彙整統計摘要（n_files, ephem_span_days, n_tles_used）
         ↓
@@ -322,9 +324,14 @@ python compare_tle_vs_ephemeris.py --latest-only
 
 解析計算 J2 地球扁率引起的 RAAN 世俗漂移（度）：
 
-```
-dΩ/dt = -(3/2) * n * J2 * (Rₑ/p)² * cos(i)
-```
+$$\frac{d\Omega}{dt} = -\frac{3}{2}\, n\, J_2 \left(\frac{R_e}{p}\right)^2 \cos i$$
+
+其中：
+- $n$：平均角速度（rad/s）
+- $J_2 = 1.08263 \times 10^{-3}$：地球 J2 係數
+- $R_e$：地球赤道半徑（km）
+- $p = a(1 - e^2)$：**半通徑**（km）
+- $i$：軌道傾角（度）
 
 機動偵測中，所有 ΔRAAN 測量均扣除此預期漂移，保留非引力殘差。
 
@@ -338,7 +345,16 @@ dΩ/dt = -(3/2) * n * J2 * (Rₑ/p)² * cos(i)
 score = |da| / da_thr  +  |di| / di_thr  +  |de| / de_thr  +  |draan_res| / raan_thr
 ```
 
-各分量獨立觸發即足以使 `score > 1.0`。設計意圖：Δa 捕捉切向機動，Δi 捕捉面外機動，ΔRAAN_res 捕捉 J2 無法解釋的面外擾動，Δe 捕捉非圓化機動。
+各分量獨立觸發即足以使 `score > 1.0`。各閾值為程式碼中的模組常數：
+
+| 分量 | 閾值變數 | 預設值 | 捕捉的機動類型 |
+|------|----------|-------:|--------------|
+| Δa | `da_thr` | **0.5 km** | 切向機動（最常見） |
+| Δi | `di_thr` | **0.01°** | 面外機動（需主動推力） |
+| Δe | `de_thr` | **0.0001** | 非圓化機動 |
+| ΔRAAN_res | `raan_thr` | **0.02°** | J2 無法解釋的面外擾動 |
+
+> **注意**：以上閾值是針對 Starlink（500–600 km LEO）校準的預設值。GEO 或 MEO 衛星的自然攝動量級不同，需重新調整。
 
 ---
 
@@ -443,8 +459,8 @@ score = |da| / da_thr  +  |di| / di_thr  +  |de| / de_thr  +  |draan_res| / raan
 | `status` | 處理結果 |
 | `n_files` | 處理的星曆檔案數 |
 | `n_points` | 比較的狀態向量數 |
-| `ephem_span_days` | 星曆覆蓋總天數 |
-| `n_tles_used` | 傳播中實際使用的 TLE 數量（去重後） |
+| `ephem_span_days` | 星曆覆蓋總天數（= 所有檔案去重後最晚時間戳 − 最早時間戳，非 nominal 涵蓋範圍加總） |
+| `n_tles_used` | 傳播中實際被分配到至少一個時間戳的不重複 TLE 數量（epoch 差 < 1s 的近重複 TLE 已去重計為一筆） |
 | `tle_epoch` | 代表性 TLE 曆元（最近先行 TLE；ISO 8601） |
 | `tle_age_days` | 代表性 TLE 曆元到星曆起始的天數 |
 | `ephem_start/end` | 星曆起始/結束時間 |
@@ -565,7 +581,8 @@ SpaceX 在每次軌道機動後都會重新生成並上傳新的 MEME 星曆，�
 | 英文 | 中文 | 說明 |
 |------|------|------|
 | TLE | 雙行軌道根數 | Space-Track 發布的標準軌道資料格式 |
-| MEME | SpaceX 精密星曆 | Mission Ephemeris，SpaceX 提供的高精度 OEM 星曆 |
+| OEM | 軌道星曆訊息 | Orbit Ephemeris Message，CCSDS 502.0-B 標準格式；MEME 採用此格式封裝狀態向量 |
+| MEME | SpaceX 精密星曆 | Mission Ephemeris，SpaceX 提供的高精度 OEM 星曆（EME2000 座標） |
 | SGP4 | 簡化廣義擾動模型 4 | TLE 標準傳播演算法 |
 | RTN | 徑向-順軌道-交叉軌道 | 衛星本體座標系 |
 | ECI | 地心慣性座標系 | Earth-Centered Inertial |
@@ -591,7 +608,7 @@ SpaceX 在每次軌道機動後都會重新生成並上傳新的 MEME 星曆，�
 
 4. **near-duplicate TLE 去重**：`query_tles_in_range` 對 `epoch_utc.round("s")` 去重，避免 epoch 差 < 1s 的近重複 TLE 造成不必要的分組分裂。
 
-5. **時間戳精度**：MEME 與 TLE 傳播時間戳精度不同時（nanosecond vs microsecond），inner join 可能丟失資料行。若 match rate < 90% 會記錄 WARNING。
+5. **時間戳精度**：MEME 與 TLE 傳播時間戳精度不同時（nanosecond vs microsecond），inner join 可能丟失資料行。若 match rate < 90% 會記錄 WARNING。出現此問題時，可在 `compute_residuals` 內 merge 前對兩個 DataFrame 的時間戳欄位執行 `.dt.round("us")` 統一精度後再 join。
 
 6. **matplotlib 選用**：未安裝時所有圖表輸出自動略過，CSV 不受影響。
 
@@ -599,6 +616,6 @@ SpaceX 在每次軌道機動後都會重新生成並上傳新的 MEME 星曆，�
 
 8. **MEO/GEO 衛星**：預設超參數針對 Starlink（500–600 km LEO）設計，超過 1200 km 的衛星殘差特性不同（無大氣拖曳，SRP 主導），需另行校準。
 
-9. **機動偵測與殘差比較的差異**：殘差比較需要 SGP4 傳播（計算密集）；`--maneuver-detection` 的 MEME 偵測路徑**不依賴 SGP4**（只讀取快照並差分根數），計算成本極低。搭配 `--no-residuals` 可只跑機動偵測，大幅縮短執行時間。
+9. **機動偵測與殘差比較的差異**：殘差比較需要 SGP4 傳播（計算密集）；`--maneuver-detection` 的 MEME 偵測路徑**不依賴 SGP4**（只讀取快照並差分根數），TLE 差分偵測路徑同樣不需 SGP4（直接解析 TLE mean elements，無需傳播），兩者計算成本都極低。搭配 `--no-residuals` 可只跑機動偵測，大幅縮短執行時間。
 
 10. **艦隊級 vs 逐顆衛星 AUC**：艦隊級 AUC 以分箱數為權重（覆蓋長的衛星影響力更大）；`maneuver_sat_metrics_*.csv` 提供逐顆衛星的 AUC，更適合評估個別衛星的偵測效能。
