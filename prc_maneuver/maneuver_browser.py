@@ -65,6 +65,7 @@ st.caption("TLE-based maneuver detection  |  J2-corrected RAAN residual")
 # ── 資料載入 ─────────────────────────────────────────────────────────────────
 
 META_PARQUET = REPO / "data" / "tle_parquet" / "sat_metadata.parquet"
+SAT_BG_PARQUET = REPO / "data" / "tle_parquet" / "sat_background.parquet"
 META_COLS = [
     "norad_id", "name_en", "launch_date", "launch_site", "intl_code",
     "perigee_km", "apogee_km", "inclination_deg", "period_min",
@@ -145,6 +146,16 @@ def load_csv(path: str) -> pd.DataFrame:
         df["da_severity"] = "none"
     df["da_severity"] = pd.Categorical(df["da_severity"], categories=SEV_ORDER, ordered=True)
     return df
+
+
+@st.cache_data(show_spinner=False)
+def load_sat_background() -> pd.DataFrame:
+    if SAT_BG_PARQUET.exists():
+        try:
+            return pd.read_parquet(SAT_BG_PARQUET)
+        except Exception:
+            pass
+    return pd.DataFrame()
 
 
 def run_detection(download: bool) -> None:
@@ -589,6 +600,36 @@ with tab3:
                     if desc_ch and str(desc_ch) not in ("nan", "None", ""):
                         with st.expander("中文描述"):
                             st.caption(str(desc_ch))
+
+        # ── 任務背景研究卡（sat_background.parquet）─────────────────────────
+        sat_bg = load_sat_background()
+        if not sat_bg.empty:
+            bg_row = sat_bg[sat_bg["norad_id"] == chosen_norad]
+            if not bg_row.empty:
+                r_bg = bg_row.iloc[0]
+                with st.container(border=True):
+                    quality = r_bg.get("data_quality", "stub")
+                    quality_badge = {"researched": "✅ researched", "inferred": "⚠️ inferred"}.get(
+                        quality, f"🔲 {quality}"
+                    )
+                    st.markdown(f"#### 📚 任務背景　{quality_badge}")
+                    bg_a, bg_b = st.columns(2)
+                    with bg_a:
+                        st.markdown(f"**星座/系列**　{r_bg.get('constellation') or '—'}")
+                        st.markdown(f"**任務類型**　{r_bg.get('mission_type') or '—'}")
+                        lv = r_bg.get("launch_vehicle")
+                        st.markdown(f"**運載火箭**　{lv if lv and str(lv) not in ('nan','None') else '—'}")
+                    with bg_b:
+                        mass = r_bg.get("mass_kg")
+                        st.markdown(f"**質量**　{f'{mass:.0f} kg' if pd.notna(mass) else '—'}")
+                        st.markdown(f"**運營商**　{r_bg.get('operator_org') or '—'}")
+                    reason = r_bg.get("maneuver_reason")
+                    if reason and str(reason) not in ("nan", "None", ""):
+                        st.markdown(f"**機動原因**：{reason}")
+                    desc = r_bg.get("desc_zh")
+                    if desc and str(desc) not in ("nan", "None", ""):
+                        with st.expander("任務背景詳情（中文）"):
+                            st.write(str(desc))
 
         # ── 機動事件 KPI ──────────────────────────────────────────────────────
         col1, col2, col3 = st.columns(3)
