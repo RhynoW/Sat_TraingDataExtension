@@ -17,7 +17,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-import duckdb
+try:
+    import duckdb
+    _HAS_DUCKDB = True
+except ImportError:
+    _HAS_DUCKDB = False
+
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -30,6 +35,12 @@ OUT_DIR  = Path(__file__).resolve().parent / "output"  # prc_maneuver/output/
 DEFAULT_FLAGGED     = OUT_DIR / "prc_maneuver_flagged.csv"
 DEFAULT_TRANSITIONS = OUT_DIR / "prc_maneuver_transitions.csv"
 DB_PATH  = REPO / "space_db.duckdb"
+
+# 雲端環境偵測：DuckDB 不存在時視為 Streamlit Cloud（只開放 parquet/CSV 模式）
+_IS_CLOUD = (
+    not DB_PATH.exists()
+    and not (REPO / "space_db_slim.duckdb").exists()
+)
 
 SEV_ORDER  = ["large", "medium", "small", "none"]
 SEV_COLORS = {
@@ -85,6 +96,8 @@ def load_sat_metadata(norad_ids: tuple[int, ...]) -> pd.DataFrame:
             st.warning(f"parquet metadata 讀取失敗，改用 DuckDB：{exc}")
 
     # ── 備用：DuckDB（優先 slim，再試原始）────────────────────────────────────
+    if not _HAS_DUCKDB:
+        return pd.DataFrame()
     slim_db = REPO / "space_db_slim.duckdb"
     db_candidates = [p for p in [slim_db, DB_PATH] if p.exists()]
     if not db_candidates:
@@ -159,28 +172,34 @@ def run_detection(download: bool) -> None:
 with st.sidebar:
     st.header("📂 資料來源")
 
-    source_mode = st.radio(
-        "選擇資料來源",
-        ["既有 CSV 檔案", "上傳 CSV", "重新執行偵測"],
-        index=0,
-    )
+    _source_options = ["既有 CSV 檔案", "上傳 CSV"]
+    if not _IS_CLOUD:
+        _source_options.append("重新執行偵測")
+
+    source_mode = st.radio("選擇資料來源", _source_options, index=0)
+
+    if _IS_CLOUD:
+        st.caption("☁️ 雲端模式：預先產生的 CSV 或上傳自訂 CSV。")
 
     df_raw: pd.DataFrame | None = None
 
     if source_mode == "既有 CSV 檔案":
-        # 列出 output 目錄下的所有 CSV
+        # 列出 output 目錄下的所有 CSV（flagged 優先）
         csv_files = sorted(OUT_DIR.glob("*.csv"))
         csv_names = [f.name for f in csv_files]
-        default_idx = next(
-            (i for i, n in enumerate(csv_names) if "flagged" in n), 0
-        )
-        chosen = st.selectbox("選擇檔案", csv_names, index=default_idx)
-        csv_path = OUT_DIR / chosen
-        if csv_path.exists():
-            df_raw = load_csv(str(csv_path))
-            st.caption(f"✅ 已載入  `{chosen}`  —  {len(df_raw):,} 列")
+        if not csv_names:
+            st.error("output/ 目錄無 CSV 檔案")
         else:
-            st.error("檔案不存在")
+            default_idx = next(
+                (i for i, n in enumerate(csv_names) if "flagged" in n), 0
+            )
+            chosen = st.selectbox("選擇檔案", csv_names, index=default_idx)
+            csv_path = OUT_DIR / chosen
+            if csv_path.exists():
+                df_raw = load_csv(str(csv_path))
+                st.caption(f"✅ 已載入  `{chosen}`  —  {len(df_raw):,} 列")
+            else:
+                st.error("檔案不存在")
 
     elif source_mode == "上傳 CSV":
         uploaded = st.file_uploader("上傳 CSV 檔案", type=["csv"])
@@ -188,15 +207,20 @@ with st.sidebar:
             df_raw = load_csv(uploaded)
             st.caption(f"✅ 已載入  —  {len(df_raw):,} 列")
 
-    else:  # 重新執行偵測
-        st.warning("將執行 `detect_prc_maneuvers.py`，需要 Space-Track 帳號與網路。")
-        dl_missing = st.checkbox("補下載缺失 TLE（2026-01-01~03-30）", value=False)
+    else:  # 重新執行偵測（本地模式限定）
+        st.warning("將執行 `detect_prc_maneuvers.py`，需要 Space-Track 帳號與本地 DuckDB。")
+        dl_missing = st.checkbox("補下載缺失 TLE", value=False)
         if st.button("▶ 開始偵測", type="primary"):
             run_detection(dl_missing)
-        # 偵測完後自動載入
-        if DEFAULT_FLAGGED.exists():
-            df_raw = load_csv(str(DEFAULT_FLAGGED))
-            st.caption(f"✅ 已載入  `prc_maneuver_flagged.csv`  —  {len(df_raw):,} 列")
+        # 偵測完後自動載入最新 flagged CSV
+        latest = max(
+            (f for f in OUT_DIR.glob("prc_maneuver_flagged*.csv")),
+            key=lambda f: f.stat().st_mtime,
+            default=None,
+        )
+        if latest:
+            df_raw = load_csv(str(latest))
+            st.caption(f"✅ 已載入  `{latest.name}`  —  {len(df_raw):,} 列")
 
     st.divider()
 
