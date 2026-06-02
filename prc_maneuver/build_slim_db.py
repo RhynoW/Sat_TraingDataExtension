@@ -68,6 +68,14 @@ PARQUET_DETECT_COLS = [
     "sma_km", "eccentricity", "inclination_deg", "raan_deg",
 ]
 
+# ── latest30day parquet 欄位（含 line1/line2，供 SGP4 傳播用）───────────────
+LATEST30_COLS = [
+    "norad_id", "object_name", "epoch_utc",
+    "line1", "line2",
+    "mean_motion", "eccentricity", "inclination_deg",
+    "raan_deg", "argp_deg", "mean_anomaly_deg", "bstar", "sma_km",
+]
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(message)s",
@@ -249,6 +257,72 @@ def export_parquet(date_from: str, db_path: Path) -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Part 3: 匯出 latest30day_tle.parquet（含 line1/line2）+ conjunction_events.parquet
+# ─────────────────────────────────────────────────────────────────────────────
+
+def export_latest30day_parquet() -> None:
+    """
+    從 SRC_DB（原始全量 DB）匯出：
+      - latest30day_tle.parquet：每顆衛星最新一筆 TLE（30 天內），含 line1/line2
+      - conjunction_events.parquet：預計算合相事件表
+
+    必須讀原始 DB（slim DB 已移除 line1/line2 與 object_name）。
+    """
+    log.info("=== Part 3: 匯出 latest30day parquet ===")
+    PARQUET_DIR.mkdir(parents=True, exist_ok=True)
+
+    if not SRC_DB.exists():
+        log.error("找不到原始 DB: %s", SRC_DB)
+        return
+
+    con = duckdb.connect(str(SRC_DB), read_only=True)
+    col_str = ", ".join(LATEST30_COLS)
+
+    # ── latest30day_tle.parquet ──────────────────────────────────────────────
+    t0 = time.time()
+    log.info("查詢 latest30day TLE（每顆衛星最新一筆，30 天內）…")
+    df_tle = con.execute(f"""
+        WITH latest AS (
+            SELECT {col_str},
+                   ROW_NUMBER() OVER (
+                       PARTITION BY norad_id
+                       ORDER BY epoch_utc DESC
+                   ) AS rn
+            FROM raw_tle_archive
+            WHERE epoch_utc >= current_timestamp - INTERVAL '30' DAY
+              AND line1 IS NOT NULL
+              AND line2 IS NOT NULL
+        )
+        SELECT {col_str}
+        FROM latest
+        WHERE rn = 1
+        ORDER BY norad_id
+    """).fetchdf()
+
+    out_tle = PARQUET_DIR / "latest30day_tle.parquet"
+    df_tle.to_parquet(out_tle, index=False, compression="snappy")
+    sz_tle = out_tle.stat().st_size
+    log.info("  latest30day_tle.parquet: %d 顆衛星, %.0f KB  (%.1f s)",
+             len(df_tle), sz_tle / 1024, time.time() - t0)
+
+    # ── conjunction_events.parquet ───────────────────────────────────────────
+    t0 = time.time()
+    try:
+        df_ce = con.execute(
+            "SELECT * FROM conjunction_events ORDER BY tca_utc DESC"
+        ).fetchdf()
+        out_ce = PARQUET_DIR / "conjunction_events.parquet"
+        df_ce.to_parquet(out_ce, index=False, compression="snappy")
+        log.info("  conjunction_events.parquet: %d 列, %.0f KB  (%.1f s)",
+                 len(df_ce), out_ce.stat().st_size / 1024, time.time() - t0)
+    except Exception as e:
+        log.warning("conjunction_events 匯出失敗（表可能不存在）: %s", e)
+
+    con.close()
+    log.info("✅ latest30day parquet 完成  (%.1f MB)", sz_tle / 1024**2)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # CLI
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -262,6 +336,9 @@ def main() -> int:
                     help="資料起始日期 YYYY-MM-DD（預設 2024-01-01）")
     ap.add_argument("--parquet-src", choices=["original", "slim"], default="original",
                     help="parquet 資料來源：original=原始DB, slim=精簡DB（需先執行slim）")
+    ap.add_argument("--latest30day", action="store_true",
+                    help="匯出最近 30 天最新 TLE（含 line1/line2）至 latest30day_tle.parquet"
+                         " 與 conjunction_events.parquet，供 conjunction_app.py 使用")
     args = ap.parse_args()
 
     if not SRC_DB.exists():
@@ -278,6 +355,9 @@ def main() -> int:
         src = SLIM_DB if args.parquet_src == "slim" and SLIM_DB.exists() else SRC_DB
         log.info("parquet 資料來源: %s", src.name)
         export_parquet(args.date_from, src)
+
+    if args.latest30day:
+        export_latest30day_parquet()
 
     # ── 最終大小報告 ───────────────────────────────────────────────────────
     print(f"\n{'='*55}")

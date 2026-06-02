@@ -17,6 +17,7 @@ Unified TLE downloader/loader for space_db.duckdb.
 import os
 import re
 import shutil
+import subprocess
 import time
 import math
 from pathlib import Path
@@ -113,6 +114,7 @@ def init_space_db(db_path: str) -> None:
             energy           DOUBLE  NOT NULL,
             rmin_km          DOUBLE,
             rmax_km          DOUBLE,
+            bstar            DOUBLE,
             UNIQUE (norad_id, date_tag)
         );
     """)
@@ -136,16 +138,19 @@ def init_space_db(db_path: str) -> None:
             mean_motion       DOUBLE  NOT NULL,
             energy            DOUBLE  NOT NULL,
             rmin_km           DOUBLE,
-            rmax_km           DOUBLE
+            rmax_km           DOUBLE,
+            bstar             DOUBLE
         );
     """)
 
-    # 4) 嘗試補上 rmin_km / rmax_km 欄位（舊版 DB 沒有時用）
+    # 4) 嘗試補上缺少的欄位（舊版 DB 沒有時用；欄位已存在會拋例外，catch 即可）
     alter_sqls = [
         "ALTER TABLE tle_table ADD COLUMN rmin_km DOUBLE;",
         "ALTER TABLE tle_table ADD COLUMN rmax_km DOUBLE;",
+        "ALTER TABLE tle_table ADD COLUMN bstar    DOUBLE;",
         "ALTER TABLE raw_tle_archive ADD COLUMN rmin_km DOUBLE;",
         "ALTER TABLE raw_tle_archive ADD COLUMN rmax_km DOUBLE;",
+        "ALTER TABLE raw_tle_archive ADD COLUMN bstar    DOUBLE;",
     ]
     for sql in alter_sqls:
         try:
@@ -165,6 +170,54 @@ def init_space_db(db_path: str) -> None:
         pass
 
     con.close()
+
+    # 6) 回填 bstar：把 tle_raw 中已有的 bstar 補進 tle_table / raw_tle_archive
+    backfill_bstar_from_tle_raw(db_path)
+
+
+def backfill_bstar_from_tle_raw(db_path: str) -> None:
+    """
+    從 tle_raw（source of truth）將 bstar 回填至 tle_table 與 raw_tle_archive。
+    只更新 bstar IS NULL 且 tle_raw 有非 NULL 值的列，冪等可重複執行。
+
+    時間戳對齊說明：
+      tle_raw.tle_epoch  — UTC（parse_tle_epoch 以 timezone.utc 解析）
+      tle_table.date_tag — 舊批次資料以 CST（UTC+8）存入，因此比 tle_raw 早 8 小時
+                           新批次（download_TLE_unified.py）以 UTC 存入（兩者並存）
+      對齊策略：同時嘗試精確 UTC 匹配，以及 date_tag + 8h = tle_epoch（舊 CST 資料）
+    """
+    con = duckdb.connect(database=db_path, read_only=False)
+    try:
+        # tle_table：兩種對齊方式：UTC 精確匹配 + CST 偏移匹配
+        con.execute("""
+            UPDATE tle_table t
+            SET    bstar = r.bstar
+            FROM   tle_raw r
+            WHERE  t.norad_id = r.norad_id
+              AND  (
+                    t.date_tag                          = r.tle_epoch
+                 OR t.date_tag + INTERVAL '8' HOUR = r.tle_epoch
+              )
+              AND  t.bstar    IS NULL
+              AND  r.bstar    IS NOT NULL
+        """)
+
+        # raw_tle_archive：以 (norad_id, line1) 對齊（最精確，無時區問題）
+        con.execute("""
+            UPDATE raw_tle_archive a
+            SET    bstar = r.bstar
+            FROM   tle_raw r
+            WHERE  a.norad_id = r.norad_id
+              AND  a.line1    = r.line1
+              AND  a.bstar   IS NULL
+              AND  r.bstar   IS NOT NULL
+        """)
+
+        n1 = con.execute("SELECT COUNT(*) FROM tle_table WHERE bstar IS NOT NULL").fetchone()[0]
+        n2 = con.execute("SELECT COUNT(*) FROM raw_tle_archive WHERE bstar IS NOT NULL").fetchone()[0]
+        print(f"[backfill_bstar] tle_table bstar 有值: {n1:,} 列  |  raw_tle_archive bstar 有值: {n2:,} 列")
+    finally:
+        con.close()
 
 
 # ==========================
@@ -332,9 +385,20 @@ def upsert_tle_into_space_db(
       - 寫入 tle_raw
       - 轉幾何後寫入 raw_tle_archive / tle_table
     """
-    print(">>> upsert_tle_into_space_db version: anti-join v3, date", datetime.now())
+    print(">>> upsert_tle_into_space_db version: anti-join v4, date", datetime.now())
     if df_tle_raw.empty:
         return
+
+    # Space-Track occasionally returns two TLEs for the same satellite with
+    # identical epoch but different elements (different line1).
+    # idx_tle_raw_norad_epoch is a UNIQUE index on (norad_id, tle_epoch), which
+    # ON CONFLICT (norad_id, line1) DO NOTHING does not cover.
+    # Deduplicate here so the batch itself is epoch-unique before hitting the DB.
+    df_tle_raw = (
+        df_tle_raw
+        .drop_duplicates(subset=["norad_id", "tle_epoch"], keep="first")
+        .reset_index(drop=True)
+    )
 
     df_geo = df_tle_raw.copy()
 
@@ -395,6 +459,7 @@ def upsert_tle_into_space_db(
             "energy",
             "rmin_km",
             "rmax_km",
+            "bstar",
         ]
     ].rename(columns={
         "name": "object_name",
@@ -417,8 +482,21 @@ def upsert_tle_into_space_db(
             "energy",
             "rmin_km",
             "rmax_km",
+            "bstar",
         ]
     ].rename(columns={"epoch_utc_naive": "date_tag"})
+
+    # Space-Track occasionally returns two TLEs for the same satellite with
+    # different elements (different line1) but identical epoch timestamps.
+    # Both survive the tle_raw insert (unique on norad_id, line1) but collapse
+    # to the same (norad_id, date_tag) in tle_table.  ON CONFLICT DO NOTHING
+    # only deconflicts against existing rows, not within the incoming batch,
+    # so deduplicate here before inserting.
+    df_tle_table = (
+        df_tle_table
+        .drop_duplicates(subset=["norad_id", "date_tag"], keep="first")
+        .reset_index(drop=True)
+    )
 
     con = duckdb.connect(database=db_path, read_only=False)
     con.execute("SET preserve_insertion_order = false;")
@@ -429,32 +507,62 @@ def upsert_tle_into_space_db(
         # ==========================
         con.register("df_raw", df_tle_raw)
 
+        # NOT EXISTS guards two distinct unique constraints on tle_raw:
+        #   UNIQUE(norad_id, line1)                — exact-duplicate TLE
+        #   UNIQUE INDEX idx_tle_raw_norad_epoch   — same epoch, updated elements
+        # ON CONFLICT (norad_id, line1) only covered the first one, leaving
+        # cross-file same-epoch-different-line1 rows to hit the epoch index.
         con.execute("""
-            INSERT INTO tle_raw AS t BY NAME
+            INSERT INTO tle_raw (
+                norad_id, tle_epoch, tle_epoch_year, tle_epoch_day,
+                name, line1, line2, classification, intl_designator,
+                mean_motion, inclination_deg, raan_deg, eccentricity,
+                argp_deg, mean_anomaly_deg, rev_number, bstar,
+                element_number, source_file
+            )
             SELECT
-                norad_id,
-                tle_epoch,
-                tle_epoch_year,
-                tle_epoch_day,
-                name,
-                line1,
-                line2,
-                classification,
-                intl_designator,
-                mean_motion,
-                inclination_deg,
-                raan_deg,
-                eccentricity,
-                argp_deg,
-                mean_anomaly_deg,
-                rev_number,
-                bstar,
-                element_number,
-                source_file
-            FROM df_raw
-            ON CONFLICT (norad_id, line1) DO NOTHING
+                src.norad_id,
+                src.tle_epoch,
+                src.tle_epoch_year,
+                src.tle_epoch_day,
+                src.name,
+                src.line1,
+                src.line2,
+                src.classification,
+                src.intl_designator,
+                src.mean_motion,
+                src.inclination_deg,
+                src.raan_deg,
+                src.eccentricity,
+                src.argp_deg,
+                src.mean_anomaly_deg,
+                src.rev_number,
+                src.bstar,
+                src.element_number,
+                src.source_file
+            FROM df_raw src
+            WHERE NOT EXISTS (
+                SELECT 1 FROM tle_raw t
+                WHERE t.norad_id = src.norad_id
+                  AND (t.line1 = src.line1 OR t.tle_epoch = src.tle_epoch)
+            )
         """)
 
+        # Back-fill name for pre-existing rows that were inserted without it
+        # (e.g. previously downloaded with format='tle' instead of '3le').
+        # Starlink sat names in Space-Track (e.g. "STARLINK-1008") differ from
+        # both the NORAD ID and the SpaceX API name — only norad_id is reliable
+        # for cross-referencing; this UPDATE merely populates the display label.
+        con.register("df_raw_names", df_tle_raw[["norad_id", "line1", "name"]].dropna(subset=["name"]))
+        con.execute("""
+            UPDATE tle_raw
+            SET name = src.name
+            FROM df_raw_names src
+            WHERE tle_raw.norad_id = src.norad_id
+              AND tle_raw.line1    = src.line1
+              AND tle_raw.name IS NULL
+        """)
+        con.unregister("df_raw_names")
         con.unregister("df_raw")
 
         # ==========================
@@ -481,10 +589,23 @@ def upsert_tle_into_space_db(
                 mean_motion,
                 energy,
                 rmin_km,
-                rmax_km
+                rmax_km,
+                bstar
             FROM df_arch
             """
         )
+
+        # Back-fill object_name for pre-existing archive rows inserted without a name
+        con.register("df_arch_names", df_raw_arch[["norad_id", "line1", "object_name"]].dropna(subset=["object_name"]))
+        con.execute("""
+            UPDATE raw_tle_archive
+            SET object_name = src.object_name
+            FROM df_arch_names src
+            WHERE raw_tle_archive.norad_id    = src.norad_id
+              AND raw_tle_archive.line1       = src.line1
+              AND raw_tle_archive.object_name IS NULL
+        """)
+        con.unregister("df_arch_names")
         con.unregister("df_arch")
 
         # ==========================
@@ -492,24 +613,33 @@ def upsert_tle_into_space_db(
         # ==========================
         con.register("df_tle_table", df_tle_table)
 
+        # tle_table has no UNIQUE constraint (only a non-unique index), so
+        # ON CONFLICT is a no-op there.  Use an explicit NOT EXISTS anti-join
+        # to skip rows already present.  Python-level drop_duplicates above
+        # already ensures the batch itself has no (norad_id, date_tag) dups.
         con.execute("""
-            INSERT INTO tle_table AS t BY NAME
+            INSERT INTO tle_table
             SELECT
-                norad_id,
-                epoch_jd,
-                date_tag,
-                sma_km,
-                eccentricity,
-                inclination_deg,
-                raan_deg,
-                argp_deg,
-                mean_anomaly_deg,
-                mean_motion,
-                energy,
-                rmin_km,
-                rmax_km
-            FROM df_tle_table
-            ON CONFLICT (norad_id, date_tag) DO NOTHING
+                src.norad_id,
+                src.epoch_jd,
+                src.date_tag,
+                src.sma_km,
+                src.eccentricity,
+                src.inclination_deg,
+                src.raan_deg,
+                src.argp_deg,
+                src.mean_anomaly_deg,
+                src.mean_motion,
+                src.energy,
+                src.rmin_km,
+                src.rmax_km,
+                src.bstar
+            FROM df_tle_table src
+            WHERE NOT EXISTS (
+                SELECT 1 FROM tle_table t
+                WHERE t.norad_id = src.norad_id
+                  AND t.date_tag = src.date_tag
+            )
         """)
 
         con.unregister("df_tle_table")
@@ -562,10 +692,14 @@ def download_historical_from_spacetrack(
     else:
         start = time.perf_counter()
         time.sleep(10)  # 避免太密集呼叫
+        # format='3le' returns the name line (line 0) so Space-Track's official
+        # STARLINK-XXXX label is stored.  Note: Space-Track's STARLINK number is
+        # its own sequential assignment — it does NOT equal the NORAD catalog ID
+        # or the SpaceX-internal name embedded in MEME ephemeris URLs.
         tle_text = st.gp_history(
             creation_date=drange,
             orderby='NORAD_CAT_ID,EPOCH',
-            format='tle',
+            format='3le',
             emptyresult='show'
         )
         os.makedirs(download_dir, exist_ok=True)
@@ -619,11 +753,12 @@ def run_spacetrack_mode():
                 SPACE_TRACK_IDENTITY,
                 SPACE_TRACK_PASSWORD,
             )
-            write_last_tle_date(current_date, fmt)
-            print(f"更新 LAST_TLE_DATE = {current_date.strftime(fmt)}")
+
         except Exception as e:
             print(f"{e} TLE下載失敗，日期 {current_date.strftime(fmt)}")
 
+        write_last_tle_date(current_date, fmt)
+        print(f"更新 LAST_TLE_DATE = {current_date.strftime(fmt)}")
         current_date = next_day
 
 
@@ -678,6 +813,44 @@ def run_local_files_mode():
 
 
 # ==========================
+# 下游重建（slim DB / parquet）
+# ==========================
+
+def rebuild_downstream(parquet: bool) -> None:
+    """
+    TLE 寫入 space_db.duckdb 完成後，呼叫 prc_maneuver/build_slim_db.py
+    重建 space_db_slim.duckdb 與/或月份 parquet，並匯出 latest30day_tle.parquet。
+
+    旗標邏輯：
+      parquet=False  → build_slim_db.py --slim-only
+      parquet=True   → build_slim_db.py --parquet-src slim --latest30day
+                       （先建 slim → 月份 parquet → latest30day parquet）
+    """
+    build_script = Path(__file__).resolve().parent / "prc_maneuver" / "build_slim_db.py"
+    if not build_script.exists():
+        print(f"[rebuild] 找不到 build_slim_db.py：{build_script}", flush=True)
+        return
+
+    import sys as _sys
+    cmd = [_sys.executable, str(build_script)]
+    if parquet:
+        # 先建 slim，再從 slim 匯出月份 parquet，最後匯出 latest30day（從原始 DB）
+        cmd += ["--parquet-src", "slim", "--latest30day"]
+    else:
+        cmd.append("--slim-only")
+
+    print(f"[rebuild] 執行：{' '.join(cmd)}", flush=True)
+    t0 = time.perf_counter()
+    result = subprocess.run(cmd, text=True)
+    elapsed = time.perf_counter() - t0
+    if result.returncode != 0:
+        print(f"[rebuild] ❌ build_slim_db.py 失敗（exit {result.returncode}，{elapsed:.0f} s）",
+              flush=True)
+    else:
+        print(f"[rebuild] ✅ 完成（{elapsed:.0f} s）", flush=True)
+
+
+# ==========================
 # CLI 入口
 # ==========================
 
@@ -691,6 +864,16 @@ def main():
         default="spacetrack",
         help="spacetrack: 從 Space-Track gp_history 下載; local_files: 從暫存目錄載入 historical_daily_*.tle",
     )
+    parser.add_argument(
+        "--rebuild-slim",
+        action="store_true",
+        help="TLE 寫入完成後重建 space_db_slim.duckdb（呼叫 prc_maneuver/build_slim_db.py --slim-only）",
+    )
+    parser.add_argument(
+        "--rebuild-parquet",
+        action="store_true",
+        help="TLE 寫入完成後重建 slim DB 並匯出月份 parquet（隱含 --rebuild-slim）",
+    )
 
     args = parser.parse_args()
 
@@ -698,6 +881,9 @@ def main():
         run_spacetrack_mode()
     else:
         run_local_files_mode()
+
+    if args.rebuild_slim or args.rebuild_parquet:
+        rebuild_downstream(parquet=args.rebuild_parquet)
 
 
 if __name__ == "__main__":
