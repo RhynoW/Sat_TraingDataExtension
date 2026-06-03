@@ -1,0 +1,29 @@
+{
+  "model_version": "v1.0-meme-gt-satellite-level",
+  "feat_cols": [
+    "sma_mean_km",
+    "alt_mean_km",
+    "sma_net_30d_km",
+    "sma_slope_km_day",
+    "sma_std_30d_km",
+    "sma_resid_std_km",
+    "sma_range_30d_km",
+    "inc_std_30d_deg",
+    "raan_res_30d_deg",
+    "ecc_mean",
+    "n_tle_30d",
+    "inc_family_enc"
+  ],
+  "phase_classes": [
+    "deployment",
+    "raising",
+    "operational",
+    "high-shell"
+  ],
+  "n_satellites": 283,
+  "phase_cv_acc_mean": 0.9610902255639097,
+  "phase_cv_acc_std": 0.026130899609899547,
+  "activity_cv_auc_mean": 1.0,
+  "activity_cv_ap_mean": 1.0,
+  "known_limitation": "Trained on 3-day MEME window (283 satellites). Per-transition (8h) labels are NOT learnable from daily TLE. Satellite-level orbital phase (30-day TLE) is reliably detected. Re-train as more MEME data accumulates."
+}

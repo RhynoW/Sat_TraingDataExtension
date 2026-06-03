@@ -1,0 +1,132 @@
+# shells_config.yaml  v2  (2026-05)
+# Shell 定義依 CLAUDE.md v2：
+#   - FCC DA-26-36（2026 年核准）：Gen2 V2 Mini 高度修正至 475–485 km
+#   - Jonathan McDowell planet4589.org（2026-05-11）：在軌 10,375 顆
+#   - 新增 SL-G5（Gen1 43°）、SL-8（Gen2 70°）、SL-9（Gen2 97.6°）
+#
+# 分類演算法：同時滿足 alt_tol_km + inc_tol_deg；競爭 Shell 取正規化距離最小者
+#
+# ─── Gen1 V1.0/V1.5（550–570 km，2019–2023 年發射，在軌約 2,495 顆）─────────
+Gen1:
+  description: "Gen1 V1.0/V1.5 (550–570 km)"
+  shells:
+    SL-1:
+      shell_name: "Gen1 主殼 (550km/53°)"
+      shell_alt_km: 550.0
+      alt_tol_km: 25.0
+      inc_ref_deg: 53.0
+      inc_tol_deg: 1.5
+      num_planes: 72       # Group 1，~1,500 顆；ΔRAAN 理論間距 5°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+    SL-2:
+      shell_name: "Gen1 子殼 (540km/53.2°)"
+      shell_alt_km: 540.0
+      alt_tol_km: 20.0
+      inc_ref_deg: 53.2
+      inc_tol_deg: 1.5
+      num_planes: 72       # Group 2/4，~1,750 顆；ΔRAAN 理論間距 5°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+    SL-3:
+      shell_name: "Gen1 高傾角 (570km/70°)"
+      shell_alt_km: 570.0
+      alt_tol_km: 25.0
+      inc_ref_deg: 70.0
+      inc_tol_deg: 2.0
+      num_planes: 36       # Group 3，~211 顆；ΔRAAN 理論間距 10°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+    SL-4:
+      shell_name: "Gen1 SSO (560km/97.6°)"
+      shell_alt_km: 560.0
+      alt_tol_km: 25.0
+      inc_ref_deg: 97.6
+      inc_tol_deg: 2.0
+      num_planes: 6        # SSO 層，~180 顆；ΔRAAN 理論間距 60°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+    SL-G5:
+      shell_name: "Gen1 Group5 (530km/43°)"
+      shell_alt_km: 530.0
+      alt_tol_km: 20.0
+      inc_ref_deg: 43.0
+      inc_tol_deg: 2.0
+      num_planes: 36       # Group 5，~653 顆；ΔRAAN 理論間距 10°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+
+# ─── Gen2 V2 Mini / V2 Mini Opt（475–485 km，FCC DA-26-36 核准）──────────────
+# McDowell 2026-05-11：V2 Mini + DTC + V2 Mini/Opt 合計約 7,030 顆在軌
+# 舊定義（v1）用 525/530/535 km，已全數遷移至新高度，v1 定義會導致全部落入 UNKNOWN
+Gen2:
+  description: "Gen2 V2 Mini / V2 Mini Opt (475–485 km，FCC DA-26-36)"
+  shells:
+    SL-5:
+      shell_name: "Gen2 Mini (485km/43°)"
+      shell_alt_km: 485.0
+      alt_tol_km: 22.0
+      inc_ref_deg: 43.0
+      inc_tol_deg: 2.0
+      num_planes: 50       # V2 Mini S2 + Opt S2，~2,600 顆；ΔRAAN 理論間距 7.2°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+    SL-6:
+      shell_name: "Gen2 Mini (480km/53°)"
+      shell_alt_km: 480.0
+      alt_tol_km: 20.0
+      inc_ref_deg: 53.0
+      inc_tol_deg: 2.0
+      num_planes: 72       # V2 Mini S1 + DTC S1 + Opt S1，~2,800 顆；ΔRAAN 理論間距 5°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+    SL-7:
+      shell_name: "Gen2 Mini (475km/33°)"
+      shell_alt_km: 475.0
+      alt_tol_km: 22.0
+      inc_ref_deg: 33.0
+      inc_tol_deg: 3.0
+      num_planes: 50       # 低傾角殼，含 FCC 28–32° 核准層；ΔRAAN 理論間距 7.2°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+    SL-8:
+      shell_name: "Gen2 Mini 高傾角 (480km/70°)"
+      shell_alt_km: 480.0
+      alt_tol_km: 22.0
+      inc_ref_deg: 70.0
+      inc_tol_deg: 2.0
+      num_planes: 36       # V2 Mini S3 + Opt S3，~358 顆；ΔRAAN 理論間距 10°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+    SL-9:
+      shell_name: "Gen2 Mini/Opt 極軌 (480km/97.6°)"
+      shell_alt_km: 480.0
+      alt_tol_km: 22.0
+      inc_ref_deg: 97.6
+      inc_tol_deg: 2.0
+      num_planes: 6        # V2 Mini/Opt S4，~876 顆；ΔRAAN 理論間距 60°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+
+# ─── 特殊／補充殼層 ───────────────────────────────────────────────────────────
+Special:
+  description: "VLEO 實驗層 / 極軌補充層"
+  shells:
+    SL-V:
+      shell_name: "VLEO 實驗層 (340km/53°)"
+      shell_alt_km: 340.0
+      alt_tol_km: 30.0
+      inc_ref_deg: 53.0
+      inc_tol_deg: 3.0
+      num_planes: 6        # 低軌實驗，衛星數少；ΔRAAN 理論間距 60°
+      filter_str: "STARLINK-"
+      target_per_plane: null
+    SL-P:
+      shell_name: "Polar 補充層 (560km/90°)"
+      shell_alt_km: 560.0
+      alt_tol_km: 35.0
+      inc_ref_deg: 90.0
+      inc_tol_deg: 5.0
+      num_planes: 6        # 真極軌補充；ΔRAAN 理論間距 60°
+      filter_str: "STARLINK-"
+      target_per_plane: null

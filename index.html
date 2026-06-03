@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>衛星軌道監測系統 - Cesium 1.140</title>
+
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.140/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.140/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+
+  <style>
+    html, body, #cesiumContainer {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #000;
+    }
+
+    body {
+      font-family: "Microsoft JhengHei", sans-serif;
+    }
+
+    #toolbar {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: rgba(42, 42, 42, 0.9);
+      padding: 12px;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      max-width: 350px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid #555;
+      box-sizing: border-box;
+    }
+
+    #toolbar select,
+    #toolbar input,
+    #toolbar button {
+      margin: 4px 2px;
+      font-size: 13px;
+      vertical-align: middle;
+      box-sizing: border-box;
+    }
+
+    #toolbar input,
+    #toolbar select {
+      background: #222;
+      color: #fff;
+      border: 1px solid #666;
+      border-radius: 4px;
+      padding: 4px 6px;
+    }
+
+    #toolbar button {
+      padding: 4px 8px;
+      cursor: pointer;
+      background: #444;
+      color: #fff;
+      border: 1px solid #666;
+      border-radius: 3px;
+    }
+
+    #toolbar button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      #toolbar button:hover:not(:disabled) {
+        background: #666;
+      }
+    }
+
+    #satInfo {
+      position: absolute;
+      top: 10px;
+      left: 400px;
+      z-index: 10;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 12px;
+      border-radius: 6px;
+      color: #eee;
+      font-family: "Cascadia Code", "Courier New", monospace;
+      font-size: 12px;
+      width: 320px;
+      border: 1px solid #444;
+      box-sizing: border-box;
+    }
+
+    #satInfoText {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    #conjInfo {
+      margin-top: 10px;
+      border-top: 1px solid #555;
+      padding-top: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      font-size: 11px;
+    }
+
+    #noradList {
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+      background: #111;
+      border: 1px solid #555;
+      margin: 8px 0;
+      padding: 4px;
+      box-sizing: border-box;
+    }
+
+    .norad-item-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin-bottom: 2px;
+      font-size: 11px;
+      background: #1d1d1d;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 4px;
+      padding: 4px 6px;
+    }
+
+    .norad-item-btn:last-child {
+      margin-bottom: 0;
+    }
+
+    body.mobile #toolbar {
+      top: 8px;
+      left: 8px;
+      right: 8px;
+      width: calc(100vw - 16px);
+      max-width: none;
+      max-height: 48vh;
+      padding: 16px;
+      font-size: 18px;
+      border-radius: 10px;
+    }
+
+    body.mobile #toolbar strong {
+      font-size: 18px;
+    }
+
+    body.mobile #toolbar select,
+    body.mobile #toolbar input,
+    body.mobile #toolbar button {
+      font-size: 16px;
+      padding: 10px 12px;
+      margin: 6px 4px;
+      min-height: 44px;
+    }
+
+    body.mobile #toolbar input,
+    body.mobile #toolbar select {
+      font-size: 16px;
+    }
+
+    body.mobile #noradInput {
+      width: 100px !important;
+    }
+
+    body.mobile #noradList {
+      max-height: 180px;
+      padding: 6px;
+    }
+
+    body.mobile .norad-item-btn {
+      font-size: 16px;
+      padding: 10px 12px;
+      margin-bottom: 6px;
+      min-height: 44px;
+    }
+
+    body.mobile #satInfo {
+      left: 8px;
+      right: 8px;
+      top: auto;
+      bottom: 8px;
+      width: calc(100vw - 16px);
+      max-height: 36vh;
+      overflow-y: auto;
+      font-size: 14px;
+      z-index: 1000;
+    }
+
+    body.mobile #conjInfo {
+      font-size: 12px;
+      max-height: 18vh;
+    }
+
+    body.mobile hr {
+      margin: 10px 0;
+    }
+
+    @media (max-width: 768px) {
+      #toolbar {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        width: calc(100vw - 16px);
+        max-width: none;
+      }
+
+      #satInfo {
+        left: 8px;
+        right: 8px;
+        top: auto;
+        bottom: 8px;
+        width: calc(100vw - 16px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="cesiumContainer"></div>
+
+  <div id="toolbar">
+    <strong>NORAD 監測清單</strong>
+    <div id="noradList">載入中...</div>
+
+    <div>
+      輸入 ID:
+      <input type="text" id="noradInput" placeholder="25544" style="width:60px;">
+      點數:
+      <select id="numPoints">
+        <option value="240">240</option>
+        <option value="480">480</option>
+        <option value="960" selected>960</option>
+      </select>
+    </div>
+
+    <div style="margin-top:10px;">
+      <button id="loadBtn">載入軌道</button>
+      <button id="clearAllBtn" style="color:#ffaa00;">清除全部</button>
+    </div>
+
+    <hr style="border:0; border-top:1px solid #555;">
+
+    <div>
+      <button id="viewSatBtn">追蹤衛星</button>
+      <button id="viewEarthBtn">回主視角</button>
+      <button id="maneuverBtn">機動分析 (Streamlit)</button>
+      <button id="conjBtn" style="background:#2c3e50;">Conjunction 預警</button>
+    </div>
+
+    <!-- 新增：Artemis II CZML 載入按鈕 -->
+    <hr style="border:0; border-top:1px solid #555; margin-top:10px;">
+    <div>
+      <button id="loadArtemisBtn" style="background:#8e44ad;">載入 Artemis II</button>
+    </div>
+  </div>
+
+  <div id="satInfo">
+    <strong>衛星詳細資訊</strong>
+    <pre id="satInfoText">尚未選取衛星</pre>
+    <div id="conjInfo">
+      <strong>接近事件 (TCA)</strong>
+      <pre id="conjInfoText">無查詢資料</pre>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND_PORT = '5001';
+    const STREAMLIT_PORT = '8501';
+
+    const REQUEST_TIMEOUT_MS = 90000;
+    const NORAD_LIST_TIMEOUT_MS = 20000;
+    const CONJ_TIMEOUT_MS = 120000;
+    const RETRY_DELAYS_MS = [1200, 2500];
+
+    const activeRequestControllers = new Map();
+
+    Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIxNDY3NzlmZi00YjUyLTQ1OTUtYTNhYi03MzQ2YTAzODRiNzQiLCJpZCI6MTE3ODQsImlhdCI6MTc3NDc5OTA3OH0.NO0-3a2HXo7Id7B4iAoed9AvP7I6g9Ufo9n9smnL1-k';
+
+    function isMobileDevice() {
+      const smallScreen = window.matchMedia('(max-width: 768px)').matches;
+      const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+      const noHover = window.matchMedia('(hover: none)').matches;
+      const touchPoints = navigator.maxTouchPoints > 0;
+      return smallScreen || coarsePointer || noHover || touchPoints;
+    }
+
+    function applyResponsiveUI() {
+      document.body.classList.toggle('mobile', isMobileDevice());
+
+      const noradInput = document.getElementById('noradInput');
+      if (document.body.classList.contains('mobile')) {
+        noradInput.style.width = '100px';
+      } else {
+        noradInput.style.width = '60px';
+      }
+    }
+
+    window.addEventListener('resize', applyResponsiveUI);
+    window.addEventListener('orientationchange', applyResponsiveUI);
+
+    const viewer = new Cesium.Viewer('cesiumContainer', {
+      terrain: Cesium.Terrain.fromWorldTerrain(),
+      animation: true,
+      timeline: true,
+      baseLayerPicker: true,
+      sceneModePicker: true,
+      selectionIndicator: true,
+      navigationHelpButton: false,
+      requestRenderMode: true,
+      maximumRenderTimeChange: Infinity
+    });
+
+    viewer.camera.flyTo({
+      destination: Cesium.Cartesian3.fromDegrees(121.5, 23.5, 1.5e7)
+    });
+
+    let satelliteMap = new Map();
+    let lastSelectedNorad = null;
+
+    // 新增：Artemis II 的 CZML data source
+    let artemisDataSource = null;
+
+    function backendUrl(path) {
+      return `http://127.0.0.1:${BACKEND_PORT}${path}`;
+    }
+
+    function streamlitUrl(query) {
+      return `http://${window.location.hostname}:${STREAMLIT_PORT}${query}`;
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function isRetriableStatus(status) {
+      return [408, 429, 500, 502, 503, 504].includes(status);
+    }
+
+    function isRetriableError(err) {
+      return (
+        err.name === 'TimeoutError' ||
+        err.name === 'AbortError' ||
+        err.message.includes('Failed to fetch') ||
+        err.message.includes('NetworkError') ||
+        err.message.includes('Load failed')
+      );
+    }
+
+    function abortActiveRequest(requestKey) {
+      const oldController = activeRequestControllers.get(requestKey);
+      if (oldController) {
+        oldController.abort('replaced-by-new-request');
+        activeRequestControllers.delete(requestKey);
+      }
+    }
+
+    async function fetchJsonWithRetry(url, {
+      timeoutMs = REQUEST_TIMEOUT_MS,
+      retries = RETRY_DELAYS_MS.length,
+      retryDelays = RETRY_DELAYS_MS,
+      requestKey = null,
+      fetchOptions = {}
+    } = {}) {
+      let lastError = null;
+
+      if (requestKey) {
+        abortActiveRequest(requestKey);
+      }
+
+      const manualController = new AbortController();
+      if (requestKey) {
+        activeRequestControllers.set(requestKey, manualController);
+      }
+
+      try {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          try {
+            const timeoutSignal = AbortSignal.timeout(timeoutMs);
+            const signal = AbortSignal.any([manualController.signal, timeoutSignal]);
+
+            const resp = await fetch(url, {
+              method: 'GET',
+              cache: 'no-store',
+              ...fetchOptions,
+              signal
+            });
+
+            if (!resp.ok) {
+              let errorText = '';
+              try {
+                errorText = await resp.text();
+              } catch (_) {}
+
+              const err = new Error(
+                `HTTP ${resp.status}${errorText ? ` - ${errorText.slice(0, 200)}` : ''}`
+              );
+              err.status = resp.status;
+
+              if (attempt < retries && isRetriableStatus(resp.status)) {
+                await sleep(retryDelays[attempt] || 1000);
+                continue;
+              }
+
+              throw err;
+            }
+
+            const contentType = resp.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+              const text = await resp.text();
+              throw new Error(`後端未回傳 JSON: ${text.slice(0, 200)}`);
+            }
+
+            return await resp.json();
+          } catch (err) {
+            lastError = err;
+
+            if (manualController.signal.aborted && manualController.signal.reason === 'replaced-by-new-request') {
+              throw new Error('前一個請求已取消，改用最新查詢');
+            }
+
+            const canRetry = attempt < retries && isRetriableError(err);
+            if (!canRetry) {
+              throw err;
+            }
+
+            await sleep(retryDelays[attempt] || 1000);
+          }
+        }
+
+        throw lastError || new Error('未知請求錯誤');
+      } finally {
+        if (requestKey && activeRequestControllers.get(requestKey) === manualController) {
+          activeRequestControllers.delete(requestKey);
+        }
+      }
+    }
+
+    function getReadableErrorMessage(err) {
+      if (err.name === 'TimeoutError') return '請求逾時，後端回應過久';
+      if (err.message.includes('前一個請求已取消')) return '已切換到最新查詢';
+      if (err.message.includes('HTTP 408')) return '請求逾時 (408)';
+      if (err.message.includes('HTTP 429')) return '查詢過於頻繁，請稍後再試';
+      if (err.message.includes('HTTP 500')) return '後端內部錯誤 (500)';
+      if (err.message.includes('HTTP 502')) return '後端閘道錯誤 (502)';
+      if (err.message.includes('HTTP 503')) return '服務暫時無法使用 (503)';
+      if (err.message.includes('HTTP 504')) return '後端處理逾時 (504)';
+      if (err.message.includes('Failed to fetch')) return '無法連線至後端服務';
+      if (err.message.includes('後端未回傳 JSON')) return err.message;
+      return err.message || '未知錯誤';
+    }
+
+    function setButtonBusy(buttonId, busy, busyText = '處理中...') {
+      const btn = document.getElementById(buttonId);
+      if (!btn) return;
+
+      if (busy) {
+        btn.dataset.originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = busyText;
+        btn.style.opacity = '0.7';
+        btn.style.cursor = 'wait';
+      } else {
+        btn.disabled = false;
+        btn.textContent = btn.dataset.originalText || btn.textContent;
+        btn.style.opacity = '';
+        btn.style.cursor = '';
+      }
+    }
+
+    function clearAllSatellites() {
+      satelliteMap.forEach(item => {
+        viewer.entities.remove(item.satellite);
+        viewer.entities.remove(item.orbit);
+      });
+      satelliteMap.clear();
+      lastSelectedNorad = null;
+      viewer.trackedEntity = undefined;
+      document.getElementById('satInfoText').textContent = '尚未載入衛星';
+      document.getElementById('conjInfoText').textContent = '無查詢資料';
+      viewer.scene.requestRender();
+    }
+
+    async function loadNoradList() {
+      const list = document.getElementById('noradList');
+      list.textContent = '載入中...';
+
+      try {
+        const ids = await fetchJsonWithRetry(backendUrl('/api/norads'), {
+          timeoutMs: NORAD_LIST_TIMEOUT_MS,
+          retries: 1,
+          retryDelays: [1000],
+          requestKey: 'norad-list'
+        });
+
+        list.innerHTML = '';
+
+        if (Array.isArray(ids) && ids.length > 0) {
+          ids.forEach(id => {
+            const btn = document.createElement('button');
+            btn.textContent = `NORAD ${id}`;
+            btn.className = 'norad-item-btn';
+            btn.onclick = () => {
+              document.getElementById('noradInput').value = id;
+              loadOrbitByNorad(id);
+            };
+            list.appendChild(btn);
+          });
+        } else {
+          list.textContent = '無可用 NORAD 清單';
+        }
+      } catch (e) {
+        list.textContent = `無法連線至後端：${getReadableErrorMessage(e)}`;
+      }
+    }
+
+    async function loadOrbitByNorad(norad) {
+      const numPoints = document.getElementById('numPoints').value;
+      const satInfoElem = document.getElementById('satInfoText');
+      norad = String(norad || '').trim();
+
+      if (!norad) return alert('請輸入 ID');
+
+      if (satelliteMap.has(norad)) {
+        const item = satelliteMap.get(norad);
+        viewer.trackedEntity = item.satellite;
+        satInfoElem.textContent = item.info;
+        return;
+      }
+
+      setButtonBusy('loadBtn', true, '載入中...');
+      satInfoElem.textContent = `NORAD ${norad} 載入中...`;
+
+      try {
+        const data = await fetchJsonWithRetry(
+          backendUrl(`/api/orbit?norad_id=${encodeURIComponent(norad)}&num_points=${encodeURIComponent(numPoints)}`),
+          {
+            timeoutMs: REQUEST_TIMEOUT_MS,
+            retries: 2,
+            retryDelays: [1500, 3000],
+            requestKey: `orbit-${norad}`
+          }
+        );
+
+        if (data.error) throw new Error(data.error);
+        if (!Array.isArray(data.positions_lla) || data.positions_lla.length < 2) {
+          throw new Error('軌道資料不足');
+        }
+
+        const positionsLLA = data.positions_lla;
+        const color = Cesium.Color.fromRandom({
+          minimumRed: 0.5,
+          minimumGreen: 0.5,
+          alpha: 1.0
+        });
+
+        const property = new Cesium.SampledPositionProperty();
+        property.setInterpolationOptions({
+          interpolationDegree: 2,
+          interpolationAlgorithm: Cesium.HermitePolynomialApproximation
+        });
+
+        const start = Cesium.JulianDate.fromIso8601(positionsLLA[0].time);
+        const stop = Cesium.JulianDate.fromIso8601(positionsLLA[positionsLLA.length - 1].time);
+
+        const orbitPositions = [];
+        positionsLLA.forEach(p => {
+          if (
+            typeof p.lon !== 'number' ||
+            typeof p.lat !== 'number' ||
+            typeof p.alt_km !== 'number' ||
+            !p.time
+          ) {
+            return;
+          }
+
+          const time = Cesium.JulianDate.fromIso8601(p.time);
+          const pos = Cesium.Cartesian3.fromDegrees(p.lon, p.lat, p.alt_km * 1000);
+          property.addSample(time, pos);
+          orbitPositions.push(p.lon, p.lat, p.alt_km * 1000);
+        });
+
+        if (orbitPositions.length < 6) {
+          throw new Error('有效軌道點不足');
+        }
+
+        const orbit = viewer.entities.add({
+          id: `line-${norad}`,
+          polyline: {
+            positions: Cesium.Cartesian3.fromDegreesArrayHeights(orbitPositions),
+            width: 1,
+            material: color.withAlpha(0.4)
+          }
+        });
+
+        const satellite = viewer.entities.add({
+          id: `sat-${norad}`,
+          availability: new Cesium.TimeIntervalCollection([
+            new Cesium.TimeInterval({ start, stop })
+          ]),
+          position: property,
+          point: {
+            pixelSize: 8,
+            color: color,
+            outlineColor: Cesium.Color.WHITE,
+            outlineWidth: 1
+          },
+          label: {
+            text: (data.name_en || norad).toString(),
+            font: document.body.classList.contains('mobile') ? '16px monospace' : '12px monospace',
+            pixelOffset: new Cesium.Cartesian2(0, -15),
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            showBackground: true,
+            backgroundColor: new Cesium.Color(0, 0, 0, 0.7)
+          },
+          path: {
+            resolution: 120,
+            material: new Cesium.PolylineGlowMaterialProperty({
+              glowPower: 0.1,
+              color: color
+            }),
+            width: 2,
+            trailTime: 3600
+          }
+        });
+
+        const info =
+          `${data.name_en || 'Unknown'}\n` +
+          `ID: ${norad}\n` +
+          `近地點: ${data.perigee_km ?? 'N/A'}km\n` +
+          `遠地點: ${data.apogee_km ?? 'N/A'}km\n` +
+          `傾角: ${data.inclination_deg ?? 'N/A'}°\n` +
+          `週期: ${data.period_min ?? 'N/A'}分\n` +
+          `描述: ${data.website_desc_ch || '暫無'}`;
+
+        satelliteMap.set(norad, { satellite, orbit, info });
+        lastSelectedNorad = norad;
+        satInfoElem.textContent = info;
+
+        viewer.clock.startTime = start.clone();
+        viewer.clock.stopTime = stop.clone();
+        viewer.clock.currentTime = start.clone();
+        viewer.clock.multiplier = 60;
+        viewer.clock.shouldAnimate = true;
+        viewer.timeline.zoomTo(start, stop);
+        viewer.trackedEntity = satellite;
+        viewer.scene.requestRender();
+
+      } catch (e) {
+        const msg = getReadableErrorMessage(e);
+        satInfoElem.textContent = `載入失敗：${msg}`;
+        if (msg !== '已切換到最新查詢') {
+          alert('載入失敗: ' + msg);
+        }
+      } finally {
+        setButtonBusy('loadBtn', false);
+      }
+    }
+
+    async function queryConjunction() {
+      const norad = (document.getElementById('noradInput').value || lastSelectedNorad || '').trim();
+      if (!norad) return alert('請先指定衛星');
+
+      const conjInfoElem = document.getElementById('conjInfoText');
+      conjInfoElem.textContent = '分析中...';
+      setButtonBusy('conjBtn', true, '分析中...');
+
+      const currentIso = Cesium.JulianDate.toIso8601(viewer.clock.currentTime).split('T')[0];
+
+      try {
+        const url = backendUrl(
+          `/api/conjunction?norad=${encodeURIComponent(norad)}&snapshot_date=${encodeURIComponent(currentIso)}&coarse_hours_after=72`
+        );
+
+        const data = await fetchJsonWithRetry(url, {
+          timeoutMs: CONJ_TIMEOUT_MS,
+          retries: 2,
+          retryDelays: [2000, 4000],
+          requestKey: `conj-${norad}`
+        });
+
+        if (data.events && data.events.length > 0) {
+          let output = "目標ID    距離(km)   碰撞機率Pc\n----------------------------\n";
+          data.events.forEach(ev => {
+            const secId = String(ev.secondary_norad ?? 'N/A').padEnd(8);
+            const miss = typeof ev.miss_distance_km === 'number'
+              ? ev.miss_distance_km.toFixed(2).padEnd(10)
+              : 'N/A'.padEnd(10);
+            const pc = typeof ev.pc === 'number'
+              ? ev.pc.toExponential(2)
+              : 'N/A';
+            output += `${secId} ${miss} ${pc}\n`;
+          });
+          conjInfoElem.textContent = output;
+        } else {
+          conjInfoElem.textContent = '未來 72 小時內無高風險事件';
+        }
+      } catch (e) {
+        conjInfoElem.textContent = `分析服務失敗：${getReadableErrorMessage(e)}`;
+      } finally {
+        setButtonBusy('conjBtn', false);
+      }
+    }
+
+    // 新增：載入 Artemis II CZML
+    async function loadArtemisCzml() {
+      const btnId = 'loadArtemisBtn';
+      setButtonBusy(btnId, true, '載入中...');
+      try {
+        // 若已載入過，先移除舊的
+        if (artemisDataSource) {
+          viewer.dataSources.remove(artemisDataSource, true);
+          artemisDataSource = null;
+        }
+
+        artemisDataSource = await Cesium.CzmlDataSource.load('./artemis2.czml');
+        viewer.dataSources.add(artemisDataSource);
+
+        // 嘗試取得 EM2 實體
+        const em2 = artemisDataSource.entities.getById('EM2') || artemisDataSource.entities.values[0];
+        if (em2) {
+          viewer.trackedEntity = em2;
+          // 若 CZML 內有 availability，Cesium 會自動處理 clock；這裡只做 zoom
+          await viewer.zoomTo(artemisDataSource);
+          document.getElementById('satInfoText').textContent = 'Artemis II (EM2) 已載入 (CZML)。';
+        } else {
+          document.getElementById('satInfoText').textContent = '已載入 Artemis CZML，但找不到 EM2 實體。';
+        }
+
+        viewer.scene.requestRender();
+      } catch (e) {
+        console.error('載入 Artemis II CZML 失敗:', e);
+        alert('載入 Artemis II CZML 失敗，請確認 artemis2.czml 是否與此 HTML 在同一目錄。');
+      } finally {
+        setButtonBusy(btnId, false);
+      }
+    }
+
+    document.getElementById('loadBtn').onclick = () => {
+      loadOrbitByNorad(document.getElementById('noradInput').value.trim());
+    };
+
+    document.getElementById('clearAllBtn').onclick = clearAllSatellites;
+
+    document.getElementById('viewSatBtn').onclick = () => {
+      if (lastSelectedNorad && satelliteMap.has(lastSelectedNorad)) {
+        viewer.trackedEntity = satelliteMap.get(lastSelectedNorad).satellite;
+      }
+    };
+
+    document.getElementById('viewEarthBtn').onclick = () => {
+      viewer.trackedEntity = undefined;
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(121.5, 23.5, 1.5e7)
+      });
+    };
+
+    document.getElementById('conjBtn').onclick = queryConjunction;
+
+    document.getElementById('maneuverBtn').onclick = () => {
+      const norad = (document.getElementById('noradInput').value || lastSelectedNorad || '').trim();
+      if (norad) {
+        window.open(streamlitUrl(`/?norad=${encodeURIComponent(norad)}`), '_blank');
+      } else {
+        alert('請先指定衛星');
+      }
+    };
+
+    // 綁定 Artemis II 按鈕
+    document.getElementById('loadArtemisBtn').onclick = loadArtemisCzml;
+
+    applyResponsiveUI();
+    loadNoradList();
+  </script>
+</body>
+</html>

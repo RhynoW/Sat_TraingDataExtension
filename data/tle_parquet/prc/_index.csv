@@ -27,4 +27,5 @@ file,year,month,size_kb
 2026_02.parquet,2026,2,3594
 2026_03.parquet,2026,3,3295
 2026_04.parquet,2026,4,2585
-2026_05.parquet,2026,5,3483
+2026_05.parquet,2026,5,3592
+2026_06.parquet,2026,6,293

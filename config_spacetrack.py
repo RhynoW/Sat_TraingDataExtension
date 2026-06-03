@@ -1,6 +1,10 @@
 from dotenv import load_dotenv
 import os
-import time
+import datetime as dt
+import pandas as pd
+from spacetrack import SpaceTrackClient
+import spacetrack.operators as op
+
 # ==========================
 # 常數與環境變數
 # ==========================
@@ -16,14 +20,6 @@ DAILY_TLE_PATH = os.getenv("DAILY_TLE_PATH", "./tle_downloads")
 
 SPACE_TRACK_USER = os.getenv("SPACE_TRACK_IDENTITY")
 SPACE_TRACK_PASS = os.getenv("SPACE_TRACK_PASSWORD")
-
-# download_starlink_tle_sp.py
-import datetime as dt
-from spacetrack import SpaceTrackClient
-import spacetrack.operators as op
-import pandas as pd
-
-from config_spacetrack import SPACE_TRACK_USER, SPACE_TRACK_PASS
 
 def make_st_client():
     st = SpaceTrackClient(identity=SPACE_TRACK_USER,

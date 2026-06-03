@@ -1,0 +1,73 @@
+project:
+  output_dir: output_data
+  timezone: UTC
+
+ilrs:
+  maneuver_url: https://ilrs.gsfc.nasa.gov/data_and_products/predictions/maneuver.html
+  names_url: https://ilrs.gsfc.nasa.gov/missions/satellite_names.html
+
+ids:
+  base_url: https://cddis.nasa.gov/archive/doris/products/orbits/ssa
+  analysis_center: ssa
+  auth:
+    username_env: EOSDIS_IDENTITY
+    password_env: EOSDIS_PASSWORD
+  ftp_mirrors:
+    - ftp://doris.ign.fr/pub/doris/products/orbits/ssa
+    - ftp://ftpsedr.cls.fr/pub/doris/products/orbits/ssa
+  satellite_code_map:
+    cryosat-2: cs2
+    envisat: en1
+    hy-2a: h2a
+    hy-2c: h2c
+    hy-2d: h2d
+    jason-1: ja1
+    jason-2: ja2
+    jason-3: ja3
+    saral: srl
+    sentinel-3a: s3a
+    sentinel-3b: s3b
+    sentinel-6a: s6a
+    swot: swo
+    topex-poseidon: top
+
+tle:
+  source_type: duckdb
+  db_path: ../space_db.duckdb
+  # Fallback CSV path (used when source_type: csv)
+  csv_path: ./local_tle_catalog.csv
+  columns:
+    satellite: satellite
+    epoch: epoch
+    line1: line1
+    line2: line2
+  # NORAD ID for each IDS satellite (used by duckdb source)
+  satellite_norad_map:
+    cryosat-2: 36508
+    envisat: 27386
+    hy-2a: 37781
+    hy-2c: 46469
+    hy-2d: 48621
+    jason-1: 26997
+    jason-2: 33105
+    jason-3: 41240
+    saral: 39086
+    sentinel-3a: 41335
+    sentinel-3b: 43437
+    sentinel-6a: 46984
+    swot: 54754
+    topex-poseidon: 22076
+
+analysis:
+  start: 2024-01-01T00:00:00Z
+  end: 2024-03-31T23:59:59Z
+  step_seconds: 300
+  interpolation_method: linear
+  residual_frame: ric
+  thresholds:
+    radial_km: 0.3
+    in_track_km: 1.0
+    cross_track_km: 0.3
+    dv_equivalent_mps: 0.02
+  rolling_window_points: 12
+  min_candidate_separation_hours: 6

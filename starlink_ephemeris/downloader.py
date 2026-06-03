@@ -8,8 +8,13 @@ SpaceX hosts files at:
     MEME_{norad_id}_{sat_name}_{obj_id}_{status}_{gps_stop}_UNCLASSIFIED.txt
 
 Where:
-    norad_id   — NORAD catalog number (known)
-    sat_name   — e.g. STARLINK-32283 (from Space-Track or file header)
+    norad_id   — NORAD catalog number (e.g. 62425)
+    sat_name   — SpaceX-internal designation embedded in the URL
+                 (e.g. STARLINK-32283).  This is NOT the Space-Track official
+                 name.  Space-Track assigns its own sequential STARLINK-XXXX
+                 numbers that do not match the NORAD ID or the SpaceX API name.
+                 Always use norad_id — never the numeric part of sat_name — to
+                 cross-reference against Space-Track / TLE databases.
     obj_id     — SpaceX-internal satellite ID, **fixed per satellite**
     gps_stop   — GPS seconds (from 1980-01-06) of the ephemeris stop time
                  Formula: int((utc_stop - datetime(1980,1,6)).total_seconds()) + 18

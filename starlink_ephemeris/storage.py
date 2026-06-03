@@ -104,6 +104,7 @@ def download_ephemeris(
             if existing_checksum == metadata.checksum:
                 logger.info("Identical file already at %s — skipping.", final_path)
                 print(f"  [skip] identical content already at {final_path}")
+                tmp_path.unlink(missing_ok=True)
                 return metadata, final_path
 
         tmp_path.replace(final_path)
