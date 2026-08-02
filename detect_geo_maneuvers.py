@@ -52,7 +52,7 @@ SMA_GEO_KM  = 42_164.17          # km
 # ── Detection thresholds ───────────────────────────────────────────────────────
 GEO_SMA_MIN_KM   = 40_000.0      # filter: must be above this to be GEO candidate
 GEO_SMA_MAX_KM   = 45_000.0
-GEO_INC_MAX_DEG  = 15.0          # max inclination for inclusion
+GEO_INC_MAX_DEG  = 50.0          # max inclination: covers GEO (<5°), inclined GEO (5–15°), IGSO (15–50°)
 
 EW_DRIFT_THRESHOLD_DEG_DAY  = 0.020  # |Δ(dλ/dt)| > this  → EW candidate
 EW_SIGN_FLIP_REQUIRED       = True   # must reverse direction to confirm EW
@@ -62,6 +62,14 @@ NS_RAAN_STEP_THRESHOLD_DEG  =  0.10  # |ΔΩ - J2_correction| → NS confirmatio
 
 REPO_LONGITUDE_BOX_DEG      = 1.0    # |λ - λ_nominal| > this → repositioning
 DISPOSAL_SMA_THRESHOLD_KM   = 42_300.0  # above this = graveyard candidate
+
+# Chemical EW station-keeping (Decoto 2015 sawtooth SMA pattern)
+# Between burns the SMA drifts ~0.1 km/day upward; a correction burn
+# lowers it by 10–20 km in one epoch step.  Drift-rate sign-flip
+# (Algorithm A) often does NOT occur at the burn epoch for chemical SK.
+CHEM_EW_SMA_DROP_KM          = -10.0   # delta_sma < this → chemical EW burn candidate
+CHEM_EW_ARGP_CORR_DEG        =  1.0    # |Δargp| → angular correlation confirmation
+CHEM_EW_RAAN_CORR_DEG        =  0.5    # |ΔRAAN_residual| alternative confirmation
 
 TLE_GAP_THRESHOLD_DAYS      = 4.0    # gap > this → unknown event
 
@@ -208,8 +216,16 @@ def compute_features(df: pd.DataFrame) -> pd.DataFrame:
 
     df["dn_rev_day"] = df["mean_motion"] - N_GEO
 
+    # SMA change
+    df["delta_sma"] = df["sma_km"].diff()
+
     # Inclination change
     df["delta_i"] = df["inclination_deg"].diff()
+
+    # Argument-of-perigee change (unwrapped)
+    dargp = df["argp_deg"].diff()
+    dargp = ((dargp + 180.0) % 360.0) - 180.0
+    df["delta_argp"] = dargp
 
     # RAAN change and J2 residual
     draan = df["raan_deg"].diff()
@@ -301,6 +317,52 @@ def detect_ns(df: pd.DataFrame) -> pd.DataFrame:
             "lambda_deg":  float(row["lambda_deg"]),
             "sma_km":      float(row["sma_km"]),
             "dt_days":     float(row["dt_days"]),
+        })
+    return pd.DataFrame(events)
+
+
+def detect_ew_sawtooth(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Algorithm F: Chemical EW station-keeping burn (Decoto 2015 sawtooth SMA).
+
+    Primary signal:  delta_sma < CHEM_EW_SMA_DROP_KM  (sudden large negative SMA drop)
+    Confirmation:    |Δargp| > CHEM_EW_ARGP_CORR_DEG  OR
+                     |ΔΩ_residual| > CHEM_EW_RAAN_CORR_DEG
+                     (correction burn generates correlated angular element changes)
+
+    Why distinct from Algorithm A (EW drift-rate):
+    Chemical-propulsion station-keeping does not always flip the longitude
+    drift direction at burn epoch — the satellite may continue drifting in
+    the same direction at reduced rate.  The sawtooth SMA signature (slow
+    upward natural drift → sudden 10–20 km downward correction) is the
+    more reliable indicator for discrete chemical EW burns.
+    """
+    events = []
+    for idx in df.index[1:]:
+        dsma = df.loc[idx, "delta_sma"]
+        if pd.isna(dsma) or dsma >= CHEM_EW_SMA_DROP_KM:
+            continue
+        dargp     = df.loc[idx, "delta_argp"]
+        draan_res = df.loc[idx, "delta_raan_res"]
+        confirmed = (
+            (pd.notna(dargp)     and abs(dargp)     > CHEM_EW_ARGP_CORR_DEG) or
+            (pd.notna(draan_res) and abs(draan_res)  > CHEM_EW_RAAN_CORR_DEG)
+        )
+        row = df.loc[idx]
+        sma_before = float(df.loc[idx - 1, "sma_km"]) if idx > 0 else np.nan
+        events.append({
+            "epoch_utc":          row["epoch_utc"],
+            "type":               "EW_CHEM",
+            "confirmed":          confirmed,
+            "delta_sma_km":       float(dsma),
+            "sma_before_km":      sma_before,
+            "sma_after_km":       float(row["sma_km"]),
+            "delta_argp_deg":     float(dargp)     if pd.notna(dargp)     else np.nan,
+            "delta_raan_res_deg": float(draan_res) if pd.notna(draan_res) else np.nan,
+            "lambda_deg":         float(row["lambda_deg"]),
+            "inc_deg":            float(row["inclination_deg"]),
+            "sma_km":             float(row["sma_km"]),
+            "dt_days":            float(row["dt_days"]),
         })
     return pd.DataFrame(events)
 
@@ -420,6 +482,7 @@ def analyse_satellite(df_sat: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]
     for fn, kwargs in [
         (detect_ew,           {"df": feat}),
         (detect_ns,           {"df": feat}),
+        (detect_ew_sawtooth,  {"df": feat}),
         (detect_repositioning, {"df": feat, "nominal_lon": nominal_lon}),
         (detect_disposal,     {"df": feat}),
         (detect_gaps,         {"df": feat}),
@@ -432,14 +495,15 @@ def analyse_satellite(df_sat: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]
 
     events = pd.concat(parts, ignore_index=True) if parts else pd.DataFrame()
 
-    n_ew    = (events["type"] == "EW").sum()   if not events.empty else 0
-    n_ns    = (events["type"] == "NS").sum()   if not events.empty else 0
-    n_gap   = (events["type"] == "TLE_GAP").sum() if not events.empty else 0
-    n_repo  = (events["type"] == "REPOSITIONING").sum() if not events.empty else 0
-    n_disp  = (events["type"] == "DISPOSAL").sum() if not events.empty else 0
+    n_ew      = (events["type"] == "EW").sum()       if not events.empty else 0
+    n_ew_chem = (events["type"] == "EW_CHEM").sum() if not events.empty else 0
+    n_ns      = (events["type"] == "NS").sum()       if not events.empty else 0
+    n_gap     = (events["type"] == "TLE_GAP").sum()  if not events.empty else 0
+    n_repo    = (events["type"] == "REPOSITIONING").sum() if not events.empty else 0
+    n_disp    = (events["type"] == "DISPOSAL").sum() if not events.empty else 0
 
-    log.info("  NORAD %6d  %-28s  EW:%d  NS:%d  GAP:%d  REPO:%d  DISP:%d",
-             norad, name[:28], n_ew, n_ns, n_gap, n_repo, n_disp)
+    log.info("  NORAD %6d  %-28s  EW:%d  EW_CHEM:%d  NS:%d  GAP:%d  REPO:%d  DISP:%d",
+             norad, name[:28], n_ew, n_ew_chem, n_ns, n_gap, n_repo, n_disp)
 
     return feat, events
 
@@ -447,7 +511,7 @@ def analyse_satellite(df_sat: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]
 # ── Summary output ─────────────────────────────────────────────────────────────
 
 _TYPE_ORDER = {"DISPOSAL": 0, "TLE_GAP": 1, "REPOSITIONING": 2,
-               "NS": 3, "EW": 4}
+               "NS": 3, "EW": 4, "EW_CHEM": 5}
 
 
 def print_summary(all_events: pd.DataFrame) -> None:
@@ -504,6 +568,11 @@ def _format_detail(row: pd.Series) -> str:
         return (f"gap={row.get('gap_days',0):.1f} days  "
                 f"lon: {row.get('lambda_before',0):.2f}° -> "
                 f"{row.get('lambda_after',0):.2f}°")
+    if typ == "EW_CHEM":
+        return (f"ΔSMA={row.get('delta_sma_km',0):+.2f} km  "
+                f"({row.get('sma_before_km',0):.1f} → {row.get('sma_after_km',0):.1f} km)  "
+                f"Δargp={row.get('delta_argp_deg',0):+.3f}°  "
+                f"lon={row.get('lambda_deg',0):.2f}°")
     return ""
 
 

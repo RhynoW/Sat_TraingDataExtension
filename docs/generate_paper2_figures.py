@@ -87,23 +87,23 @@ def fig1_ml_pipeline():
 def fig2_class_imbalance():
     fig, axes = plt.subplots(1, 3, figsize=(13, 5))
 
-    # ─ 左：圓餅圖 ──────────────────────────────────────────────
-    sizes  = [12892, 1127]
-    labels = ["無機動（0）\n12,892 顆（91.96%）",
-              "有機動（1）\n1,127 顆（8.04%）"]
+    # ─ 左：圓餅圖（現況：20 特徵版本，2026-06-23 重新標記）──────
+    sizes  = [11123, 2900]
+    labels = ["無機動（0）\n11,123 顆（79.3%）",
+              "有機動（1）\n2,900 顆（20.7%）"]
     colors = ["#aaccff", "#ff7777"]
     wedges, texts = axes[0].pie(
         sizes, labels=labels, colors=colors,
         startangle=90, wedgeprops=dict(edgecolor="white", linewidth=2))
     for t in texts:
         t.set_fontsize(9.5)
-    axes[0].set_title("(a) 訓練資料類別分布\n（14,019 顆衛星）",
+    axes[0].set_title("(a) 訓練資料類別分布\n（14,023 顆衛星，P1–P6 標籤）",
                       fontsize=11, fontweight="bold")
 
-    # ─ 中：訓練/驗證/測試各組正負例 ────────────────────────────
-    splits = ["訓練組\n9,813 顆", "驗證組\n2,103 顆", "測試組\n2,103 顆"]
-    neg_n  = [round(9813*0.9196), round(2103*0.9196), 1906]
-    pos_n  = [round(9813*0.0804), round(2103*0.0804), 171]
+    # ─ 中：訓練/驗證/測試各組正負例（random_split seed=42 實測）──
+    splits = ["訓練組\n9,816 顆", "驗證組\n2,103 顆", "測試組\n2,104 顆"]
+    neg_n  = [7786, 1668, 1669]
+    pos_n  = [2030,  435,  435]
 
     x = np.arange(3)
     axes[1].bar(x, neg_n, label="無機動（0）", color="#aaccff", alpha=0.85)
@@ -111,26 +111,28 @@ def fig2_class_imbalance():
                 color="#ff7777", alpha=0.85)
     for i, (n, p) in enumerate(zip(neg_n, pos_n)):
         axes[1].text(i, n + p + 30,
-                     f"8%", ha="center", fontsize=9, color="#cc2222")
+                     f"{p/(n+p)*100:.1f}%", ha="center", fontsize=9, color="#cc2222")
     axes[1].set_xticks(x)
     axes[1].set_xticklabels(splits, fontsize=9.5)
     axes[1].set_ylabel("衛星顆數", fontsize=10)
     axes[1].legend(fontsize=9, loc="upper right")
-    axes[1].set_title("(b) 分層切分後各組正負例比例",
+    axes[1].set_title("(b) 分層切分後各組正負例比例\n（三組均維持 ~20.7%，分層生效）",
                       fontsize=11, fontweight="bold")
     axes[1].grid(True, axis="y", alpha=0.3)
 
-    # ─ 右：蠢分類器 vs LightGBM 對比 ──────────────────────────
+    # ─ 右：蠢分類器 vs LightGBM 對比（現況數字）──────────────
     metrics = ["Precision", "Recall", "F1", "Accuracy"]
-    dumb    = [0,     0,     0,    0.9196]   # always predicts 0
-    lgbm    = [0.816, 0.680, 0.742, None]
+    dumb_acc = 11123 / 14023
+    dumb    = [0,     0,     0,    dumb_acc]   # always predicts 0
+    lgbm    = [0.995, 0.975, 0.985, None]
 
     x2 = np.arange(len(metrics))
     w2 = 0.3
-    axes[2].bar(x2[:3] - w2/2, dumb[:3],  w2, label="全猜「無機動」（準確率 92%）",
+    axes[2].bar(x2[:3] - w2/2, dumb[:3],  w2,
+                label=f"全猜「無機動」（準確率 {dumb_acc:.0%}）",
                 color="#dddddd", alpha=0.8)
     axes[2].bar(x2[3]  - w2/2, dumb[3],   w2, color="#dddddd", alpha=0.8)
-    axes[2].bar(x2[:3] + w2/2, lgbm[:3],  w2, label="LightGBM（本研究）",
+    axes[2].bar(x2[:3] + w2/2, lgbm[:3],  w2, label="LightGBM（本研究，現況）",
                 color="#4488cc", alpha=0.85)
     axes[2].axhline(1.0, color="#999999", ls="--", lw=1, alpha=0.5)
 
@@ -261,15 +263,15 @@ def fig3_shap_importance():
 # 圖四：混淆矩陣熱力圖
 # ─────────────────────────────────────────────────────────────────────────────
 def fig4_confusion_matrix():
-    # 30 天模型，thr=0.8901，測試集（2,103 顆）
-    cm = np.array([[1906, 26],
-                   [  55, 116]])
+    # 現況 20 特徵模型，thr=0.5747，獨立測試集（2,104 顆，seed=42）
+    cm = np.array([[1667, 2],
+                   [  11, 424]])
 
     labels_row = ["實際：無機動（0）", "實際：有機動（1）"]
     labels_col = ["預測：無機動（0）", "預測：有機動（1）"]
 
-    cell_labels = [["TN\n1,906", "FP\n26（誤報）"],
-                   ["FN\n55（漏報）", "TP\n116"]]
+    cell_labels = [["TN\n1,667", "FP\n2（誤報）"],
+                   ["FN\n11（漏報）", "TP\n424"]]
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
@@ -297,16 +299,16 @@ def fig4_confusion_matrix():
                          color="#222222")
 
     plt.colorbar(im, ax=axes[0], label="衛星顆數（對數刻度）")
-    axes[0].set_title(f"(a) 混淆矩陣\n閾值 τ = 0.8901（F0.5 最優）",
+    axes[0].set_title(f"(a) 混淆矩陣\n閾值 τ = 0.5747（F0.5 最優，現況模型）",
                       fontsize=11, fontweight="bold")
 
     # ─ 右：各指標計算結果 ──────────────────────────────────────
-    tp, fp, fn, tn = 116, 26, 55, 1906
+    tp, fp, fn, tn = 424, 2, 11, 1667
     prec   = tp / (tp+fp)
     recall = tp / (tp+fn)
     f1     = 2*prec*recall/(prec+recall)
     acc    = (tp+tn)/(tp+fp+fn+tn)
-    auc    = 0.9901
+    auc    = 0.9962
 
     metrics = ["Precision\n（精確率）", "Recall\n（召回率）",
                "F1 Score", "Accuracy\n（整體準確率）", "AUC-ROC"]
@@ -338,12 +340,12 @@ def fig4_confusion_matrix():
     axes[1].set_ylim(0, 1.15)
     axes[1].set_ylabel("指標值", fontsize=11)
     axes[1].set_title(
-        "(b) 各指標計算值（測試集，2,103 顆）",
+        "(b) 各指標計算值（獨立測試集，2,104 顆）",
         fontsize=11, fontweight="bold")
     axes[1].grid(True, axis="y", alpha=0.3)
 
     fig.suptitle(
-        "圖四：LightGBM 混淆矩陣與評估指標（30 天模型）",
+        "圖四：LightGBM 混淆矩陣與評估指標（現況 20 特徵模型）",
         fontsize=13, fontweight="bold")
     fig.tight_layout(rect=[0, 0, 1, 0.94])
     out = os.path.join(OUT, "paper2_fig4_confusion_matrix.png")
@@ -356,47 +358,31 @@ def fig4_confusion_matrix():
 # 圖五：多模型 ROC 曲線比較
 # ─────────────────────────────────────────────────────────────────────────────
 def fig5_roc_comparison():
-    """以合成曲線示意四種模型的 ROC 差異，並標注已驗證的 AUC 值。"""
-    fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+    """左圖直接載入 compare_models.py 實際執行產生的真實 ROC 曲線（非合成示意）；
+    右圖為對應的 Precision/Recall/F1 長條圖，數字取自同一次執行的
+    Orbital_Maneuver_V2/output/model_comparison.csv（現況 20 特徵模型）。"""
+    real_roc_path = os.path.join(OUT, "..", "Orbital_Maneuver_V2", "output", "roc_comparison.png")
 
-    def _roc_curve(auc_target, n=200, seed=42):
-        """合成一條 AUC 接近 target 的 ROC 曲線。"""
-        rng = np.random.default_rng(seed)
-        t = np.linspace(0, 1, n)
-        # 使用 beta 分布產生凸型 ROC 曲線
-        alpha = -1 / np.log(auc_target + 1e-8)
-        tpr = t ** (1 / (1 + alpha * 2))
-        tpr = np.clip(tpr + rng.normal(0, 0.005, n), 0, 1)
-        tpr = np.sort(tpr)
-        fpr = t
-        return fpr, tpr
+    fig, axes = plt.subplots(1, 2, figsize=(13, 5.5))
 
-    model_specs = [
-        ("規則基準\n(flag_rate>5%)", 0.974, "#888888", "--"),
-        ("隨機森林",                  0.988, "#228833", "-"),
-        ("XGBoost",                   0.990, "#aa6600", "-"),
-        ("LightGBM（本研究）",         0.990, "#cc2222", "-"),
-    ]
+    # ─ 左：直接嵌入真實 ROC 曲線圖（compare_models.py 產生）────────
+    if os.path.exists(real_roc_path):
+        img = plt.imread(real_roc_path)
+        axes[0].imshow(img)
+        axes[0].axis("off")
+        axes[0].set_title("(a) 真實 ROC 曲線（compare_models.py 實測，非示意）",
+                          fontsize=10.5, fontweight="bold")
+    else:
+        axes[0].text(0.5, 0.5, "roc_comparison.png 不存在\n請先執行 compare_models.py",
+                     ha="center", va="center")
+        axes[0].axis("off")
 
-    # ─ 左：ROC 曲線 ────────────────────────────────────────────
-    for name, auc, color, ls in model_specs:
-        fpr, tpr = _roc_curve(auc, seed=hash(name) % 100)
-        axes[0].plot(fpr, tpr, color=color, lw=2.0, ls=ls,
-                     label=f"{name}  AUC={auc:.3f}")
-    axes[0].plot([0,1],[0,1], "k:", lw=1, alpha=0.5, label="隨機猜測")
-    axes[0].set_xlabel("假陽性率（FPR）", fontsize=11)
-    axes[0].set_ylabel("真陽性率（TPR）", fontsize=11)
-    axes[0].set_title("(a) ROC 曲線比較\n（各模型整體辨別能力）",
-                      fontsize=11, fontweight="bold")
-    axes[0].legend(fontsize=9, loc="lower right")
-    axes[0].grid(True, alpha=0.3)
-
-    # ─ 右：Precision-Recall 對照（凸顯 LightGBM 高精確率優勢）
+    # ─ 右：Precision-Recall-F1 對照（現況真實數字）──────────────
     metrics_all = {
-        "規則基準\n(flag_rate>5%)": (0.647, 0.325, 0.433),
-        "隨機森林":                  (0.664, 0.994, 0.796),
-        "XGBoost":                   (0.643, 0.982, 0.778),
-        "LightGBM\n（本研究）":      (0.816, 0.680, 0.742),
+        "規則基準\n(flag_rate>0.05)": (0.524, 0.099, 0.166),
+        "隨機森林":                    (0.986, 0.979, 0.983),
+        "XGBoost":                     (0.979, 0.972, 0.976),
+        "LightGBM\n（本研究）":        (0.995, 0.975, 0.985),
     }
     names = list(metrics_all.keys())
     precs   = [v[0] for v in metrics_all.values()]
@@ -406,26 +392,23 @@ def fig5_roc_comparison():
     x4 = np.arange(len(names))
     w4 = 0.25
     colors4 = ["#888888","#228833","#aa6600","#cc2222"]
-    b1 = axes[1].bar(x4 - w4, precs,   w4, label="精確率", alpha=0.82,
-                     color=[c for c in colors4])
-    b2 = axes[1].bar(x4,      recalls, w4, label="召回率", alpha=0.55,
-                     color=[c for c in colors4])
-    b3 = axes[1].bar(x4 + w4, f1s,    w4, label="F1",     alpha=0.40,
-                     color=[c for c in colors4])
+    axes[1].bar(x4 - w4, precs,   w4, label="精確率", alpha=0.82, color=colors4)
+    axes[1].bar(x4,      recalls, w4, label="召回率", alpha=0.55, color=colors4)
+    axes[1].bar(x4 + w4, f1s,    w4, label="F1",     alpha=0.40, color=colors4)
     axes[1].set_xticks(x4)
     axes[1].set_xticklabels(names, fontsize=8.5)
     axes[1].set_ylim(0, 1.2)
     axes[1].set_ylabel("指標值", fontsize=11)
     axes[1].legend(fontsize=9, loc="upper left")
-    axes[1].set_title("(b) 精確率/召回率/F1 對比\n（LightGBM 精確率最高 +17 pp）",
-                      fontsize=11, fontweight="bold")
+    axes[1].set_title("(b) 精確率/召回率/F1 對比\n（三種樹模型現況表現相近，規則基準明顯落後）",
+                      fontsize=10.5, fontweight="bold")
     axes[1].grid(True, axis="y", alpha=0.3)
-    # 標注 LightGBM 數值
-    axes[1].text(3 - w4, 0.816 + 0.02, "81.6%",
-                 ha="center", fontsize=8, color="#cc2222", fontweight="bold")
+    for x, v in zip(x4, precs):
+        axes[1].text(x - w4, v + 0.02, f"{v:.1%}", ha="center", fontsize=7.5,
+                     color="#222222", fontweight="bold")
 
-    fig.suptitle("圖五：四種分類方法的 ROC 曲線與 Precision/Recall 對比（30 天模型）",
-                 fontsize=12, fontweight="bold")
+    fig.suptitle("圖五：四種分類方法的 ROC 曲線與 Precision/Recall 對比（現況 20 特徵模型）",
+                 fontsize=12.5, fontweight="bold")
     fig.tight_layout(rect=[0, 0, 1, 0.93])
     out = os.path.join(OUT, "paper2_fig5_roc_comparison.png")
     fig.savefig(out)
@@ -437,18 +420,19 @@ def fig5_roc_comparison():
 # 圖六：LightGBM 早停訓練曲線
 # ─────────────────────────────────────────────────────────────────────────────
 def fig6_training_curve():
-    """模擬 LightGBM 早停訓練過程中驗證損失的收斂曲線。"""
+    """早停訓練過程示意曲線（形狀為示意，早停棵數 188 為現況模型實測值，
+    來自 joblib.load 後 booster_.best_iteration_）。"""
     rng = np.random.default_rng(42)
-    n_trees = 1000
+    n_trees = 400
     t = np.arange(1, n_trees + 1)
 
-    # 模擬訓練/驗證損失（指數衰減 + 輕微過擬合）
-    train_loss = 0.55 * np.exp(-t / 150) + 0.08 + rng.normal(0, 0.003, n_trees)
-    val_loss   = 0.58 * np.exp(-t / 160) + 0.12 + rng.normal(0, 0.005, n_trees)
-    # 驗證損失在 ~561 棵後微幅上升（過擬合）
-    val_loss[560:] += np.linspace(0, 0.025, n_trees - 560)
+    # 示意訓練/驗證損失（指數衰減 + 輕微過擬合），曲線形狀非實際逐棵記錄
+    train_loss = 0.55 * np.exp(-t / 60) + 0.05 + rng.normal(0, 0.003, n_trees)
+    val_loss   = 0.58 * np.exp(-t / 65) + 0.08 + rng.normal(0, 0.005, n_trees)
+    # 驗證損失在 ~188 棵後微幅上升（過擬合）
+    val_loss[187:] += np.linspace(0, 0.02, n_trees - 187)
 
-    best_iter = 561
+    best_iter = 188
     best_val  = val_loss[best_iter - 1]
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
@@ -459,39 +443,39 @@ def fig6_training_curve():
     axes[0].plot(t, val_loss,   color="#cc2222", lw=1.5,
                  label="驗證損失")
     axes[0].axvline(x=best_iter, color="#aa5500", lw=2.0, ls="--",
-                    label=f"最佳迭代（第 {best_iter} 棵）")
+                    label=f"最佳迭代（第 {best_iter} 棵，實測值）")
     axes[0].axvspan(best_iter, n_trees, alpha=0.07, color="#ff8800")
     axes[0].annotate(
         f"早停：第 {best_iter} 棵後\n連續 50 棵無改善",
         xy=(best_iter, best_val),
-        xytext=(best_iter + 100, best_val + 0.02),
+        xytext=(best_iter + 60, best_val + 0.02),
         fontsize=9, color="#aa5500",
         arrowprops=dict(arrowstyle="->", color="#aa5500"))
     axes[0].set_xlabel("樹的棵數（Boosting 輪次）", fontsize=11)
-    axes[0].set_ylabel("Binary Log-Loss", fontsize=11)
+    axes[0].set_ylabel("Binary Log-Loss（示意曲線形狀）", fontsize=11)
     axes[0].set_xlim(0, n_trees)
-    axes[0].set_title("(a) 早停機制（Early Stopping）\n訓練在最佳點自動停止",
-                      fontsize=11, fontweight="bold")
+    axes[0].set_title("(a) 早停機制（Early Stopping）示意\n早停棵數 188 為現況模型實測值，曲線形狀為示意",
+                      fontsize=10.5, fontweight="bold")
     axes[0].legend(fontsize=9)
     axes[0].grid(True, alpha=0.3)
 
-    # ─ 右：超參數對精確率影響（sensitivity）────────────────────
+    # ─ 右：超參數設定（現況不變，維持 0.05）────────────────────
     lr_vals   = [0.2,  0.1,  0.05, 0.02, 0.01]
-    prec_vals = [0.79, 0.81, 0.816,0.81, 0.78]  # 非線性最優在 0.05
+    prec_vals = [0.97, 0.98, 0.995, 0.98, 0.96]  # 示意；現況精確峰值在 0.05
 
     axes[1].plot(lr_vals, prec_vals, "o-", color="#228833", lw=2.0, ms=8)
     axes[1].axvline(x=0.05, color="#cc2222", lw=1.8, ls="--", alpha=0.8)
-    axes[1].text(0.055, 0.815, "最佳\nlearning_rate=0.05",
+    axes[1].text(0.055, prec_vals[2] - 0.01, "現況設定\nlearning_rate=0.05",
                  fontsize=9, color="#cc2222")
     axes[1].set_xlabel("學習率（learning_rate）", fontsize=11)
-    axes[1].set_ylabel("測試集 Precision", fontsize=11)
+    axes[1].set_ylabel("測試集 Precision（示意）", fontsize=11)
     axes[1].set_xscale("log")
-    axes[1].set_ylim(0.74, 0.84)
-    axes[1].set_title("(b) 學習率超參數敏感性分析\n（其他參數固定）",
-                      fontsize=11, fontweight="bold")
+    axes[1].set_ylim(0.90, 1.02)
+    axes[1].set_title("(b) 學習率超參數設定示意\n（其他參數固定，敏感性未在現況模型重新掃描）",
+                      fontsize=10.5, fontweight="bold")
     axes[1].grid(True, alpha=0.3)
 
-    fig.suptitle("圖六：LightGBM 早停訓練動態與超參數敏感性",
+    fig.suptitle("圖六：LightGBM 早停訓練動態（現況：188 棵樹）與超參數設定",
                  fontsize=13, fontweight="bold")
     fig.tight_layout(rect=[0, 0, 1, 0.94])
     out = os.path.join(OUT, "paper2_fig6_training_curve.png")
@@ -505,8 +489,12 @@ if __name__ == "__main__":
     print("產生論文二圖片中...")
     fig1_ml_pipeline()
     fig2_class_imbalance()
-    fig3_shap_importance()
+    # 圖三（SHAP）改用真實運算結果，不再呼叫 fig3_shap_importance() 合成版本：
+    # 見 Orbital_Maneuver_V2/analyze_plan_b_model.py 產生的
+    # output/shap_summary_bar.png、output/shap_beeswarm.png（本腳本執行前需
+    # 先在相容環境下跑過一次該腳本），再手動複製為
+    # paper2_fig3_shap_importance.png / paper2_fig3b_shap_beeswarm.png。
     fig4_confusion_matrix()
     fig5_roc_comparison()
     fig6_training_curve()
-    print("全部完成。")
+    print("全部完成（圖三 SHAP 需另外由 analyze_plan_b_model.py 產生，見上方註解）。")

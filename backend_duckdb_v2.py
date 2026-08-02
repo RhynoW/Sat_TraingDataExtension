@@ -67,6 +67,7 @@ def create_app() -> Flask:
     register_error_handlers(app)
     register_routes(app)
     register_czml_routes(app)   # v2: /api/orbit_czml + /api/conjunction_czml
+    register_rpo_routes(app)    # RPO: /api/rpo_pair + /api/rpo_czml（雙星 × 日期區間）
 
     @app.get("/health")
     def health() -> Any:
@@ -278,6 +279,107 @@ def eci_to_ecef_m(r_eci_km: np.ndarray, t_utc: datetime) -> np.ndarray:
         (-sg * r_eci_km[0] + cg * r_eci_km[1]) * 1000.0,
         r_eci_km[2] * 1000.0,
     ])
+
+
+def eci_to_ecef_rot(t_utc: datetime) -> np.ndarray:
+    """ECI→ECEF 的 3×3 GMST 旋轉矩陣（純旋轉，可直接作用於「方向向量」）。
+
+    與 eci_to_ecef_m 用同一組 GMST，確保位置與姿態一致。
+    """
+    jd, fr = jday(
+        t_utc.year, t_utc.month, t_utc.day,
+        t_utc.hour, t_utc.minute, t_utc.second + t_utc.microsecond * 1e-6,
+    )
+    gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0 + fr)
+    g = np.deg2rad(gmst % 360.0)
+    cg, sg = np.cos(g), np.sin(g)
+    return np.array([[cg, sg, 0.0], [-sg, cg, 0.0], [0.0, 0.0, 1.0]])
+
+
+def rtn_basis_eci(r: np.ndarray, v: np.ndarray) -> np.ndarray:
+    """RTN 單位基底（ECI），回傳 3×3，列 = [R, T, N]。與 conjunction_viz._rtn_basis 一致。"""
+    R = r / np.linalg.norm(r)
+    h = np.cross(r, v)
+    N = h / np.linalg.norm(h)
+    T = np.cross(N, R)
+    return np.vstack([R, T, N])
+
+
+def _mat_to_quat(M: np.ndarray) -> list[float]:
+    """3×3 旋轉矩陣 → 單位四元數 [x,y,z,w]（CZML unitQuaternion 慣例）。
+
+    M 的「行」為目標座標系(ECEF)中的局部軸向量，即 local→ECEF 的旋轉。
+    """
+    tr = M[0, 0] + M[1, 1] + M[2, 2]
+    if tr > 0:
+        s = np.sqrt(tr + 1.0) * 2
+        w, x, y, z = 0.25 * s, (M[2, 1] - M[1, 2]) / s, (M[0, 2] - M[2, 0]) / s, (M[1, 0] - M[0, 1]) / s
+    elif M[0, 0] > M[1, 1] and M[0, 0] > M[2, 2]:
+        s = np.sqrt(1.0 + M[0, 0] - M[1, 1] - M[2, 2]) * 2
+        w, x, y, z = (M[2, 1] - M[1, 2]) / s, 0.25 * s, (M[0, 1] + M[1, 0]) / s, (M[0, 2] + M[2, 0]) / s
+    elif M[1, 1] > M[2, 2]:
+        s = np.sqrt(1.0 + M[1, 1] - M[0, 0] - M[2, 2]) * 2
+        w, x, y, z = (M[0, 2] - M[2, 0]) / s, (M[0, 1] + M[1, 0]) / s, 0.25 * s, (M[1, 2] + M[2, 1]) / s
+    else:
+        s = np.sqrt(1.0 + M[2, 2] - M[0, 0] - M[1, 1]) * 2
+        w, x, y, z = (M[1, 0] - M[0, 1]) / s, (M[0, 2] + M[2, 0]) / s, (M[1, 2] + M[2, 1]) / s, 0.25 * s
+    q = np.array([x, y, z, w], float)
+    return [float(a) for a in q / np.linalg.norm(q)]
+
+
+def covariance_ellipsoid_packet(entity_id: str, name: str, r_eci: np.ndarray,
+                                v_eci: np.ndarray, t_utc: datetime,
+                                sigma_rtn_km: tuple[float, float, float],
+                                k_sigma: float = 3.0,
+                                rgba: list[int] | None = None,
+                                availability: str | None = None,
+                                position_ref: str | None = None) -> dict:
+    """3D 誤差橢球（協方差視覺化）CZML packet。
+
+    橢球半徑 = k_sigma × σ(RTN)，姿態對齊 RTN 座標系（沿跡軸最長 —— TLE 誤差
+    沿跡主導，此為本專案報告確立之特性）。
+
+    ⚠ 不確定度來源：σ 取自 conjunction_pipeline.pseudo_cov_tle_leo()（R/T/N =
+    1/5/3 km）——TLE **不攜帶協方差**，該值為專案既有的粗略假設，與資料庫中
+    已算出的 Pc 同源。故此橢球是「Pc 所依據之假設」的視覺化，**不是實測定軌
+    協方差**；不可解讀為真實不確定度。若日後 tle_sp_ric_residuals 有實測殘差，
+    應改以其統計量取代。
+    """
+    rgba = rgba or [0, 255, 0, 200]
+    M_rtn = rtn_basis_eci(r_eci, v_eci)            # 列 = R,T,N（ECI）
+    Rot = eci_to_ecef_rot(t_utc)
+    axes_ecef = (Rot @ M_rtn.T)                    # 行 = ECEF 中的 R,T,N 軸
+    quat = _mat_to_quat(axes_ecef)
+    sr, st, sn = sigma_rtn_km
+    pkt: dict[str, Any] = {
+        "id": entity_id, "name": name,
+        "description": (
+            "<table style='color:#ddd;font-size:13px;border-collapse:collapse'>"
+            f"<tr><td>不確定度橢球</td><td><b>{k_sigma:g}σ</b></td></tr>"
+            f"<tr><td>σ 徑向 R</td><td><b>{sr:g} km</b></td></tr>"
+            f"<tr><td>σ 沿跡 T</td><td><b>{st:g} km</b></td></tr>"
+            f"<tr><td>σ 法向 N</td><td><b>{sn:g} km</b></td></tr>"
+            "<tr><td colspan=2 style='color:#ffb703;padding-top:6px'>"
+            "來源：pseudo_cov_tle_leo（與 Pc 同源之粗略假設）。<br>"
+            "TLE 不帶協方差，此非實測定軌不確定度。</td></tr></table>"),
+        "orientation": {"unitQuaternion": quat},
+        "ellipsoid": {
+            "radii": {"cartesian": [k_sigma * sr * 1000.0, k_sigma * st * 1000.0,
+                                    k_sigma * sn * 1000.0]},
+            "fill": False, "outline": True,
+            "outlineColor": {"rgba": rgba},
+            "outlineWidth": 1,
+            "slicePartitions": 12, "stackPartitions": 12,
+        },
+    }
+    if position_ref:
+        pkt["position"] = {"reference": position_ref}
+    else:
+        e = eci_to_ecef_m(r_eci, t_utc)
+        pkt["position"] = {"cartesian": [float(e[0]), float(e[1]), float(e[2])]}
+    if availability:
+        pkt["availability"] = availability
+    return pkt
 
 
 def propagate_to_time(row: dict, t_utc: datetime) -> np.ndarray | None:
@@ -964,6 +1066,272 @@ def register_czml_routes(app: Flask) -> None:
                 "norad": target_norad,
                 "error": {"type": type(e).__name__, "message": str(e)},
             }), 500
+
+
+def build_rpo_czml(data: dict, verdict: dict | None = None, **kwargs) -> list:
+    """
+    Build a CZML document animating a satellite pair's relative approach.
+
+    Produces:
+      • Two satellites with time-sampled ECEF paths (Cesium interpolates + animates)
+      • A dynamic polyline between them (the miss vector, shrinking toward TCA)
+      • A TCA marker at the point of closest approach
+    Entity descriptions carry the pair summary + HCW intent verdict (InfoBox on click).
+    """
+    from conjunction_viz import _load_tles, _prop, _recs  # 重用既有 SGP4 傳播
+
+    ell_sigma = kwargs.get("ellipsoid_sigma")     # None → 不畫誤差橢球
+    meta, summ = data["meta"], data["summary"]
+    rel = data["rel"]
+    t0_iso, t1_iso = meta["window"][0], meta["window"][1]
+
+    def _iso(t: datetime) -> str:
+        return t.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # 依 rel 時間軸重新傳播兩顆的 ECEF 位置（rel 只存相對量，畫圖需絕對位置）
+    with connect_readonly(settings.raw_db_path) as con:
+        P, pname = _load_tles(con, meta["primId"])
+        S, sname = _load_tles(con, meta["secId"])
+    Precs, Pep = _recs(P)
+    Srecs, Sep = _recs(S)
+
+    epoch = datetime.fromisoformat(t0_iso.replace("Z", "+00:00"))
+    carts: dict[str, list[float]] = {"P": [], "S": []}
+    quats: dict[str, list[float]] = {"P": [], "S": []}
+    for x in rel:
+        t = datetime.fromisoformat(x["t"].replace("Z", "+00:00"))
+        dt_s = (t - epoch).total_seconds()
+        rp, vp = _prop(Precs, Pep, t)
+        rs, vs = _prop(Srecs, Sep, t)
+        if rp is None or rs is None:
+            continue
+        Rot = eci_to_ecef_rot(t) if ell_sigma else None
+        for key, r, v in (("P", rp, vp), ("S", rs, vs)):
+            e = eci_to_ecef_m(np.asarray(r), t)
+            carts[key] += [dt_s, float(e[0]), float(e[1]), float(e[2])]
+            if ell_sigma:
+                # 誤差橢球需逐時姿態：RTN 座標系隨衛星繞行而轉動
+                M = rtn_basis_eci(np.asarray(r), np.asarray(v))
+                quats[key] += [dt_s] + _mat_to_quat(Rot @ M.T)
+
+    v_html = ""
+    if verdict:
+        v_html = (f"<tr><td>HCW 判定</td><td><b>{verdict.get('verdict', '—')}</b></td></tr>"
+                  f"<tr><td>殘差峰值</td><td><b>{verdict.get('peak_rms_km', float('nan')):.3f} km"
+                  f"（{verdict.get('peak_ratio', float('nan')):.0f}× 基線）</b></td></tr>")
+
+    def _desc(role: str, norad: int, name: str) -> str:
+        return (
+            "<table style='color:#ddd;font-size:13px;border-collapse:collapse'>"
+            f"<tr><td>Role</td><td><b>{role}</b></td></tr>"
+            f"<tr><td>NORAD</td><td><b>{norad}</b></td></tr>"
+            f"<tr><td>Name</td><td><b>{name}</b></td></tr>"
+            f"<tr><td>最近距離</td><td><b>{summ['d_min']} km</b>（{summ['d_min_t'][:16]}）</td></tr>"
+            f"<tr><td>距離範圍</td><td><b>{summ['d_min']} ~ {summ['d_max']} km</b></td></tr>"
+            + v_html + "</table>"
+        )
+
+    avail = f"{t0_iso}/{t1_iso}"
+    czml: list = [{
+        "id": "document", "name": meta["title"], "version": "1.0",
+        "clock": {"interval": avail, "currentTime": t0_iso, "multiplier": 60,
+                  "range": "LOOP_STOP", "step": "SYSTEM_CLOCK_MULTIPLIER"},
+    }]
+
+    for key, role, nid, name, rgba, px in (
+        ("P", "Primary", meta["primId"], meta["primName"], [255, 200, 0, 255], 12),
+        ("S", "Secondary", meta["secId"], meta["secName"], [0, 220, 255, 255], 10),
+    ):
+        czml.append({
+            "id": f"sat-{nid}", "name": f"{name} ({nid})", "availability": avail,
+            "description": _desc(role, nid, name),
+            "position": {"epoch": t0_iso, "cartesian": carts[key],
+                         "interpolationAlgorithm": "LAGRANGE",
+                         "interpolationDegree": 5,
+                         "referenceFrame": "FIXED"},
+            "point": {"pixelSize": px, "color": {"rgba": rgba},
+                      "outlineColor": {"rgba": [0, 0, 0, 255]}, "outlineWidth": 1},
+            "label": {"text": name, "font": "12px sans-serif", "pixelOffset": {"cartesian2": [10, 0]},
+                      "fillColor": {"rgba": rgba}, "showBackground": True,
+                      "backgroundColor": {"rgba": [0, 0, 0, 160]}},
+            "path": {"width": 2, "leadTime": 0, "trailTime": 900,
+                     "material": {"solidColor": {"color": {"rgba": rgba[:3] + [140]}}},
+                     "resolution": 60},
+        })
+
+    # 3D 誤差橢球（k σ）：位置參照衛星實體自動跟隨，姿態逐時取樣以對齊 RTN
+    if ell_sigma:
+        k = float(kwargs.get("ellipsoid_k", 3.0))
+        sr, st, sn = ell_sigma
+        for key, nid, name, rgba in (
+            ("P", meta["primId"], meta["primName"], [0, 255, 0, 200]),
+            ("S", meta["secId"], meta["secName"], [0, 255, 0, 200]),
+        ):
+            czml.append({
+                "id": f"cov-{nid}", "name": f"{name} {k:g}σ 不確定度橢球",
+                "availability": avail,
+                "description": (
+                    "<table style='color:#ddd;font-size:13px;border-collapse:collapse'>"
+                    f"<tr><td>物件</td><td><b>{name} ({nid})</b></td></tr>"
+                    f"<tr><td>橢球</td><td><b>{k:g}σ</b></td></tr>"
+                    f"<tr><td>σ 徑向 R</td><td><b>{sr:g} km</b></td></tr>"
+                    f"<tr><td>σ 沿跡 T</td><td><b>{st:g} km</b>（最長軸）</td></tr>"
+                    f"<tr><td>σ 法向 N</td><td><b>{sn:g} km</b></td></tr>"
+                    "<tr><td colspan=2 style='color:#ffb703;padding-top:6px'>"
+                    "來源：pseudo_cov_tle_leo（與 Pc 同源之粗略假設）。<br>"
+                    "TLE 不帶協方差，此非實測定軌不確定度。</td></tr></table>"),
+                "position": {"reference": f"sat-{nid}#position"},
+                "orientation": {"epoch": t0_iso, "unitQuaternion": quats[key],
+                                "interpolationAlgorithm": "LINEAR",
+                                "interpolationDegree": 1},
+                "ellipsoid": {
+                    "radii": {"cartesian": [k * sr * 1000.0, k * st * 1000.0, k * sn * 1000.0]},
+                    "fill": False, "outline": True,
+                    "outlineColor": {"rgba": rgba}, "outlineWidth": 1,
+                    "slicePartitions": 12, "stackPartitions": 12,
+                },
+            })
+
+    # 動態連線（miss vector）：隨時間縮放，直觀顯示接近過程
+    czml.append({
+        "id": "miss-vector", "name": "Relative range", "availability": avail,
+        "description": _desc("Pair", meta["primId"], f"{meta['primName']} × {meta['secName']}"),
+        "polyline": {
+            "positions": {"references": [f"sat-{meta['primId']}#position",
+                                          f"sat-{meta['secId']}#position"]},
+            "width": 2,
+            "material": {"polylineDash": {"color": {"rgba": [255, 80, 80, 220]}, "dashLength": 16}},
+            "arcType": "NONE",
+        },
+    })
+
+    # TCA 標記
+    czml.append({
+        "id": "tca", "name": "TCA", "availability": avail,
+        "description": (f"<b>TCA</b> {summ['d_min_t']}<br>最近距離 <b>{summ['d_min']} km</b>"),
+        "position": {"reference": f"sat-{meta['primId']}#position"},
+        "billboard": {
+            "image": ("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmci"
+                      "IHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCI+PGNpcmNsZSBjeD0iMTIiIGN5PSIxMiIgcj0iOSIgZmls"
+                      "bD0ibm9uZSIgc3Ryb2tlPSIjZmY1MDUwIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4="),
+            "scale": 1.0,
+            "show": [{"interval": f"{summ['d_min_t']}/{t1_iso}", "boolean": True}],
+        },
+    })
+    return czml
+
+
+def register_rpo_routes(app: Flask) -> None:
+    """
+    RPO / rendezvous pair endpoints (new): specify TWO satellites + a date range.
+
+    GET /api/rpo_pair
+        ?primary=<int>&secondary=<int>
+        &start=<YYYY-MM-DD, optional>&end=<YYYY-MM-DD, optional>
+        &step_min=<float, default 5>
+        &around_tca_days=<float, optional — auto-window around TCA>
+        &hcw=<0|1, default 1 — run HCW intent analysis>
+        &control=<"P,S", optional — debris control pair to calibrate the residual baseline>
+        → JSON {meta, summary, rel[], hcw:{validity, verdict, residual_series}}
+
+    GET /api/rpo_czml   (same query params, minus hcw/control)
+        → CZML animating both satellites + dynamic miss-vector + TCA marker
+
+    Demo — Shenlong RPO (known case):
+        /api/rpo_pair?primary=58573&secondary=59884&around_tca_days=2&control=60682,61372
+        /api/rpo_czml?primary=58573&secondary=59884&around_tca_days=2
+    """
+
+    def _params():
+        primary = parse_int_arg("primary", minimum=1)
+        secondary = parse_int_arg("secondary", minimum=1)
+        start = request.args.get("start") or None
+        end = request.args.get("end") or None
+        step_min = parse_float_arg("step_min", default=5.0, minimum=0.1)
+        atd = request.args.get("around_tca_days")
+        around = float(atd) if atd else None
+        return primary, secondary, start, end, step_min, around
+
+    @app.get("/api/rpo_pair")
+    def api_rpo_pair():
+        primary, secondary, start, end, step_min, around = _params()
+        want_hcw = request.args.get("hcw", "1") not in ("0", "false", "False")
+        try:
+            from conjunction_viz import compute_pair_series
+            data = compute_pair_series(str(settings.raw_db_path), primary, secondary,
+                                       start=start, end=end, step_min=step_min) \
+                if around is None else None
+            if around is not None:
+                from hcw_intent import analyze_pair
+                data, res = analyze_pair(str(settings.raw_db_path), primary, secondary,
+                                         step_min=step_min, start=start, end=end,
+                                         around_tca_days=around)
+            out: dict[str, Any] = {"meta": data["meta"], "summary": data["summary"],
+                                   "rel": data["rel"]}
+            if want_hcw:
+                from hcw_intent import (classify, hcw_residual_series, hcw_validity,
+                                        analyze_pair as _ap)
+                if around is None:
+                    res = hcw_residual_series(data)
+                val = hcw_validity(data)
+                base = None
+                ctl = request.args.get("control")
+                if ctl:
+                    cp, cs = [int(x) for x in ctl.split(",")]
+                    _, cres = _ap(str(settings.raw_db_path), cp, cs, step_min=step_min,
+                                  around_tca_days=around)
+                    if len(cres):
+                        base = float(cres["rms_km"].median())
+                v = classify(res, base, valid=val)
+                if v.get("peak_t") is not None:
+                    v["peak_t"] = str(v["peak_t"])
+                out["hcw"] = {
+                    "validity": val, "verdict": v,
+                    "baseline_source": "control" if base else "self_median",
+                    "residual_series": res.to_dict("records") if len(res) else [],
+                }
+                for r in out["hcw"]["residual_series"]:
+                    r["t_mid"] = str(r["t_mid"])
+            return jsonify(out)
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logger.exception("rpo_pair failed for %s x %s", primary, secondary)
+            return jsonify({"status": "error",
+                            "error": {"type": type(e).__name__, "message": str(e)}}), 500
+
+    @app.get("/api/rpo_czml")
+    def api_rpo_czml():
+        primary, secondary, start, end, step_min, around = _params()
+        try:
+            if around is not None:
+                from hcw_intent import analyze_pair, classify, hcw_validity
+                data, res = analyze_pair(str(settings.raw_db_path), primary, secondary,
+                                         step_min=step_min, start=start, end=end,
+                                         around_tca_days=around)
+                v = classify(res, valid=hcw_validity(data))
+            else:
+                from conjunction_viz import compute_pair_series
+                data = compute_pair_series(str(settings.raw_db_path), primary, secondary,
+                                           start=start, end=end, step_min=step_min)
+                v = None
+            # 誤差橢球：預設關閉；ellipsoid=1 開啟。σ 沿用 pseudo_cov_tle_leo（與 Pc 同源）
+            ell = None
+            if request.args.get("ellipsoid", "0") not in ("0", "false", "False"):
+                ell = (parse_float_arg("sigma_r_km", default=1.0, minimum=0.0),
+                       parse_float_arg("sigma_t_km", default=5.0, minimum=0.0),
+                       parse_float_arg("sigma_n_km", default=3.0, minimum=0.0))
+            czml = build_rpo_czml(data, v, ellipsoid_sigma=ell,
+                                  ellipsoid_k=parse_float_arg("k_sigma", default=3.0,
+                                                              minimum=0.1))
+            return app.response_class(json.dumps(czml, separators=(",", ":")),
+                                      mimetype="application/json")
+        except ValueError as e:
+            return jsonify({"error": str(e)}), 404
+        except Exception as e:
+            logger.exception("rpo_czml failed for %s x %s", primary, secondary)
+            return jsonify({"status": "error",
+                            "error": {"type": type(e).__name__, "message": str(e)}}), 500
 
 
 app = create_app()

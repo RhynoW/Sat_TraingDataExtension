@@ -27,89 +27,120 @@ OUT = os.path.dirname(os.path.abspath(__file__))   # 存到 docs/
 # 圖一：軌道根數幾何示意圖
 # ─────────────────────────────────────────────────────────────────────────────
 def fig1_orbital_geometry():
-    fig, ax = plt.subplots(figsize=(8, 7))
-    ax.set_aspect("equal")
-    ax.axis("off")
-    ax.set_xlim(-5.5, 5.5)
-    ax.set_ylim(-5.5, 5.5)
+    """軌道六元素 3D 幾何示意圖（參照標準教科書畫法）。"""
+    from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+    from mpl_toolkits.mplot3d.proj3d import proj_transform
+    from matplotlib.patches import FancyArrowPatch
 
-    # ── 參考平面（赤道面）──
-    eq_xs = np.linspace(-5, 5, 200)
-    eq_ys = 0.22 * eq_xs          # 輕微透視傾斜
-    ax.fill_between(eq_xs, eq_ys - 0.45, eq_ys + 0.45,
-                    color="#d0e8f8", alpha=0.55, zorder=1)
-    ax.plot(eq_xs, eq_ys + 0.45, color="#5599cc", lw=1.2, zorder=2)
-    ax.plot(eq_xs, eq_ys - 0.45, color="#5599cc", lw=1.2, zorder=2)
-    ax.text(4.6, 0.25*4.6, "赤道面", fontsize=10, color="#3366aa",
-            ha="right", va="bottom", zorder=5)
+    class Arrow3D(FancyArrowPatch):
+        def __init__(self, xs, ys, zs, *a, **k):
+            super().__init__((0, 0), (0, 0), *a, **k); self._v = (xs, ys, zs)
+        def do_3d_projection(self, renderer=None):
+            xs, ys, zs = proj_transform(self._v[0], self._v[1], self._v[2], self.axes.M)
+            self.set_positions((xs[0], ys[0]), (xs[1], ys[1])); return min(zs)
 
-    # ── 地球 ──
-    earth = plt.Circle((0, 0), 1.0, color="#2a7ae4", zorder=3)
-    ax.add_patch(earth)
-    earth_shade = plt.Circle((0, 0), 1.0, color="white", alpha=0.25, zorder=4)
-    ax.add_patch(earth_shade)
-    ax.text(0, 0, "地球", fontsize=11, ha="center", va="center",
-            color="white", fontweight="bold", zorder=5)
+    def Rz(t): c, s = np.cos(t), np.sin(t); return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+    def Rx(t): c, s = np.cos(t), np.sin(t); return np.array([[1, 0, 0], [0, c, -s], [0, s, c]])
 
-    # ── 軌道橢圓（傾斜 i≈35° ）──
-    theta = np.linspace(0, 2*np.pi, 300)
-    a_orb, b_orb = 3.5, 3.0        # 長半軸 a_orb，短半軸
-    inc_rad = np.radians(35)
-    xe = a_orb * np.cos(theta)
-    ye = b_orb * np.sin(theta)
-    # 繞 x 軸旋轉 i
-    xe_r = xe
-    ye_r = ye * np.cos(inc_rad)
-    ax.plot(xe_r, ye_r, color="#e06000", lw=2.0, zorder=6, label="軌道橢圓")
+    Om, inc, w = np.radians(40), np.radians(35), np.radians(55)   # RAAN, 傾角, 近地點幅角
+    e, a = 0.5, 1.4
+    Q = Rz(Om) @ Rx(inc) @ Rz(w)                                   # 近焦點座標 → ECI
 
-    # ── 衛星位置 ──
-    sat_t = np.radians(60)
-    sx = a_orb * np.cos(sat_t)
-    sy = b_orb * np.sin(sat_t) * np.cos(inc_rad)
-    ax.plot(sx, sy, "o", color="#ff4444", ms=10, zorder=8)
-    ax.annotate("衛星", xy=(sx, sy), xytext=(sx+0.5, sy+0.5),
-                fontsize=10, color="#cc2200",
-                arrowprops=dict(arrowstyle="->", color="#cc2200", lw=1.3),
-                zorder=9)
+    def P(nu):
+        r = a * (1 - e**2) / (1 + e * np.cos(nu))
+        return Q @ np.array([r * np.cos(nu), r * np.sin(nu), 0.0])
 
-    # ── 半長軸 a ──
-    ax.annotate("", xy=(a_orb, 0), xytext=(0, 0),
-                arrowprops=dict(arrowstyle="<->", color="#555555", lw=1.5))
-    ax.text(a_orb/2, 0.25, "a（半長軸）", fontsize=10, color="#555555",
-            ha="center", va="bottom")
+    nu = np.linspace(0, 2 * np.pi, 400)
+    r = a * (1 - e**2) / (1 + e * np.cos(nu))
+    orbit = Q @ np.vstack([r * np.cos(nu), r * np.sin(nu), np.zeros_like(nu)])
+    perigee, apogee = P(0.0), P(np.pi)
+    nu_sat = np.radians(62); sat = P(nu_sat)
+    an, dn = P(-w), P(np.pi - w)                                   # 升 / 降交點
+    node_dir = Rz(Om) @ np.array([1., 0, 0])
 
-    # ── 傾角 i（在升交點附近標示）──
-    ang_arc = np.linspace(-inc_rad, 0, 60)
-    r_arc = 1.5
-    ax.plot(r_arc * np.cos(ang_arc), r_arc * np.sin(ang_arc),
-            color="#008800", lw=1.8, zorder=7)
-    ax.text(r_arc*0.85, -0.35, "i（傾角）", fontsize=10, color="#005500")
+    fig = plt.figure(figsize=(9.8, 8))
+    ax = fig.add_subplot(111, projection="3d")
+    ax.set_box_aspect((1, 1, 0.66)); ax.view_init(elev=24, azim=-62); ax.set_axis_off()
+    ang = np.linspace(0, 2 * np.pi, 90)
 
-    # ── 升交點（Ω/RAAN）方向 ──
-    ax.annotate("", xy=(3.2, 0.3*3.2), xytext=(1.1, 0.3*1.1),
-                arrowprops=dict(arrowstyle="->", color="#aa0099",
-                                lw=1.8, connectionstyle="arc3,rad=0"))
-    ax.text(3.3, 0.3*3.3+0.3, "升交點方向\n（RAAN，Ω）",
-            fontsize=9.5, color="#880077", ha="left")
+    # 赤道面（灰）與軌道面（藍）半透明圓盤
+    Req, Rop = 1.75, 2.3
+    eq = np.vstack([Req * np.cos(ang), Req * np.sin(ang), np.zeros_like(ang)]).T
+    ax.add_collection3d(Poly3DCollection([eq], facecolor="#b7c2cb", alpha=0.34,
+                                         edgecolor="#8a99a6", lw=0.6))
+    op = (Q @ np.vstack([Rop * np.cos(ang), Rop * np.sin(ang), np.zeros_like(ang)])).T
+    ax.add_collection3d(Poly3DCollection([op], facecolor="#c3dcf0", alpha=0.22,
+                                         edgecolor="#7fa8d0", lw=0.6))
 
-    # ── 春分點方向 ──
-    ax.annotate("", xy=(5.0, 0.3*5.0), xytext=(4.0, 0.3*4.0),
-                arrowprops=dict(arrowstyle="->", color="#aaaaaa", lw=1.5))
-    ax.text(5.1, 0.3*5.1, "春分點方向\n（參考）",
-            fontsize=9, color="#888888", ha="left")
+    ax.plot(1.2 * np.cos(ang), 1.2 * np.sin(ang), 0 * ang, color="#1a1a1a", lw=1.1)  # 赤道圈
+    ax.plot(orbit[0], orbit[1], orbit[2], color="#1f4e9c", lw=3.2, zorder=10)        # 軌道
 
-    # ── 近地點（ω）──
-    ax.plot(-a_orb, 0, "D", color="#e06000", ms=8, zorder=7)
-    ax.annotate("近地點\n（ω 量至此）",
-                xy=(-a_orb, 0), xytext=(-a_orb-0.3, -1.5),
-                fontsize=9.5, color="#e06000",
-                arrowprops=dict(arrowstyle="->", color="#e06000", lw=1.2))
+    ax.scatter([0], [0], [0], color="#222", s=22, depthshade=False, zorder=11)
+    for pt in (perigee, apogee, sat):
+        ax.plot([0, pt[0]], [0, pt[1]], [0, pt[2]], color="#e6a3b8", lw=0.9, zorder=5)
+    ax.plot([0, apogee[0]], [0, apogee[1]], [0, apogee[2]], color="#7a7a7a",
+            lw=1.4, ls=":", zorder=6)                             # a(1+e)
+    ax.plot([dn[0], an[0]], [dn[1], an[1]], [dn[2], an[2]], color="#3a6ea5",
+            lw=1.0, alpha=0.7)                                    # 交點線
 
-    ax.set_title("圖一：低地球軌道衛星的主要軌道根數示意圖",
-                 fontsize=13, fontweight="bold", pad=10)
+    def dot(pt, lab, col="#111", off=(0.12, 0.12, 0.16), m="o", s=45):
+        ax.scatter([pt[0]], [pt[1]], [pt[2]], color=col, marker=m, s=s,
+                   depthshade=False, zorder=13)
+        ax.text(pt[0] + off[0], pt[1] + off[1], pt[2] + off[2], lab, fontsize=10.5,
+                fontweight="bold", color=col, zorder=14)
+    dot(perigee, "Perigee", off=(0.12, 0.18, 0.22))
+    dot(apogee, "Apogee", off=(-0.1, -0.25, -0.28))
+    dot(an, "Ascending\nNode", off=(0.2, -0.05, -0.42))
+    dot(dn, "Descending\nNode", off=(-0.35, 0.15, 0.28))
+    dot(sat, "Satellite", col="#c1121f", m="s", s=85, off=(-0.15, 0.1, 0.5))
+
+    # 春分點方向（+X）；以 γ 代 ♈（字型無 ♈ 字符）
+    ax.add_artist(Arrow3D([0, 2.4], [0, 0], [0, 0], mutation_scale=15, lw=1.7,
+                          arrowstyle="-|>", color="#111"))
+    ax.text(2.55, 0, 0.04, "γ  Vernal Equinox", fontsize=10.5, fontweight="bold", color="#111")
+
+    # 平面 / 軌道文字
+    ax.text(*(Q @ np.array([Rop - 0.05, -0.2, 0])), "Orbital Plane", color="#2f6090",
+            fontsize=10, fontweight="bold")
+    ax.text(*np.array([Req * np.cos(np.radians(-46)), Req * np.sin(np.radians(-46)), 0]),
+            "Equatorial Plane", color="#5a6672", fontsize=10, fontweight="bold")
+    ax.text(orbit[0, 182] - 0.5, orbit[1, 182] - 0.1, orbit[2, 182] - 0.05, "Orbit",
+            color="#1f4e9c", fontsize=11, fontweight="bold")
+    ax.text(1.2 * np.cos(np.radians(212)), 1.2 * np.sin(np.radians(212)), -0.02,
+            "Equator", color="#1a1a1a", fontsize=9.5)
+
+    # 角度弧與希臘字母（不同半徑，避免投影後重疊）
+    def arc(pts, col, lw=2.4): ax.plot(pts[0], pts[1], pts[2], color=col, lw=lw, zorder=9)
+    ph = np.linspace(0, Om, 40)                                   # Ω 於赤道面
+    arc(np.vstack([0.62 * np.cos(ph), 0.62 * np.sin(ph), 0 * ph]), "#2ca02c")
+    ax.text(*(0.82 * np.array([np.cos(Om / 2), np.sin(Om / 2), 0])), "Ω",
+            color="#2ca02c", fontsize=15, fontweight="bold")
+    ph = np.linspace(-w, 0, 40)                                   # ω 於軌道面
+    arc(Q @ np.vstack([0.92 * np.cos(ph), 0.92 * np.sin(ph), 0 * ph]), "#7b3fbf")
+    ax.text(*(Q @ (1.12 * np.array([np.cos(-w / 2), np.sin(-w / 2), 0]))), "ω",
+            color="#7b3fbf", fontsize=15, fontweight="bold")
+    ph = np.linspace(0, nu_sat, 40)                              # ν 真近點角
+    arc(Q @ np.vstack([0.46 * np.cos(ph), 0.46 * np.sin(ph), 0 * ph]), "#d62728")
+    ax.text(*(Q @ (0.6 * np.array([np.cos(nu_sat / 2), np.sin(nu_sat / 2), 0]))), "ν",
+            color="#d62728", fontsize=15, fontweight="bold")
+    # i 傾角（兩平面二面角，置於升交點外側較開闊處）
+    e_eq = np.cross(np.array([0, 0, 1.]), node_dir); e_eq /= np.linalg.norm(e_eq)
+    e_orb = np.cross(Q @ np.array([0, 0, 1.]), node_dir); e_orb /= np.linalg.norm(e_orb)
+    if np.dot(e_eq, e_orb) < 0:
+        e_orb = -e_orb
+    ii = np.arccos(np.clip(np.dot(e_eq, e_orb), -1, 1))
+    t = np.linspace(0, 1, 40)
+    iv = (np.sin((1 - t) * ii)[:, None] * e_eq + np.sin(t * ii)[:, None] * e_orb) / np.sin(ii)
+    cen = 1.6 * node_dir                                          # 升交點外側（右下）
+    arc(cen[:, None] + 0.5 * iv.T, "#0e8ba8")
+    ax.text(*(cen + 0.62 * iv[len(iv) // 2]), "i", color="#0e8ba8",
+            fontsize=15, fontweight="bold", style="italic")
+
+    ax.set_xlim(-2.3, 3.2); ax.set_ylim(-2.3, 2.3); ax.set_zlim(-1.7, 1.7)
+    fig.text(0.5, 0.065, "圖 A-1　軌道六元素", ha="center", fontsize=14, fontweight="bold")
 
     out = os.path.join(OUT, "fig1_orbital_geometry.png")
-    fig.savefig(out)
+    fig.savefig(out, dpi=200, bbox_inches="tight")
     plt.close(fig)
     print(f"  saved {out}")
 
@@ -157,26 +188,31 @@ def fig2_timeseries():
     ax3 = axes[2]
     ax3.plot(days, a_p4, "o-", color="#555555", ms=4, lw=1.5, alpha=0.5,
              label="30 天整體")
-    # 標出 4 個子窗口
+    # y 軸上下各留白，供圖內標註使用（避免文字掉到 x 軸刻度上）
+    ymin, ymax = float(a_p4.min()), float(a_p4.max())
+    ax3.set_ylim(ymin - 0.9, ymax + 1.05)
+    # 標出 4 個子窗口；標籤以「軸分數座標」置於圖內底部，不與 x 軸刻度重疊
     win_colors = ["#cce8ff", "#ffe4cc", "#d4f0d0", "#f5d0f5"]
-    win_labels = ["窗口 1\n(D1-7)", "窗口 2\n(D8-14)", "窗口 3\n(D15-21)", "窗口 4\n(D22-28)"]
+    win_labels = ["窗口1\n(D1-7)", "窗口2\n(D8-14)", "窗口3\n(D15-21)", "窗口4\n(D22-28)"]
     for k, (ws, we) in enumerate([(1,7),(8,14),(15,21),(22,28)]):
         ax3.axvspan(ws, we, alpha=0.35, color=win_colors[k], zorder=0)
-        ax3.text((ws+we)/2, 6915.5, win_labels[k],
-                 ha="center", va="bottom", fontsize=7.5, color="#555555")
-    ax3.annotate("主窗口未觸發\n（整體 flag_rate 偏低）",
-                 xy=(25, a_p4[25]), xytext=(21, a_p4[25]-1.8),
-                 fontsize=8.5, color="#555555",
-                 arrowprops=dict(arrowstyle="->", color="#555555"))
-    ax3.annotate("P4 在窗口 2 偵測到機動！",
-                 xy=(11, a_p4[11]), xytext=(13, a_p4[11]+1.2),
-                 fontsize=8.5, color="#880099",
+        ax3.text((ws+we)/2, 0.03, win_labels[k],
+                 transform=ax3.get_xaxis_transform(),
+                 ha="center", va="bottom", fontsize=7, color="#555555")
+    # 兩個標註分置頂部左右開放區，彼此不重疊、也不壓到座標軸
+    ax3.annotate("P4 在窗口2偵測到機動！",
+                 xy=(11, a_p4[11]), xytext=(0.5, ymax + 0.55),
+                 fontsize=8.5, color="#880099", ha="left",
                  arrowprops=dict(arrowstyle="->", color="#880099"))
+    ax3.annotate("主窗口未觸發（整體 flag_rate 偏低）",
+                 xy=(27, a_p4[27]), xytext=(30.3, ymax + 0.55),
+                 fontsize=8, color="#555555", ha="right",
+                 arrowprops=dict(arrowstyle="->", color="#555555"))
     ax3.set_title("(c) P4 多窗口補充偵測案例", fontsize=11, fontweight="bold")
     ax3.set_xlabel("天（Day）", fontsize=10)
     ax3.set_ylabel("半長軸 a（km）", fontsize=10)
 
-    fig.suptitle("圖二：半長軸時序變化三種典型模式",
+    fig.suptitle("圖 A-2：半長軸時序變化三種典型模式",
                  fontsize=13, fontweight="bold", y=1.01)
     fig.tight_layout()
     out = os.path.join(OUT, "fig2_timeseries.png")
@@ -279,7 +315,7 @@ def fig3_flowchart():
         "multi_window_detected = True",
         fc="#ccf0cc", ec="#006600", fs=8)
 
-    ax.set_title("圖三：TLE 差分機動偵測流程（含 P1–P4 改進策略）",
+    ax.set_title("圖 A-4：TLE 差分機動偵測流程（含 P1–P4 改進策略）",
                  fontsize=13, fontweight="bold", y=0.995)
 
     out = os.path.join(OUT, "fig3_flowchart.png")
@@ -351,7 +387,7 @@ def fig4_p2_threshold():
     axes[1].set_xlim(-1, 33)
     axes[1].grid(True, alpha=0.3)
 
-    fig.suptitle("圖四：P2 高度自適應閾值示意圖",
+    fig.suptitle("圖 A-3：P2 高度自適應閾值示意圖",
                  fontsize=13, fontweight="bold")
     fig.tight_layout()
     out = os.path.join(OUT, "fig4_p2_threshold.png")
@@ -434,7 +470,7 @@ def fig5_ablation():
     ax2.set_title("(b) 各改進策略對假陽性數量的影響", fontsize=11, fontweight="bold")
     ax2.grid(True, axis="y", alpha=0.3)
 
-    fig.suptitle("圖五：P1–P4 消融實驗結果\n（2026年5月，14,019顆LEO衛星）",
+    fig.suptitle("圖 A-5：P1–P4 消融實驗結果\n（2026年5月，14,019顆LEO衛星）",
                  fontsize=13, fontweight="bold")
     out = os.path.join(OUT, "fig5_ablation.png")
     fig.savefig(out)
@@ -501,7 +537,7 @@ def fig6_fp_waterfall():
     ax2.set_title("(b) 誤報來源類別拆解（估算）", fontsize=11, fontweight="bold")
     ax2.grid(True, axis="y", alpha=0.3)
 
-    fig.suptitle("圖六：假陽性縮減路徑與誤報來源分析",
+    fig.suptitle("圖 A-6：假陽性縮減路徑與誤報來源分析",
                  fontsize=13, fontweight="bold")
     fig.tight_layout()
     out = os.path.join(OUT, "fig6_fp_waterfall.png")

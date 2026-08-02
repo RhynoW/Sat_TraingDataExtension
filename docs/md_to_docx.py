@@ -11,13 +11,34 @@ import os
 from pathlib import Path
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor, Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 import copy
 
 DOCS_DIR = Path(__file__).parent
+
+# ── LaTeX → Word 原生方程式（OMML）────────────────────────────────────────────
+# 需要 latex2mathml + lxml + Office 內建 MML2OMML.XSL；任一缺少則回退為文字呈現。
+try:
+    import latex2mathml.converter as _l2m
+    from lxml import etree as _etree
+    _MML2OMML = Path(r"C:/Program Files/Microsoft Office/root/Office16/MML2OMML.XSL")
+    _OMML_XSLT = _etree.XSLT(_etree.parse(str(_MML2OMML))) if _MML2OMML.exists() else None
+except Exception:
+    _OMML_XSLT = None
+
+
+def latex_to_omml(latex: str):
+    """LaTeX 字串 → OMML（Word 方程式）元素；不可用或轉換失敗回 None。"""
+    if _OMML_XSLT is None:
+        return None
+    try:
+        mml = _l2m.convert(latex)
+        return _OMML_XSLT(_etree.fromstring(mml)).getroot()
+    except Exception:
+        return None
 
 # ── LaTeX 數式轉可讀文字 ──────────────────────────────────────────────────────
 _LATEX_MAP = [
@@ -81,15 +102,14 @@ def clean_math(s: str) -> str:
 
 
 # ── 行內樣式解析 ──────────────────────────────────────────────────────────────
-def add_inline_runs(para, text: str):
-    """解析 **bold**、*italic*、`code`，並依序加入 Run。"""
-    # 合法字元範圍
+def _add_styled_runs(para, text: str):
+    """解析 **bold**、*italic*、`code`（不含超連結），依序加入 Run。"""
     pattern = re.compile(
         r"\*\*(.+?)\*\*"        # **bold**
         r"|\*(.+?)\*"           # *italic*
         r"|`(.+?)`"             # `code`
         r"|\!\[([^\]]*)\]\([^)]*\)"  # ![img](path) → skip in inline
-        r"|(\[([^\]]+)\]\([^)]*\))"  # [link text](url) → text only
+        r"|(\[([^\]]+)\]\([^)]*\))"  # [link text](url) → text only（非 http）
         r"|(.+?)"               # plain text
         r"|(\s+)",              # whitespace
         re.DOTALL)
@@ -114,12 +134,57 @@ def add_inline_runs(para, text: str):
             para.add_run(ws_t)
 
 
+def add_inline_runs(para, text: str):
+    """行內解析：先把 [文字](http…) 轉為真超連結，其餘交給樣式解析。"""
+    pos = 0
+    for m in _LINK_RE.finditer(text):
+        if m.start() > pos:
+            _add_styled_runs(para, text[pos:m.start()])
+        add_hyperlink(para, m.group(1), m.group(2))
+        pos = m.end()
+    if pos < len(text):
+        _add_styled_runs(para, text[pos:])
+
+
 def add_para_text(para, raw: str):
     """先清理 math、再寫入行內樣式。"""
     raw = clean_math(raw)
     # 清理 Markdown 轉義
     raw = raw.replace(r"\*", "*").replace(r"\_", "_").replace(r"\|", "|")
     add_inline_runs(para, raw)
+
+
+# ── 超連結 ────────────────────────────────────────────────────────────────────
+_LINK_RE = re.compile(r"\[([^\]]+)\]\((https?://[^)]+)\)")
+
+
+def add_hyperlink(paragraph, text: str, url: str):
+    """在段落內加入可點擊的 Word 超連結（藍字底線）。"""
+    r_id = paragraph.part.relate_to(
+        url, "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+        is_external=True)
+    h = OxmlElement("w:hyperlink")
+    h.set(qn("r:id"), r_id)
+    r = OxmlElement("w:r")
+    rpr = OxmlElement("w:rPr")
+    color = OxmlElement("w:color"); color.set(qn("w:val"), "0563C1"); rpr.append(color)
+    u = OxmlElement("w:u"); u.set(qn("w:val"), "single"); rpr.append(u)
+    r.append(rpr)
+    t = OxmlElement("w:t"); t.text = text; r.append(t)
+    h.append(r)
+    paragraph._p.append(h)
+
+
+def add_text_with_links(paragraph, text: str):
+    """把含 [文字](URL) 的字串寫入段落，連結轉為真超連結、其餘為一般文字。"""
+    pos = 0
+    for m in _LINK_RE.finditer(text):
+        if m.start() > pos:
+            add_inline_runs(paragraph, text[pos:m.start()])
+        add_hyperlink(paragraph, m.group(1), m.group(2))
+        pos = m.end()
+    if pos < len(text):
+        add_inline_runs(paragraph, text[pos:])
 
 
 # ── 表格處理 ──────────────────────────────────────────────────────────────────
@@ -130,8 +195,14 @@ def is_separator_row(row_text: str) -> bool:
     return bool(re.match(r"^\|?[\s\-:]+(\|[\s\-:]+)*\|?$", row_text.strip()))
 
 def parse_table_row(line: str):
-    parts = [c.strip() for c in line.strip().strip("|").split("|")]
-    return parts
+    """切表格欄位，跳過反斜線跳脫的管線（\\| 是儲存格內的字面 |，非欄界）。"""
+    s = line.strip()
+    if s.startswith("|"):
+        s = s[1:]
+    if s.endswith("|") and not s.endswith("\\|"):
+        s = s[:-1]
+    parts = re.split(r"(?<!\\)\|", s)
+    return [p.strip().replace("\\|", "|") for p in parts]
 
 def build_word_table(doc, rows):
     """rows: list of list[str] — 第一行為表頭。"""
@@ -149,9 +220,11 @@ def build_word_table(doc, rows):
             cell.text = ""
             p = cell.paragraphs[0]
             p.clear()
-            run = p.add_run(strip_cell(cell_text))
             if ri == 0:
+                run = p.add_run(strip_cell(cell_text))
                 run.bold = True
+            else:
+                add_text_with_links(p, clean_math(cell_text.strip()))
             p.paragraph_format.space_before = Pt(2)
             p.paragraph_format.space_after  = Pt(2)
     doc.add_paragraph()  # 表格後空行
@@ -323,6 +396,47 @@ def convert_md_to_docx(md_path: Path, out_path: Path):
             p = doc.add_paragraph(style=style_name)
             p.clear()
             add_inline_runs(p, title_text)
+            i += 1
+            continue
+
+        # ── 顯示型 LaTeX 方程式：$$…\tag{n}$$ → Word 原生方程式（APA：置中＋編號右靠）──
+        eq_disp = re.match(r"^\$\$(.+?)\$\$$", stripped)
+        if eq_disp:
+            latex = eq_disp.group(1).strip()
+            tag = None
+            tm = re.search(r"\\tag\{(\d+)\}", latex)
+            if tm:
+                tag = tm.group(1)
+                latex = latex.replace(tm.group(0), "").strip()
+            omml = latex_to_omml(latex)
+            p = doc.add_paragraph()
+            p.paragraph_format.space_before = Pt(6)
+            p.paragraph_format.space_after = Pt(6)
+            if omml is not None:
+                sect = doc.sections[0]
+                content_w = int(sect.page_width - sect.left_margin - sect.right_margin)
+                p.paragraph_format.tab_stops.add_tab_stop(content_w // 2, WD_TAB_ALIGNMENT.CENTER)
+                p.paragraph_format.tab_stops.add_tab_stop(content_w, WD_TAB_ALIGNMENT.RIGHT)
+                p.add_run("\t")
+                p._p.append(copy.deepcopy(omml))
+                if tag:
+                    p.add_run(f"\t({tag})")
+            else:  # 後備：文字置中
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                add_inline_runs(p, latex_to_text(latex) + (f"　　({tag})" if tag else ""))
+            i += 1
+            continue
+
+        # ── APA 置中：表/圖標題（**表 N　…**／**圖 N　…**）與編號方程式（… (N)）──
+        is_caption = bool(re.match(r"^\*\*(表|圖)\s?\d+", stripped))
+        is_equation = bool(re.search(r"\(\d+\)\s*$", stripped)) and \
+            any(op in stripped for op in ("=", "≈", "≥", "≤"))
+        if is_caption or is_equation:
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            p.paragraph_format.space_before = Pt(6)
+            p.paragraph_format.space_after = Pt(4)
+            add_para_text(p, stripped)
             i += 1
             continue
 

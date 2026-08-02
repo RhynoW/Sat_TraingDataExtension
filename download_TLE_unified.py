@@ -16,6 +16,7 @@ Unified TLE downloader/loader for space_db.duckdb.
 
 import os
 import re
+import json
 import shutil
 import subprocess
 import time
@@ -32,6 +33,8 @@ import dotenv
 from skyfield.api import EarthSatellite, load as load_skyfield
 from spacetrack import SpaceTrackClient
 import spacetrack.operators as op
+
+from tle_catnr import decode_catnr  # Alpha-5 相容編目欄解析（6 位數 NORAD 止血）
 
 # ==========================
 # 常數與環境變數
@@ -51,8 +54,11 @@ SPACE_TRACK_PASSWORD = os.getenv("SPACE_TRACK_PASSWORD")
 
 # 舊版 tle_raw 解析用 regex
 TLE_NAME_RE = re.compile(r"^[^12].*")       # 非 1/2 開頭 → 可能是名稱行
-LINE1_RE = re.compile(r"^1\s+(\d{5})")
-LINE2_RE = re.compile(r"^2\s+(\d{5})")
+# 編目欄相容 Alpha-5（6 位數 NORAD，如 "A0000"=100000）：首字元為數字或 Alpha-5 字母
+# （A-H、J-N、P-Z，排除易混淆的 I/O），後接 4 位數字；傳統 5 位數字亦涵蓋。
+_CATNR_RE = r"[0-9A-HJ-NP-Z][0-9]{4}"
+LINE1_RE = re.compile(rf"^1\s+({_CATNR_RE})")
+LINE2_RE = re.compile(rf"^2\s+({_CATNR_RE})")
 
 
 # ==========================
@@ -344,8 +350,8 @@ def parse_tle_file_to_tle_raw_records(file_path: Path) -> pd.DataFrame:
             i += 1
             continue
 
-        norad1 = int(line1[2:7])
-        norad2 = int(line2[2:7])
+        norad1 = decode_catnr(line1[2:7])
+        norad2 = decode_catnr(line2[2:7])
         if norad1 != norad2:
             continue
 
@@ -721,7 +727,105 @@ def download_historical_from_spacetrack(
     return filepath
 
 
-def run_spacetrack_mode():
+# ==========================
+# GP/OMM 路徑（治本：NORAD_CAT_ID 直接讀整數欄，免定寬切字串）
+# ==========================
+#
+# 背景：官方已宣告新物件（含逾 Alpha-5 範圍 >339999 者）不再提供舊式 TLE 格式，
+# 僅發 GP/OMM（JSON/CSV/KVN）。OMM 的 NORAD_CAT_ID 為原生整數欄，不受 5 字元編目欄
+# 與 Alpha-5 編碼牽制，是面向未來的根治來源。以下把 OMM 記錄映射成與
+# parse_tle_file_to_tle_raw_records 完全相同的欄位，直接沿用既有 upsert。
+
+def _omm_epoch(epoch_str: str):
+    """OMM EPOCH（ISO8601）→ (year4, day_of_year_float, datetime_utc)。"""
+    dt = pd.to_datetime(epoch_str, utc=True).to_pydatetime()
+    year0 = datetime(dt.year, 1, 1, tzinfo=timezone.utc)
+    doy = (dt - year0).total_seconds() / 86400.0 + 1.0
+    return dt.year, doy, dt
+
+
+def parse_omm_records(omm_list, source_file: str = "omm_json") -> pd.DataFrame:
+    """OMM/GP JSON（list[dict]）→ 與 tle_raw 相容之 DataFrame。
+
+    NORAD_CAT_ID 直接讀整數欄；line1/line2 若 OMM 附 TLE_LINE1/TLE_LINE2 則保留
+    （便於下游沿用），否則為 None（例如逾 Alpha-5、官方已不發 TLE 之物件）。
+    """
+    records = []
+    for o in omm_list:
+        nid = o.get("NORAD_CAT_ID")
+        mm = o.get("MEAN_MOTION")
+        if nid is None or mm is None:
+            continue
+        year4, doy, epoch_dt = _omm_epoch(o["EPOCH"])
+        bstar = o.get("BSTAR")
+        rec = {
+            "norad_id": int(nid),                       # ← 原生整數，免定寬切字串
+            "tle_epoch": epoch_dt,
+            "tle_epoch_year": year4,
+            "tle_epoch_day": doy,
+            "name": o.get("OBJECT_NAME"),
+            "line1": o.get("TLE_LINE1"),                # OMM 可能附帶；無則 None
+            "line2": o.get("TLE_LINE2"),
+            "source_file": source_file,
+            "classification": o.get("CLASSIFICATION_TYPE"),
+            "intl_designator": o.get("OBJECT_ID"),
+            "bstar": float(bstar) if bstar not in (None, "") else None,
+            "element_number": int(o["ELEMENT_SET_NO"]) if o.get("ELEMENT_SET_NO") not in (None, "") else None,
+            "inclination_deg": float(o["INCLINATION"]),
+            "raan_deg": float(o["RA_OF_ASC_NODE"]),
+            "eccentricity": float(o["ECCENTRICITY"]),
+            "argp_deg": float(o["ARG_OF_PERICENTER"]),
+            "mean_anomaly_deg": float(o["MEAN_ANOMALY"]),
+            "mean_motion": float(mm),
+            "rev_number": int(o["REV_AT_EPOCH"]) if o.get("REV_AT_EPOCH") not in (None, "") else None,
+        }
+        records.append(rec)
+    return pd.DataFrame(records)
+
+
+def download_historical_omm_from_spacetrack(
+    db_path: str,
+    download_dir: str,
+    date_start_str: str,
+    date_end_str: str,
+    ts,
+    identity: str,
+    password: str,
+) -> str:
+    """治本版下載：Space-Track gp_history 以 OMM/JSON 取回，直接讀 NORAD_CAT_ID。"""
+    filename = f"historical_daily_{date_start_str}.omm.json"
+    filepath = os.path.join(download_dir, filename)
+
+    d_start = datetime.strptime(date_start_str, "%Y-%m-%d")
+    d_end = datetime.strptime(date_end_str, "%Y-%m-%d")
+
+    st = SpaceTrackClient(identity=identity, password=password)
+    drange = op.inclusive_range(d_start, d_end)
+
+    if os.path.isfile(filepath):
+        print(f"檔案存在 {filepath}，取消下載")
+        omm_text = Path(filepath).read_text(encoding="utf-8")
+    else:
+        time.sleep(10)  # 避免太密集呼叫
+        omm_text = st.gp_history(
+            creation_date=drange,
+            orderby="NORAD_CAT_ID,EPOCH",
+            format="json",          # ← OMM/GP JSON，含 NORAD_CAT_ID 整數欄
+            emptyresult="show",
+        )
+        os.makedirs(download_dir, exist_ok=True)
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(omm_text)
+        print(f"{d_start} 至 {d_end} OMM 下載並存檔：{filepath}")
+
+    omm_list = json.loads(omm_text) if omm_text.strip() else []
+    df_raw = parse_omm_records(omm_list, source_file=filename)
+    upsert_tle_into_space_db(db_path, df_raw, source_datetime_for_archive=None)
+    print(f"{filepath} 寫入 space_db（OMM 路徑，{len(df_raw)} 筆）")
+    return filepath
+
+
+def run_spacetrack_mode(source_format: str = "3le"):
     if not SPACE_TRACK_IDENTITY or not SPACE_TRACK_PASSWORD:
         raise RuntimeError("Space-Track 帳號或密碼環境變數未設定")
 
@@ -741,10 +845,14 @@ def run_spacetrack_mode():
     else:
         current_date = last_tle_date + timedelta(days=1)
 
+    downloader = (download_historical_omm_from_spacetrack
+                  if source_format == "omm"
+                  else download_historical_from_spacetrack)
+
     while current_date <= target_end:
         next_day = current_date + timedelta(days=1)
         try:
-            filepath = download_historical_from_spacetrack(
+            filepath = downloader(
                 SPACE_DB_PATH,
                 str(download_dir),
                 current_date.strftime(fmt),
@@ -865,6 +973,13 @@ def main():
         help="spacetrack: 從 Space-Track gp_history 下載; local_files: 從暫存目錄載入 historical_daily_*.tle",
     )
     parser.add_argument(
+        "--source-format",
+        choices=["3le", "omm"],
+        default="3le",
+        help="spacetrack 模式的取回格式：3le（傳統 TLE，Alpha-5 相容）或 omm（治本：GP/OMM JSON，"
+             "直接讀 NORAD_CAT_ID 整數欄，面向官方停發 TLE 的未來）",
+    )
+    parser.add_argument(
         "--rebuild-slim",
         action="store_true",
         help="TLE 寫入完成後重建 space_db_slim.duckdb（呼叫 prc_maneuver/build_slim_db.py --slim-only）",
@@ -878,7 +993,7 @@ def main():
     args = parser.parse_args()
 
     if args.mode == "spacetrack":
-        run_spacetrack_mode()
+        run_spacetrack_mode(source_format=args.source_format)
     else:
         run_local_files_mode()
 

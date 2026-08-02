@@ -779,13 +779,33 @@ def tab_conjunction(norad: int | None, df_conj: pd.DataFrame) -> None:
 
     st.markdown(f"顯示 **{len(filtered):,}** 筆（共 {len(df_conj):,} 筆）Conjunction 事件")
 
+    with st.expander("📖 CDM 操作門檻說明", expanded=False):
+        st.markdown("""
+**Pc（碰撞機率）操作門檻（參照 CCSDS CDM 標準）**
+
+| 風險等級 | Pc 範圍 | 典型處置 |
+|---------|--------|---------|
+| 🔴 HIGH | Pc ≥ 1×10⁻³ | 多數任務規程要求執行 COLA 避碰機動 |
+| 🟠 ELEVATED | 1×10⁻⁴ ≤ Pc < 1×10⁻³ | 機動評估，視情況執行避碰 |
+| 🟡 MEDIUM | 1×10⁻⁵ ≤ Pc < 1×10⁻⁴ | 分析員複核，評估事件趨勢 |
+| 🟢 LOW | Pc < 1×10⁻⁵ | 持續監控，無需立即行動 |
+
+> **miss_distance ≠ 碰撞風險全貌**：miss distance 反映幾何接近程度，Pc 整合了幾何距離**與**位置不確定性。
+> 單獨看 miss distance 不足以完整反映風險——miss distance 大但 covariance 大時，Pc 仍可能不可忽視。
+>
+> **covariance_method = DEFAULT**：本系統使用 TLE 統計 pseudo-covariance（固定 σR=1 km, σT=5 km, σN=3 km），
+> 非實際軌道決定估算。Pc 可能被高估或低估，決策時應結合 miss distance 互補判斷。
+""")
+
     if filtered.empty:
         st.info("無符合條件的事件。")
         return
 
     display_cols = [c for c in
                     ["primary_norad", "secondary_norad", "tca_utc",
-                     "miss_distance_km", "pc", "risk_label"]
+                     "miss_distance_km", "relative_speed_km_s",
+                     "pc", "pc_method", "covariance_method",
+                     "screen_volume_frame", "risk_label"]
                     if c in filtered.columns]
     sort_col = "tca_utc" if "tca_utc" in display_cols else display_cols[0]
     st.dataframe(
@@ -803,12 +823,27 @@ def tab_conjunction(norad: int | None, df_conj: pd.DataFrame) -> None:
                 marker_color="#00e5ff",
                 name="log₁₀(Pc)",
             ))
+            # CDM 操作門檻垂直標線
+            for log_thr, label, color in [
+                (-3, "HIGH ≥1e-3", "#ff4444"),
+                (-4, "ELEVATED ≥1e-4", "#ff9800"),
+                (-5, "MEDIUM ≥1e-5", "#ffcc00"),
+            ]:
+                fig_pc.add_vline(
+                    x=log_thr,
+                    line_dash="dash",
+                    line_color=color,
+                    annotation_text=label,
+                    annotation_position="top right",
+                    annotation_font_color=color,
+                    annotation_font_size=11,
+                )
             fig_pc.update_layout(
-                title="Pc 分布（log₁₀ 尺度）",
+                title="Pc 分布（log₁₀ 尺度）— 垂直線為 CDM 操作門檻",
                 xaxis_title="log₁₀(Pc)",
                 yaxis_title="事件數",
-                height=260,
-                margin=dict(t=36, b=24, l=0, r=0),
+                height=280,
+                margin=dict(t=44, b=24, l=0, r=0),
                 paper_bgcolor="rgb(15,18,28)",
                 plot_bgcolor="rgb(20,24,36)",
                 font_color="white",
@@ -996,6 +1031,191 @@ def tab_realtime_conjunction(norad: int | None) -> None:
             st.text("\n".join(result["debug"]))
 
 
+# ── Tab 6: RPO / Rendezvous 相對運動（本地限定）──────────────────────────────
+
+@st.cache_data(show_spinner=False)
+def _cached_pair(db: str, primary: int, secondary: int,
+                 start, end, step_min: float) -> dict:
+    from conjunction_viz import compute_pair_series
+    return compute_pair_series(db, primary, secondary,
+                               start=start, end=end, step_min=step_min)
+
+
+def _rpo_fig3d(rel: list, comp: tuple, obs_name: str, other_name: str,
+               color_by: str = "time") -> go.Figure:
+    """從 obs 物體的 LVLH 座標系看 other 物體的 3D 相對軌跡（時序或距離著色）。"""
+    x = [p[comp[0]] for p in rel]; y = [p[comp[1]] for p in rel]; z = [p[comp[2]] for p in rel]
+    if color_by == "range":
+        cvals = [p["d"] for p in rel]; cbar = "range (km)"; cscale = "Turbo_r"
+    else:
+        cvals = list(range(len(rel))); cbar = "時序"; cscale = "Turbo"
+    txt = [f"{p['t'][5:16]}Z<br>R={p[comp[0]]} T={p[comp[1]]} N={p[comp[2]]} km<br>range={p['d']} km"
+           for p in rel]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter3d(
+        x=x, y=y, z=z, mode="markers+lines",
+        marker=dict(size=2.6, color=cvals, colorscale=cscale, showscale=True,
+                    colorbar=dict(title=cbar, thickness=10, len=.7)),
+        line=dict(color="rgba(150,155,170,0.35)", width=2),
+        text=txt, hoverinfo="text", name=other_name))
+    fig.add_trace(go.Scatter3d(
+        x=[0], y=[0], z=[0], mode="markers+text",
+        marker=dict(size=6, color="#ff5c4e", symbol="diamond"),
+        text=[f"▲ {obs_name}"], textposition="top center",
+        textfont=dict(color="#ff9a90", size=11), name=obs_name, hoverinfo="name"))
+    fig.update_layout(
+        scene=dict(
+            xaxis=dict(title="R 徑向 (km)", backgroundcolor="rgb(8,10,20)", gridcolor="rgb(40,44,60)"),
+            yaxis=dict(title="T 順行 (km)", backgroundcolor="rgb(8,10,20)", gridcolor="rgb(40,44,60)"),
+            zaxis=dict(title="N 法向 (km)", backgroundcolor="rgb(8,10,20)", gridcolor="rgb(40,44,60)"),
+            bgcolor="rgb(8,10,20)", camera=dict(eye=dict(x=1.5, y=1.5, z=.9))),
+        paper_bgcolor="rgb(8,10,20)", font_color="white", height=460,
+        margin=dict(l=0, r=0, t=34, b=0),
+        title=dict(text=f"從 {obs_name} 視角看 {other_name}（LVLH）", x=0.5),
+        showlegend=False)
+    return fig
+
+
+def _pair_inputs(prefix: str, default_primary: int):
+    """共用的 primary/secondary/窗 輸入元件（不同分頁用不同 key 前綴避免衝突）。"""
+    c1, c2, c3 = st.columns(3)
+    primary = int(c1.number_input("Primary NORAD", value=default_primary, step=1,
+                                  format="%d", key=prefix + "p"))
+    secondary = int(c2.number_input("Secondary NORAD", value=59884, step=1,
+                                    format="%d", key=prefix + "s"))
+    step_min = float(c3.select_slider("取樣間隔（分）", options=[10, 15, 30, 60, 120],
+                                      value=30, key=prefix + "step"))
+    c4, c5 = st.columns(2)
+    start = c4.text_input("起始日期 UTC（YYYY-MM-DD，空=自動重疊窗）", value="",
+                          key=prefix + "start").strip()
+    end = c5.text_input("結束日期 UTC（空=自動）", value="", key=prefix + "end").strip()
+    return primary, secondary, step_min, start, end
+
+
+def tab_rpo(norad: int | None, df_tle: pd.DataFrame) -> None:
+    if IS_CLOUD:
+        st.warning("RPO / Rendezvous 分析需本地 `space_db.duckdb`（即時 SGP4 傳播），Cloud 不支援。\n\n"
+                   "本地執行：`streamlit run conjunction_app.py`")
+        return
+    st.subheader("🔗 RPO / Rendezvous 相對運動分析")
+    st.caption("任兩顆衛星：相對距離、LVLH 相對運動、接近率、雙高度。"
+               "3D 立體視角請見「🧊 3D 相對視角」分頁。")
+
+    primary, secondary, step_min, start, end = _pair_inputs("rpo_", int(norad) if norad else 58573)
+
+    if not st.button("▶ 計算相對運動", type="primary"):
+        return
+    try:
+        with st.spinner("SGP4 逐時刻傳播中…"):
+            data = _cached_pair(str(SPACE_DB), primary, secondary,
+                                start or None, end or None, step_min)
+    except Exception as e:
+        st.error(f"計算失敗：{e}")
+        return
+
+    rel = data["rel"]; s = data["summary"]; m = data["meta"]
+    tx = [pd.to_datetime(p["t"]) for p in rel]
+
+    k = st.columns(5)
+    k[0].metric("最接近", f"{s['d_min']:.2f} km" if s['d_min'] < 10 else f"{s['d_min']:.0f} km")
+    k[1].metric("結束間距", f"{s['d_last']:.0f} km")
+    k[2].metric("取樣點", f"{s['n']} @ {s['step_min']:.0f}m")
+    k[3].metric(f"{m['primName'][:12]} Δalt", f"{s['altP_span']:.0f} km")
+    k[4].metric(f"{m['secName'][:12]} Δalt", f"{s['altS_span']:.0f} km")
+
+    # ① 相對距離
+    logy = st.radio("距離軸", ["log", "linear"], horizontal=True, index=0) == "log"
+    f1 = go.Figure(go.Scatter(x=tx, y=[p["d"] for p in rel], mode="lines+markers",
+                              line=dict(color="#f2a73b", width=1.6), marker=dict(size=3),
+                              name="range"))
+    for e in m.get("events", []):
+        f1.add_vline(x=pd.to_datetime(e["t"]).timestamp() * 1000, line_dash="dash",
+                     line_color="#ff5c4e", annotation_text=e["label"])
+    f1.update_layout(title="① 相對距離 vs 時間", yaxis_title="range (km)",
+                     yaxis_type="log" if logy else "linear", height=320,
+                     paper_bgcolor="rgb(15,18,28)", plot_bgcolor="rgb(20,24,36)",
+                     font_color="white", margin=dict(t=40, b=30, l=10, r=10))
+    st.plotly_chart(f1, use_container_width=True)
+
+    cc = st.columns(2)
+    # ② LVLH 2D（primary 視角，時間著色）
+    f2 = go.Figure(go.Scatter(x=[p["T"] for p in rel], y=[p["R"] for p in rel],
+                              mode="markers", marker=dict(size=4, color=list(range(len(rel))),
+                              colorscale="Turbo", showscale=False),
+                              text=[p["t"][5:16] for p in rel], name="secondary"))
+    f2.add_trace(go.Scatter(x=[0], y=[0], mode="markers", marker=dict(size=9, color="#ff5c4e"),
+                            name="ref"))
+    f2.update_layout(title="② LVLH 相對運動（T–R，時間著色）", xaxis_title="along-track T (km)",
+                     yaxis_title="radial R (km)", height=340, showlegend=False,
+                     paper_bgcolor="rgb(15,18,28)", plot_bgcolor="rgb(20,24,36)",
+                     font_color="white", margin=dict(t=40, b=30, l=10, r=10))
+    cc[0].plotly_chart(f2, use_container_width=True)
+    # ③ range-rate
+    f3 = go.Figure(go.Scatter(x=tx, y=[p["rr"] for p in rel], mode="lines",
+                              line=dict(color="#35c6f4", width=1.5), name="ṙ"))
+    f3.add_hline(y=0, line_color="rgba(255,255,255,0.25)")
+    f3.update_layout(title="③ 接近率 vs 時間（− 接近 / + 遠離）", yaxis_title="range-rate (km/s)",
+                     height=340, paper_bgcolor="rgb(15,18,28)", plot_bgcolor="rgb(20,24,36)",
+                     font_color="white", margin=dict(t=40, b=30, l=10, r=10))
+    cc[1].plotly_chart(f3, use_container_width=True)
+
+    # ④ 雙高度
+    f4 = go.Figure()
+    f4.add_trace(go.Scatter(x=[pd.to_datetime(p["t"]) for p in data["altP"]],
+                            y=[p["a"] for p in data["altP"]], mode="lines+markers",
+                            line=dict(color="#f2a73b", width=1.4), marker=dict(size=2),
+                            name=f"{m['primId']} {m['primName']}"))
+    f4.add_trace(go.Scatter(x=[pd.to_datetime(p["t"]) for p in data["altS"]],
+                            y=[p["a"] for p in data["altS"]], mode="lines+markers",
+                            line=dict(color="#35c6f4", width=1.4), marker=dict(size=2),
+                            name=f"{m['secId']} {m['secName']}"))
+    f4.update_layout(title="④ 平均高度（a−R⊕）— 兩物體", yaxis_title="altitude (km)", height=320,
+                     paper_bgcolor="rgb(15,18,28)", plot_bgcolor="rgb(20,24,36)", font_color="white",
+                     margin=dict(t=40, b=30, l=10, r=10),
+                     legend=dict(bgcolor="rgba(0,0,0,0.3)", font_size=11))
+    st.plotly_chart(f4, use_container_width=True)
+
+    st.info("🧊 三維立體視角（可旋轉、從各物體自身角度看對方）請切換至「🧊 3D 相對視角」分頁。")
+
+
+# ── Tab 7: 3D 相對視角（本地限定）────────────────────────────────────────────
+
+def tab_rpo_3d(norad: int | None) -> None:
+    if IS_CLOUD:
+        st.warning("3D 相對視角需本地 `space_db.duckdb`（即時 SGP4 傳播），Cloud 不支援。")
+        return
+    st.subheader("🧊 3D 相對視角 — 從各物體角度看對方")
+    st.caption("每張圖以**觀測物體自身**為原點（紅鑽），顯示對方在其 LVLH（R 徑向／T 順行／N 法向）"
+               "座標系的三維相對軌跡；可拖曳旋轉。沿軌 T 主導＝沿軌分離；R/N 小＝近共面。")
+
+    primary, secondary, step_min, start, end = _pair_inputs("r3d_", int(norad) if norad else 58573)
+    cby = st.radio("著色", ["時序", "距離"], horizontal=True, index=0)
+    color_by = "range" if cby == "距離" else "time"
+
+    if not st.button("▶ 計算 3D 視角", type="primary", key="r3d_go"):
+        return
+    try:
+        with st.spinner("SGP4 逐時刻傳播中…"):
+            data = _cached_pair(str(SPACE_DB), primary, secondary,
+                                start or None, end or None, step_min)
+    except Exception as e:
+        st.error(f"計算失敗：{e}")
+        return
+
+    rel = data["rel"]; s = data["summary"]; m = data["meta"]
+    k = st.columns(4)
+    k[0].metric("Pair", f"{m['primId']} × {m['secId']}")
+    k[1].metric("最接近", f"{s['d_min']:.2f} km" if s['d_min'] < 10 else f"{s['d_min']:.0f} km")
+    k[2].metric("結束間距", f"{s['d_last']:.0f} km")
+    k[3].metric("取樣點", f"{s['n']} @ {s['step_min']:.0f}m")
+
+    d3 = st.columns(2)
+    d3[0].plotly_chart(_rpo_fig3d(rel, ("R", "T", "N"), m["primName"], m["secName"], color_by),
+                       use_container_width=True)
+    d3[1].plotly_chart(_rpo_fig3d(rel, ("R2", "T2", "N2"), m["secName"], m["primName"], color_by),
+                       use_container_width=True)
+
+
 # ── 主程式 ────────────────────────────────────────────────────────────────────
 
 def main() -> None:
@@ -1012,6 +1232,8 @@ def main() -> None:
         "⚠️ Conjunction",
         "🔭 過頂時間",
         "⚡ 即時合相",
+        "🔗 RPO/Rendezvous",
+        "🧊 3D 相對視角",
     ])
 
     with tabs[0]:
@@ -1034,6 +1256,12 @@ def main() -> None:
 
     with tabs[4]:
         tab_realtime_conjunction(chosen)
+
+    with tabs[5]:
+        tab_rpo(chosen, df_tle)
+
+    with tabs[6]:
+        tab_rpo_3d(chosen)
 
 
 if __name__ == "__main__":

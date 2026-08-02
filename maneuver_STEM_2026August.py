@@ -1,4 +1,4 @@
-# maneuver_STEM_app.py  —  STEM Bilingual Learning Edition
+# maneuver_STEM_2026August.py  —  STEM Bilingual Learning Edition（2026-08 定版，前身 maneuver_STEM_app.py）
 # Derived from maneuver_app.py; all analysis logic preserved.
 from datetime import datetime
 import os

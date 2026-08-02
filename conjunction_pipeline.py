@@ -133,17 +133,14 @@ def compute_pc_simplified(
 
 
 def risk_label_from_pc(pc: float) -> str:
-    """
-    簡化版風險等級：High / Medium / Low / Very Low。
-    門檻可依你之後標定調整。
-    """
+    """CDM 操作門檻（參照 CCSDS CDM 標準，文件 5）"""
     if pc >= 1e-3:
-        return "HIGH"
+        return "HIGH"      # COLA 機動（多數任務規程要求）
+    if pc >= 1e-4:
+        return "ELEVATED"  # 機動評估，視情況執行避碰
     if pc >= 1e-5:
-        return "MEDIUM"
-    if pc >= 1e-7:
-        return "LOW"
-    return "VERY_LOW"
+        return "MEDIUM"    # 分析員複核，評估事件趨勢
+    return "LOW"           # 持續監控，無需立即行動
 
 
 # ==========================
@@ -671,12 +668,13 @@ def refine_tca_with_pc_grid(
     fine_step_seconds: int = 1,
     Rc_km: float = 0.01,
     n_mc: int = 20000,
-) -> Tuple[Optional[datetime], Optional[float], Optional[float]]:
+) -> Tuple[Optional[datetime], Optional[float], Optional[float], Optional[float]]:
     """
     Old Stage C:
     - 以 Stage B 給的 coarse_time 為中心，在 ±coarse_window_minutes 內、
       以 fine_step_seconds 掃描真正 TCA。
-    - 找到最小 miss distance 後，於該 TCA 計算 RTN 相對位置與 Pc。
+    - 找到最小 miss distance 後，於該 TCA 計算 RTN 相對位置、Pc 與相對速度。
+    - 回傳 (tca, miss_distance_km, pc, relative_speed_km_s)
     """
     span_seconds = int(coarse_window_minutes * 60)
 
@@ -689,7 +687,7 @@ def refine_tca_with_pc_grid(
     )
 
     if best_t is None or best_r1 is None or best_r2 is None:
-        return None, None, None
+        return None, None, None, None
 
     r_rel = best_r2 - best_r1
     B = eci_to_rtn_basis(best_r1, best_v1)
@@ -704,8 +702,8 @@ def refine_tca_with_pc_grid(
         Rc_km=Rc_km,
         n_mc=n_mc,
     )
-
-    return best_t, best_d, pc
+    rel_speed = float(np.linalg.norm(best_v2 - best_v1))
+    return best_t, best_d, pc, rel_speed
 
 
 def refine_tca_with_pc_minimize(
@@ -715,12 +713,13 @@ def refine_tca_with_pc_minimize(
     coarse_window_minutes: float = 5.0,
     Rc_km: float = 0.01,
     n_mc: int = 20000,
-) -> Tuple[Optional[datetime], Optional[float], Optional[float]]:
+) -> Tuple[Optional[datetime], Optional[float], Optional[float], Optional[float]]:
     """
     New Stage C:
     - 以 Stage B 給的 coarse_time 為中心，在 ±coarse_window_minutes 內，
       用 minimize_scalar 在連續時間上尋找 TCA。
-    - 在該 TCA 計算 RTN 相對位置與 Pc。
+    - 在該 TCA 計算 RTN 相對位置、Pc 與相對速度。
+    - 回傳 (tca, miss_distance_km, pc, relative_speed_km_s)
     """
     span_seconds = int(coarse_window_minutes * 60)
 
@@ -732,7 +731,7 @@ def refine_tca_with_pc_minimize(
     )
 
     if best_t is None or best_r1 is None or best_r2 is None:
-        return None, None, None
+        return None, None, None, None
 
     r_rel = best_r2 - best_r1
     B = eci_to_rtn_basis(best_r1, best_v1)
@@ -747,8 +746,8 @@ def refine_tca_with_pc_minimize(
         Rc_km=Rc_km,
         n_mc=n_mc,
     )
-
-    return best_t, best_d, pc
+    rel_speed = float(np.linalg.norm(best_v2 - best_v1))
+    return best_t, best_d, pc, rel_speed
 
 
 # ==========================
@@ -864,7 +863,7 @@ def run_pipeline(
         coarse_time = row.t_utc
 
         if stage_c_mode == "grid":
-            tca, miss, pc = refine_tca_with_pc_grid(
+            tca, miss, pc, rel_speed = refine_tca_with_pc_grid(
                 target_sat=target_sat,
                 secondary_sat=sec_sat,
                 coarse_time=coarse_time,
@@ -875,7 +874,7 @@ def run_pipeline(
             )
 
         elif stage_c_mode == "minimize":
-            tca, miss, pc = refine_tca_with_pc_minimize(
+            tca, miss, pc, rel_speed = refine_tca_with_pc_minimize(
                 target_sat=target_sat,
                 secondary_sat=sec_sat,
                 coarse_time=coarse_time,
@@ -887,7 +886,7 @@ def run_pipeline(
         elif stage_c_mode == "benchmark":
             # 跑舊版
             t0 = time.perf_counter()
-            tca_grid, miss_grid, pc_grid = refine_tca_with_pc_grid(
+            tca_grid, miss_grid, pc_grid, rs_grid = refine_tca_with_pc_grid(
                 target_sat=target_sat,
                 secondary_sat=sec_sat,
                 coarse_time=coarse_time,
@@ -900,7 +899,7 @@ def run_pipeline(
 
             # 跑新版
             t2 = time.perf_counter()
-            tca_new, miss_new, pc_new = refine_tca_with_pc_minimize(
+            tca_new, miss_new, pc_new, rs_new = refine_tca_with_pc_minimize(
                 target_sat=target_sat,
                 secondary_sat=sec_sat,
                 coarse_time=coarse_time,
@@ -928,9 +927,9 @@ def run_pipeline(
 
             # 寫入 DB 時採用新版結果（若新版失敗就退回舊版）
             if tca_new is not None and miss_new is not None and pc_new is not None:
-                tca, miss, pc = tca_new, miss_new, pc_new
+                tca, miss, pc, rel_speed = tca_new, miss_new, pc_new, rs_new
             else:
-                tca, miss, pc = tca_grid, miss_grid, pc_grid
+                tca, miss, pc, rel_speed = tca_grid, miss_grid, pc_grid, rs_grid
 
         else:
             raise ValueError(f"未知的 stage_c_mode: {stage_c_mode}")
@@ -940,13 +939,17 @@ def run_pipeline(
 
         results.append(
             {
-                "primary_norad": target_norad,
-                "secondary_norad": sec_id,
-                "coarse_hit_time_utc": coarse_time,
-                "tca_utc": tca,
-                "miss_distance_km": miss,
-                "pc": pc,
-                "risk_label": risk_label_from_pc(pc),
+                "primary_norad":        target_norad,
+                "secondary_norad":      sec_id,
+                "coarse_hit_time_utc":  coarse_time,
+                "tca_utc":              tca,
+                "miss_distance_km":     miss,
+                "relative_speed_km_s":  rel_speed,
+                "pc":                   pc,
+                "pc_method":            "MONTE-CARLO",
+                "covariance_method":    "DEFAULT",
+                "screen_volume_frame":  "RTN",
+                "risk_label":           risk_label_from_pc(pc),
             }
         )
 
@@ -959,7 +962,11 @@ def run_pipeline(
                 "coarse_hit_time_utc",
                 "tca_utc",
                 "miss_distance_km",
+                "relative_speed_km_s",
                 "pc",
+                "pc_method",
+                "covariance_method",
+                "screen_volume_frame",
                 "risk_label",
             ]
         )
@@ -976,7 +983,11 @@ def run_pipeline(
             coarse_hit_time_utc  TIMESTAMP,
             tca_utc              TIMESTAMP,
             miss_distance_km     DOUBLE,
+            relative_speed_km_s  DOUBLE,
             pc                   DOUBLE,
+            pc_method            VARCHAR,
+            covariance_method    VARCHAR,
+            screen_volume_frame  VARCHAR,
             risk_label           VARCHAR
         );
         """

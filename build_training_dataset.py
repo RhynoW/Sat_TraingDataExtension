@@ -35,6 +35,8 @@ import pandas as pd
 BASE       = Path(__file__).parent
 DB_PATH    = BASE / "space_db.duckdb"
 TRANS_CSV  = BASE / "data/maneuvers/transitions_2026-05-02.csv"
+# 全時段 MEME 真值（build_meme_labels.py 產生）；存在時優先於舊的 4 天快照
+MEME_TRUTH_DIR = BASE / "data/meme_truth"
 REG_CSV    = BASE / "data/url_registry.csv"
 F107_CSV   = BASE / "f107_cache.csv"
 OUT_CSV    = BASE / "data/maneuvers/training_samples_meme_gt.csv"
@@ -49,8 +51,8 @@ OUT_PQ     = BASE / "data/maneuvers/training_dataset_final.parquet"
 MODEL_VER_B = "v1.0-tle-annotation-plan-b"
 
 DATE_START_B = "2026-05-01"
-DATE_END_B   = "2026-05-30"
-OBS_DAYS_B   = 30.0
+DATE_END_B   = "2026-06-23"
+OBS_DAYS_B   = 54.0
 
 # 偵測閾值（與 validate_annotations.py 一致）
 THR_DI    = 0.02
@@ -234,6 +236,28 @@ def compute_features(sat_tle: pd.DataFrame, t_from: pd.Timestamp,
 
     feats["n_tle_7d"] = len(window_7d)
 
+    # ── 阻力衰減辨識特徵（根治 ML 對衰減軌誤報；不依賴 bstar）──────────────
+    # da_frac_neg_7d：窗內「小/負 Δa（< +0.1km TLE 雜訊）」比例；純大氣阻力衰減 ≈ 1.0，
+    #                 主動機動因含正向抬升 → 較低。給模型辨識衰減 vs 機動的直接依據。
+    # da_monotonic_decay：二元旗標 = 高 frac_neg + 無 >2km 跳變 + 淨負。
+    if da_series:
+        da_arr7 = np.array(da_series)
+        frac_neg = float((da_arr7 < 0.1).sum()) / len(da_arr7)
+        has_jump = bool((np.abs(da_arr7) > 2.0).any())
+        net7 = float(da_arr7.sum())
+        feats["da_frac_neg_7d"] = round(frac_neg, 4)
+        feats["da_monotonic_decay"] = int(frac_neg >= 0.85 and not has_jump and net7 < 0)
+    else:
+        feats["da_frac_neg_7d"] = np.nan
+        feats["da_monotonic_decay"] = 0
+
+    # bstar_mean（tle_table 覆蓋率低 ~11%，多為 NaN；LGBM 原生容 NaN）
+    if "bstar" in sat_tle.columns and sat_tle["bstar"].notna().any():
+        bw = window_7d["bstar"].dropna() if "bstar" in window_7d.columns else sat_tle["bstar"].dropna()
+        feats["bstar_mean"] = round(float(bw.mean()), 8) if len(bw) else np.nan
+    else:
+        feats["bstar_mean"] = np.nan
+
     # ── ΔV estimates from 1-day look-back ────────────────────────────────
     da_1d = feats.get("da_1d_km", np.nan)
     di_1d = feats.get("di_1d_deg", np.nan)
@@ -268,18 +292,23 @@ def adaptive_thr_da(sma_km: float) -> float:
     return 1.0
 
 
-def extract_features_plan_b(sat_tle: pd.DataFrame) -> dict | None:
+def extract_features_plan_b(
+    sat_tle: pd.DataFrame,
+    f107_mean: float = np.nan,
+) -> dict | None:
     """
     26 天觀測窗口的 per-satellite 特徵向量。
 
     特徵群組：
-      orbit_state   — 觀測期起始軌道元素
-      bstar         — B* 統計（阻力係數）
-      da_aggregate  — 26 天 Δa 聚合統計
-      monotone      — 單調衰減指標（P1）
-      flagging      — 旗標率與次數
-      multiwindow   — 4 × 7 天子窗口旗標數
-      tle_coverage  — TLE 密度與缺口
+      orbit_state         — 觀測期起始軌道元素
+      bstar               — B* 統計（阻力係數）
+      da_aggregate        — 26 天 Δa 聚合統計
+      monotone            — 單調衰減指標（P1）
+      da_monotonic_decay  — 物理導向純阻力衰減旗標（新）
+      bstar_f107_normalized — B* 除以 F10.7/100（新，需 f107_mean > 0）
+      flagging            — 旗標率與次數
+      multiwindow         — 4 × 7 天子窗口旗標數
+      tle_coverage        — TLE 密度與缺口
     """
     if len(sat_tle) < 3:
         return None
@@ -364,6 +393,28 @@ def extract_features_plan_b(sat_tle: pd.DataFrame) -> dict | None:
     n_thr = -2.0 if bstar_boost else -3.0
     monotone_decay = int(neg_streak >= s_thr and total_drop > d_thr and net_da < n_thr)
 
+    # ── da_monotonic_decay (physics-grounded, new) ────────────────────────
+    # Conditions: ≥85% of Δa transitions are below +0.1 km (TLE noise floor),
+    # no single jump > 2 km, positive B* (drag-dominated), net drop > 2 km.
+    # This flag suppresses false-positive maneuver detections caused by solar
+    # activity peaks (F10.7 > 150 sfu, 2025–2026 solar maximum).
+    frac_neg_da  = float((da_arr < 0.1).sum()) / len(da_arr)
+    has_big_jump = bool((np.abs(da_arr) > 2.0).any())
+    da_monotonic_decay = int(
+        frac_neg_da >= 0.85 and
+        not has_big_jump and
+        not np.isnan(bstar_mean) and bstar_mean > 0 and
+        net_da < -2.0
+    )
+
+    # ── bstar_f107_normalized ─────────────────────────────────────────────
+    # bstar_mean / (F10.7 / 100) — removes solar-activity bias from B*.
+    # NaN when F10.7 is unavailable (f107_mean not passed or <= 0).
+    if not np.isnan(f107_mean) and f107_mean > 0 and not np.isnan(bstar_mean):
+        bstar_f107_normalized = float(bstar_mean) / (f107_mean / 100.0)
+    else:
+        bstar_f107_normalized = np.nan
+
     # ── multi-window (4 × 7d) ─────────────────────────────────────────────
     t_start = sat_tle["date_tag"].min()
     n_win_flagged = 0
@@ -398,10 +449,13 @@ def extract_features_plan_b(sat_tle: pd.DataFrame) -> dict | None:
         "da_abs_mean":       round(float(np.mean(np.abs(da_arr))), 4),
         "max_di_deg":        round(float(np.max(np.abs(di_arr))), 5),
         "max_draan_res_deg": round(float(np.max(np.abs(draan_arr))), 4),
-        # monotone decay (P1)
+        # monotone decay (P1, original streak-based)
         "neg_streak":        neg_streak,
         "total_drop_km":     round(total_drop, 3),
         "monotone_decay":    monotone_decay,
+        # new physics-grounded features
+        "da_monotonic_decay":    da_monotonic_decay,
+        "bstar_f107_normalized": round(bstar_f107_normalized, 9) if not np.isnan(bstar_f107_normalized) else np.nan,
         # flagging
         "n_transitions":     n_trans,
         "n_flagged":         n_flagged,
@@ -474,12 +528,33 @@ def run_plan_b() -> pd.DataFrame:
                    for nid, grp in tle_all.groupby("norad_id")}
     log.info("  TLE 總筆數: %d  衛星數: %d", len(tle_all), len(tle_grouped))
 
+    # ── F10.7 solar flux — observation-period average ──────────────────────
+    f107_obs_mean = np.nan
+    if F107_CSV.exists():
+        try:
+            f107_raw = pd.read_csv(F107_CSV)
+            f107_raw["epoch"] = pd.to_datetime(f107_raw["epoch"]).dt.normalize()
+            f107_map = (f107_raw
+                        .groupby(f107_raw["epoch"].dt.strftime("%Y-%m-%d"))["f107"]
+                        .median().to_dict())
+            obs_dates = pd.date_range(DATE_START_B, DATE_END_B, freq="D").strftime("%Y-%m-%d")
+            obs_vals  = [f107_map.get(d, np.nan) for d in obs_dates]
+            obs_vals  = [v for v in obs_vals if not np.isnan(v)]
+            if obs_vals:
+                f107_obs_mean = float(np.mean(obs_vals))
+            log.info("  F10.7 obs-period mean: %.1f sfu  (%d daily entries)",
+                     f107_obs_mean if not np.isnan(f107_obs_mean) else -1, len(f107_map))
+        except Exception as exc:
+            log.warning("  F10.7 load failed: %s — bstar_f107_normalized will be NaN", exc)
+    else:
+        log.warning("  f107_cache.csv not found — bstar_f107_normalized will be NaN")
+
     # ── feature extraction loop ────────────────────────────────────────────
     records, skipped = [], 0
     for _, row in merged.iterrows():
         norad   = str(row["norad_id"])
         sat_tle = tle_grouped.get(norad, pd.DataFrame())
-        feats   = extract_features_plan_b(sat_tle)
+        feats   = extract_features_plan_b(sat_tle, f107_mean=f107_obs_mean)
         if feats is None:
             skipped += 1
             continue
@@ -512,7 +587,7 @@ def run_plan_b() -> pd.DataFrame:
 
     # ── DuckDB ────────────────────────────────────────────────────────────
     conn = duckdb.connect(str(DB_PATH))
-    conn.execute("CREATE TABLE IF NOT EXISTS training_samples_plan_b AS SELECT * FROM df_b WHERE 1=0")
+    conn.execute("CREATE OR REPLACE TABLE training_samples_plan_b AS SELECT * FROM df_b WHERE 1=0")
     conn.execute("DELETE FROM training_samples_plan_b WHERE model_version = ?", [MODEL_VER_B])
     conn.register("df_b", df_b)
     conn.execute("INSERT INTO training_samples_plan_b SELECT * FROM df_b")
@@ -610,23 +685,41 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Build ML training dataset")
     parser.add_argument("--plan", choices=["a", "b", "all"], default="b",
                         help="a=MEME-GT only  b=TLE-annotation only  all=both+merge (default: b)")
+    parser.add_argument("--rebuild-parquet", action="store_true",
+                        help="Skip TLE extraction; rebuild Parquet from existing CSVs only")
     args = parser.parse_args()
+
+    if args.rebuild_parquet:
+        if not OUT_CSV_B.exists():
+            log.error("Plan B CSV not found: %s", OUT_CSV_B)
+            return
+        df_b_existing = pd.read_csv(OUT_CSV_B)
+        log.info("Loaded existing Plan B CSV: %d rows × %d cols", *df_b_existing.shape)
+        merge_and_save_final(df_b_existing)
+        return
 
     df_b: pd.DataFrame | None = None
     if args.plan in ("b", "all"):
         df_b = run_plan_b()
         _print_plan_b_summary(df_b)
+        merge_and_save_final(df_b)   # always rebuild Parquet so train.py sees new features
         if args.plan == "b":
             return
 
     log.info("=== Plan A: MEME ground-truth ===")
-    log.info("Loading MEME ground-truth transitions …")
-    trans = pd.read_csv(TRANS_CSV)
+    # 優先使用 build_meme_labels.py 產生的「全時段」真值；否則回退舊的 4 天快照
+    full_truth = sorted(MEME_TRUTH_DIR.glob("transitions_full_*.csv"))
+    trans_path = full_truth[-1] if full_truth else TRANS_CSV
+    log.info("Loading MEME ground-truth transitions ← %s", trans_path)
+    trans = pd.read_csv(trans_path)
     trans["t_from"] = pd.to_datetime(trans["t_from"], utc=True)
     trans["t_to"]   = pd.to_datetime(trans["t_to"],   utc=True)
 
-    reg = pd.read_csv(REG_CSV)[["norad_id", "sat_name"]].drop_duplicates("sat_name")
-    trans = trans.merge(reg, on="sat_name", how="left")
+    # 全時段檔已含 norad_id；舊檔沒有 → 由 registry 補上
+    if "norad_id" not in trans.columns or trans["norad_id"].isna().all():
+        reg = pd.read_csv(REG_CSV)[["norad_id", "sat_name"]].drop_duplicates("sat_name")
+        trans = trans.drop(columns=[c for c in ("norad_id",) if c in trans.columns])
+        trans = trans.merge(reg, on="sat_name", how="left")
 
     n_missing = trans["norad_id"].isna().sum()
     if n_missing:
@@ -635,9 +728,14 @@ def main() -> None:
     trans = trans.dropna(subset=["norad_id"])
     trans["norad_id"] = trans["norad_id"].astype(int)
 
-    # Binary label
+    # Binary label（與 build_meme_labels.label_meme 一致：da_severity != none）
     trans["label_binary"]   = (trans["da_severity"] != "none").astype(int)
     trans["label_severity"] = trans["da_severity"]
+    # 第二確認訊號（全時段檔才有；舊檔缺則補 NA）
+    if "poserr_confirmed" not in trans.columns:
+        trans["poserr_confirmed"] = pd.NA
+    if "confirmed_both" not in trans.columns:
+        trans["confirmed_both"] = (trans["label_binary"] == 1) & (trans["poserr_confirmed"] == True)  # noqa: E712
 
     log.info("  %d transitions for %d satellites", len(trans), trans["sat_name"].nunique())
     log.info("  label_binary: 1=%d  0=%d",
@@ -654,7 +752,7 @@ def main() -> None:
     conn = duckdb.connect(str(DB_PATH), read_only=True)
     tle_all = conn.execute(f"""
         SELECT norad_id, date_tag, sma_km, eccentricity, inclination_deg,
-               raan_deg, argp_deg, mean_anomaly_deg
+               raan_deg, argp_deg, mean_anomaly_deg, bstar
         FROM tle_table
         WHERE norad_id IN ({n_str})
           AND date_tag BETWEEN TIMESTAMP '{t_min}' AND TIMESTAMP '{t_max}'
@@ -715,6 +813,8 @@ def main() -> None:
             "label_maneuver_class": row["maneuver_class"],
             "inc_family":         row["inc_family"],
             "da_km_meme":         round(row["da_km"], 4),
+            "poserr_confirmed":   row.get("poserr_confirmed", pd.NA),
+            "confirmed_both":     bool(row.get("confirmed_both", False)),
             "label_source":       "meme_ephemeris",
             "model_version":      MODEL_VER,
             **feats,
@@ -740,7 +840,8 @@ def main() -> None:
                                "window_start", "window_end",
                                "label_binary", "label_severity",
                                "label_maneuver_class", "inc_family",
-                               "da_km_meme", "label_source", "model_version")]
+                               "da_km_meme", "poserr_confirmed", "confirmed_both",
+                               "label_source", "model_version")]
 
     conn = duckdb.connect(str(DB_PATH))
     conn.execute("DELETE FROM training_samples WHERE model_version = ?", [MODEL_VER])
