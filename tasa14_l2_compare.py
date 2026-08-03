@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""nasa14_l2_compare.py — L2 統計變點層(CUSUM/BOCPD/SSA/3σ-MAD)+ 無監督融合,於 NASA/ILRS 14 星。
+"""tasa14_l2_compare.py — L2 統計變點層(CUSUM/BOCPD/SSA/3σ-MAD)+ 無監督融合,於 NASA/ILRS 14 星。
 
 L2 偵測器為窗級設計(BOCPD 為 O(n²)),故以滑動窗跑 statistical_detectors.run_all,
 收集各通道事件→合併→配對 ILRS 真值。另加無監督融合:union(任一)、vote≥2(至少兩通道)。
 L3(HistGB 融合)為 Starlink 訓練之跨域模型,依報告規約僅作一致性驗證、不列數字,故以
-無監督融合替代作「星系級融合」對照。用法：python nasa14_l2_compare.py
+無監督融合替代作「星系級融合」對照。用法：python tasa14_l2_compare.py
 """
 from __future__ import annotations
 import sys
@@ -16,7 +16,7 @@ try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 
 import statistical_detectors as sd
-from nasa14_compare import load_events, load_a, SATS, TOL_D, MERGE_D
+from tasa14_compare import load_events, load_a, SATS, TOL_D, MERGE_D
 
 WIN, STEP, EDGE = 150, 100, 4       # 滑動窗點數 / 步長 / 邊緣裁切
 CHANS = ["cusum", "bocpd", "ssa", "mad3sig"]
@@ -138,7 +138,7 @@ def main():
         print(f"{r['name']:14}{r.n_ev:>5}{r.n_det:>5}{r.tp:>4}{r.fp:>4}{r.fn:>5}"
               f"{r.precision:>6.2f}{r.recall:>6.2f}{r.f1:>6.2f}")
 
-    out = Path("data/benchmark/nasa14_l2_compare_20260801.csv")
+    out = Path("data/benchmark/tasa14_l2_compare_20260801.csv")
     out.parent.mkdir(parents=True, exist_ok=True)
     df.to_csv(out, index=False, encoding="utf-8-sig")
     print(f"\n輸出 → {out}")

@@ -36,7 +36,7 @@
 
 ### 4.1 全方法總排名(14 星平均 F1)
 
-![圖 A　NASA/ILRS 14 星標竿全方法平均 F1 總排名(◆=單星最高 F1)。](fig_nasa14_allmethods.png)
+![圖 A　NASA/ILRS 14 星標竿全方法平均 F1 總排名(◆=單星最高 F1)。](fig_tasa14_allmethods.png)
 
 | 名次 | 方法 | 平均 F1 | 最高 F1 |
 |---|---|--:|--:|
@@ -53,7 +53,7 @@
 
 ### 4.2 迭代之效果與逐星表現
 
-![圖 B　左：方法進程(σ 正規化+迭代逐步逼近 PDF);右：逐星 F1(迭代版),現代星逼近/超越 PDF。](fig_nasa14_summary.png)
+![圖 B　左：方法進程(σ 正規化+迭代逐步逼近 PDF);右：逐星 F1(迭代版),現代星逼近/超越 PDF。](fig_tasa14_summary.png)
 
 迭代 + 位準位移把平均 F1 由單趟 0.38 提升至 0.46,且**精確率由 0.30 升至 0.49**(FP 大幅抑制:TOPEX 1217→106、CryoSat-2 257→34、SARAL 530→64)。**前 5 顆現代高品質衛星全部 ≥ PDF 平均(0.52)**:Sentinel-3A 0.77、Jason-3 0.71、CryoSat-2 0.71、SWOT 0.67、Sentinel-3B 0.64。
 
@@ -68,7 +68,7 @@
 
 **問:這是 14 顆衛星資料品質能量化比較嗎?　答:可以。** 對每顆星量化四個客觀(與偵測方法無關)之資料品質維度——TLE 雜訊底 σ、更新間隔、機動量級 |Δa|、物理可見比例(SNR≥2)——並與偵測 F1 求 Spearman 相關,以歸因效能差異。
 
-![圖 C　F1 由『機動量級 + 更新頻率』決定,非雜訊底。14 星雜訊底 σ 皆 0.1–0.3 m 均一優良;點色為 TLE 更新間隔。](fig_nasa14_dataquality.png)
+![圖 C　F1 由『機動量級 + 更新頻率』決定,非雜訊底。14 星雜訊底 σ 皆 0.1–0.3 m 均一優良;點色為 TLE 更新間隔。](fig_tasa14_dataquality.png)
 
 **表　14 星資料品質逐星量化(節錄)**
 
@@ -99,7 +99,7 @@
 ## 附錄：可重現性
 
 - 真值:`ids_truth_set/ids_build_truth.py`(--build)→ `ids_truth.csv`、`ids_quiet.csv`
-- TLE 回補:`backfill_nasa14.py`(Space-Track,憑證於 .env)
-- 比較:`nasa14_compare.py`(σ 正規化/迭代)、`nasa14_l2_compare.py`(L2 滑動窗)
-- 輸出:`data/benchmark/nasa14_compare_iter_20260801.csv`、`nasa14_l2_compare_20260801.csv`
-- 圖:`docs/fig_nasa14_{allmethods,summary,compare}.png`
+- TLE 回補:`backfill_tasa14.py`(Space-Track,憑證於 .env)
+- 比較:`tasa14_compare.py`(σ 正規化/迭代)、`tasa14_l2_compare.py`(L2 滑動窗)
+- 輸出:`data/benchmark/tasa14_compare_iter_20260801.csv`、`tasa14_l2_compare_20260801.csv`
+- 圖:`docs/fig_tasa14_{allmethods,summary,compare}.png`

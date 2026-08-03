@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""nasa14_dataquality.py — 14 星「資料品質」逐星量化,並與偵測 F1 關聯。
+"""tasa14_dataquality.py — 14 星「資料品質」逐星量化,並與偵測 F1 關聯。
 
 量化四個資料品質維度(皆為客觀、與偵測方法無關):
   σ_m       : TLE 半長軸雜訊底(去趨勢步階 MAD,公尺)——越小越乾淨
@@ -7,7 +7,7 @@
   vis_frac  : 機動之「物理可見比例」= |Δa| ≥ 2σ(SNR≥2)之事件占比——越高越可偵
   med_da_m  : 機動 |Δa| 中位量級(公尺)——訊號強度
 再與迭代法逐星 F1 求 Spearman 相關,檢驗「F1 差異是否由資料品質解釋」。
-用法：python nasa14_dataquality.py
+用法：python tasa14_dataquality.py
 """
 from __future__ import annotations
 import sys
@@ -18,7 +18,7 @@ import pandas as pd
 try: sys.stdout.reconfigure(encoding="utf-8")
 except Exception: pass
 
-from nasa14_compare import load_a, detrend_step, robust_sigma, SATS
+from tasa14_compare import load_a, detrend_step, robust_sigma, SATS
 RE = 6378.137
 
 
@@ -27,7 +27,7 @@ def main():
     truth = truth.dropna(subset=["norad"]); truth["norad"] = truth["norad"].astype(int)
     truth["da_m"] = pd.to_numeric(truth["da_km"], errors="coerce") * 1000.0
 
-    f1 = pd.read_csv("data/benchmark/nasa14_compare_iter_20260801.csv").set_index("norad")["f1"]
+    f1 = pd.read_csv("data/benchmark/tasa14_compare_iter_20260801.csv").set_index("norad")["f1"]
 
     rows = []
     for nid, nm in SATS:
@@ -72,7 +72,7 @@ def main():
     print(f"  F1 ↔ 更新間隔           : {spearman(f, df['cadence_d'].to_numpy()):+.2f}  (應為負:越疏越差)")
     print(f"  F1 ↔ |Δa| 中位量級      : {spearman(f, df['med_da_m'].to_numpy()):+.2f}  (應為正:訊號越強越好)")
 
-    out = Path("data/benchmark/nasa14_dataquality_20260801.csv")
+    out = Path("data/benchmark/tasa14_dataquality_20260801.csv")
     df.to_csv(out, index=False, encoding="utf-8-sig")
     print(f"\n輸出 → {out}")
 

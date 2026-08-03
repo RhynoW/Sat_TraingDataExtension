@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""nasa14_compare.py — 本專案 σ 正規化(SNR)變點偵測 vs PDF Poly/LOWESS,於 NASA/ILRS 14 星標竿。
+"""tasa14_compare.py — 本專案 σ 正規化(SNR)變點偵測 vs PDF Poly/LOWESS,於 NASA/ILRS 14 星標竿。
 
 真值：ids_truth_set/ids_truth.csv(修正版,14 星),collapse burns→機動事件(unique win_start)。
 方法：a(t) 去趨勢後之相鄰步階 s，以「相對各星自身雜訊 σ 的 SNR 門檻」k·σ 判定機動——
       即雜訊底論文主張的高度相依 σ 正規化;另跑固定絕對門檻基線作對照。
 評估：逐星 TP/FP/FN → Precision/Recall/F1，彙總平均(14 星)與最高;窗配對容差 ±1.5 天。
-用法：python nasa14_compare.py
+用法：python tasa14_compare.py
 """
 from __future__ import annotations
 import sys
@@ -239,7 +239,7 @@ def main():
         print(f"{r['name']:14}{r.n_ev:>5}{r.n_det:>5}{r.tp:>4}{r.fp:>4}{r.fn:>5}"
               f"{r.precision:>6.2f}{r.recall:>6.2f}{r.f1:>6.2f}")
 
-    out = Path("data/benchmark/nasa14_compare_iter_20260801.csv")
+    out = Path("data/benchmark/tasa14_compare_iter_20260801.csv")
     out.parent.mkdir(parents=True, exist_ok=True)
     df.assign(global_k=k, method="iter+levelshift").to_csv(out, index=False, encoding="utf-8-sig")
     print(f"\n輸出 → {out}")

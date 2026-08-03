@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""build_nasa14_ppt.py — NASA/ILRS 14 星標竿比較投影片(TASA 風,16:9)。
-輸出：docs/NASA_ILRS_benchmark_20260801.pptx"""
+"""build_tasa14_ppt.py — NASA/ILRS 14 星標竿比較投影片(TASA 風,16:9)。
+輸出：docs/TASA_ILRS_benchmark_20260802.pptx"""
 import sys
 from pathlib import Path
 try: sys.stdout.reconfigure(encoding="utf-8")
@@ -90,7 +90,7 @@ foot(s,3)
 
 # ── 4 結果總排名(圖) ──
 s=new(); head(s,"結果：全方法平均 F1 總排名")
-img(s,D/"fig_nasa14_allmethods.png",Inches(0.5),Inches(1.35),Inches(8.6))
+img(s,D/"fig_tasa14_allmethods.png",Inches(0.5),Inches(1.35),Inches(8.6))
 txt(s,Inches(9.3),Inches(1.5),Inches(3.7),Inches(5.2),
     [[("重點",18,GOLD,True)],
      [("現代 6 星子集 ",15,GOOD,True),("平均 F1 0.64",15,GOOD,True),(" > PDF 0.52",15,INK,False)],
@@ -101,14 +101,14 @@ foot(s,4)
 
 # ── 5 迭代效果+逐星(圖) ──
 s=new(); head(s,"迭代之效果與逐星表現")
-img(s,D/"fig_nasa14_summary.png",Inches(0.35),Inches(1.4),Inches(12.6))
+img(s,D/"fig_tasa14_summary.png",Inches(0.35),Inches(1.4),Inches(12.6))
 txt(s,Inches(0.6),Inches(6.75),Inches(12.4),Inches(0.5),
     [[("迭代把平均 F1 0.38→0.46、精確率 0.30→0.49(FP 大降);前 5 現代星全部 ≥ PDF 平均 0.52。",14,INK,False)]])
 foot(s,5)
 
 # ── 6 委員提問回應：資料品質量化 ──
 s=new(); head(s,"委員提問：14 星資料品質能量化比較嗎? → 可以")
-img(s,D/"fig_nasa14_dataquality.png",Inches(0.45),Inches(1.35),Inches(8.3))
+img(s,D/"fig_tasa14_dataquality.png",Inches(0.45),Inches(1.35),Inches(8.3))
 txt(s,Inches(9.0),Inches(1.45),Inches(4.0),Inches(5.4),
     [[("量化四維度",17,GOLD,True)],
      [("σ 雜訊底、更新間隔、|Δa| 量級、SNR 可見比例",13.5,MUTE,False)],

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""backfill_nasa14.py — 回補 NASA/ILRS 14 顆標竿衛星之 TLE 歷史至 space_db.duckdb。
+"""backfill_tasa14.py — 回補 NASA/ILRS 14 顆標竿衛星之 TLE 歷史至 space_db.duckdb。
 
 每星依其 ILRS 機動起始年設 --since，向 Space-Track gp_history 取 3LE（Alpha-5 相容），
 以既有解析/upsert 管線寫入 raw_tle_archive（idempotent anti-join）；末尾一次性補 bstar。
-憑證由 .env 經 dotenv 載入。用法：python backfill_nasa14.py
+憑證由 .env 經 dotenv 載入。用法：python backfill_tasa14.py
 """
 from __future__ import annotations
 import os, sys, time, tempfile
