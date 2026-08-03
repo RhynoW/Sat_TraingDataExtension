@@ -99,8 +99,8 @@ foot(s,2)
 # ── 3 貢獻 ──
 s=new(); head(s,"本文貢獻")
 items=[("三層互補架構","規則廣掃 → 統計變點 → 梯度提升融合 + 物理路由"),
-       ("真值可信度分級","效能宣稱僅採嚴格真值（MEME／ILRS-IDS）"),
-       ("三種嚴格泛化協定","GroupKFold OOF、時間外推、未見衛星 hold-out（AUC 0.980）"),
+       ("真值定義與獨立性","真值純取自 MEME、特徵純取自 TLE(兩獨立儀器)，杜絕循環"),
+       ("泛化 + 誠實界定範圍","星系內 hold-out AUC 0.980/AP 0.947；跨域由外部 ILRS+物理路由界定"),
        ("真實全星系部署","67 天 284 星，量化營運負荷（每日 ~1.1 人時）"),
        ("SNR 物理偵測下限","誠實界定純 TLE 對小型機動之能力邊界")]
 y=1.5
@@ -207,17 +207,20 @@ txt(s,Inches(0.6),Inches(4.4),Inches(12.4),Inches(2.0),
 foot(s,10)
 
 # ── 11 泛化(重點) ──
-s=new(); head(s,"六、結果：泛化驗證（三協定）")
-table(s,Inches(0.6),Inches(1.6),[5.2,2.1,2.1,1.5,1.5],
-      [["協定","ROC-AUC","large 召回","FPR","測試 unit"],
-       ["GroupKFold OOF（全域）","0.985","0.970","0.050","7,233"],
-       ["out-of-time（後 40% 盲測）","0.94","0.800","0.044","2,893"],
-       ["*unseen-satellite hold-out","*0.980","*1.000","0.070","1,457"]],rh=0.6)
-kpi(s,Inches(1.2),Inches(4.4),Inches(3.4),"0.980","未見衛星 hold-out AUC")
-kpi(s,Inches(5.0),Inches(4.4),Inches(3.4),"1.000","未見衛星 large 召回",GOOD)
-kpi(s,Inches(8.8),Inches(4.4),Inches(3.4),"0.044","四軸 OOF AUC 全距",ACCENT)
-txt(s,Inches(0.6),Inches(6.15),Inches(12.4),Inches(0.9),
-    [[("56 顆從未訓練之衛星仍完整偵測大型機動 → 泛化非源於記憶特定衛星（最強證據）。",15.5,GOLD,True)]])
+s=new(); head(s,"六、結果：泛化驗證（三協定，含 AP）","AP：不平衡下之 PR-AUC，檢核 AUC 樂觀偏差")
+table(s,Inches(0.6),Inches(1.55),[4.7,1.7,1.5,2.0,1.4,1.4],
+      [["協定","ROC-AUC","AP","large 召回","FPR","測試 unit"],
+       ["GroupKFold OOF（全域）","0.985","0.952","0.970","0.050","7,233"],
+       ["out-of-time（後 40% 盲測）","0.94","n/a","0.800","0.044","2,893"],
+       ["*unseen-sat hold-out（星系內）","*0.980","*0.947","*1.000","0.070","1,457"]],rh=0.58,fs=12.5)
+kpi(s,Inches(0.6),Inches(4.05),Inches(2.9),"0.952","全域 AP(PR-AUC)",ACCENT)
+kpi(s,Inches(3.7),Inches(4.05),Inches(2.9),"81/81","hold-out large 召回",GOOD)
+kpi(s,Inches(6.8),Inches(4.05),Inches(2.9),"0.955","81/81 Wilson 下界")
+kpi(s,Inches(9.9),Inches(4.05),Inches(2.9),"0.032","域外逐窗 FPR",WARN)
+txt(s,Inches(0.6),Inches(5.85),Inches(12.4),Inches(1.3),
+    [[("● 正例率 8.3%，AP 0.952≈AUC 0.985 → 判別力非 AUC 灌水。",14.5,INK,False)],
+     [("● hold-out 為",14.5,GOLD,True),("星系內泛化",14.5,GOLD,True),
+      ("(Starlink 同質)，證未記憶特定衛星；跨異質域由外部 ILRS 標竿(14 非Starlink星)+物理路由(域外FPR 0.032)界定。",14.5,INK,False)]],gap=1.2)
 foot(s,11)
 
 # ── 12 部署 ──
