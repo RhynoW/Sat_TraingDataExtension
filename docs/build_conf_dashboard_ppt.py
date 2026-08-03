@@ -35,10 +35,12 @@ def head(s,title,sub=None):
     txt(s,Inches(0.78),Inches(0.16),Inches(11.5),Inches(0.85),
         ([[(title,24,INK,True)]] + ([[(sub,14,MUTE,False)]] if sub else [])),anchor=MSO_ANCHOR.MIDDLE,gap=1.0)
     txt(s,Inches(11.2),Inches(0.35),Inches(1.85),Inches(0.5),[("🛰 SatDashboard",13,MUTE,True)],align=PP_ALIGN.RIGHT)
-def foot(s,n):
+_pageno=[0]
+def foot(s,n=None):
+    _pageno[0]+=1                      # 自動頁碼（插入投影片後仍連續，忽略傳入值）
     txt(s,Inches(0.5),Inches(7.08),Inches(11),Inches(0.34),
         [("互動式 SSA 儀表板:瞬時鄰近篩選與 TCA 精化　|　自主新創研發",11,MUTE,False)])
-    txt(s,Inches(12.4),Inches(7.08),Inches(0.7),Inches(0.34),[(str(n),11,MUTE,False)],align=PP_ALIGN.RIGHT)
+    txt(s,Inches(12.4),Inches(7.08),Inches(0.7),Inches(0.34),[(str(_pageno[0]),11,MUTE,False)],align=PP_ALIGN.RIGHT)
 def new(): s=prs.slides.add_slide(BLANK); bg(s); return s
 def img(s,path,x,y,w):
     if Path(path).exists(): s.shapes.add_picture(str(path),x,y,width=w)
@@ -76,17 +78,37 @@ s=new(); head(s,"一、緒論：互動式 SSA 工具 —— 且須正名")
 txt(s,Inches(0.6),Inches(1.35),Inches(12.4),Inches(1.3),
     [[("SSA 需能",16,INK,False),("互動探索",16,GOLD,True),
       ("的工具：全目錄鄰近熱點、地面站覆蓋/過頂、三維幾何檢視。",16,INK,False)],
-     [("商用平台(STK)昂貴難客製；純 3D 檢視器擅展示但不含全目錄鄰近篩選與 Pc。",15,INK,False)]],gap=1.25)
-box(s,Inches(0.6),Inches(3.1),Inches(12.1),Inches(1.55),RGBColor(0x3a,0x1a,0x1a))
-txt(s,Inches(0.85),Inches(3.25),Inches(11.6),Inches(1.3),
-    [[("⚠ 關鍵正名：瞬時鄰近 ≠ conjunction",16,RED,True)],
-     [("LEO 相對速 7–14 km/s，兩物體停留 10 km 內僅約 1–2 秒；單快照大量納入共軌群/編隊/",14.5,INK,False)],
-     [("恰好經過者。本文採「瞬時鄰近篩選」+ TCA 精化，避免方法命名超出能力。",14.5,INK,False)]],gap=1.15)
+     [("商用平台(STK)有不同版本，採購/租用通常不含客製化費用；開源 3D 軌道 App 僅具軌道展示，",14.5,INK,False)],
+     [("不含全目錄鄰近篩選與 Pc(交會機率分析)。",14.5,INK,False)]],gap=1.2)
+box(s,Inches(0.6),Inches(3.15),Inches(12.1),Inches(1.7),RGBColor(0x3a,0x1a,0x1a))
+txt(s,Inches(0.85),Inches(3.27),Inches(11.6),Inches(1.5),
+    [[("⚠ 關鍵正名：瞬時鄰近 ≠ conjunction（Web App 輕量化設計取捨）",15.5,RED,True)],
+     [("LEO 相對速 7–14 km/s，兩物體停留 10 km 內僅約 1–2 秒；單快照大量納入共軌群/編隊/恰好經過者。",14,INK,False)],
+     [("本文採「瞬時鄰近篩選 + TCA 精化」：以單一時刻查詢圈熱點(避免瀏覽器端維持全目錄時間視窗傳播)，",14,INK,False)],
+     [("再對少量候選精化——輕量、可互動，且不以快照冒充碰撞篩選。",14,INK,False)]],gap=1.12)
 txt(s,Inches(0.6),Inches(4.9),Inches(12.4),Inches(0.5),[("四項貢獻：",16,GOLD,True)])
 txt(s,Inches(0.6),Inches(5.4),Inches(12.4),Inches(1.5),
     [[("① 全目錄近即時鄰近篩選(首次0.35s/穩態52ms)　② TCA 精化分類辨真接近(8→4)",15,INK,False)],
      [("③ 受控對照量化資料時效(同星系 過期31 vs 新鮮8)　④ 單體→模組化(128測試/Docker)+SOCRATES驗證",15,INK,False)]],gap=1.3)
 foot(s,2)
+
+# ── 2b 背景教育:SSA/SDA + TLE 誤差前提 ──
+s=new(); head(s,"背景（教育推廣）：SSA/SDA 與 TLE 誤差前提")
+txt(s,Inches(0.6),Inches(1.35),Inches(12.4),Inches(1.7),
+    [[("SSA(太空情勢感知)",16,GOLD,True),("：在軌物體之編目、追蹤、接近/碰撞預警、行為(機動)判讀。",16,INK,False)],
+     [("SDA(太空領域感知)",16,GOLD,True),("：更納入威脅與意圖研判之防衛視角。",16,INK,False)],
+     [("資料底層兩類：少數",15,INK,False),("精密星曆",15,ACCENT,True),("(公尺級,GNSS/SLR/DORIS)合作目標；絕大多數僅有",15,INK,False),
+      ("公開 TLE",15,ACCENT,True),("之非合作目標。",15,INK,False)]],gap=1.25)
+box(s,Inches(0.6),Inches(3.5),Inches(12.1),Inches(2.9),PANEL)
+txt(s,Inches(0.85),Inches(3.65),Inches(11.6),Inches(2.7),
+    [[("論證鏈：缺精密星曆 → 僅靠 TLE → 先確立 TLE 誤差分布 → 於此誤差包絡上做輕量 Pc",16,GOLD,True)],
+     [("● 任何篩選/Pc 之可信度取決於",15,INK,False),("TLE 誤差包絡",15,WARN,True),("——不知誤差,Pc 只是無根之數字。",15,INK,False)],
+     [("● 本文依據一項",15,INK,False),("獨立之 TASA 委託研究",15,ACCENT,True),
+      ("(TLE 半長軸雜訊底/誤差分布量化,2026)：精密目標雜訊底可低至次公尺、",15,INK,False)],
+     [("　雷達追蹤低軌(Starlink 級)達數十公尺,且隨傳播時間/太陽活動增長。",15,INK,False)],
+     [("● 本文即在此包絡上設計 Web App 輕量快速 Pc(代表性 σ_r/σ_t,見 §4.4);絕對值須精密星曆 CDM。",15,INK,False)],
+     [("（本系統為自主研發,引該委託案為 TLE 誤差外部依據,無隸屬關係。）",13,MUTE,False)]],gap=1.18)
+foot(s,3)
 
 # ── 3 相關研究與定位 ──
 s=new(); head(s,"二、相關研究與系統定位")
@@ -199,6 +221,22 @@ kpi(s,Inches(6.8),Inches(1.45),Inches(2.9),"8→4","TCA 收斂為真接近",GOOD
 kpi(s,Inches(9.9),Inches(1.45),Inches(2.9),"5.5 km","快速類 miss 中位",ACCENT)
 img(s,D/"fig_ssa_tca.png",Inches(1.15),Inches(3.2),Inches(11.0))
 foot(s,10)
+
+# ── 10b 正確性驗證:SOCRATES 交叉比對 ──
+s=new(); head(s,"五、正確性驗證：SOCRATES 交叉比對","同對、各自算——化解視窗不匹配(SOCRATES 未來7天 vs 快照當下)")
+txt(s,Inches(0.6),Inches(1.3),Inches(12.4),Inches(0.9),
+    [[("取 CelesTrak SOCRATES 最小 miss 前 500 對(736 物體全數命中)，以本方引擎於其 TCA 附近獨立重算，比一致性：",14.5,INK,False)]],gap=1.15)
+table(s,Inches(0.6),Inches(2.3),[2.7,4.5,5.0],
+      [["比對量","一致性","判讀"],
+       ["*相對速度","*|Δ| 中位 0.000 km/s","*交會速度幾何一致 → 引擎正確"],
+       ["*TCA 時刻","*|Δ| 中位 1.2 s（81% <60s）","*最接近時刻一致 → 精化正確"],
+       ["miss distance","本方 1.6km vs SOC 0.18km；相關≈0；69% |Δ|<5km","次公里 miss 受 TLE 精度主導"]],rh=0.72,fs=13)
+box(s,Inches(0.6),Inches(5.5),Inches(12.1),Inches(1.3),PANEL)
+txt(s,Inches(0.85),Inches(5.62),Inches(11.6),Inches(1.1),
+    [[("雙面結論：",15.5,GOLD,True),("① 運動學(速度/TCA)一致 → ",15,GOOD,True),("驗證引擎正確",15,GOOD,True),
+      ("；② 次公里 miss 不相關 → ",15,INK,False),("實證 TLE 精度極限",15,WARN,True),("，",15,INK,False)],
+     [("獨立佐證「TLE 僅堪篩選、絕對 miss/Pc 須精密星曆 CDM」之界定。",15,INK,False)]],gap=1.15)
+foot(s,11)
 
 # ── 11 功能與介面 ──
 s=new(); head(s,"六、系統功能與介面")

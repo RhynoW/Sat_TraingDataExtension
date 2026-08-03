@@ -9,7 +9,7 @@
 
 ### Abstract
 
-Space situational awareness (SSA) increasingly requires interactive tools that let analysts screen the entire tracked catalog for proximity events, forecast regional coverage, and inspect orbital geometry in near real time. This paper presents SatDashboard, a modular, web-based SSA platform that ingests Two-Line Elements (TLE) and couples four capabilities on one interface: (1) vectorized SGP4 propagation of the entire catalog at a common epoch via the batched SatrecArray interface; (2) all-pairs **instantaneous proximity screening** using a k-d tree (`query_pairs`), followed by a lightweight **time-of-closest-approach (TCA) refinement** that propagates each candidate pair over one orbital period to recover its true TCA, miss distance, and relative speed; (3) regional coverage and overpass forecasting for a ground site (Taipei, ±30-day timeline); and (4) an optional Space-Track integration with graceful degradation, user-defined overlays, and hot-reloadable configuration. On a single workstation (Intel Raptor Lake, 24 cores; timings are medians of five runs), efficiency—which is independent of TLE data age—scales near-linearly: a full 31,481-satellite snapshot completes in ~0.35 s on first call and ~52 ms in steady state (cached SatrecArray). Behavior results use **fresh TLE (median age 1.2 days)**; we show that data currency is decisive—on the same Starlink constellation (~10.8k objects), 18-day-old TLE yields 31 candidate pairs at 10 km versus only 8 with fresh TLE (~4×, and ~14× at 5 km), the excess being propagation-error artifacts. On fresh data, TCA refinement resolves the 8 snapshot candidates into 5 fast transits (4 genuinely closing), 2 co-orbital, and 1 mid-speed pair; the conjunction-meaningful fast-transit miss distances (median 5.5 km) are reported separately from co-orbital formation spacing. We limit the isotropic first-order Pc proxy (inspired by Chan, 2008) to fast-transit pairs, and position CelesTrak SOCRATES as the intended correctness benchmark with an explicit screening-window caveat. An event-driven roadmap is outlined.
+Space situational awareness (SSA) increasingly requires interactive tools that let analysts screen the entire tracked catalog for proximity events, forecast regional coverage, and inspect orbital geometry in near real time. This paper also serves an SSA/SDA outreach and education purpose. Where precise ephemerides are unavailable and only public Two-Line Elements (TLE) exist, the credibility of any proximity/Pc computation hinges on the TLE error envelope; we therefore ground our representative uncertainties in an independent TASA-commissioned TLE-error-distribution study and then design lightweight, fast Pc on top of that envelope. This paper presents SatDashboard, a modular, web-based SSA platform that ingests Two-Line Elements (TLE) and couples four capabilities on one interface: (1) vectorized SGP4 propagation of the entire catalog at a common epoch via the batched SatrecArray interface; (2) all-pairs **instantaneous proximity screening** using a k-d tree (`query_pairs`), followed by a lightweight **time-of-closest-approach (TCA) refinement** that propagates each candidate pair over one orbital period to recover its true TCA, miss distance, and relative speed; (3) regional coverage and overpass forecasting for a ground site (Taipei, ±30-day timeline); and (4) an optional Space-Track integration with graceful degradation, user-defined overlays, and hot-reloadable configuration. On a single workstation (Intel Raptor Lake, 24 cores; timings are medians of five runs), efficiency—which is independent of TLE data age—scales near-linearly: a full 31,481-satellite snapshot completes in ~0.35 s on first call and ~52 ms in steady state (cached SatrecArray). Behavior results use **fresh TLE (median age 1.2 days)**; we show that data currency is decisive—on the same Starlink constellation (~10.8k objects), 18-day-old TLE yields 31 candidate pairs at 10 km versus only 8 with fresh TLE (~4×, and ~14× at 5 km), the excess being propagation-error artifacts. On fresh data, TCA refinement resolves the 8 snapshot candidates into 5 fast transits (4 genuinely closing), 2 co-orbital, and 1 mid-speed pair; the conjunction-meaningful fast-transit miss distances (median 5.5 km) are reported separately from co-orbital formation spacing. We limit the isotropic first-order Pc proxy (inspired by Chan, 2008) to fast-transit pairs. A SOCRATES cross-comparison on the 500 closest predicted conjunctions (all 736 objects present in our catalog) validates the engine kinematically—relative-speed |Δ| median 0.000 km/s and TCA |Δ| median 1.2 s—while empirically confirming that sub-kilometre miss distance is TLE-precision-limited (correlation ≈ 0), independently supporting the need for precise-ephemeris CDM. An event-driven roadmap is outlined.
 
 **Keywords**: space situational awareness; proximity screening; time of closest approach; SGP4; k-d tree; collision probability; data currency; interactive visualization
 
@@ -17,16 +17,20 @@ Space situational awareness (SSA) increasingly requires interactive tools that l
 
 ## 一、緒論
 
-太空情勢感知（SSA）的日常作業，除了「偵測與判讀」之外，還需要一套能讓分析人員**互動探索**的工具：在近即時的時間尺度上，對整個編目篩選出**鄰近事件熱點**、預報地面站的覆蓋與過頂時段、並以三維幾何檢視軌道狀態。商用平台（如 STK）功能完整但授權昂貴、不易客製與內部部署；純前端的三維檢視器（多以 CesiumJS 實作）擅長展示，卻通常不含全目錄的鄰近篩選與碰撞機率計算。
+**何謂太空情勢感知（SSA）。** 太空情勢感知（Space Situational Awareness, SSA）指對在軌物體之**編目、追蹤、接近／碰撞預警、與行為（機動）判讀**之整體掌握，為太空交通管理與太空安全之基礎；其進階之**太空領域感知（Space Domain Awareness, SDA）**更納入威脅與意圖之研判，帶有防衛視角。無論 SSA 或 SDA，其資料底層不外乎兩類：少數具**精密星曆**（公尺級，如 GNSS／SLR／DORIS 定軌）之合作目標，以及絕大多數僅有**公開兩行軌道根數（TLE）**之非合作目標。本文兼負 SSA／SDA 之**推廣與教育**目的——以一個可實作、可互動之 Web App，具體展示 SSA 之核心作業（鄰近篩選、覆蓋預報、碰撞機率初估）如何在**僅有 TLE** 之現實約束下運行，及其能力與邊界。
 
-需特別界定的是：**「瞬時鄰近」不等於「碰撞接近事件（conjunction）」**。低軌相對速度動輒 7–14 km/s，兩物體停留在 10 km 內僅約 1–2 秒；單一時刻的距離篩選會納入（a）恰好同時經過附近的無關物體、（b）同次發射的共軌 payload／debris 群、（c）編隊飛行衛星。本文因此明確採「瞬時鄰近篩選（instantaneous proximity screening）」一詞，並以一個**輕量 TCA 精化**步驟把快照候選收斂為真正逼近中的配對。此外，本文亦以受控對照量化**資料時效（data currency）**對篩選之影響——這在互動式工具之討論中常被忽略。
+SSA 的日常作業需要一套能讓分析人員**互動探索**的工具：在近即時的時間尺度上，對整個編目篩選出**鄰近事件熱點**、預報地面站的覆蓋與過頂時段、並以三維幾何檢視軌道狀態。商用平台（如 STK）有不同版本，其**軟體採購或租用通常不包含客製化費用**，較不利於在地需求之快速調整與內部部署；開源三維軌道 App 通常僅具備**軌道展示**，但不含全目錄之鄰近篩選與 Pc（交會機率分析）。
+
+**先確立 TLE 誤差分布，再談 Pc。** 在缺乏精密星曆、僅能倚賴公開 TLE 之情境下，任何鄰近篩選與碰撞機率（Pc）之可信度，**取決於對 TLE 誤差分布範圍之掌握**——不知誤差包絡，Pc 只是無根之數字。本文所依據之 TLE 誤差特性，來自一項**獨立之 TASA 委託研究**（TLE 半長軸雜訊底／誤差分布之量化，2026）：該研究以精密定軌目標之認證安靜期直接實測 TLE 誤差，得精密定軌目標之半長軸雜訊底可低至**次公尺**，而雷達追蹤之低軌目標（如 Starlink 級）則達**數十公尺**量級，且位置誤差隨傳播時間與太陽活動增長。本文即**在此誤差包絡之上**設計 Web App 之輕量化快速 Pc：以代表性之徑向／切向 1-σ（§4.4）作各向同性首階近似之排序代理，並誠實界定其僅適用快速穿越類、絕對值須由精密星曆 CDM 取代（此界定亦於第五節之 SOCRATES 交叉比對獲實證）。
+
+需特別界定的是：**「瞬時鄰近」不等於「碰撞接近事件（conjunction）」**。低軌相對速度動輒 7–14 km/s，兩物體停留在 10 km 內僅約 1–2 秒；單一時刻的距離篩選會納入（a）恰好同時經過附近的無關物體、（b）同次發射的共軌 payload／debris 群、（c）編隊飛行衛星。**本文採「瞬時鄰近篩選（instantaneous proximity screening）」＋輕量 TCA 精化，係針對 Web App 之輕量化設計取捨**：以單一時刻之空間查詢快速圈出熱點供互動展示（避免在瀏覽器端維持全目錄之時間視窗傳播），再對少量候選以 TCA 精化收斂為真正逼近中的配對——因此全程明確界定「瞬時鄰近 ≠ conjunction」，不以快照計數冒充碰撞篩選。此外，本文亦以受控對照量化**資料時效（data currency）**對篩選之影響——這在互動式工具之討論中常被忽略。
 
 本文提出 **SatDashboard**——一套模組化、以 Web 為介面的自主 SSA 平台，將四項能力整合於單一介面：(1) **向量化 SGP4**；(2) **k-d tree 瞬時鄰近篩選 + TCA 精化**；(3) **在地覆蓋與過頂預報**（台北，±30 天時間軸）；(4) **Space-Track 選配整合**與使用者自訂資料、設定熱重載。本文貢獻有四：
 
 1. 一套**可全目錄近即時運行**的鄰近篩選管線，全 31,481 顆單快照首次約 0.35 秒、穩態約 52 毫秒（效能與資料齡無關、近線性擴展）；
 2. **輕量 TCA 精化**把快照鄰近收斂為真接近，並分類別（共軌／中速／快速）報告——避免把瞬時鄰近計數誤讀為 conjunction 計數；
 3. 以**受控對照量化資料時效**：同一 Starlink 星系，過期 TLE（18 天）較新鮮 TLE（1.2 天）多出約 4×（@10km）之候選，多為傳播誤差假影；
-4. 誠實界定近似 Pc 之適用範圍（僅快速穿越類）、並以 SOCRATES 為正確性驗證路徑（含視窗不匹配之方法學說明）。
+4. 誠實界定近似 Pc 之適用範圍（僅快速穿越類），並以 **SOCRATES 交叉比對**（500 對最接近事件）完成正確性驗證——運動學一致、次公里 miss 受 TLE 精度限制，佐證精密星曆 CDM 之必要。
 
 ## 二、相關研究與系統定位
 
@@ -81,7 +85,7 @@ $$\sigma^2 = \sigma_r^2 + \sigma_t^2, \qquad P_{c,\text{base}} = 1 - \exp\!\left
 
 $$P_c = P_{c,\text{base}} \cdot \exp\!\left(-\frac{m^2}{2\sigma^2}\right) \tag{2}$$
 
-其中 $r_A$ 為合成硬體半徑（等效 0.005 km）。**適用界定**：(i) 式 (1)(2) 取 Chan 級數首項並假設圓對稱協方差，非其各向異性等效面積解；(ii) $\sigma_r=0.1$、$\sigma_t=0.5$ km 為**代表性量級假設，非個別物體之真實協方差**（TLE 誤差隨高度、資料齡與太陽活動變化）；(iii) 式 (1)(2) 之高相對速度、線性穿越假設**僅對快速穿越類成立**，故**共軌／低相對速度類不輸出 Pc（標為 N/A）**，其風險須另用 3D 非線性方法。此式僅作快速排序代理，作業級評估須改用含真實協方差之 CDM。
+其中 $r_A$ 為合成硬體半徑（等效 0.005 km）。**適用界定**：(i) 式 (1)(2) 取 Chan 級數首項並假設圓對稱協方差，非其各向異性等效面積解；(ii) $\sigma_r=0.1$、$\sigma_t=0.5$ km 為**代表性量級假設，非個別物體之真實協方差**——其量級取自 §1 所引 TASA 委託之 TLE 誤差分布研究之包絡（TLE 誤差隨高度、資料齡與太陽活動變化）；(iii) 式 (1)(2) 之高相對速度、線性穿越假設**僅對快速穿越類成立**，故**共軌／低相對速度類不輸出 Pc（標為 N/A）**，其風險須另用 3D 非線性方法。此式僅作快速排序代理，作業級評估須改用含真實協方差之 CDM。
 
 ### 4.5 在地覆蓋、資料層與可擴充性
 
@@ -116,7 +120,17 @@ $$P_c = P_{c,\text{base}} \cdot \exp\!\left(-\frac{m^2}{2\sigma^2}\right) \tag{2
 
 ![圖 2　資料時效受控對照（左，同 Starlink 星系、僅資料齡不同）；新鮮資料之 TCA 精化分類（右，8 候選 → 4 真接近）。](fig_ssa_tca.png)
 
-**正確性驗證（規劃）與方法學界定。** 本文已完成**效能**、**資料時效**與**行為分類**之實測；**正確性**之外部交叉比對列為即將步驟，並須注意**視窗不匹配**：CelesTrak SOCRATES 報告未來 7 天之 TCA，本系統之 TCA 精化僅掃當下 ±1 軌道週期（±55 分）——兩者篩選範圍本質不同（快照當下 vs 未來 7 天）。正確之比對須（a）將本系統之篩選延伸為時間視窗式（即路線圖之事件驅動化），或（b）僅就 TCA 落於可比視窗內之 SOCRATES 事件與本系統候選作交集比對；否則召回率會被誤讀。此比對將於下一步以新鮮資料（與 SOCRATES 同源時效）進行。
+**正確性驗證：SOCRATES 交叉比對（已完成）。** 為驗證引擎正確性並化解視窗不匹配（SOCRATES 報未來 7 天之 TCA、本系統快照掃當下 ±1 週期），採「**同對、各自算**」策略：取 CelesTrak **SOCRATES**（sort-minRange，共 98,939 對）**最小 miss 之前 500 對**接近事件（涉 736 個物體，**全數於本目錄命中**），對每一對以本系統之最新 TLE 與 TCA 精化引擎，於 SOCRATES 所報 TCA 附近（±20 分粗掃 + 細掃）**獨立重算** TCA、miss distance 與相對速度，再與 SOCRATES 權威值比對（表 3）。結果分兩面：
+
+**表 3　SOCRATES 交叉比對（500 對最接近事件，736 物體全數命中）**
+
+| 比對量 | 一致性結果 | 判讀 |
+|---|---|---|
+| 相對速度 | \|Δ\| 中位 **0.000 km/s** | 交會速度幾何一致 → 引擎正確 |
+| TCA 時刻 | \|Δ\| 中位 **1.2 s**（81% 落於 60 s 內） | 最接近時刻一致 → TCA 精化正確 |
+| miss distance | 本系統中位 **1.6 km** vs SOCRATES **0.18 km**；相關係數 ≈ 0；69% \|Δ\|<5 km、83% 本系統獨立算得 <25 km | 次公里 miss 受 TLE 精度主導（見判讀） |
+
+**(1) 編碼運動學高度一致——驗證引擎**：相對速度與 TCA 時刻與 SOCRATES 近乎相同，證本系統之傳播與 TCA 精化正確重現其交會幾何。**(2) 絕對 miss 於次公里尺度不相關——實證 TLE 精度極限**：因這 500 對為最接近（中位 180 m）之預測，miss distance 位於 TLE 精度雜訊底、對所用 TLE 極度敏感（本系統採獨立之最新 TLE、與 SOCRATES 不同源），故絕對值不相關實屬預期。此結果**獨立佐證 §4.4／§8 之界定**：TLE 僅堪作接近篩選與熱點偵測；絕對 miss／Pc 須改用含真實協方差之精密星曆 CDM。
 
 ## 六、系統功能與介面
 
@@ -128,11 +142,11 @@ $$P_c = P_{c,\text{base}} \cdot \exp\!\left(-\frac{m^2}{2\sigma^2}\right) \tag{2
 
 ## 八、討論與限制
 
-**近似 Pc 與適用類別。** 式 (1)(2) 為各向同性首階近似、僅施於快速穿越類，未使用每對真實相對協方差，不取代作業級 CDM；共軌／低相對速度類不輸出 Pc，其風險須另用 3D 非線性方法（Coppola, 2012）。**TCA 為兩體幾何。** 4.3 之精化沿一軌道週期求極值，已將快照鄰近收斂為真接近，但採兩體 SGP4 外推，未含機動與攝動不確定性之協方差傳播。**資料時效。** 第五節已量化過期 TLE 之候選膨脹；行為結果須以新鮮資料產生，部署應每日更新並以資料齡旗標降權。**正確性外部驗證待補。** SOCRATES 交叉比對已定位為即將步驟，並須處理視窗不匹配（第五節）。上述限制清楚界定本系統與作業級碰撞評估之分工，不減損其作為**近即時初篩、熱點偵測與態勢展示平台**之價值。
+**近似 Pc 與適用類別。** 式 (1)(2) 為各向同性首階近似、僅施於快速穿越類，未使用每對真實相對協方差，不取代作業級 CDM；共軌／低相對速度類不輸出 Pc，其風險須另用 3D 非線性方法（Coppola, 2012）。**TCA 為兩體幾何。** 4.3 之精化沿一軌道週期求極值，已將快照鄰近收斂為真接近，但採兩體 SGP4 外推，未含機動與攝動不確定性之協方差傳播。**資料時效。** 第五節已量化過期 TLE 之候選膨脹；行為結果須以新鮮資料產生，部署應每日更新並以資料齡旗標降權。**正確性外部驗證已完成。** SOCRATES 交叉比對（第五節、表 3）以「同對、各自算」化解視窗不匹配，驗證引擎之運動學正確、並實證次公里 miss 之 TLE 精度極限。上述限制清楚界定本系統與作業級碰撞評估之分工，不減損其作為**近即時初篩、熱點偵測與態勢展示平台**之價值。
 
 ## 九、結論與展望
 
-本文提出並實測 SatDashboard——一套模組化、可全目錄近即時運行的互動式 SSA 平台。效能上（與資料齡無關），全 31,481 顆單快照首次約 0.35 秒、穩態約 52 毫秒，傳播近線性擴展。行為上採**新鮮 TLE**（中位齡 1.2 天）：TCA 精化把 10 km 之 8 個瞬時鄰近收斂為 5 個快速穿越、其中 4 個真接近，並分類別報告 miss；且以受控對照證明**資料時效之決定性**（同星系過期資料膨脹候選約 4×）。系統整合在地覆蓋預報、Space-Track、使用者自訂資料與設定熱重載，工程上由單體重構為含 128 項測試之分層架構。後續：以 SOCRATES 完成正確性交叉比對（處理視窗不匹配）；把篩選延伸為時間視窗式；獨立 ingestion 排程與 Redis Streams；WebSocket 事件推送與告警規則引擎；以及實測感測器接入、track fusion 與 STK 匯出。
+本文提出並實測 SatDashboard——一套模組化、可全目錄近即時運行的互動式 SSA 平台。效能上（與資料齡無關），全 31,481 顆單快照首次約 0.35 秒、穩態約 52 毫秒，傳播近線性擴展。行為上採**新鮮 TLE**（中位齡 1.2 天）：TCA 精化把 10 km 之 8 個瞬時鄰近收斂為 5 個快速穿越、其中 4 個真接近，並分類別報告 miss；且以受控對照證明**資料時效之決定性**（同星系過期資料膨脹候選約 4×）。正確性上，SOCRATES 交叉比對（500 對最接近事件）驗證引擎之運動學（相對速度／TCA 一致），並實證次公里 miss 之 TLE 精度極限，佐證精密星曆 CDM 之必要。系統整合在地覆蓋預報、Space-Track、使用者自訂資料與設定熱重載，工程上由單體重構為含 128 項測試之分層架構。後續：把篩選延伸為時間視窗式（與 SOCRATES 同尺度之全域比對）；獨立 ingestion 排程與 Redis Streams；WebSocket 事件推送與告警規則引擎；以及實測感測器接入、track fusion 與 STK 匯出。
 
 ## 誌謝
 
@@ -154,3 +168,4 @@ $$P_c = P_{c,\text{base}} \cdot \exp\!\left(-\frac{m^2}{2\sigma^2}\right) \tag{2
 [12] O. Montenbruck and E. Gill, *Satellite Orbits: Models, Methods and Applications*, Springer, 2000.
 [13] P. Virtanen et al., "SciPy 1.0: Fundamental Algorithms for Scientific Computing in Python," *Nature Methods*, 17, 2020.
 [14] CesiumJS, "An Open-Source JavaScript Library for World-Class 3D Globes and Maps," Cesium GS, Inc.
+[15] TLE 半長軸雜訊底／誤差分布之量化研究（TASA 委託案 TASA-S-1150268 相關成果），2026.（本文引為 TLE 誤差包絡之外部依據；本系統之開發與該委託案無隸屬關係。）
