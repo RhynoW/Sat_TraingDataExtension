@@ -54,7 +54,7 @@ s=new()
 box(s,0,Inches(2.3),W,Inches(2.7),PANEL)
 box(s,Inches(0.9),Inches(2.55),Inches(0.16),Inches(2.2),ACCENT)
 txt(s,Inches(1.25),Inches(2.6),Inches(11),Inches(1.7),
-    [[("Space Event Detection Test",34,INK,True)],[("with Actual Maneuver Data from NASA / ILRS",30,INK,True)]],gap=1.1)
+    [[("TASA Space Event Detection Benchmark",30,INK,True)],[("validated against NASA / ILRS maneuver truth",24,INK,True)]],gap=1.1)
 txt(s,Inches(1.28),Inches(4.15),Inches(11),Inches(0.6),[("本專案偵測法 vs 曲線擬合法(Poly/LOWESS)—— 14 星外部認證標竿",18,ACCENT,True)])
 txt(s,Inches(1.28),Inches(5.3),Inches(11),Inches(0.9),
     [[("Systems Engineering Division　|　2026-08-01",15,MUTE,False)],
@@ -136,5 +136,5 @@ box(s,0,Inches(3.0),W,Inches(1.6),PANEL); box(s,Inches(0.9),Inches(3.2),Inches(0
 txt(s,Inches(1.25),Inches(3.15),Inches(11),Inches(1.3),[("謝謝聆聽",40,INK,True)],anchor=MSO_ANCHOR.MIDDLE)
 txt(s,Inches(1.28),Inches(4.8),Inches(11),Inches(0.5),[("國家太空中心　Taiwan Space Agency",15,MUTE,False)])
 
-out=D/"NASA_ILRS_benchmark_20260801.pptx"; prs.save(str(out))
+out=D/"TASA_ILRS_benchmark_20260802.pptx"; prs.save(str(out))
 print("saved",out,f"({len(prs.slides.__iter__.__self__._sldIdLst)} slides)")

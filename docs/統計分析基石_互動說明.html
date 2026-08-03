@@ -1,0 +1,805 @@
+<title>統計分析基石：Layer 1 規則層與 Layer 2 統計層</title>
+
+<style>
+  :root {
+    --ground:#EEF1F4; --panel:#FFFFFF; --sunk:#E4E9ED;
+    --ink:#10181F; --ink-2:#3D4A54; --ink-3:#6B7A85; --rule:#CDD6DD;
+    --l1:#3F5E8C; --l1-soft:#DCE4F0;
+    --l2:#1F7A78; --l2-soft:#D5E7E6;
+    --l3:#6B4E8F; --l3-soft:#E4DCEF;
+    --warn:#C2603A; --warn-soft:#F2DFD6;
+    --flag:#8A6D1F; --flag-soft:#F1E8D0;
+    --serif: Georgia,"Songti TC","Noto Serif TC","PMingLiU","SimSun",serif;
+    --sans: -apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif;
+    --mono: ui-monospace,"Cascadia Code","SF Mono",Consolas,"Courier New",monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:#0F1519; --panel:#182127; --sunk:#131B21;
+      --ink:#E8EDF1; --ink-2:#B3C0CA; --ink-3:#8496A2; --rule:#2C3941;
+      --l1:#8AA8D8; --l1-soft:#1B2536;
+      --l2:#4FB3B0; --l2-soft:#12312F;
+      --l3:#B49BD8; --l3-soft:#241C33;
+      --warn:#E08A5F; --warn-soft:#3A2418;
+      --flag:#D6B75A; --flag-soft:#322A14;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:#0F1519; --panel:#182127; --sunk:#131B21;
+    --ink:#E8EDF1; --ink-2:#B3C0CA; --ink-3:#8496A2; --rule:#2C3941;
+    --l1:#8AA8D8; --l1-soft:#1B2536;
+    --l2:#4FB3B0; --l2-soft:#12312F;
+    --l3:#B49BD8; --l3-soft:#241C33;
+    --warn:#E08A5F; --warn-soft:#3A2418;
+    --flag:#D6B75A; --flag-soft:#322A14;
+  }
+  :root[data-theme="light"] {
+    --ground:#EEF1F4; --panel:#FFFFFF; --sunk:#E4E9ED;
+    --ink:#10181F; --ink-2:#3D4A54; --ink-3:#6B7A85; --rule:#CDD6DD;
+    --l1:#3F5E8C; --l1-soft:#DCE4F0;
+    --l2:#1F7A78; --l2-soft:#D5E7E6;
+    --l3:#6B4E8F; --l3-soft:#E4DCEF;
+    --warn:#C2603A; --warn-soft:#F2DFD6;
+    --flag:#8A6D1F; --flag-soft:#F1E8D0;
+  }
+
+  body { background:var(--ground); color:var(--ink); font-family:var(--sans); line-height:1.72; -webkit-font-smoothing:antialiased; }
+  .layout { display:grid; grid-template-columns:250px minmax(0,1fr); max-width:1380px; margin:0 auto; }
+  @media (max-width:900px){ .layout{ grid-template-columns:1fr; } }
+
+  .nav { position:sticky; top:0; align-self:start; max-height:100vh; overflow-y:auto;
+         border-right:1px solid var(--rule); padding:26px 16px 40px; background:var(--panel); }
+  @media (max-width:900px){ .nav{ position:static; max-height:none; border-right:0; border-bottom:1px solid var(--rule); } }
+  .nav-brand { font-family:var(--serif); font-size:15.5px; font-weight:700; line-height:1.4; }
+  .nav-sub { font-size:11.5px; color:var(--ink-3); margin:4px 0 18px; }
+  .nav-ch { font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);
+            font-weight:700; margin:16px 0 5px; padding-top:11px; border-top:1px solid var(--rule); }
+  .nav-ch:first-of-type{ border-top:0; padding-top:0; margin-top:0; }
+  .nav a { display:block; font-size:13.5px; color:var(--ink-2); text-decoration:none;
+           padding:5px 9px; border-radius:2px; border-left:2px solid transparent; }
+  .nav a:hover { background:var(--sunk); color:var(--ink); }
+  .nav a.on { border-left-color:var(--l2); color:var(--l2); font-weight:700; background:var(--l2-soft); }
+  .nav a:focus-visible { outline:2px solid var(--l2); outline-offset:1px; }
+
+  main { padding:clamp(24px,4vw,52px) clamp(18px,4vw,54px) 90px; min-width:0; }
+  .hero { border-bottom:2px solid var(--ink); padding-bottom:24px; }
+  .eyebrow { font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3); font-weight:700; }
+  h1 { font-family:var(--serif); font-size:clamp(26px,4.4vw,40px); line-height:1.24; font-weight:700; margin:8px 0 0; text-wrap:balance; }
+  .lede { font-size:clamp(15px,2vw,17.5px); color:var(--ink-2); max-width:66ch; margin-top:14px; }
+  .lede b{ color:var(--ink); }
+
+  section { padding:42px 0; border-bottom:1px solid var(--rule); scroll-margin-top:16px; }
+  section:last-of-type{ border-bottom:0; }
+  .tag { display:inline-block; font-family:var(--mono); font-size:11.5px; color:var(--ink-3);
+         border:1px solid var(--rule); border-radius:2px; padding:1px 7px; margin-bottom:8px; }
+  h2 { font-family:var(--serif); font-size:clamp(21px,3.2vw,29px); font-weight:700; margin:0 0 10px; text-wrap:balance; }
+  h3 { font-family:var(--serif); font-size:18px; margin:26px 0 10px; font-weight:700; }
+  p { margin:0 0 14px; }
+  .thesis { font-size:17px; background:var(--sunk); border-left:3px solid var(--l2); padding:14px 18px; margin:0 0 22px; max-width:72ch; }
+  .thesis b{ color:var(--l2); }
+  .note { color:var(--ink-2); font-size:15px; max-width:72ch; }
+  .muted { color:var(--ink-3); font-size:13.5px; }
+
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:18px 0; }
+  .stat { background:var(--panel); border:1px solid var(--rule); border-radius:3px; padding:15px 16px; }
+  .stat .n { font-family:var(--mono); font-size:24px; font-weight:700; font-variant-numeric:tabular-nums; display:block; line-height:1.2; }
+  .stat .l { font-size:12.5px; color:var(--ink-3); display:block; margin-top:5px; }
+  .stat.a .n{ color:var(--l1); } .stat.g .n{ color:var(--l2); } .stat.w .n{ color:var(--warn); }
+
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:13px; margin:18px 0; }
+  .c { background:var(--panel); border:1px solid var(--rule); border-top:3px solid var(--l2); border-radius:3px; padding:16px 17px; }
+  .c.a{ border-top-color:var(--l1); } .c.p{ border-top-color:var(--l3); }
+  .c.w{ border-top-color:var(--warn); } .c.f{ border-top-color:var(--flag); }
+  .c h4 { margin:0 0 7px; font-size:15.5px; font-family:var(--serif); font-weight:700; }
+  .c p { margin:0; font-size:13.5px; color:var(--ink-2); }
+  .c .k { font-family:var(--mono); font-size:12px; color:var(--ink-3); display:block; margin-bottom:5px; }
+
+  .tw { overflow-x:auto; margin:18px 0; }
+  table { border-collapse:collapse; width:100%; font-size:13.5px; min-width:560px; }
+  th,td { padding:8px 11px; text-align:right; border-bottom:1px solid var(--rule); }
+  th:first-child,td:first-child{ text-align:left; }
+  thead th { font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); font-weight:700; border-bottom:1.5px solid var(--rule); }
+  td { font-family:var(--mono); font-variant-numeric:tabular-nums; }
+  td:first-child{ font-family:var(--sans); }
+  tr.hi td { background:var(--l2-soft); font-weight:700; }
+  tr.hi td:first-child{ color:var(--l2); }
+  tr.hw td { background:var(--warn-soft); }
+
+  .caveat { background:var(--flag-soft); border:1px solid var(--flag); border-radius:3px; padding:17px 20px; margin:22px 0 0; }
+  .caveat h4 { margin:0 0 9px; font-size:14px; color:var(--flag); letter-spacing:.06em; text-transform:uppercase; font-weight:700; }
+  .caveat ul{ margin:0; padding-left:19px; } .caveat li{ font-size:14px; color:var(--ink-2); margin-bottom:7px; }
+  .caveat li:last-child{ margin-bottom:0; } .caveat li b{ color:var(--ink); }
+
+  /* ── 互動元件 ── */
+  .lab { background:var(--panel); border:1px solid var(--l2); border-radius:3px; padding:20px 22px; margin:22px 0; }
+  .lab-h { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .lab-h b { font-family:var(--serif); font-size:17px; }
+  .lab-h .badge { font-family:var(--mono); font-size:11px; background:var(--l2); color:#fff; padding:2px 7px; border-radius:2px; letter-spacing:.05em; }
+  .lab p.hint { font-size:13.5px; color:var(--ink-3); margin:0 0 16px; }
+
+  .ctl { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:16px; }
+  .ctl label { font-size:13.5px; color:var(--ink-2); min-width:112px; }
+  input[type=range]{ flex:1; min-width:180px; accent-color:var(--l2); height:22px; }
+  .val { font-family:var(--mono); font-size:15px; font-weight:700; color:var(--l2);
+         font-variant-numeric:tabular-nums; min-width:96px; text-align:right; }
+
+  .seg { display:flex; gap:0; flex-wrap:wrap; margin-bottom:16px; }
+  .seg button {
+    font-family:var(--sans); font-size:13px; padding:7px 13px; cursor:pointer;
+    background:var(--sunk); color:var(--ink-2); border:1px solid var(--rule);
+    margin-right:-1px;
+  }
+  .seg button:first-child{ border-radius:3px 0 0 3px; } .seg button:last-child{ border-radius:0 3px 3px 0; margin-right:0; }
+  .seg button[aria-pressed=true]{ background:var(--l2); color:#fff; border-color:var(--l2); font-weight:700; position:relative; z-index:1; }
+  .seg button:focus-visible{ outline:2px solid var(--l2); outline-offset:2px; z-index:2; }
+
+  .gauge { background:var(--sunk); height:30px; border-radius:0 3px 3px 0; position:relative; margin:6px 0 4px; overflow:hidden; }
+  .gauge .g { height:100%; background:var(--l2); display:flex; align-items:center; justify-content:flex-end;
+              padding-right:10px; box-sizing:border-box; transition:width .18s ease; min-width:2px; }
+  .gauge .g b { font-family:var(--mono); font-size:13px; color:#fff; font-weight:700; white-space:nowrap; }
+  .gauge.low .g{ background:var(--warn); }
+  .verdict { font-size:14.5px; font-weight:700; margin-top:10px; }
+  .verdict.ok{ color:var(--l2); } .verdict.no{ color:var(--warn); } .verdict.mid{ color:var(--flag); }
+
+  .chk { display:flex; gap:9px; flex-wrap:wrap; margin-bottom:14px; }
+  .chk button {
+    font-family:var(--mono); font-size:12.5px; padding:6px 12px; cursor:pointer; border-radius:3px;
+    background:var(--sunk); color:var(--ink-3); border:1px solid var(--rule);
+  }
+  .chk button[aria-pressed=true]{ background:var(--l1-soft); color:var(--l1); border-color:var(--l1); font-weight:700; }
+  .chk button.sup[aria-pressed=true]{ background:var(--warn-soft); color:var(--warn); border-color:var(--warn); }
+  .chk button:focus-visible{ outline:2px solid var(--l2); outline-offset:2px; }
+
+  .out { display:grid; grid-template-columns:repeat(auto-fit,minmax(128px,1fr)); gap:11px; margin-top:6px; }
+  .out div { background:var(--sunk); border-radius:3px; padding:12px 14px; }
+  .out .n { font-family:var(--mono); font-size:21px; font-weight:700; display:block; font-variant-numeric:tabular-nums; }
+  .out .l { font-size:12px; color:var(--ink-3); }
+
+  .punch { font-family:var(--serif); font-size:clamp(16px,2.2vw,20px); line-height:1.6; text-wrap:balance;
+           margin:20px 0 0; padding-top:18px; border-top:1px solid var(--rule); }
+  .punch .g{ color:var(--l2); font-weight:700; } .punch .w{ color:var(--warn); font-weight:700; }
+
+  footer { padding:32px clamp(18px,4vw,54px) 70px; color:var(--ink-3); font-size:13px; line-height:1.85; }
+  code { font-family:var(--mono); font-size:12.5px; color:var(--ink-2); }
+  @media (prefers-reduced-motion:reduce){ *{ transition:none!important; } }
+
+  /* ── 字體統一樣大、縮短行距（後置覆寫，一次套用全頁） ── */
+  body{ line-height:1.45 !important; }
+  main *, nav *, footer, footer *{ font-size:14.5px !important; line-height:1.45 !important; }
+  h1{ font-size:21px !important; line-height:1.2 !important; }
+  h2{ font-size:16px !important; }
+</style>
+
+<div class="layout">
+
+<nav class="nav" aria-label="章節導覽">
+  <div class="nav-brand">統計分析基石</div>
+  <div class="nav-sub">Layer 1 規則層　Layer 2 統計層</div>
+
+  <div class="nav-ch">定位</div>
+  <a href="#role">三層分工</a>
+
+  <div class="nav-ch">Layer 1　規則層</div>
+  <a href="#l1-method">六條規則，三種角色</a>
+  <a href="#l1-lab">▸ 互動：規則開關</a>
+  <a href="#l1-proc">程序：寬進嚴出</a>
+  <a href="#l1-result">成果：消融與全量</a>
+
+  <div class="nav-ch">Layer 2　統計層</div>
+  <a href="#l2-method">三種變點偵測法</a>
+  <a href="#l2-proc">雙序列驗證設計</a>
+  <a href="#l2-result">八組實測結果</a>
+  <a href="#l2-flip">▸ 精確率／召回率翻轉</a>
+
+  <div class="nav-ch">能力邊界</div>
+  <a href="#snr-lab">▸ 互動：訊噪比實驗</a>
+  <a href="#feed">餵養機器學習層</a>
+
+  <div class="nav-ch">誠實聲明</div>
+  <a href="#honest">指標不可橫向比較</a>
+  <a href="#arena">同一擂台可比較版本</a>
+  <a href="#src">數據出處</a>
+</nav>
+
+<main>
+
+<header class="hero">
+  <div class="eyebrow">TASA-S-1150268　統計分析基石</div>
+  <h1>Layer 1 規則層　與　Layer 2 統計層<br>方法・程序・成果</h1>
+  <p class="lede">
+    機器學習是本計畫的偵測主力，但<b>它的全部輸入來自統計層</b>。<br>
+    沒有可稽核的規則基線與高召回的候選產生器，就沒有機器學習層。<br>
+    本頁附<b>兩個可操作的實驗</b>——你可以親手調參數，驗證結論是否成立。
+  </p>
+</header>
+
+<!-- ══ 定位 ══ -->
+<section id="role">
+  <div class="tag">定位</div>
+  <h2>三層分工：不是競爭，是各司其職</h2>
+  <p class="thesis">三層用<b>不同的方法、不同的真值、解決不同的問題</b>。比較它們的分數是沒有意義的。</p>
+
+  <div class="cards">
+    <div class="c a"><span class="k">Layer 1　規則</span>
+      <h4>可稽核基線</h4>
+      <p>白箱規則 P1–P6。每個旗標都附「哪條規則、門檻多少」。<b>不需訓練資料</b>，可直接部署於全庫 14,090 顆。</p></div>
+    <div class="c"><span class="k">Layer 2　統計</span>
+      <h4>候選產生器</h4>
+      <p>CUSUM／BOCPD／SSA。不預設機動長什麼樣，逐點找變化點。<b>設計為高召回</b>，寧可多報由後段篩。</p></div>
+    <div class="c p"><span class="k">Layer 3　機器學習</span>
+      <h4>判別器</h4>
+      <p>融合評分器。<b>以 Layer 2 的逐點分數為輸入特徵</b>，綜合五通道給出可操作判別。</p></div>
+  </div>
+
+  <p class="punch">
+    關鍵事實：<span class="g">Layer 2 的輸出「就是」Layer 3 的輸入</span>。<br>
+    融合評分器的五通道 ＝ CUSUM／BOCPD／SSA／3σ-MAD ＋ NRLMSIS 阻力殘差 ——
+    <span class="w">沒有統計層，機器學習層沒有東西可吃</span>。
+  </p>
+</section>
+
+<!-- ══ L1 方法 ══ -->
+<section id="l1-method">
+  <div class="tag">Layer 1　方法</div>
+  <h2>六條規則，三種角色</h2>
+  <p class="thesis">P1–P6 不是六個平行的偵測器，而是<b>三種功能</b>：偵測、抑制、調制。</p>
+
+  <div class="cards">
+    <div class="c a"><span class="k">P2　偵測型</span><h4>高度自適應 Δa 閾值</h4>
+      <p>拋物線左側曲線：頂點 700 km、下限 0.4 km；400 km 處門檻 2.0 km。
+        <b>低軌雜訊大 → 門檻高</b>。</p></div>
+    <div class="c a"><span class="k">P4　偵測型</span><h4>多窗口補充掃描</h4>
+      <p>滑動 3 筆內出現超閾值即補旗標 —— 找回長觀測窗中<b>被平均掉的單週機動</b>。</p></div>
+    <div class="c a"><span class="k">P6　偵測型</span><h4>星座感知專屬閾值</h4>
+      <p>依傾角族群：53° 1.0×／SSO 1.2×／中傾角 1.1×。
+        MEO/GEO/HEO <b>無大氣阻力</b>，改用固定 0.05 km。</p></div>
+    <div class="c w"><span class="k">P1　抑制型</span><h4>單調衰減抑制</h4>
+      <p>5 筆窗內 ≥85% 為小幅負 Δa、無跳變（|Δa|&lt;2 km）、B*&gt;0
+        → 判為<b>大氣阻力，非機動</b>。</p></div>
+    <div class="c w"><span class="k">P3　抑制型</span><h4>B* 輔助抑制</h4>
+      <p>B* &gt; max(中位+2σ, 5e-4) 且 Δa&lt;0 且 |Δa|&lt;1.5 km
+        → 該下降<b>可由高阻力解釋</b>，移除誤報。</p></div>
+    <div class="c f"><span class="k">P5　調制型</span><h4>F10.7 太陽通量倍率</h4>
+      <p>拋物線：頂點 70 sfu、下限 1.0；200 sfu 時 1.6× ——
+        <b>太陽活躍期阻力強，門檻同步放寬</b>。</p></div>
+  </div>
+</section>
+
+<!-- ══ L1 互動 ══ -->
+<section id="l1-lab">
+  <div class="tag">Layer 1　互動實驗</div>
+  <h2>親手調規則：看抑制型規則如何降低誤報</h2>
+  <p class="thesis">開關各條規則，觀察<b>旗標數與誤報數</b>怎麼變。這重現了 P1–P4 消融實驗的邏輯。</p>
+
+  <div class="lab">
+    <div class="lab-h"><b>規則組合模擬器</b><span class="badge">互動</span></div>
+    <p class="hint">
+      基於 P1–P4 消融實驗的實測結果（30 天、14,019 顆）建模。
+      點擊按鈕開關規則 —— 藍色為偵測型、橘色為抑制型。
+    </p>
+
+    <div class="chk" id="ruleBtns">
+      <button data-r="P2" aria-pressed="true">P2 高度自適應</button>
+      <button data-r="P4" aria-pressed="true">P4 多窗口補充</button>
+      <button data-r="P1" class="sup" aria-pressed="true">P1 單調衰減抑制</button>
+      <button data-r="P3" class="sup" aria-pressed="true">P3 B* 抑制</button>
+    </div>
+
+    <div class="out">
+      <div><span class="n" id="rTP" style="color:var(--l2)">—</span><span class="l">真陽性（抓到的機動）</span></div>
+      <div><span class="n" id="rFP" style="color:var(--warn)">—</span><span class="l">假陽性（誤報）</span></div>
+      <div><span class="n" id="rPrec" style="color:var(--ink)">—</span><span class="l">精確率</span></div>
+    </div>
+    <div class="verdict" id="rVerdict">—</div>
+  </div>
+
+  <p class="note muted">
+    模擬說明：本元件以消融實驗的兩個實測端點（基準 FP=68／精確率 94.8%；完整 P1–P4 FP=29／精確率 97.5%，
+    P4 另找回 26 顆）為錨點，中間組合按各規則的獨立貢獻線性內插。
+    <b>端點為實測值，中間組合為示意</b>——用途是理解機制，不是引用數據。
+  </p>
+</section>
+
+<!-- ══ L1 程序 ══ -->
+<section id="l1-proc">
+  <div class="tag">Layer 1　程序</div>
+  <h2>設計哲學：偵測寬進，物理嚴出</h2>
+  <p class="thesis">先盡量標記，再用<b>物理原理</b>逐條剔除 —— 而不是一開始就把門檻調高。</p>
+
+  <div class="cards">
+    <div class="c a"><span class="k">① 元素差分</span><h4>由 TLE 取 Δa／Δi／Δe／ΔΩ</h4>
+      <p>ΔΩ 為 J2 修正後的殘差。<b>僅用推論時可得的公開資料</b>；MEME 不參與偵測，只在驗證時當真值。</p></div>
+    <div class="c"><span class="k">② 閾值判定</span><h4>偵測取聯集</h4>
+      <p><code>flag = P2 ∪ P5 ∪ P6 ∪ P4 ∪ other(Δi/Δe/ΔΩ)</code><br>任一指標超標即產生候選 —— <b>設計為寬進</b>。</p></div>
+    <div class="c w"><span class="k">③ 物理抑制</span><h4>扣除可由阻力解釋者</h4>
+      <p><code>combined = detect AND NOT (P1 ∪ P3)</code><br>這是<b>誤報控制的主力</b>，不是調高門檻。</p></div>
+    <div class="c f"><span class="k">④ 輸出</span><h4>每旗標附理由字串</h4>
+      <p>「哪條規則、門檻多少、觸發幾筆」。<b>可稽核、可人工複核</b> —— 這是可解釋性的實作，不是事後說明。</p></div>
+  </div>
+</section>
+
+<!-- ══ L1 成果 ══ -->
+<section id="l1-result">
+  <div class="tag">Layer 1　成果</div>
+  <h2>消融實驗、全量部署、獨立驗證</h2>
+  <p class="thesis">三種不同強度的驗證：<b>控制實驗 → 全庫部署 → 完全獨立的第二真值</b>。</p>
+
+  <h3>① P1–P4 消融實驗（30 天，14,019 顆）</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>組態</th><th>假陽性</th><th>精確率</th><th>額外貢獻</th></tr></thead>
+      <tbody>
+        <tr><td>基準（無 P1–P4）</td><td>68 顆</td><td>94.8%</td><td>—</td></tr>
+        <tr class="hi"><td>完整 P1–P4</td><td>29 顆</td><td>97.5%</td><td>P4 找回 26 顆遺漏機動</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">
+    假陽性<b>減少 57%</b>，同時 P4 還<b>找回</b> 26 顆基準方法遺漏的真實機動 ——
+    抑制與補充同時進行，不是單純犧牲召回換精確率。
+  </p>
+
+  <h3>② 54 天全量部署（14,090 顆，啟用 P1–P6）</h3>
+  <div class="stats">
+    <div class="stat"><span class="n">26.9%</span><span class="l">Overall Recall</span></div>
+    <div class="stat g"><span class="n">5.4%</span><span class="l">誤報率 FAR</span></div>
+    <div class="stat"><span class="n">94.6%</span><span class="l">精確率（整體）</span></div>
+    <div class="stat g"><span class="n">98.2%</span><span class="l">Precision@Top-1000</span></div>
+  </div>
+
+  <h3>③ 獨立 hold-out：MEME 精密星曆</h3>
+  <div class="stats">
+    <div class="stat a"><span class="n">99</span><span class="l">真實事件數</span></div>
+    <div class="stat g"><span class="n">57.6%</span><span class="l">事件級 Recall</span></div>
+    <div class="stat g"><span class="n">24.4 h</span><span class="l">平均偵測前置時間</span></div>
+    <div class="stat"><span class="n">89.7%</span><span class="l">跨時間段一致率</span></div>
+  </div>
+
+  <div class="caveat">
+    <h4>為何 Overall Recall 只有 26.9%？</h4>
+    <ul>
+      <li>因為全量評估的真值是<b>「該衛星有無推進能力」的代理標籤</b>，
+        而 54 天內有推進能力者<b>未必真的機動過</b> —— <b>分母被高估了</b>。</li>
+      <li>用真實事件當真值的 hold-out 驗證得到<b>事件級 Recall 57.6%</b>，
+        這才是 Layer 1 的實際偵測力。<b>兩個數字不可混用</b>。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══ L2 方法 ══ -->
+<section id="l2-method">
+  <div class="tag">Layer 2　方法</div>
+  <h2>三種具名變點偵測法，各擅所長</h2>
+  <p class="thesis">三法<b>互補而非重複</b> —— 這正是它們能各自成為融合評分器獨立通道的原因。</p>
+
+  <div class="cards">
+    <div class="c"><span class="k">CUSUM　累積和管制圖</span><h4>「小變化持續累積，總會超線」</h4>
+      <p>Page (1954)。把每點偏差減去容差 k 後累加，超過門檻 h 即報警並重置。
+        參數 <code>k=0.5, h=5.0</code>，作用於 Δa 增量序列。<b>對緩慢漂移敏感</b>。</p></div>
+    <div class="c"><span class="k">BOCPD　貝氏線上變點偵測</span><h4>「這段穩定期被打斷了嗎？」</h4>
+      <p>Adams &amp; MacKay (2007)。維護 run-length（已穩定多久）的後驗分布，Normal-Gamma 共軛＋Student-t 預測。
+        用 <code>P(run&lt;3)</code> 當分數<b>比標準 P(run=0) 對連續機動更穩健</b>。</p></div>
+    <div class="c"><span class="k">SSA　奇異譜分析</span><h4>「先算它本來該長怎樣，再看差多少」</h4>
+      <p>滯後嵌入 → SVD → 取前 3 主成分重構「趨勢（阻力）＋振盪（J2）」，殘差尖峰即機動。
+        <b>與物理殘差模型同源思路</b>。</p></div>
+    <div class="c f"><span class="k">3σ-MAD　對照基準</span><h4>最簡單的方法，實測召回卻最高</h4>
+      <p>穩健 z ＝ |Δa − median| / (1.4826·MAD)，z&gt;3 標為異常。
+        列為對照組，<b>結果反而勝過三種具名方法</b>——見成果表。</p></div>
+  </div>
+
+  <p class="note muted">
+    全部以 numpy／scipy 自行實作，<b>無外部相依</b>。每個偵測器同時輸出
+    <b>逐點分數</b>（供 Layer 3 當特徵）與<b>事件索引</b>（供 Layer 2 輸出）。
+  </p>
+</section>
+
+<!-- ══ L2 程序 ══ -->
+<section id="l2-proc">
+  <div class="tag">Layer 2　程序</div>
+  <h2>雙序列驗證：分離「方法限制」與「資料限制」</h2>
+  <p class="thesis">同一組偵測器<b>同時跑在 TLE 與 MEME 兩種序列上</b> —— 兩者的落差就是公開資料的資訊上限。</p>
+
+  <div class="cards">
+    <div class="c"><span class="k">① 雙序列</span><h4>TLE sma　vs　MEME mean-a</h4>
+      <p>TLE ＝ 推論時可得、可部署；MEME ＝ 乾淨、已消 J2 振盪。<b>比較兩者即可分離方法與資料的貢獻</b>。</p></div>
+    <div class="c"><span class="k">② 真值定義</span><h4>da_severity ∈ {medium, large}</h4>
+      <p>即 ≥5 km，與主模型一致的門檻。共 <b>1,758 個真值事件</b>、283–284 顆衛星。</p></div>
+    <div class="c"><span class="k">③ episode 合併</span><h4>間隔 &gt; 48 小時視為不同事件</h4>
+      <p>避免把一次連續機動的 per-8h 多個時刻<b>重複計為多次事件</b>。</p></div>
+    <div class="c"><span class="k">④ 匹配計分</span><h4>±24 小時容差</h4>
+      <p>計算 precision／recall／lead-time。<b>lead 負值 ＝ 提前偵測</b>。</p></div>
+  </div>
+</section>
+
+<!-- ══ L2 成果 ══ -->
+<section id="l2-result">
+  <div class="tag">Layer 2　成果</div>
+  <h2>四方法 × 兩序列：八組完整實測</h2>
+  <p class="thesis">真值 1,758 個 MEME 機動 episode，容差 ±24 小時。<b>全部八組結果一次列出，不挑好看的講</b>。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>方法</th><th>輸入</th><th>衛星數</th><th>偵測數</th><th>精確率</th><th>召回率</th><th>前置時間</th></tr></thead>
+      <tbody>
+        <tr><td>BOCPD</td><td>MEME</td><td>283</td><td>355</td><td>0.862</td><td>0.148</td><td>0.0 h</td></tr>
+        <tr class="hi"><td>CUSUM</td><td>MEME</td><td>283</td><td>1,032</td><td>0.968</td><td>0.127</td><td>−43.2 h</td></tr>
+        <tr><td>3σ-MAD</td><td>MEME</td><td>283</td><td>1,469</td><td>0.953</td><td>0.210</td><td>−75.7 h</td></tr>
+        <tr><td>SSA</td><td>MEME</td><td>283</td><td>2,709</td><td>0.952</td><td>0.217</td><td>−56.1 h</td></tr>
+        <tr><td>BOCPD</td><td>TLE</td><td>284</td><td>1,094</td><td>0.480</td><td>0.201</td><td>−75.0 h</td></tr>
+        <tr><td>CUSUM</td><td>TLE</td><td>284</td><td>6,687</td><td>0.496</td><td>0.482</td><td>−43.0 h</td></tr>
+        <tr class="hi"><td>3σ-MAD</td><td>TLE</td><td>284</td><td>10,378</td><td>0.526</td><td>0.668</td><td>−23.1 h</td></tr>
+        <tr><td>SSA</td><td>TLE</td><td>284</td><td>9,839</td><td>0.493</td><td>0.414</td><td>−44.6 h</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="stats">
+    <div class="stat g"><span class="n">0.668</span><span class="l">TLE 上最佳召回（3σ-MAD）</span></div>
+    <div class="stat g"><span class="n">0.968</span><span class="l">MEME 上最佳精確率（CUSUM）</span></div>
+  </div>
+
+  <p class="note">
+    期中報告所引的「統計層最佳召回 0.67」即為表中 <b>3σ-MAD on TLE 的 0.668</b>。
+    值得注意的是：<b>最簡單的對照基準，在可部署的 TLE 序列上表現最好</b> ——
+    我們如實列出，不因為它「不夠精緻」而略過。
+  </p>
+</section>
+
+<!-- ══ L2 翻轉 ══ -->
+<section id="l2-flip">
+  <div class="tag">Layer 2　關鍵發現</div>
+  <h2>最重要的發現：精確率與召回率的翻轉</h2>
+  <p class="thesis">MEME 精度高 100 倍，<b>召回率反而更低</b>。這個反直覺結果，是三層架構的實證依據。</p>
+
+  <div class="cards">
+    <div class="c"><span class="k">MEME 序列（乾淨）</span><h4>高精確率、低召回率</h4>
+      <p>精確率 <b>0.86–0.97</b>／召回率 <b>0.13–0.22</b><br><br>
+        資料乾淨 → 報出來的幾乎都對；<br>但序列點數少、已被檔案平均平滑，<b>小事件被抹平</b> → 漏抓多。</p></div>
+    <div class="c w"><span class="k">TLE 序列（雜訊大）</span><h4>低精確率、高召回率</h4>
+      <p>精確率 <b>0.48–0.53</b>／召回率 <b>0.20–0.67</b><br><br>
+        雜訊大 → 約一半是誤報；<br>但取樣密、保留原始跳變，<b>抓得到的事件反而多</b>。</p></div>
+  </div>
+
+  <h3>這個翻轉為什麼重要？</h3>
+  <div class="cards">
+    <div class="c f"><h4>① 「資料更好」≠「偵測更多」</h4>
+      <p>MEME 精度高 100 倍，召回率卻更低。<b>解析度與取樣密度是兩件事</b>。</p></div>
+    <div class="c f"><h4>② 統計層必須是候選產生器</h4>
+      <p>TLE 的高召回是可用的，<b>低精確率交給後段</b>（物理抑制＋ML）處理。</p></div>
+    <div class="c f"><h4>③ 三層架構的實證依據</h4>
+      <p><b>單一層無法同時滿足高召回與高精確率</b> —— 這不是設計偏好，是實測結果。</p></div>
+  </div>
+</section>
+
+<!-- ══ SNR 互動 ══ -->
+<section id="snr-lab">
+  <div class="tag">能力邊界　互動實驗</div>
+  <h2>親手驗證：偵測率由「訊噪比」決定</h2>
+  <p class="thesis">拖動滑桿改變機動量級，切換雜訊帶 —— 你會發現<b>同樣的 Δa 在不同軌道帶結果完全不同</b>。</p>
+
+  <div class="lab">
+    <div class="lab-h"><b>合成注入實驗模擬器</b><span class="badge">互動</span></div>
+    <p class="hint">
+      在真實 TLE 序列上注入已知量級的人工機動，量測偵測率。
+      表格中的九個 Δa 錨點為<b>實測值</b>，滑桿在錨點之間以對數內插。
+    </p>
+
+    <div class="seg" id="bandBtns" role="group" aria-label="雜訊帶">
+      <button data-b="0" aria-pressed="false">LEO 低軌 &lt;450 km（σ=0.15）</button>
+      <button data-b="1" aria-pressed="true">LEO 中軌 450–700（σ=0.08）</button>
+      <button data-b="2" aria-pressed="false">LEO 高軌 &gt;700 km（σ=0.05）</button>
+    </div>
+
+    <div class="ctl">
+      <label for="daRange">機動量級 Δa</label>
+      <input type="range" id="daRange" min="0" max="100" value="55" step="1"
+             aria-describedby="daVal">
+      <span class="val" id="daVal">—</span>
+    </div>
+
+    <div class="gauge" id="gauge"><div class="g" id="gaugeFill" style="width:0%"><b>—</b></div></div>
+    <div class="ctl" style="margin-top:2px;margin-bottom:0">
+      <label style="min-width:auto">訊噪比 SNR</label>
+      <span class="val" id="snrVal" style="text-align:left;min-width:auto">—</span>
+    </div>
+    <div class="verdict" id="snrVerdict">—</div>
+  </div>
+
+  <h3>實測資料：同一個 Δa，三個雜訊帶差 15 倍</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>雜訊帶</th><th>σ (km)</th><th>Δa=0.1</th><th>Δa=0.2</th><th>Δa=0.3</th><th>Δa=0.5</th><th>Δa=1.0</th><th>Δa=2.0</th></tr></thead>
+      <tbody>
+        <tr><td>LEO 低軌 &lt;450 km</td><td>0.15</td><td>2.5%</td><td>3.5%</td><td>8.5%</td><td>25%</td><td>92.5%</td><td>100%</td></tr>
+        <tr><td>LEO 中軌 450–700</td><td>0.08</td><td>4.5%</td><td>17.5%</td><td>41.5%</td><td>84.5%</td><td>100%</td><td>100%</td></tr>
+        <tr><td>LEO 高軌 &gt;700 km</td><td>0.05</td><td>5.5%</td><td>51%</td><td>82%</td><td>100%</td><td>100%</td><td>100%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="note">
+    <b>Δa = 0.2 km 時</b>：低軌只有 3.5%，高軌卻有 51% —— <b>差 15 倍</b>。
+    但若改用訊噪比 SNR ＝ Δa / σ 來看，三條曲線大致收攏為同一條。
+  </p>
+
+  <div class="caveat">
+    <h4>收攏得有多好？如實揭露</h4>
+    <ul>
+      <li><b>SNR &lt; 2</b>：三帶偵測率全距僅 <b>0.02</b> —— 收攏得非常好，一致地測不到。</li>
+      <li><b>SNR ≥ 7</b>：三帶全距 <b>0</b> —— 全部 100%。</li>
+      <li><b>轉折區 SNR 3–4.5</b>：偵測率 25%～51%，全距達 <b>0.26</b> ——
+        <b>此區仍有明顯殘餘差異，SNR 並非唯一決定因素</b>。若簡報稱「三條曲線完全重合」，這一區會被挑戰。</li>
+    </ul>
+  </div>
+
+  <p class="punch">
+    結論：統計層的偵測能力，主要由<span class="g">「機動相對於該星雜訊有多大」</span>決定，
+    而非<span class="w">絕對 Δa 大小</span>。<br>
+    這正是後續機器學習層改用 σ 正規化（SNR）特徵的實證依據 —— <b>統計層先發現了這個規律</b>。
+  </p>
+</section>
+
+<!-- ══ 餵養 ML ══ -->
+<section id="feed">
+  <div class="tag">銜接</div>
+  <h2>統計層如何餵養機器學習層</h2>
+  <p class="thesis">融合評分器的<b>全部 15 維輸入</b>，都來自統計層與物理模型。</p>
+
+  <div class="cards">
+    <div class="c"><span class="k">輸入</span><h4>五個通道</h4>
+      <p>CUSUM／BOCPD／SSA／3σ-MAD 的逐點分數，<br>＋ NRLMSIS 阻力殘差。</p></div>
+    <div class="c"><span class="k">特徵工程</span><h4>每通道 ±24h 窗內取三統計量</h4>
+      <p><code>max ／ mean ／ p90</code><br>5 通道 × 3 統計量 ＝ <b>15 維特徵向量</b>。</p></div>
+    <div class="c p"><span class="k">輸出</span><h4>融合評分器</h4>
+      <p>ROC-AUC <b>0.9823</b>、AP 0.9583、FPR 0.0498<br>
+        large 召回 0.9728、medium 召回 0.9448。</p></div>
+  </div>
+
+  <div class="caveat">
+    <h4>但 small 召回 ＝ 0.000（目標 0.65）</h4>
+    <ul>
+      <li>這<b>不是模型缺陷</b>，而是統計層邊界的直接後果：
+        small 級機動的 SNR 落在上一節「SNR &lt; 2 幾乎測不到」的區間。</li>
+      <li><b>訊號本來就不在資料裡，任何下游模型都無法還原。</b>
+        這也是期中報告契約 #7 那個「0.000」的來源 —— 它是物理限制，不是實作失誤。</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══ 誠實聲明 ══ -->
+<section id="honest">
+  <div class="tag">誠實聲明</div>
+  <h2>三層指標不可橫向比較</h2>
+  <p class="thesis">三層<b>各自使用不同的測試集與 Ground Truth</b>。把 L1 的 26.9% 和 L3 的 97.5% 並排，是錯誤的比較。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>層</th><th>偵測器</th><th>評估基準（Ground Truth）</th><th>精確率</th><th>召回率</th></tr></thead>
+      <tbody>
+        <tr><td>L1 規則</td><td>P1–P6 整體</td><td>推進代理 GT · 54 天 · 14,090 顆</td><td>94.6</td><td>26.9</td></tr>
+        <tr><td>L1 規則</td><td>P1–P6 @Top-1000</td><td>推進代理 GT · Recall@N 排名</td><td>98.2</td><td>9.6</td></tr>
+        <tr><td>L2 統計</td><td>3σ-MAD (TLE)</td><td>MEME episodes · 1,758 事件 · 284 顆</td><td>52.6</td><td>66.8</td></tr>
+        <tr><td>L2 統計</td><td>CUSUM (MEME)</td><td>MEME episodes · 1,758 事件 · 283 顆</td><td>96.8</td><td>12.7</td></tr>
+        <tr><td>L3 監督式</td><td>LightGBM</td><td>Plan B 自標籤測試集 · 2,104 顆</td><td>99.5</td><td>97.5</td></tr>
+        <tr class="hw"><td>L3 監督式</td><td>LightGBM（MEME 外部）</td><td>Plan A · MEME 真值 · 252 顆（外部）</td><td>100.0</td><td>39.7</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="caveat">
+    <h4>三個必須說明的事實</h4>
+    <ul>
+      <li><b>L1 的 26.9% 與 L3 的 97.5% 不是同一件事</b> —— 分母、真值、時間窗全都不同。</li>
+      <li><b>L3 內部 97.5% 與外部 39.7% 的落差</b>，就是監督式模型的域外泛化問題
+        （已由域不變模型改善，見期中報告成果⑤）。</li>
+      <li>本頁所有數字皆可由 <code>data/benchmark/benchmark_v1_20260715.csv</code> 重跑複核，
+        該檔的 <code>eval_basis</code> 欄已逐列標註評估基準。</li>
+    </ul>
+  </div>
+
+  <p class="punch">
+    統計層是<span class="g">基石，不是配角</span> ——<br>
+    它提供可稽核的基線、機器學習的全部輸入，並且<span class="g">先一步發現了訊噪比規律</span>。
+  </p>
+</section>
+
+<!-- ══ 同一擂台補充 ══ -->
+<section id="arena">
+  <div class="tag">同一擂台補充</div>
+  <h2>可比較的版本：把三層放到「完全相同」的條件（§13.2）</h2>
+  <p class="thesis">上一節強調「不可橫向比較」；為此另建一個<b>可比較版本</b>——284 顆 Starlink、同一 MEME episode unit、同一操作點 FPR≤0.05，三層在同一批 unit 上給分。</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>層／方法</th><th>AUC</th><th>精確率</th><th>召回率</th><th>large</th><th>medium</th><th>small</th></tr></thead>
+      <tbody>
+        <tr><td>基線 純|Δa| 絕對門檻</td><td>0.870</td><td>0.324</td><td>0.263</td><td>0.353</td><td>0.072</td><td>0.091</td></tr>
+        <tr><td>基線 僅阻力模型</td><td>0.856</td><td>0.294</td><td>0.228</td><td>0.321</td><td>0.033</td><td>0.000</td></tr>
+        <tr><td>基線 σ 正規化|Δa|</td><td>0.878</td><td>0.335</td><td>0.276</td><td>0.363</td><td>0.099</td><td>0.000</td></tr>
+        <tr><td>L1 規則 P1–P6</td><td>—</td><td>0.299</td><td>0.251</td><td>0.333</td><td>0.083</td><td>0.000</td></tr>
+        <tr><td>L2 CUSUM（最佳單通道）</td><td>0.899</td><td>0.473</td><td>0.492</td><td>0.467</td><td>0.575</td><td>0.091</td></tr>
+        <tr><td>L2 五通道樸素 max</td><td>0.831</td><td>0.286</td><td>0.219</td><td>0.314</td><td>0.022</td><td>0.000</td></tr>
+        <tr class="hi"><td>L3 融合評分器 OOF</td><td>0.986</td><td>0.634</td><td>0.950</td><td>0.975</td><td>0.945</td><td>0.091</td></tr>
+        <tr><td>naive 隨機（對照）</td><td>—</td><td>0.082</td><td>0.049</td><td>0.050</td><td>0.046</td><td>0.036</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="caveat">
+    <h4>三個直接讀出的結論</h4>
+    <ul>
+      <li><b>L2 四通道同一擂台 AUC：CUSUM 0.899 ＞ 3σ-MAD 0.858 ＞ SSA 0.818 ＞ BOCPD 0.725</b>
+        —— 四法各有盲區、皆無法單獨涵蓋，正是 L3 融合的動機（融合後 AUC 0.986）。</li>
+      <li><b>基線階梯：σ 正規化|Δa| 0.878 ＞ 純絕對門檻 0.870</b> —— 驗證「σ 正規化優於固定絕對門檻」之核心主張；且三基線（純Δa／僅阻力／σ正規化）與樸素 max 皆<b>遠低於 L3 0.986</b>，凸顯學習融合之增益。</li>
+      <li><b>naive 隨機僅召回 0.049</b> —— 證明此擂台<b>具鑑別力</b>（若擂台無效，隨機分數應接近滿分）；同標準下 <b>L3 ＞ L2 ＞ 基線 ＞ L1 ＞ naive</b>。</li>
+      <li>誠實界定：本擂台<b>僅 Starlink</b>，測不到 L1 域先驗與跨域優勢；L1 門檻為全庫調校、非為此集最佳化——故此為三層之共同交集切面，非取代上一節之口徑聲明。</li>
+    </ul>
+  </div>
+
+  <p class="punch">
+    同標準下 <span class="g">L3 0.986 ＞ L2 0.899 ＞ 基線 ＞ L1 ＞ naive 0.049</span> ——<br>
+    統計層（L2）是同一擂台上<span class="g">僅次於融合層的最強單一方法</span>，且是 L3 的輸入來源。
+  </p>
+</section>
+
+<!-- ══ 出處 ══ -->
+<section id="src">
+  <div class="tag">附錄</div>
+  <h2>數據出處與可重跑指令</h2>
+  <div class="tw">
+    <table>
+      <thead><tr><th>內容</th><th>來源檔案</th></tr></thead>
+      <tbody>
+        <tr><td>三層總表（含 eval_basis）</td><td>data/benchmark/benchmark_v1_20260715.csv</td></tr>
+        <tr class="hi"><td>三層同一擂台（§13.2，本頁「可比較版本」）</td><td>three_layer_common_eval.py → data/benchmark/three_layer_common_eval_20260802.csv（含基線與模型消融）</td></tr>
+        <tr><td>Layer 2 八組 P/R/lead</td><td>data/statistical_layer/metrics_20260714.csv</td></tr>
+        <tr><td>合成注入偵測率</td><td>data/benchmark/injection_detect_rate.csv</td></tr>
+        <tr><td>融合評分器指標</td><td>data/benchmark/fusion_metrics_20260715.csv</td></tr>
+        <tr><td>P1–P6 實作與預設參數</td><td>maneuver_strategies_july.py</td></tr>
+        <tr><td>CUSUM／BOCPD／SSA 實作</td><td>statistical_detectors.py</td></tr>
+        <tr><td>Layer 2 執行與驗證</td><td>run_statistical_layer.py</td></tr>
+        <tr><td>L1 消融與 hold-out</td><td>docs/paper1_tle_maneuver_detection_zh.md</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note muted">
+    重跑 Layer 2 全量驗證：<code>python run_statistical_layer.py</code>（283 顆，約數分鐘）<br>
+    重建本簡報：<code>python docs/build_stat_layers_ppt.py</code>
+  </p>
+</section>
+
+</main>
+</div>
+
+<footer>
+  TASA-S-1150268　智慧化低軌通訊衛星軌道異常及太空事件偵測　｜　統計分析基石：Layer 1 與 Layer 2　｜　2026-07-20<br>
+  本頁兩個互動元件為<b>教學用模擬器</b>：錨點取自實測資料，錨點之間為內插示意，用途是理解機制而非引用數據。
+</footer>
+
+<script>
+(function () {
+  // ── 導覽高亮 ──
+  var links = [].slice.call(document.querySelectorAll('.nav a[href^="#"]'));
+  var map = {};
+  links.forEach(function (a) {
+    var el = document.getElementById(a.getAttribute('href').slice(1));
+    if (el) map[el.id] = a;
+  });
+  var seen = {};
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { seen[e.target.id] = e.isIntersecting ? e.intersectionRatio : 0; });
+    var best = null, bv = 0;
+    Object.keys(seen).forEach(function (id) { if (seen[id] > bv) { bv = seen[id]; best = id; } });
+    links.forEach(function (a) { a.classList.remove('on'); });
+    if (best && map[best]) map[best].classList.add('on');
+  }, { threshold: [0, .1, .25, .5, .75, 1], rootMargin: '-10% 0px -55% 0px' });
+  Object.keys(map).forEach(function (id) { io.observe(document.getElementById(id)); });
+
+  // ── 實驗一：規則組合 ──
+  // 錨點（實測）：基準 FP=68, prec=94.8%；完整 P1–P4 FP=29, prec=97.5%, P4 找回 26 顆。
+  // 由 prec 與 FP 反推基準 TP：prec = TP/(TP+FP) → TP = prec*FP/(1-prec)
+  var BASE_FP = 68, BASE_PREC = 0.948;
+  var BASE_TP = Math.round(BASE_PREC * BASE_FP / (1 - BASE_PREC));   // ≈ 1240
+  var P4_GAIN = 26;                 // P4 額外找回的真陽性
+  var SUP_TOTAL = BASE_FP - 29;     // P1+P3 合計移除的假陽性 = 39
+  var SUP = { P1: Math.round(SUP_TOTAL * 0.62), P3: SUP_TOTAL - Math.round(SUP_TOTAL * 0.62) };
+
+  var ruleState = { P2: true, P4: true, P1: true, P3: true };
+  var rBtns = document.getElementById('ruleBtns');
+
+  function renderRules() {
+    // P2 為基礎偵測器：關掉則偵測量大減（示意：TP、FP 各降 ~35%）
+    var tp = BASE_TP, fp = BASE_FP;
+    if (!ruleState.P2) { tp = Math.round(tp * 0.65); fp = Math.round(fp * 0.65); }
+    if (ruleState.P4) tp += P4_GAIN;
+    if (ruleState.P1) fp -= SUP.P1;
+    if (ruleState.P3) fp -= SUP.P3;
+    fp = Math.max(fp, 0);
+    var prec = tp + fp > 0 ? tp / (tp + fp) : 0;
+
+    document.getElementById('rTP').textContent = tp.toLocaleString();
+    document.getElementById('rFP').textContent = fp.toLocaleString();
+    document.getElementById('rPrec').textContent = (prec * 100).toFixed(1) + '%';
+
+    var v = document.getElementById('rVerdict'), msg, cls;
+    var allOn = ruleState.P2 && ruleState.P4 && ruleState.P1 && ruleState.P3;
+    var noSup = !ruleState.P1 && !ruleState.P3;
+    if (allOn) { msg = '完整 P1–P4：假陽性 29 顆、精確率 97.5% —— 這組是實測值'; cls = 'ok'; }
+    else if (noSup) { msg = '關閉全部抑制型規則：假陽性回到基準水準，精確率明顯下降'; cls = 'no'; }
+    else if (!ruleState.P4) { msg = '關閉 P4：少了 26 顆被找回的真實機動 —— 補充掃描是有代價的'; cls = 'mid'; }
+    else { msg = '部分組態：抑制型規則每關一條，假陽性就回升一段'; cls = 'mid'; }
+    v.textContent = msg; v.className = 'verdict ' + cls;
+  }
+
+  rBtns.addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    var r = b.dataset.r;
+    ruleState[r] = !ruleState[r];
+    b.setAttribute('aria-pressed', String(ruleState[r]));
+    renderRules();
+  });
+  renderRules();
+
+  // ── 實驗二：SNR ──
+  var BANDS = [
+    { name: 'LEO 低軌 <450 km', sigma: 0.15,
+      da: [0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 1.0, 2.0, 5.0],
+      dr: [0.040, 0.035, 0.025, 0.035, 0.085, 0.250, 0.925, 1.0, 1.0] },
+    { name: 'LEO 中軌 450–700', sigma: 0.08,
+      da: [0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 1.0, 2.0, 5.0],
+      dr: [0.030, 0.040, 0.045, 0.175, 0.415, 0.845, 1.0, 1.0, 1.0] },
+    { name: 'LEO 高軌 >700 km', sigma: 0.05,
+      da: [0.02, 0.05, 0.1, 0.2, 0.3, 0.5, 1.0, 2.0, 5.0],
+      dr: [0.030, 0.045, 0.055, 0.510, 0.820, 1.0, 1.0, 1.0, 1.0] }
+  ];
+  var band = 1;
+  var daRange = document.getElementById('daRange');
+
+  function sliderToDa(v) {           // 0..100 → 0.02..5.0（對數）
+    var lo = Math.log(0.02), hi = Math.log(5.0);
+    return Math.exp(lo + (hi - lo) * (v / 100));
+  }
+  function interpRate(b, da) {
+    var X = b.da, Y = b.dr;
+    if (da <= X[0]) return Y[0];
+    if (da >= X[X.length - 1]) return Y[Y.length - 1];
+    for (var i = 0; i < X.length - 1; i++) {
+      if (da >= X[i] && da <= X[i + 1]) {
+        var t = (Math.log(da) - Math.log(X[i])) / (Math.log(X[i + 1]) - Math.log(X[i]));
+        return Y[i] + t * (Y[i + 1] - Y[i]);
+      }
+    }
+    return Y[Y.length - 1];
+  }
+  function renderSnr() {
+    var b = BANDS[band];
+    var da = sliderToDa(+daRange.value);
+    var rate = interpRate(b, da);
+    var snr = da / b.sigma;
+
+    document.getElementById('daVal').textContent = da.toFixed(3) + ' km';
+    document.getElementById('snrVal').textContent = snr.toFixed(1) + ' ×σ';
+    var fill = document.getElementById('gaugeFill');
+    fill.style.width = Math.max(rate * 100, 1.5) + '%';
+    fill.querySelector('b').textContent = (rate * 100).toFixed(1) + '%';
+    document.getElementById('gauge').className = 'gauge' + (rate < 0.5 ? ' low' : '');
+
+    var v = document.getElementById('snrVerdict'), msg, cls;
+    if (snr < 2) { msg = 'SNR < 2：幾乎測不到 —— 訊號被雜訊淹沒，三個雜訊帶一致（全距僅 0.02）'; cls = 'no'; }
+    else if (snr < 4.5) { msg = 'SNR 3–4.5 轉折區：偵測率在 25%～51% 之間，此區三帶差異最大（全距 0.26）'; cls = 'mid'; }
+    else if (snr < 7) { msg = 'SNR 4.5–7：偵測率約 82%～93%，已相當可靠'; cls = 'mid'; }
+    else { msg = 'SNR ≥ 7：三個雜訊帶全部 100% —— 訊號遠大於雜訊，必定偵測到'; cls = 'ok'; }
+    v.textContent = msg; v.className = 'verdict ' + cls;
+  }
+  daRange.addEventListener('input', renderSnr);
+  document.getElementById('bandBtns').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    band = +b.dataset.b;
+    [].slice.call(this.querySelectorAll('button')).forEach(function (x) {
+      x.setAttribute('aria-pressed', String(+x.dataset.b === band));
+    });
+    renderSnr();
+  });
+  renderSnr();
+})();
+</script>

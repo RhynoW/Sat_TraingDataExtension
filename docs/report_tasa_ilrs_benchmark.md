@@ -1,6 +1,8 @@
-# 附錄／章節：NASA/ILRS 外部標竿之機動偵測驗證
+# 附錄／章節：TASA 機動偵測外部標竿驗證（採 NASA/ILRS 公開真值）
 
-**Space Event Detection Test with Actual Maneuver Data from NASA/ILRS**
+**TASA Space Event Detection Benchmark — validated against NASA/ILRS public maneuver truth**
+
+> 本報告為 TASA 專案之外部標竿驗證章節；所用真值為 NASA/ILRS（IDS DORIS／雷射測距服務）公開之 operator 認證機動歷史（資料源），非 TASA 產出。
 
 > 本章以 NASA/ILRS 公開之衛星機動歷史(operator 認證真值)作為**外部、非自建**標竿,驗證本專案偵測法,並與曲線擬合基準法(Polynomial Fit / LOWESS)同台比較。
 
@@ -28,7 +30,7 @@
 | 本專案 σ 正規化 | 相對各星自身雜訊 σ 的 **SNR 門檻**(單趟);**迭代 + 前後中位「位準位移」**(抑制單點離群 FP) |
 | 本專案 L2 統計層 | **CUSUM**、**BOCPD**(貝氏線上變點)、**SSA**(奇異譜)、**3σ-MAD**;無監督融合(union / vote≥2) |
 
-**設計依據**:〈TLE 半長軸雜訊底〉研究證明雜訊底隨高度巨變(719–1338 km 僅 0.3 m,vs Starlink 24–75 m),故門檻應以**高度相依之 σ 正規化(SNR 判定)**取代固定絕對值——此即本專案法之核心。
+**設計依據**:〈TLE 半長軸雜訊底〉研究證明雜訊底隨高度巨變(719–1338 km 之 13 顆測高星 σ_diff 中位僅 0.2 m,vs Starlink 24–75 m,小約兩個數量級),故門檻應以**高度相依之 σ 正規化(SNR 判定)**取代固定絕對值——此即本專案法之核心。
 
 ## 4. 結果
 
