@@ -94,7 +94,8 @@ def fmt_mb(path: Path) -> str:
 # Part 1: 建立 space_db_slim.duckdb
 # ─────────────────────────────────────────────────────────────────────────────
 
-def build_slim_db(date_from: str, keep_lines: bool) -> None:
+def build_slim_db(date_from: str, keep_lines: bool,
+                  recent_days: int = 0, whitelist: list[int] | None = None) -> None:
     if SLIM_DB.exists():
         log.info("刪除舊的 slim DB: %s", SLIM_DB)
         SLIM_DB.unlink()
@@ -110,17 +111,38 @@ def build_slim_db(date_from: str, keep_lines: bool) -> None:
     cols = SLIM_COLS_WITH_LINES if keep_lines else SLIM_COLS
     col_str = ", ".join(cols)
 
-    # ── 1. raw_tle_archive（精簡欄位，2024+ 資料）─────────────────────────
+    # ── 1. raw_tle_archive ────────────────────────────────────────────────
+    #   發布用精簡：全衛星只留最近 recent_days 天（live app 只取每顆最新一筆，故足夠），
+    #   白名單衛星則保留完整歷史（供 RPO 3D 反演之展示，如神龍 58573×59884）。
+    #   recent_days<=0 → 沿用舊行為（date_from 以後全歷史）。
     t0 = time.time()
-    log.info("複製 raw_tle_archive（%s 以後，%d 欄）…", date_from, len(cols))
+    whitelist = whitelist or []
+    if recent_days and recent_days > 0:
+        wl_clause = (" OR norad_id IN ({})".format(
+            ", ".join(str(int(x)) for x in whitelist)) if whitelist else "")
+        where = (
+            f"epoch_utc >= '{date_from}' AND ("
+            f"epoch_utc >= (SELECT max(epoch_utc) FROM src.raw_tle_archive) "
+            f"- INTERVAL '{int(recent_days)}' DAY{wl_clause})"
+        )
+        log.info("複製 raw_tle_archive（全衛星最近 %d 天 + 白名單%s 完整歷史，%d 欄）…",
+                 recent_days, whitelist or "（無）", len(cols))
+    else:
+        where = f"epoch_utc >= '{date_from}'"
+        log.info("複製 raw_tle_archive（%s 以後全歷史，%d 欄）…", date_from, len(cols))
     dst.execute(f"""
         CREATE TABLE raw_tle_archive AS
         SELECT {col_str}
         FROM src.raw_tle_archive
-        WHERE epoch_utc >= '{date_from}'
+        WHERE {where}
     """)
     n = dst.execute("SELECT COUNT(*) FROM raw_tle_archive").fetchone()[0]
-    log.info("  raw_tle_archive: %d 列 (%.1f s)", n, time.time() - t0)
+    nwl = 0
+    if whitelist:
+        nwl = dst.execute(
+            "SELECT COUNT(*) FROM raw_tle_archive WHERE norad_id IN ({})".format(
+                ", ".join(str(int(x)) for x in whitelist))).fetchone()[0]
+    log.info("  raw_tle_archive: %d 列（其中白名單 %d 列）(%.1f s)", n, nwl, time.time() - t0)
 
     # ── 2. sat_n2yo_metadata（全部） ───────────────────────────────────────
     t0 = time.time()
@@ -148,6 +170,10 @@ def build_slim_db(date_from: str, keep_lines: bool) -> None:
     except Exception as e:
         log.warning("索引建立失敗（可能已存在）: %s", e)
 
+    try:
+        dst.execute("CHECKPOINT;")   # 壓縮檔案、釋放未用空間
+    except Exception as e:
+        log.warning("CHECKPOINT 失敗: %s", e)
     dst.close()
 
     log.info("✅ slim DB 完成: %s", fmt_mb(SLIM_DB))
@@ -334,6 +360,12 @@ def main() -> int:
                     help="slim DB 中保留 line1/line2（conjunction 需要，但增加體積）")
     ap.add_argument("--from",  dest="date_from", default="2024-01-01",
                     help="資料起始日期 YYYY-MM-DD（預設 2024-01-01）")
+    ap.add_argument("--recent-days", type=int, default=0,
+                    help="發布用精簡：全衛星只保留最近 N 天歷史（live app 只取每顆最新一筆即足）；"
+                         "0=停用（沿用 --from 全歷史）。建議搭配 --keep-lines。")
+    ap.add_argument("--whitelist", default="58573,59884,67689,69673,58204,43874",
+                    help="以逗號分隔之 NORAD，這些衛星保留完整歷史（供 RPO 反演展示，"
+                         "如神龍第3次 58573,59884、第4次 2026 太空梭67689/ObjH 69673）；空字串＝無白名單。")
     ap.add_argument("--parquet-src", choices=["original", "slim"], default="original",
                     help="parquet 資料來源：original=原始DB, slim=精簡DB（需先執行slim）")
     ap.add_argument("--latest30day", action="store_true",
@@ -349,7 +381,10 @@ def main() -> int:
     do_parquet = not args.slim_only
 
     if do_slim:
-        build_slim_db(args.date_from, args.keep_lines)
+        wl = [int(x) for x in str(args.whitelist).replace("，", ",").split(",")
+              if x.strip().isdigit()]
+        build_slim_db(args.date_from, args.keep_lines,
+                      recent_days=args.recent_days, whitelist=wl)
 
     if do_parquet:
         src = SLIM_DB if args.parquet_src == "slim" and SLIM_DB.exists() else SRC_DB

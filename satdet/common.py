@@ -6,10 +6,13 @@
   merge_episodes()      機動轉移 → episode（48h gap 合併、取 max 嚴重度）
   episodes_by_sat()     整張 truth 表 → {衛星: [(times_ns, rank)]}
   fpr_floor_threshold() FPR 預算操作點（floor 保證嚴格 ≤ budget）
+  tle_ephemeris_type()  line1 第 63 欄 Ephemeris Type（4 = SGP4-XP，與 SGP4 不互通）
+  warn_sgp4xp()         整批 TLE 偵測 Type-4 並發 warning（避免混入後靜默算錯）
 """
 from __future__ import annotations
 
 import glob
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -19,6 +22,40 @@ TOL_NS = 24 * HOUR_NS   # episode 配對容差（＝latency 目標）
 GAP_NS = 48 * HOUR_NS   # episode 合併間隔
 SEV_RANK = {"small": 1, "medium": 2, "large": 3}
 RANK_SEV = {v: k for k, v in SEV_RANK.items()}
+
+# TLE line1 第 63 欄（0-based index 62）Ephemeris Type。
+#   0 = SGP4/SDP4（Space-Track 公開 TLE 一律為 0）
+#   4 = SGP4-XP（USSF AstroStds v8+，2020-12 起；EGM-96/J5、Jacchia-70、SRP AGOM）
+# Type-4 的平均元素是用 XP 理論擬合的，用傳統 SGP4（python-sgp4/Skyfield）傳播會錯，
+# 且 line1 第 45–52 欄（n̈）被 AGOM 取代。本專案下游全部假設 SGP4，故必須標旗。
+EPHEMERIS_TYPE_SGP4 = 0
+EPHEMERIS_TYPE_SGP4_XP = 4
+
+
+class SGP4XPWarning(UserWarning):
+    """批次中混入 SGP4-XP（Type-4）TLE。"""
+
+
+def tle_ephemeris_type(line1) -> int | None:
+    """回傳 TLE line1 的 Ephemeris Type 整數；line1 缺失／過短／非數字回傳 None。"""
+    if not isinstance(line1, str) or len(line1) < 63:
+        return None
+    ch = line1[62]
+    if ch == " ":
+        return 0            # 部分來源以空白代表 0
+    return int(ch) if ch.isdigit() else None
+
+
+def warn_sgp4xp(ephemeris_types, context: str = "") -> int:
+    """回傳批次中 Type-4 筆數；>0 時發 SGP4XPWarning（不拋例外，讓資料仍入庫但有旗標）。"""
+    arr = pd.Series(list(ephemeris_types))
+    n_xp = int((arr == EPHEMERIS_TYPE_SGP4_XP).sum())
+    if n_xp:
+        warnings.warn(
+            f"{context} 偵測到 {n_xp}/{len(arr)} 筆 SGP4-XP（Ephemeris Type=4）TLE；"
+            "其平均元素與 SGP4 不互通，下游 SGP4/幾何計算應以 ephemeris_type 欄位過濾。",
+            SGP4XPWarning, stacklevel=2)
+    return n_xp
 
 
 def to_ns(s) -> np.ndarray:

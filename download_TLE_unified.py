@@ -35,6 +35,7 @@ from spacetrack import SpaceTrackClient
 import spacetrack.operators as op
 
 from tle_catnr import decode_catnr  # Alpha-5 相容編目欄解析（6 位數 NORAD 止血）
+from satdet.common import tle_ephemeris_type, warn_sgp4xp  # SGP4-XP(Type-4) 旗標
 
 # ==========================
 # 常數與環境變數
@@ -97,6 +98,7 @@ def init_space_db(db_path: str) -> None:
             rev_number          INTEGER,
             bstar               DOUBLE,
             element_number      INTEGER,
+            ephemeris_type      INTEGER,
             source_file         VARCHAR,
             load_time           TIMESTAMP DEFAULT current_timestamp,
             UNIQUE (norad_id, line1)
@@ -157,6 +159,7 @@ def init_space_db(db_path: str) -> None:
         "ALTER TABLE raw_tle_archive ADD COLUMN rmin_km DOUBLE;",
         "ALTER TABLE raw_tle_archive ADD COLUMN rmax_km DOUBLE;",
         "ALTER TABLE raw_tle_archive ADD COLUMN bstar    DOUBLE;",
+        "ALTER TABLE tle_raw ADD COLUMN ephemeris_type INTEGER;",  # SGP4-XP 旗標
     ]
     for sql in alter_sqls:
         try:
@@ -285,6 +288,7 @@ def parse_line1_basic(line1: str) -> dict:
         "intl_designator": intl_designator,
         "bstar": bstar,
         "element_number": element_number,
+        "ephemeris_type": tle_ephemeris_type(line1),   # 4 = SGP4-XP
     }
 
 
@@ -406,6 +410,14 @@ def upsert_tle_into_space_db(
         .reset_index(drop=True)
     )
 
+    # ---- SGP4-XP（Ephemeris Type=4）守門：入庫並標旗，但絕不靜默 ----
+    if "ephemeris_type" not in df_tle_raw.columns:
+        df_tle_raw["ephemeris_type"] = df_tle_raw["line1"].map(tle_ephemeris_type)
+    n_xp = warn_sgp4xp(df_tle_raw["ephemeris_type"], context="upsert_tle_into_space_db:")
+    if n_xp:
+        print(f"!!! 注意：本批 {n_xp} 筆為 SGP4-XP Type-4 TLE（tle_raw.ephemeris_type=4），"
+              "tle_table/raw_tle_archive 幾何值由平均元素直接換算，SGP4 傳播請勿使用。")
+
     df_geo = df_tle_raw.copy()
 
     # ---- 時間欄位統一 ----
@@ -524,7 +536,7 @@ def upsert_tle_into_space_db(
                 name, line1, line2, classification, intl_designator,
                 mean_motion, inclination_deg, raan_deg, eccentricity,
                 argp_deg, mean_anomaly_deg, rev_number, bstar,
-                element_number, source_file
+                element_number, ephemeris_type, source_file
             )
             SELECT
                 src.norad_id,
@@ -545,6 +557,7 @@ def upsert_tle_into_space_db(
                 src.rev_number,
                 src.bstar,
                 src.element_number,
+                src.ephemeris_type,
                 src.source_file
             FROM df_raw src
             WHERE NOT EXISTS (
@@ -771,6 +784,9 @@ def parse_omm_records(omm_list, source_file: str = "omm_json") -> pd.DataFrame:
             "intl_designator": o.get("OBJECT_ID"),
             "bstar": float(bstar) if bstar not in (None, "") else None,
             "element_number": int(o["ELEMENT_SET_NO"]) if o.get("ELEMENT_SET_NO") not in (None, "") else None,
+            # OMM 有 EPHEMERIS_TYPE 欄；缺則退回從 TLE_LINE1 讀第 63 欄
+            "ephemeris_type": (int(o["EPHEMERIS_TYPE"]) if o.get("EPHEMERIS_TYPE") not in (None, "")
+                               else tle_ephemeris_type(o.get("TLE_LINE1"))),
             "inclination_deg": float(o["INCLINATION"]),
             "raan_deg": float(o["RA_OF_ASC_NODE"]),
             "eccentricity": float(o["ECCENTRICITY"]),
@@ -924,7 +940,8 @@ def run_local_files_mode():
 # 下游重建（slim DB / parquet）
 # ==========================
 
-def rebuild_downstream(parquet: bool) -> None:
+def rebuild_downstream(parquet: bool, keep_lines: bool = False,
+                       recent_days: int = 0, whitelist: str = "") -> None:
     """
     TLE 寫入 space_db.duckdb 完成後，呼叫 prc_maneuver/build_slim_db.py
     重建 space_db_slim.duckdb 與/或月份 parquet，並匯出 latest30day_tle.parquet。
@@ -933,6 +950,8 @@ def rebuild_downstream(parquet: bool) -> None:
       parquet=False  → build_slim_db.py --slim-only
       parquet=True   → build_slim_db.py --parquet-src slim --latest30day
                        （先建 slim → 月份 parquet → latest30day parquet）
+      keep_lines=True → 額外帶 --keep-lines，使 slim DB 保留 line1/line2
+                       （SGP4 傳播、conjunction 與 RPO 3D 場景所需）。
     """
     build_script = Path(__file__).resolve().parent / "prc_maneuver" / "build_slim_db.py"
     if not build_script.exists():
@@ -946,6 +965,12 @@ def rebuild_downstream(parquet: bool) -> None:
         cmd += ["--parquet-src", "slim", "--latest30day"]
     else:
         cmd.append("--slim-only")
+    if keep_lines:
+        cmd.append("--keep-lines")
+    if recent_days and recent_days > 0:
+        cmd += ["--recent-days", str(int(recent_days))]
+    if whitelist:
+        cmd += ["--whitelist", str(whitelist)]
 
     print(f"[rebuild] 執行：{' '.join(cmd)}", flush=True)
     t0 = time.perf_counter()
@@ -989,6 +1014,21 @@ def main():
         action="store_true",
         help="TLE 寫入完成後重建 slim DB 並匯出月份 parquet（隱含 --rebuild-slim）",
     )
+    parser.add_argument(
+        "--keep-lines",
+        action="store_true",
+        help="slim DB 保留 line1/line2（SGP4 傳播、conjunction 與 RPO 3D 場景所需；"
+             "透傳給 build_slim_db.py --keep-lines）",
+    )
+    parser.add_argument(
+        "--recent-days", type=int, default=0,
+        help="發布用精簡：slim DB 全衛星只留最近 N 天歷史（0=停用；透傳給 build_slim_db.py）",
+    )
+    parser.add_argument(
+        "--whitelist", default="58573,59884,67689,69673,58204,43874",
+        help="保留完整歷史之 NORAD（逗號分隔，供 RPO 展示；透傳給 build_slim_db.py）"
+             "。神龍：58573/59884（第3次任務）、67689/69673（第4次任務 2026）",
+    )
 
     args = parser.parse_args()
 
@@ -998,7 +1038,8 @@ def main():
         run_local_files_mode()
 
     if args.rebuild_slim or args.rebuild_parquet:
-        rebuild_downstream(parquet=args.rebuild_parquet)
+        rebuild_downstream(parquet=args.rebuild_parquet, keep_lines=args.keep_lines,
+                           recent_days=args.recent_days, whitelist=args.whitelist)
 
 
 if __name__ == "__main__":

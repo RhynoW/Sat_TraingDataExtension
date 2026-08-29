@@ -66,6 +66,28 @@ _PRESETS = {
             {"d": "19 Jun–21 Jul", "c": "", "t": "<b>Departure again.</b> Separation grows to 13,704 km by 21 Jul 2024."},
         ],
     },
+    (58204, 43874): {
+        "title": "TJS-10 × TJS-3 — GEO East-to-West Repositioning Past a Sister Satellite",
+        "subtitle": ("TJS-10 (58204) sat 170–360 km east of TJS-3 (43874) at 173°E through spring 2024, "
+                     "raised SMA twice on 15–16 May to drift west, passed TJS-3 at ~15 km on 16/17 May, "
+                     "braked on 18–19 May and settled ~65–85 km west — the checkout-like behaviour "
+                     "described by COMSPOC. Distances are SGP4/TLE-grade (km-level at GEO)."),
+        "events": [
+            {"t": "2024-05-15T13:56Z", "label": "SMA +11 km", "color": "--sec"},
+            {"t": "2024-05-16T20:10Z", "label": "TCA ~15 km", "color": "--crit"},
+            {"t": "2024-05-18T14:13Z", "label": "SMA -11 km", "color": "--sec"},
+            {"t": "2024-05-27T15:31Z", "label": "TRIM", "color": "--sec"},
+        ],
+        "timeline": [
+            {"d": "3 Nov 2023", "c": "", "t": "<b>Launch.</b> TJS-10 (CZ-7A) to GEO; mission undisclosed. Co-planar with TJS-3 near 173°E."},
+            {"d": "Mar–14 May 2024", "c": "", "t": "<b>East-side loiter.</b> 170–360 km east of TJS-3 (Δlon +0.2°→+0.5°)."},
+            {"d": "15–16 May", "c": "sec", "t": "<b>Drift start.</b> Two SMA raises (+11.4 / +11.8 km) initiate westward drift."},
+            {"d": "16–17 May", "c": "crit", "t": "<b>Fly-past.</b> Closest ~15 km at 20:10 UTC; TJS-10 crosses from east to west of TJS-3."},
+            {"d": "18–19 May", "c": "sec", "t": "<b>Brake.</b> Two SMA lowers (−11.1 / −11.8 km); overshoot to ~320 km west."},
+            {"d": "20–27 May", "c": "", "t": "<b>Drift back.</b> 320 → 110 km; 27 May trim (−4.9 / +10.5 km) halts drift."},
+            {"d": "Jun–Jul 2024", "c": "", "t": "<b>Station.</b> Holds 65–85 km west of TJS-3; ~40 km daily oscillation is relative e/i, not thrust."},
+        ],
+    },
 }
 
 
