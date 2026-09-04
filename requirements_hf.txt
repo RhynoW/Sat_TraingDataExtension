@@ -1,0 +1,13 @@
+# maneuver_app_2026September.py — HuggingFace Space 相依
+# 版本對齊本機環境，確保 .pkl 模型可正確反序列化（sklearn / lightgbm 尤須一致）。
+streamlit==1.54.0
+duckdb>=1.1.0            # 需支援 hf:// 檔案系統與 httpfs autoload（本機驗證於 1.5.1）
+pandas
+numpy
+plotly
+pyarrow
+joblib
+scikit-learn==1.8.0
+lightgbm==4.6.0
+pymsis                  # NRLMSIS 大氣密度（阻力殘差特徵）；缺此套件時相關功能自動略過
+huggingface_hub         # （選）上傳/管理 dataset；App 執行本身不需要
