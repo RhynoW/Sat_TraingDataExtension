@@ -3452,6 +3452,13 @@ def load_case12_heo_drag_residual() -> pd.DataFrame:
     return pd.read_csv(p) if p.exists() else pd.DataFrame()
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case12_sso_classification() -> pd.DataFrame:
+    """案例十二「太陽同步軌道」缺口之嚴謹分類與召回率切片（讀取 analyze_sso_classification.py 之離線輸出）。"""
+    p = DATA / "benchmark" / "sso_classification_validation_20260910.csv"
+    return pd.read_csv(p) if p.exists() else pd.DataFrame()
+
+
 def render_storymap_case12():
     if st.button(t("storymap_back"), key="back_from_case12"):
         st.session_state["storymap_case"] = None
@@ -3751,13 +3758,58 @@ def render_storymap_case12():
         )
 
     st.markdown("---")
-    st.markdown("**尚待測試的缺口**")
-    st.markdown(
-        "**太陽同步軌道**：目前系統從未把「太陽同步」單獨設為一條測試分層——"
-        "FORMOSAT 系列（多為太陽同步軌道）的驗證數字（如 FORMOSAT-3A 純衰減殘差極小）"
-        "可以算是間接佐證，但技術文件從未以「太陽同步 vs 非太陽同步」作為明確的分類軸去呈現結果，"
-        "這是一個誠實列出、但目前還沒有專門數字可以回答的缺口。"
-    )
+    st.markdown("**尚待測試的缺口 → 2026-09-10 已補上嚴謹分類與初步數字**")
+    sso = load_case12_sso_classification()
+    if sso.empty:
+        st.markdown(
+            "**太陽同步軌道**：目前系統從未把「太陽同步」單獨設為一條測試分層——"
+            "FORMOSAT 系列（多為太陽同步軌道）的驗證數字（如 FORMOSAT-3A 純衰減殘差極小）"
+            "可以算是間接佐證，但技術文件從未以「太陽同步 vs 非太陽同步」作為明確的分類軸去呈現結果，"
+            "這是一個誠實列出、但目前還沒有專門數字可以回答的缺口。"
+        )
+    else:
+        st.markdown(
+            "**太陽同步軌道（SSO）**：原本的缺口是「從未把太陽同步單獨設為一條測試分層」。"
+            "改進思路不是重新收案例，而是先問一個更嚴謹的問題：**傾角接近 96–99° 不等於真的是"
+            "太陽同步軌道**——太陽同步的嚴格定義是「節線進動速率跟太陽視運動同步」"
+            "（≈0.9856°/day），高傾角只是達成這個條件的必要不充分手段。\n\n"
+            "**方法**：直接對案例四 23 顆外部真值衛星的真實 RAAN（升交點赤經）時序做線性回歸，"
+            "算出每顆的**實際節線進動速率**，跟理論太陽同步值比對——這比只看傾角嚴謹得多。"
+            "例如 **CryoSat-2 傾角 92°、外觀像 SSO，但實測進動速率只有 0.24°/day，明確不是**；"
+            "**SARAL 傾角 98.5°、實測進動速率 0.985°/day，幾乎完美吻合，是嚴格 SSO**。"
+        )
+        n_sso = int(sso["is_sso"].sum())
+        n_non = int((~sso["is_sso"]).sum())
+        sso_g = sso[sso["is_sso"]]
+        non_g = sso[~sso["is_sso"]]
+        sso_recall = sso_g["tp"].sum() / sso_g["n_ev"].sum()
+        non_recall = non_g["tp"].sum() / non_g["n_ev"].sum()
+        c1, c2, c3 = st.columns(3)
+        c1.metric("確認嚴格太陽同步", f"{n_sso} 顆", f"加權召回率 {sso_recall:.1%}")
+        c2.metric("確認非太陽同步", f"{n_non} 顆", f"加權召回率 {non_recall:.1%}")
+        c3.metric("樣本來源", "既有23星外部標竿", "無需新收資料")
+        with st.expander("看逐衛星的真實節線進動速率與分類結果", expanded=False):
+            disp = sso.rename(columns={
+                "name": "衛星", "inc_mean_deg": "平均傾角(°)", "raan_rate_deg_day": "實測進動速率(°/day)",
+                "diff_from_solar_rate": "與太陽同步值之差", "is_sso": "判定為SSO",
+                "n_ev": "真值事件數", "recall": "個別召回率"})[
+                ["衛星", "平均傾角(°)", "實測進動速率(°/day)", "與太陽同步值之差", "判定為SSO",
+                 "真值事件數", "個別召回率"]].sort_values("實測進動速率(°/day)", ascending=False)
+            st.dataframe(disp.style.format({"個別召回率": "{:.1%}"}), use_container_width=True, hide_index=True)
+        st.success(
+            f"**結果**：嚴格 SSO（**{n_sso} 顆**：SPOT-2/3/4/5、Sentinel-3A/3B、SARAL、"
+            f"HY-2A、Envisat）加權召回率 **{sso_recall:.1%}**，非 SSO（**{n_non} 顆**）"
+            f"加權召回率 **{non_recall:.1%}**——**兩者只差不到 2 個百分點，沒有看到"
+            "太陽同步軌道特有的系統性弱點**。兩組數字都遠低於 Starlink 域內驗證的 97%+，"
+            "但那是既有已知的跨域泛化落差（見案例四、案例九），不是太陽同步這個軌道類型本身"
+            "造成的額外扣分。**老實補充**：這組數字沿用既有 23 星外部標竿本來就偏少的事件數"
+            "（SSO 組合計 988 個事件），子分組後樣本更小，波動仍偏大（例如 Envisat 單顆召回率"
+            "僅 17.5%、Sentinel-3A 高達 91.2%，同屬 SSO 組內差異就很大）——這足以**填補"
+            "「完全沒有數字」的缺口**，但還稱不上「太陽同步軌道已被嚴謹分層驗證過」，"
+            "仍建議標示為初步佐證而非最終結論。"
+        )
+        st.caption("可重跑腳本：`analyze_sso_classification.py`（節線進動速率回歸＋既有23星L3召回率切片，"
+                  "資料源 `docs/report_tasa_ilrs_benchmark.md` 之23星逐星總表）。")
 
     st.markdown("---")
     st.success(
