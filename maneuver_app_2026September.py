@@ -3418,9 +3418,30 @@ def load_case12_geo_meo_scope() -> pd.DataFrame:
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
-def load_case12_constellation_injection() -> pd.DataFrame:
-    """案例十二⑤之注入式合成真值測試（讀取 validate_constellation_injection.py 之離線輸出）。"""
-    p = DATA / "benchmark" / "constellation_injection_validation_20260910.csv"
+def load_case12_injection_persat() -> pd.DataFrame:
+    """案例十二⑤之注入式合成真值測試 A：單顆衛星 Δa（Monte Carlo，讀取離線輸出）。"""
+    p = DATA / "benchmark" / "constellation_injection_persat_20260910.csv"
+    return pd.read_csv(p) if p.exists() else pd.DataFrame()
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case12_injection_plane() -> pd.DataFrame:
+    """案例十二⑤之注入式合成真值測試 B：軌道面 Δi 注入（讀取離線輸出）。"""
+    p = DATA / "benchmark" / "constellation_injection_plane_20260910.csv"
+    return pd.read_csv(p) if p.exists() else pd.DataFrame()
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case12_injection_formation() -> pd.DataFrame:
+    """案例十二⑤之注入式合成真值測試 C：陣型相位注入（讀取離線輸出）。"""
+    p = DATA / "benchmark" / "constellation_injection_formation_20260910.csv"
+    return pd.read_csv(p) if p.exists() else pd.DataFrame()
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case12_injection_batch() -> pd.DataFrame:
+    """案例十二⑤之注入式合成真值測試 D：批量機動端到端驗證（讀取離線輸出）。"""
+    p = DATA / "benchmark" / "constellation_injection_batch_20260910.csv"
     return pd.read_csv(p) if p.exists() else pd.DataFrame()
 
 
@@ -3563,39 +3584,133 @@ def render_storymap_case12():
         "還是「模型對非 Starlink 域本來就不敏感、抓不到」**，因為這些星系沒有精密星曆真值可以逐一核對。"
         "零異常是一個誠實但曖昧的結果，不能直接當作「系統在這些星系上表現良好」的證據。"
     )
-    inj = load_case12_constellation_injection()
-    if not inj.empty:
+    inj_a = load_case12_injection_persat()
+    inj_b = load_case12_injection_plane()
+    inj_c = load_case12_injection_formation()
+    inj_d = load_case12_injection_batch()
+    if not inj_a.empty:
         st.markdown(
             "**2026-09-10 反思本案例後補上的注入式合成真值測試**：既然沒有外部真值，"
-            "改用「已知的真實機動量級」疊加到「真實的 OneWeb／千帆 TLE 雜訊背景」上——"
-            "各抽測 20 顆真實衛星，在其真實 TLE 序列中段注入一次已知大小的半長軸階躍，"
-            "看現行的 |Δa|>2km 判定邏輯能不能在真實雜訊底下抓到它。"
+            "改用「已知的真實機動量級」疊加到「真實的 OneWeb／千帆 TLE 雜訊背景」上，"
+            "看現行邏輯能不能在真實雜訊底下抓到它。**同日再擴充為四個方向**：單顆衛星 Δa"
+            "（改用多次隨機注入時刻的 Monte Carlo，取代原本單一時間點的估計）、軌道面 Δi 注入、"
+            "陣型相位注入，以及最關鍵的——直接端到端驗證「一整批衛星同時機動」是否真的會被標記。"
         )
-        fig_inj = go.Figure()
+
+        st.markdown("**A. 單顆衛星 Δa（Monte Carlo，每個量級 30 次隨機試驗）**")
+        fig_a = go.Figure()
         for cname, color in [("OneWeb", "#42A5F5"), ("Qianfan", "#FFA726")]:
-            sub = inj[inj["constellation"] == cname]
+            sub = inj_a[inj_a["constellation"] == cname].sort_values("inject_mag_km")
             if not sub.empty:
-                fig_inj.add_trace(go.Scatter(
+                fig_a.add_trace(go.Scatter(
                     x=sub["inject_mag_km"], y=sub["detect_rate"] * 100, mode="lines+markers",
-                    name=cname, line=dict(color=color, width=2)))
-        fig_inj.add_vline(x=2.0, line_dash="dot", line_color="#EF5350",
-                          annotation_text="現行 2km 判定門檻")
-        fig_inj.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10),
-                              xaxis_title="注入的半長軸階躍量級 (km)", yaxis_title="偵測率 (%)",
-                              plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=1.15))
-        st.plotly_chart(fig_inj, use_container_width=True, key="case12_injection")
+                    name=cname, line=dict(color=color, width=2),
+                    error_y=dict(type="data", symmetric=False,
+                                array=(sub["ci_hi"] - sub["detect_rate"]) * 100,
+                                arrayminus=(sub["detect_rate"] - sub["ci_lo"]) * 100)))
+        fig_a.add_vline(x=2.0, line_dash="dot", line_color="#EF5350",
+                        annotation_text="現行 2km 判定門檻")
+        fig_a.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10),
+                            xaxis_title="注入的半長軸階躍量級 (km)", yaxis_title="偵測率 (%，含 Wilson 95% CI)",
+                            plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=1.15))
+        st.plotly_chart(fig_a, use_container_width=True, key="case12_injection_a")
+        st.caption(
+            "0.5～1km 幾乎測不到，**3km 以上兩個星系皆達 97～100% 偵測率**。"
+            "千帆的曲線在 1～2km 附近不單調（1km 反而比 2km 偵測率高），"
+            "這正呼應下面的老實補充——千帆的真實背景雜訊本身就不乾淨，30 次隨機試驗撞到的"
+            "真實雜訊有時會抵銷、有時會疊加注入訊號，不是程式錯誤。"
+        )
+
+        if not inj_b.empty:
+            st.markdown("**B. 軌道面 Δi 注入——意外發現：「盲區甜甜圈」**")
+            fig_b = go.Figure()
+            for cname, color in [("OneWeb", "#42A5F5"), ("Qianfan", "#FFA726")]:
+                sub = inj_b[inj_b["constellation"] == cname].sort_values("inject_mag_deg")
+                if not sub.empty:
+                    fig_b.add_trace(go.Scatter(
+                        x=sub["inject_mag_deg"], y=sub["detect_rate"] * 100, mode="lines+markers",
+                        name=f"{cname} 偵測率", line=dict(color=color, width=2)))
+                    fig_b.add_trace(go.Scatter(
+                        x=sub["inject_mag_deg"], y=sub["escape_rate"] * 100, mode="lines+markers",
+                        name=f"{cname} 逃逸率", line=dict(color=color, width=1.5, dash="dot")))
+            fig_b.add_vline(x=0.5, line_dash="dot", line_color="#FFD54F",
+                            annotation_text="殼層分群間隙門檻 0.5°")
+            fig_b.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10),
+                                xaxis_title="注入的傾角變化量級 (deg)", yaxis_title="%",
+                                plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=1.18))
+            st.plotly_chart(fig_b, use_container_width=True, key="case12_injection_b")
+            st.error(
+                "**這是本次擴充最重要的意外發現**：注入 0.05° 太小，偵測率 0%（低於雜訊地板，合理）；"
+                "**注入 0.1°～0.5° 之間，兩個星系偵測率都是 100%**；但**一旦注入量級達到 1°"
+                "（超過 `assign_planes()` 用來分群軌道面的 0.5° 傾角間隙門檻），偵測率直接摔回 0%，"
+                "逃逸率 100%**——不是訊號太小看不到，而是**注入的傾角變化大到把這顆衛星直接甩出了"
+                "原本的軌道面分組**，變成一顆孤立的「新軌道面」（因為少於 3 顆同組門檻而被整個過濾掉），"
+                "根本沒有機會被 Δi 標準差邏輯檢查到。**換句話說：機動量級越大，反而越容易被系統的"
+                "分群前處理本身「看不見」**——這是一個只有做注入測試才會發現的方法論陷阱，"
+                "純粹看歷史「零異常」紀錄完全不會意識到這個盲區存在。"
+            )
+
+        if not inj_c.empty:
+            st.markdown("**C. 陣型相位注入**")
+            fig_c = go.Figure()
+            for cname, color in [("OneWeb", "#42A5F5"), ("Qianfan", "#FFA726")]:
+                sub = inj_c[inj_c["constellation"] == cname].sort_values("inject_mag_deg")
+                if not sub.empty:
+                    fig_c.add_trace(go.Scatter(
+                        x=sub["inject_mag_deg"], y=sub["detect_rate"] * 100, mode="lines+markers",
+                        name=cname, line=dict(color=color, width=2)))
+            fig_c.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10),
+                                xaxis_title="注入的相位偏移量級 (deg)", yaxis_title="偵測率 (%)",
+                                plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=1.15))
+            st.plotly_chart(fig_c, use_container_width=True, key="case12_injection_c")
+            st.caption(
+                "1° 幾乎測不到、2° 附近約 50%、5° 以上穩定在 87～97%——但**從未真正摸到 100%**："
+                "因為被注入的那一顆衛星自己會拉高該軌道面的殘差標準差（判定門檻用 3×標準差），"
+                "等於機動量級越大，門檻也跟著自己被墊高一些，形成一個溫和的自我遮蔽效應。"
+            )
+
+        if not inj_d.empty:
+            st.markdown("**D. 批量機動端到端驗證（直接回答「抓得到一整批衛星嗎」）**")
+            d_disp = inj_d.rename(columns={
+                "constellation": "星系", "n_injected": "同時注入顆數", "test_day": "測試日",
+                "flag_rate": "觸發批量旗標比例", "avg_n_maneuvering_that_day": "當天平均機動顆數",
+                "K_baseline_before_injection": "注入前基線K", "avg_K_including_test_day": "注入後K(含當天)",
+                "avg_K_excluding_test_day": "注入後K(排除當天)"})[
+                ["星系", "同時注入顆數", "測試日", "觸發批量旗標比例", "當天平均機動顆數",
+                 "注入前基線K", "注入後K(含當天)", "注入後K(排除當天)"]]
+            st.dataframe(
+                d_disp.style.format({"觸發批量旗標比例": "{:.0%}", "當天平均機動顆數": "{:.1f}",
+                                     "注入前基線K": "{:.1f}", "注入後K(含當天)": "{:.1f}",
+                                     "注入後K(排除當天)": "{:.1f}"}),
+                use_container_width=True, hide_index=True)
+            k_oneweb = inj_d.loc[inj_d["constellation"] == "OneWeb", "K_baseline_before_injection"]
+            k_qianfan = inj_d.loc[inj_d["constellation"] == "Qianfan", "K_baseline_before_injection"]
+            st.error(
+                f"**第二個重要意外發現：兩個星系的「批量」判定門檻天差地遠**。"
+                f"OneWeb 的背景基線極安靜，K≈**{k_oneweb.iloc[0]:.1f}** 顆／天——"
+                "只要同時注入 2 顆衛星就立刻超標、100% 被標記為批量事件；"
+                f"但千帆目前的背景本身變動就很劇烈，K≈**{k_qianfan.iloc[0]:.0f}** 顆／天——"
+                "同時注入 2 顆完全不會被標記（正確的陰性對照），但這也代表**如果千帆真的發生一次"
+                "涉及數十顆衛星的協同機動，只要沒超過這個上百顆的自適應門檻，系統一樣會判定「正常」**。"
+                "門檻用 mean+3σ 自適應設計的立意是避開誤報，但代價是：**背景越不安分的星系，"
+                "批量偵測的『警覺線』反而被自己的雜訊墊得越高**——這也解釋了為什麼千帆的日常監控"
+                "會持續回報「零異常」：不是系統看不到明顯的機動，而是它預設的『正常背景』範圍本身很寬。"
+            )
+            st.caption(
+                "測試方法：把同一個真實可偵測量級（5km，依上方 A 測試已知≥3km幾乎必被逐星邏輯抓到）"
+                "同時疊加到 N 顆真實衛星的同一天，重跑完整 `analyze()`，檢查該天是否觸發 `flag_batch`。"
+                "這是刻意理想化的合成情境（真實批量事件各衛星量級/時間點會有分散度），"
+                "測出的偵測率可能比真實批量事件更樂觀，用途是刻劃系統的敏感度地圖，不是宣稱這就是"
+                "真實批量事件的偵測率。"
+            )
+
         st.success(
-            "**結果**：偵測率隨注入量級呈清楚的門檻式曲線——0.5～1km 幾乎測不到"
-            "（OneWeb 0%），**3km 以上兩個星系皆達 95～100% 偵測率**，證明現行邏輯"
-            "在真實非 Starlink 雜訊背景下，對「夠大」的機動仍然有效，"
-            "**「零異常」不是全面看不到，而是至少對 3km 以上量級的機動看得到**。\n\n"
-            "**老實補充一個意外發現**：千帆的 20 顆抽測衛星中，有 5 顆（25%）即使不注入任何東西，"
-            "原始真實 TLE 在該時間點本身就已經有 >2km 的相鄰步階差（很可能是 TLE 批次重新擬合造成"
-            "的跳動，而非真實機動）——這代表千帆的資料在這個門檻附近**背景雜訊本身就不乾淨**，"
-            "「零異常」的另一種可能解讀是「雜訊被批量機動判定的相對門檻（mean+3σ）稀釋掉了」，"
-            "而不是模型看不到單顆的顯著步階。這個測試仍只涵蓋單顆逐步 |Δa| 這一項指標，"
-            "不涵蓋星系級分析裡「軌道面一致性」與「陣型誤差」另外兩項邏輯，"
-            "尚不能宣稱整套星系級分析都已驗證過偵測力。"
+            "**四項測試合起來的判讀**：「零異常」在單顆衛星機動夠大（≥3km）時是可信的——"
+            "確實抓得到。但兩個新發現讓誠實的分級更精確：**機動量級太大反而可能逃過軌道面一致性檢查**"
+            "（分群前處理的盲區），以及**批量偵測的『多大算異常』門檻，會被該星系自己的背景雜訊高低"
+            "自動撐大或縮小**——千帆目前的門檻高到數十顆衛星同時異常都可能被判定為正常。"
+            "這一級維持「有掃描、但無法判斷是否真的有效」的分級不變，但現在對「哪裡有效、哪裡有盲區」"
+            "已經有具體數字可以指認，而不是含糊地說『不確定』。"
         )
 
     st.header("⑥ 已知不適用的情境")
