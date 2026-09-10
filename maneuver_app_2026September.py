@@ -150,6 +150,34 @@ L: dict[str, dict[str, str]] = {
                                    "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
     "storymap_case2_card_desc": {"zh": "把所有方法依「完全不是AI／傳統機器學習／深度學習（已放棄）」清楚分類，並用真實數字回答「加了 AI 到底差多少」。",
                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case14_card_title": {"zh": "案例十四：本專案 vs 研究單位既有方法，同一擂台PK",
+                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case14_card_desc": {"zh": "14星原始標竿統計上打平，擴大到23星、9顆真正hold-out後才顯著勝出——樣本規模如何改變結論的真實案例。",
+                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case15_card_title": {"zh": "案例十五：從 TLE 反解機動的推力向量，能做到多準？",
+                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case15_card_desc": {"zh": "用IDS/DORIS官方認證ΔV真值逐一核對：脈衝式化學推進沿軌反解幾乎完美(r=0.975)，但垂直軌道面分量、鄰近污染、電推連續推力三種情境誠實失效。",
+                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case16_card_title": {"zh": "案例十六：為什麼深度學習序列模型在這個任務上會輸？",
+                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case16_card_desc": {"zh": "bi-GRU（Model 3）完整負面結果剖析：逐點評估天花板AUC僅0.572，問題不在模型能力，在真值解析度本身。",
+                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case17_card_title": {"zh": "案例十七：機動小到什麼程度，系統還抓得到？",
+                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case17_card_desc": {"zh": "FORMOSAT-7合成注入實驗（15,775次試驗）：把最小可偵測量級寫成一條有信賴區間、可被驗證的法則，而非單一數字。",
+                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case18_card_title": {"zh": "案例十八：TLE 的雜訊地板，在不同高度長什麼樣？",
+                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case18_card_desc": {"zh": "8顆被動測地球體橫跨800～19,126公里，以及一次差點被誤讀成「MEO本質上更雜」的月球攝動假訊號。",
+                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case19_card_title": {"zh": "案例十九：編目突破 10 萬顆那天，程式碼準備好了嗎？",
+                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case19_card_desc": {"zh": "6位數NORAD／Alpha-5遷移的真實工程故事：bug藏在資料入口的守門正則，而非顯眼的解析行；務實止血、誠實留白治本。",
+                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case20_card_title": {"zh": "案例二十：機動偵測能不能反過來，幫 Starlink 定位把關？",
+                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+    "storymap_case20_card_desc": {"zh": "延伸案例十三「TLE vs MEME差三個數量級」的結論，論證機動偵測作為LEO-PNT星曆可信度即時守門機制的應用價值與邊界。",
+                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
 
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
@@ -1944,6 +1972,15 @@ def render_storymap_landing():
         if st.button(t("storymap_enter_case"), key="enter_case13", type="primary"):
             st.session_state["storymap_case"] = "case13"
             st.rerun()
+
+    for _n in range(14, 21):
+        _card = st.container(border=True)
+        with _card:
+            st.subheader(t(f"storymap_case{_n}_card_title"))
+            st.write(t(f"storymap_case{_n}_card_desc"))
+            if st.button(t("storymap_enter_case"), key=f"enter_case{_n}", type="primary"):
+                st.session_state["storymap_case"] = f"case{_n}"
+                st.rerun()
 
     st.caption(t("storymap_more_soon"))
 
@@ -3957,6 +3994,574 @@ def render_storymap_case13():
               "`study3_tle_frozen_and_gap.py`；期中報告圖文見 `docs/meme_tle_report/`。")
 
 
+# ══ StoryMap 案例十四（2026-09-10 新增）══════════════════════════════════════════
+
+def render_storymap_case14():
+    if st.button(t("storymap_back"), key="back_from_case14"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title("案例十四：本專案 vs 研究單位既有方法，同一擂台PK")
+    st.subheader("14星戰平、23星顯著勝出——樣本規模如何改變結論")
+    st.caption("本頁數字全部取自技術報告 `docs/report_tasa_ilrs_benchmark.md` 已完成之同待遇比較，"
+              "非本頁重新計算；統計檢定（Wilcoxon符號檢定）已由該報告完成並經審閱。")
+
+    st.markdown(
+        "**問題背景**：光是「我的方法在自己的測試集上表現很好」不能說明什麼——"
+        "真正有意義的比較是「跟既有的方法，在完全相同的資料、相同的真值、相同的待遇下」正面對決。"
+        "本案例把本專案的融合偵測方法，拿去跟一套忠實重現既有研究方法論的「曲線法」"
+        "（滑動窗多項式前向預測誤差）正面比較。"
+    )
+    st.warning(
+        "**外部方法歸屬聲明**：「曲線法」的方法論設計參考自李泽越、杨震、李海阳、罗亚中，"
+        "《航天器轨道机动自适应逆向移动滑窗检测方法》，國防科技大學學報，2024, 46(4): 45–53"
+        "（**中國大陸文獻，屬外部獨立文獻，與本案執行單位無關，不構成同儕或合作關係**；"
+        "詳見案例十一文獻列表）。本專案僅忠實重現其方法論用於同一擂台比較，非直接使用原始程式碼，"
+        "並經注入健全性檢查（`tasa14_pdf_sanity.py`）確認重現忠實度。"
+    )
+
+    st.header("① 14 星原始標竿：統計上打成平手")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("本法（迭代+位準位移，全域k=6）", "F1 = 0.458")
+    c2.metric("L2 · BOCPD（單通道最佳）", "F1 = 0.456")
+    c3.metric("曲線法（全域最佳）", "F1 = 0.444")
+    c4.metric("曲線法（逐星oracle上界）", "F1 = 0.490")
+    st.markdown(
+        "配對 Wilcoxon 符號檢定：本法 vs 曲線法全域，14 星中 **9 勝 5 負，p=0.81**；"
+        "本法 vs 曲線法逐星 oracle（上界，每顆衛星都各自調到最好的參數），p=0.27——"
+        "**兩者統計上完全無法區分**。子集切分（發射年≥2010，n=10：0.559 vs 0.558/0.529；"
+        "≥2015，n=7：0.596 vs 0.645/0.618）依然不顯著。"
+    )
+    st.info(
+        "**這個「打平」本身就是誠實研究的一部分**：不刻意挑選讓自己贏的比較方式，"
+        "在樣本數只有 14 顆、且對方也給了「逐星量身調校」的最佳待遇時，"
+        "老實承認兩者難分軒輊，比宣稱「大勝」更可信。"
+    )
+
+    st.header("② 擴大到 23 星、9 顆真正 hold-out：優勢才顯現")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("L3融合 vs 曲線法全域（23星）", "17 勝 6 負", "p = 0.006（顯著）")
+    c2.metric("9 顆凍結參數 hold-out 星", "9 勝 0 敗")
+    c3.metric("平均F1（n=23）", "L3=0.457", "曲線全域=0.375")
+    st.success(
+        "**當測試集擴大到 23 顆、且新增 9 顆從未參與任何調參的真正 hold-out 衛星"
+        "（SPOT-2/3/4/5、Sentinel-6B、GRACE系列）後，本專案的 L3 融合評分器對曲線法"
+        "（同樣不逐星調參的全域版本）轉為穩定顯著勝出**——17 勝 6 負，p=0.006；"
+        "9 顆 hold-out 星更是 9 戰 9 勝。核心差異在於：**本專案的方法零逐星調參**"
+        "（同一組參數套用到全部衛星），曲線法「全域版」也是同待遇，但本專案在跨軌道域"
+        "（460–1,340 km、傾角 66–99°）的泛化能力更穩定。"
+    )
+
+    st.header("③ 老實的但書：Oracle 上界沒有隨樣本增加而變好")
+    st.warning(
+        "**曲線法逐星 oracle 上界**：14 星時 F1=0.490，**擴大到 23 星（含更難的 GRACE 家族）"
+        "後反而降到 0.462**——這代表「每顆衛星都手動調到最好」這條路線，"
+        "並不會隨著衛星種類變多而跟著進步，遇到訊噪比更差的軌道域一樣會受限。"
+        "這個現象反過來凸顯本專案「零調參仍保有泛化力」的價值——"
+        "**手動調參的天花板沒有變高，但零調參的方法卻站穩了顯著優勢**。"
+    )
+
+    st.markdown("---")
+    st.markdown(
+        "**判讀**：14 星規模的比較給出一個誠實的「打平」結論，這本身沒有問題——"
+        "小樣本標竿本來就容易讓兩種合理方法看起來難分軒輊。**但真正的證據力，"
+        "要在樣本擴大、且新增真正未參與開發的 hold-out 衛星後才會顯現**："
+        "本案例的教訓是，任何「與既有方法打平」或「小贏」的早期結論，"
+        "都應該視為暫時的，值得用更大、更嚴格的 hold-out 測試集重新檢驗。"
+    )
+    st.caption("完整推導、逐星原始數據與 Wilcoxon 檢定見 `docs/report_tasa_ilrs_benchmark.md` §4.1、§4.3、§9；"
+              "原始資料 `data/benchmark/tasa14_pdf_baseline_20260803.csv`、`tasa14_pdf_oracle_20260803.csv`、"
+              "`tasa14_compare_iter_20260801.csv`、`tasa23_l3_stack_q23_20260804.csv`。")
+
+
+# ══ StoryMap 案例十五（2026-09-10 新增）══════════════════════════════════════════
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case15_real_data() -> pd.DataFrame:
+    """案例十五之真實資料：IDS/DORIS交叉弧段ΔV驗證（讀取 ids_truth_set/ids_dv_vector_validate.csv）。"""
+    p = Path("ids_truth_set") / "ids_dv_vector_validate.csv"
+    return pd.read_csv(p) if p.exists() else pd.DataFrame()
+
+
+def render_storymap_case15():
+    if st.button(t("storymap_back"), key="back_from_case15"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title("案例十五：從 TLE 反解機動的推力向量，能做到多準？")
+    st.subheader("一個方法適用邊界被完整量化的誠實案例")
+    st.caption("本頁數字讀取自 `ids_truth_set/ids_dv_vector_validate.py` 之離線分析輸出，"
+              "真值來自 IDS/DORIS operator 認證機動日誌，非本專案自算。")
+
+    st.markdown(
+        "**問題背景**：知道「有沒有機動」是一回事，知道「這次機動的推力方向與大小」是更進一步的問題——"
+        "沿軌道方向（along-track，加速或減速）跟垂直軌道面方向（cross-track，改變軌道面）"
+        "在 TLE 精度下，反解的難度完全不同。本案例用 IDS/DORIS 的官方認證機動日誌"
+        "（含逐次真實 ΔV 向量）逐一核對，誠實劃出這個方法能做到哪裡、做不到哪裡。"
+    )
+
+    df = load_case15_real_data()
+    st.header("① 沿軌方向：脈衝式化學推進，幾乎完美")
+    st.success(
+        "對乾淨、不受鄰近機動污染的樣本子集（n=207）：沿軌 ΔV 反解值與真值相關係數 "
+        "**r=0.942**，中位誤差僅 **2.4 mm/s**。**CryoSat-2（化學推進、脈衝式點火，n=166）"
+        "單獨拿出來看，r 高達 0.975**——對這種「單一時刻瞬間點火」的機動型態，"
+        "TLE 反解的推力向量已經逼近真值。"
+    )
+    if not df.empty:
+        clean = df[df["clean"] == 1]
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=clean["dv_along_truth"], y=clean["dv_along_rec"], mode="markers",
+                                 marker=dict(size=5, color="#66BB6A", opacity=0.6), name="乾淨樣本"))
+        lims = [clean["dv_along_truth"].min(), clean["dv_along_truth"].max()]
+        fig.add_trace(go.Scatter(x=lims, y=lims, mode="lines", line=dict(color="#90A4AE", dash="dot"),
+                                 name="完美吻合線", showlegend=False))
+        fig.update_layout(height=320, margin=dict(l=10, r=10, t=10, b=10),
+                          xaxis_title="真值 ΔV 沿軌分量 (m/s)", yaxis_title="TLE反解 ΔV 沿軌分量 (m/s)",
+                          plot_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig, use_container_width=True, key="case15_along")
+
+    st.header("② 但有三個誠實的失效邊界")
+    st.error(
+        "**(a) 鄰近機動污染**：SWOT（n=41，同為乾淨子集）相關係數只有 **r=0.512**——"
+        "因為 41% 的事件間隔小於 7 天，前後兩次點火的訊號在 TLE 解析度下互相污染，"
+        "無法乾淨分離。\n\n"
+        "**(b) 垂直軌道面分量（cross-track）幾乎完全無法反解**：全樣本 n=246，"
+        "相關係數 **r≈0.00**，中位誤差高達 **39.1 mm/s**——因為本案例涉及的凍結太陽同步軌道，"
+        "其真實傾角變化中位數僅 **0.2 mm/s**，**遠低於 TLE 本身的傾角雜訊底**，"
+        "物理上就不可能從 TLE 反解出這麼小的訊號，不是演算法不夠好。\n\n"
+        "**(c) 電推連續推力，單步反解系統性失效**：這套方法假設機動是「單一瞬間脈衝」"
+        "（化學推進的典型樣貌），但 Starlink 這類電推衛星的推力是**攤開在數十圈軌道上"
+        "連續施加**，沒有單一階躍可以反解，套用單步假設會系統性低估——這正是為什麼"
+        "案例十三要改用「檔案內逐點 vis-viva」而非「單步反解」來抓 Starlink 電推弧段。"
+    )
+
+    st.markdown("---")
+    st.markdown(
+        "**判讀**：這不是一個「這個方法有多好」的案例，而是一個「這個方法的適用邊界"
+        "被完整量化」的案例——對脈衝式化學推進、乾淨無鄰近污染的沿軌機動，"
+        "TLE 反解可以逼近真值（r=0.975）；但垂直軌道面分量、鄰近事件污染、"
+        "連續電推三種情境下，方法會誠實地失效，而且失效的原因都能具體指出"
+        "（物理雜訊底、事件間隔、推力型態假設）。**知道一個方法在哪裡會失效，"
+        "跟知道它在哪裡有效一樣重要**。"
+    )
+    st.caption("完整推導見 `docs/期末_IDS三應用_20260805.md` §7.x.3；"
+              "程式與原始資料 `ids_truth_set/ids_dv_vector_validate.py`。")
+
+
+# ══ StoryMap 案例十六（2026-09-10 新增）══════════════════════════════════════════
+
+def render_storymap_case16():
+    if st.button(t("storymap_back"), key="back_from_case16"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title("案例十六：為什麼深度學習序列模型在這個任務上會輸？")
+    st.subheader("bi-GRU（Model 3）完整負面結果剖析——問題不在模型，在真值解析度")
+    st.caption("本案例展開案例二一句話帶過的負面結果，完整說明失敗機制與根因。")
+
+    st.markdown(
+        "**問題背景**：直覺上，機動偵測是一個時序問題，用雙向 GRU"
+        "（Bidirectional GRU，一種能同時看過去與未來時間點的遞迴神經網路）"
+        "對整段軌道時序逐時步做序列標註，聽起來是很自然的做法。"
+        "本專案確實這樣做過（稱為 Model 3），但最後沒有採用——這裡誠實交代完整過程。"
+    )
+
+    st.header("① 架構：不是隨便做做")
+    st.markdown(
+        "`ml_bigru_labeler.py`：2 層雙向 GRU（hidden=64、dropout=0.2）＋線性頭，"
+        "輸入跟 Model 2（Isolation Forest）完全相同的 4 條物理殘差通道"
+        "（z_drag/z_di/z_de/z_draan），固定長度滑動窗（長度48、步幅8）逐時步訓練"
+        "（BCE損失＋pos_weight處理正樣本極稀疏的問題）。內建完整自測："
+        "門檻掃描找最佳episode F1、對照「全部標記為機動」的平凡基準、對照Model 2、"
+        "以及**FORMOSAT-3A（純大氣衰減，永遠排除於訓練外）的OOD檢查**。"
+    )
+
+    st.header("② 真實失效樣貌：學到的是「星系的長相」，不是「機動的長相」")
+    st.error(
+        "**對 FORMOSAT-3A 做 OOD（未參與訓練的分布外）測試時，bi-GRU 大量誤報**——"
+        "在 Starlink 資料上訓練出來的模型，換到另一種完全不同的衛星型號就大量失靈。"
+        "根本原因：**模型學到的其實是「Starlink 殘差訊號的統計長相」，而不是"
+        "「機動事件的物理特徵」**——這是深度序列模型在小樣本、單一星系資料上"
+        "很容易掉入的陷阱：表面上學會了分類，實際上只是記住了訓練資料的分布。"
+    )
+
+    st.header("③ 根因：不是模型不夠強，是真值解析度本身的天花板")
+    st.warning(
+        "**最關鍵的診斷數字**：逐點（point-wise）監督式評估的**理論天花板 AUC 僅 0.572**"
+        "（幾乎等同亂猜，且與國際文獻報告的~0.62相近）；但同一批資料改用**episode級"
+        "融合評分器**（HistGradientBoosting，非序列模型）評估，AUC 可達 **0.982**。\n\n"
+        "**這組對比揭露了真正的根因**：本專案的 MEME 精密星曆真值解析度是**每 8 小時一格**，"
+        "TLE 曆元本身跟真值格點對不齊——**任何要求「逐時間點」精確標註的監督式模型"
+        "（包括 bi-GRU），天生就會撞上這個真值粒度的天花板**，這不是換更大的模型、"
+        "更深的網路能解決的問題。改成「這段時間窗內有沒有事件」的 episode 級判定"
+        "（而非「這一個時間點是不是機動」），才是真值解析度容許的正確評估粒度。"
+    )
+
+    st.header("④ 一個具體的、誠實除役的技術債：z_draan 通道")
+    st.info(
+        "bi-GRU 與 Model 2 共用的 4 個通道之一 z_draan（RAAN變化率殘差）**後來已從正式特徵中除役**——"
+        "根因是它主要反映**未建模的長期／日月攝動**，而不是機動訊號，曾被列為候選第六通道評估後"
+        "確認不值得納入。**具體指出一個通道為什麼是壞的、並且真的把它拿掉**，"
+        "比含糊地說「有做特徵篩選」更能取信於人。"
+    )
+
+    st.markdown("---")
+    st.success(
+        "**判讀**：三個深度模型（bi-GRU序列標註器、LSTM自編碼器、PatchTST）"
+        "最後都被列為「負面結果對照組」，結論一致：**受限於資料量與真值解析度，"
+        "不是模型能力不夠**。真正能打贏的是善用領域知識的傳統方法（物理殘差＋"
+        "統計變點）配合 episode 級融合評分器，而不是丟一個更大的深度模型上去。"
+        "深度學習不是被放棄，而是誠實驗證後，暫時擱置、留下明確的解鎖條件——"
+        "自監督預訓練與真值資料擴增。"
+    )
+    st.caption("完整推導見 `docs/期末報告_技術附錄_20260909.md`（負面結果對照組章節、消融鏈分析）；"
+              "程式 `ml_bigru_labeler.py`、`lstm_autoencoder.py`、`patch_transformer.py`。")
+
+
+# ══ StoryMap 案例十七（2026-09-10 新增）══════════════════════════════════════════
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case17_real_data() -> dict:
+    """案例十七之真實資料：FORMOSAT-7 合成機動注入實驗（讀取離線分析輸出）。"""
+    out = {}
+    p1 = DATA / "benchmark" / "fs7_injection_sweep.csv"
+    p2 = DATA / "benchmark" / "fs7_injection_smear.csv"
+    p3 = DATA / "benchmark" / "fs7_law_fit_v4.json"
+    out["sweep"] = pd.read_csv(p1) if p1.exists() else pd.DataFrame()
+    out["smear"] = pd.read_csv(p2) if p2.exists() else pd.DataFrame()
+    if p3.exists():
+        import json
+        with open(p3, encoding="utf-8") as f:
+            out["law"] = json.load(f)
+    else:
+        out["law"] = {}
+    return out
+
+
+def render_storymap_case17():
+    if st.button(t("storymap_back"), key="back_from_case17"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title("案例十七：機動小到什麼程度，系統還抓得到？")
+    st.subheader("FORMOSAT-7 合成注入實驗：把「最小可偵測量級」變成一條有信賴區間的法則")
+    st.caption("本頁數字讀取自 `fs7_injection_sweep_v4.py` 系列之離線分析輸出，"
+              "皆為對真實 FORMOSAT-7（COSMIC-2）TLE 資料注入已知量級後之實測結果。")
+
+    st.markdown(
+        "**問題背景**：與其講一個單一的「最小可偵測 X 公里」的門檻數字，"
+        "不如問一個更誠實的問題——**這個門檻本身會隨著什麼條件變化**？"
+        "本案例把已知大小的半長軸階躍，注入到真實 FORMOSAT-7 的 TLE 雜訊與大氣阻力背景中"
+        "（**15,775 次個別試驗、478 個衛星×時間窗組合**），量測偵測率如何隨機動量級、"
+        "取樣頻率、大氣阻力強度三個維度變化。"
+    )
+
+    data = load_case17_real_data()
+    sweep = data.get("sweep", pd.DataFrame())
+    if not sweep.empty:
+        st.header("① 大氣阻力強度主宰了偵測門檻，不是機動量級本身")
+        fig = go.Figure()
+        colors = {"low": "#66BB6A", "mid": "#FFB74D", "high": "#EF5350"}
+        for band in ["low", "mid", "high"]:
+            sub = sweep[(sweep["drag_band"] == band) & (sweep["decim"] == 1)].sort_values("da_km")
+            if not sub.empty:
+                fig.add_trace(go.Scatter(x=sub["da_km"], y=sub["detect_rate"] * 100, mode="lines+markers",
+                                         name=f"大氣阻力={band}", line=dict(color=colors[band], width=2)))
+        fig.update_layout(height=320, margin=dict(l=10, r=10, t=10, b=10),
+                          xaxis_title="注入的半長軸階躍量級 (km)", yaxis_title="偵測率 (%)",
+                          xaxis_type="log", plot_bgcolor="rgba(0,0,0,0)",
+                          legend=dict(orientation="h", y=1.12))
+        st.plotly_chart(fig, use_container_width=True, key="case17_sweep")
+        st.caption(
+            "低阻力環境下，注入 **20 公尺**已有約 50～58% 偵測率、**100～150 公尺**即可逼近 100%；"
+            "高阻力環境下，同樣的偵測率要到 **1～1.5 公里**量級才達得到——"
+            "**同一套系統的「最小可偵測門檻」可以相差 10～70 倍，完全取決於當下的大氣阻力狀態**。"
+        )
+
+    smear = data.get("smear", pd.DataFrame())
+    if not smear.empty:
+        st.header("② 機動拖得越久，越難抓——瞬時 vs 攤開執行")
+        sub = smear[smear["da_km"] == 0.05].sort_values("smear_day")
+        if not sub.empty:
+            fig2 = go.Figure()
+            fig2.add_trace(go.Bar(x=sub["smear_day"].astype(str) + " 天", y=sub["detect_rate"] * 100,
+                                  marker_color="#4FC3F7"))
+            fig2.update_layout(height=260, margin=dict(l=10, r=10, t=10, b=10),
+                               xaxis_title="機動拖開執行的天數（0=瞬時）", yaxis_title="偵測率 (%)",
+                               plot_bgcolor="rgba(0,0,0,0)")
+            st.plotly_chart(fig2, use_container_width=True, key="case17_smear")
+        st.caption(
+            "同樣 50 公尺的淨位移，瞬時完成的偵測率 55.4%；**拖開半天執行，掉到 43.3%**——"
+            "呼應案例三「站位保持階段真正的技術瓶頸」的結論：不是機動太小看不到，"
+            "而是拖得越久、被拆得越細，偵測率就越低。"
+        )
+
+    law = data.get("law", {})
+    if law:
+        st.header("③ 把偵測門檻寫成一條可驗證的法則")
+        lf = law.get("law_fit_v4", {})
+        cd = law.get("c_drag", {})
+        c1, c2, c3 = st.columns(3)
+        c1.metric("SNR50（50%偵測率門檻）", f"{lf.get('snr50', 'NA')}",
+                 f"95% CI [{lf.get('snr50_ci95', ['?', '?'])[0]}, {lf.get('snr50_ci95', ['?','?'])[1]}]")
+        c2.metric("SNR90（90%偵測率門檻）", f"{lf.get('snr90', 'NA')}")
+        c3.metric("阻力耦合常數 c_hat", f"{cd.get('c_hat', 'NA')}",
+                 f"95% CI [{cd.get('profile_ci95', ['?','?'])[0]}, {cd.get('profile_ci95', ['?','?'])[1]}]")
+        st.markdown(
+            f"用**有效訊噪比**（同時考慮量級與阻力雜訊耦合，非單純的 |Δa|）去擬合一條邏輯斯迴歸曲線"
+            f"（cluster-aware bootstrap、2,000次重抽樣、time-split held-out驗證 **AUC={law.get('time_split',{}).get('eff',{}).get('auc','NA')}**）——"
+            "這比宣稱一個單一的「最小可偵測 X 公里」更誠實，也更可驗證："
+            "任何人都可以拿新資料重新檢驗這條曲線準不準，而不是只能相信一個孤立的數字。"
+        )
+        st.caption(
+            "老實補充：早期版本（v1）曾把這條法則換算成具體公尺數（平靜期約61公尺、"
+            "2024年5月Gannon磁暴主相期間約217公尺），量級可信，但該換算用的是較早期"
+            "未經cluster-aware bootstrap修正的參數，尚未用本頁v4版本的嚴謹參數重新換算，"
+            "此處僅呈現v4版本本身驗證過的SNR門檻與held-out AUC，不重複引用v1的公尺數字。"
+        )
+
+    st.markdown("---")
+    st.info(
+        "**判讀**：「這套系統能抓到多小的機動」沒有單一答案，誠實的答案是一條隨大氣阻力狀態"
+        "與執行時間拉長而變動的曲線，且這條曲線本身經過 held-out 驗證（AUC≈0.98）。"
+        "把「最小可偵測量級」講成一個固定數字，是常見但不誠實的簡化；"
+        "講成一條可驗證的法則，才經得起別人拿新資料來踢館。"
+    )
+    st.caption("完整方法與程式見 `fs7_injection_sweep_v4.py`；"
+              "原始資料 `data/benchmark/fs7_injection_{sweep,trials,smear}.csv`、`fs7_law_fit_v4.json`。")
+
+
+# ══ StoryMap 案例十八（2026-09-10 新增）══════════════════════════════════════════
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case18_real_data() -> pd.DataFrame:
+    """案例十八之真實資料：8顆被動測地球體之TLE雜訊底（讀取離線分析輸出）。"""
+    p = Path("passive_sphere_noise_floor.csv")
+    return pd.read_csv(p) if p.exists() else pd.DataFrame()
+
+
+def render_storymap_case18():
+    if st.button(t("storymap_back"), key="back_from_case18"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title("案例十八：TLE 的雜訊地板，在不同高度長什麼樣？")
+    st.subheader("8顆從不機動的被動測地球體，加上一次差點被誤讀的月球攝動假訊號")
+    st.caption("本頁數字讀取自 `passive_sphere_noise_floor.py` 之離線分析輸出，"
+              "與 `docs/進度月報_202608_TASA比較_詳版.md` §3.6、§3.7 之敘述一致。")
+
+    st.markdown(
+        "**問題背景**：要知道「這個訊號是不是機動」，得先知道「什麼都沒發生時，雜訊本身有多大」。"
+        "被動測地球體（表面覆滿雷射反射鏡、完全沒有推進器、永遠不會主動機動的衛星）"
+        "是天生最乾淨的對照組——不需要像案例四那樣排除已知機動窗，本身就是「保證安靜」的樣本。"
+        "本案例用 8 顆這樣的衛星，橫跨 800～19,126 公里，畫出 TLE 雜訊地板隨高度變化的全景圖。"
+    )
+
+    df = load_case18_real_data()
+    if not df.empty:
+        d = df.copy()
+        d["sigma_resid_m"] = d["sigma_resid_km"] * 1000
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=d["alt_km"], y=d["sigma_resid_m"], mode="markers+text",
+                                 text=d["name"], textposition="top center",
+                                 marker=dict(size=10, color="#64B5F6")))
+        fig.update_layout(height=380, margin=dict(l=10, r=10, t=10, b=10),
+                          xaxis_title="軌道高度 (km)", yaxis_title="TLE雜訊地板 σ (m)",
+                          xaxis_type="log", yaxis_type="log", plot_bgcolor="rgba(0,0,0,0)")
+        st.plotly_chart(fig, use_container_width=True, key="case18_spheres")
+        st.caption(
+            "LEO帶（Stella、Starlette、Ajisai、LARES，800～1,488km）：σ = **0.17～0.46公尺**，"
+            "與 DORIS 認證安靜期實測（中位≈0.2公尺）高度吻合——用完全不同的衛星類別，"
+            "獨立驗證了同一個雜訊地板數字。LAGEOS-1/2（~5,800km）：σ = 0.34～0.40公尺。"
+            "Etalon-1/2（~19,100km）：σ 一度看起來高達 **6.2～7.7公尺**——比 LEO 帶高了 30～40 倍。"
+        )
+
+    st.header("差點被誤讀的發現：那 30～40 倍的落差，其實大半是月球假訊號")
+    st.error(
+        "跨 800～19,126 公里，原始 σ_resid 隨高度上升（Spearman ρ=+0.79，p=0.02）——"
+        "**方向跟 LEO 帶內部「高度越高、大氣阻力越小、雜訊越乾淨」（ρ=−0.79）正好相反**，"
+        "第一眼看很像是「MEO/高軌本質上就是比較雜」。但把 Etalon 的殘差拿去對月球第三體攝動建模"
+        "（主週期 27.49～27.59 天，**精準對上恆星月週期 27.32 天**）之後——"
+        "**Etalon-1 的 σ 從 7.42 公尺，扣除主週期後降到 1.16 公尺，再扣除次諧波週期後降到 0.89 公尺；"
+        "Etalon-2 從 8.80 公尺降到 0.50 公尺、再到 0.35 公尺**——大部分原本以為的「MEO雜訊」，"
+        "其實是**可預測、可建模的月球攝動訊號，不是隨機雜訊**。"
+    )
+    st.success(
+        "**修正後的真實結論**：TLE 雜訊地板從 LEO（~0.2公尺）到 MEO（~0.5～1公尺）"
+        "**只是溫和上升，不是原始數字暗示的30～40倍暴增**——那個看似戲劇性的落差，"
+        "大半是處理方式（沒扣除已知的月球攝動）造成的假象。這跟案例十的「微分假影」"
+        "是同一種教訓的不同版本：**看起來異常大的訊號，第一步永遠該先問「這是不是"
+        "已知物理效應沒被扣除，而不是急著宣稱發現了新的雜訊源」**。"
+    )
+
+    st.markdown("---")
+    st.markdown(
+        "**判讀**：被動測地球體給了一個獨立於 DORIS 之外、完全不同衛星類別的雜訊地板驗證，"
+        "本身就有價值；但更重要的教訓在於 Etalon 那段——**同一份資料，扣不扣除已知的"
+        "物理攝動效應，結論可以天差地遠**。跨軌道域比較雜訊地板時，永遠要先確認"
+        "有沒有把可預測的物理效應（月球/太陽第三體攝動、大氣阻力）處理乾淨，"
+        "才能誠實地談「剩下的雜訊有多大」。"
+    )
+    st.caption("完整推導見 `docs/進度月報_202608_TASA比較_詳版.md` §3.6～3.7；"
+              "程式 `passive_sphere_noise_floor.py`、`etalon_lunisolar_model.py`。")
+
+
+# ══ StoryMap 案例十九（2026-09-10 新增）══════════════════════════════════════════
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case19_real_data() -> dict:
+    """案例十九之真實資料：資料庫中6位數NORAD ID的即時統計。"""
+    con = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        total = con.execute("SELECT COUNT(DISTINCT norad_id) FROM raw_tle_archive WHERE norad_id>=100000").fetchone()[0]
+        official = con.execute(
+            "SELECT COUNT(DISTINCT norad_id) FROM raw_tle_archive WHERE norad_id BETWEEN 100000 AND 269999").fetchone()[0]
+        placeholder = con.execute(
+            "SELECT COUNT(DISTINCT norad_id) FROM raw_tle_archive WHERE norad_id BETWEEN 270000 AND 339999").fetchone()[0]
+        beyond_alpha5 = con.execute("SELECT COUNT(DISTINCT norad_id) FROM raw_tle_archive WHERE norad_id>339999").fetchone()[0]
+    finally:
+        con.close()
+    return {"total": total, "official": official, "placeholder": placeholder, "beyond_alpha5": beyond_alpha5}
+
+
+def render_storymap_case19():
+    if st.button(t("storymap_back"), key="back_from_case19"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title("案例十九：編目突破 10 萬顆那天，程式碼準備好了嗎？")
+    st.subheader("6位數NORAD／Alpha-5遷移——務實止血、留白治本的工程故事")
+    st.caption("本頁「目前受影響顆數」由下方快取函式對資料庫即時查驗計算。")
+
+    st.markdown(
+        "**問題背景**：NORAD 編目 ID 傳統上是 5 位數字（上限 99999）。太空垃圾與新衛星增速太快，"
+        "編目即將（或已經）突破這個上限，業界過渡方案是「Alpha-5」——用一個英文字母取代最高位數字"
+        "（例如 A0147 代表 100147），把上限延伸到 339999。任何直接假設「NORAD ID 是5位數字」的"
+        "程式碼，遇到這個轉換都會壞掉——這是一個典型的、藏在資料格式假設裡的技術債案例。"
+    )
+
+    data = load_case19_real_data()
+    c1, c2, c3 = st.columns(3)
+    c1.metric("目前資料庫中6位數ID總數", f"{data['total']:,} 顆")
+    c2.metric("官方編目（10-27萬區間）", f"{data['official']:,} 顆")
+    c3.metric("分析員暫用編號（27-34萬區間）", f"{data['placeholder']:,} 顆")
+    if data["beyond_alpha5"] > 0:
+        st.warning(f"⚠️ 另有 **{data['beyond_alpha5']} 顆**編號已超過 Alpha-5 上限 339999，"
+                  "屬於還沒有本專案对應解析邏輯的更新一代編目格式（GP/OMM）。")
+
+    st.header("① 真正的 bug 藏在哪裡：不是顯眼的解析行，是資料入口的守門正則")
+    st.error(
+        "第一層問題很好抓：`int(line1[2:7])` 遇到字母開頭的 Alpha-5（如 `A0147`）直接丟 "
+        "`ValueError`。**但真正隱蔽的殺手是更上游的行過濾正則**——`download_TLE_unified.py` "
+        "原本的 `LINE1_RE`／`LINE2_RE` 寫成 `^1\\s+(\\d{5})`，字母開頭的 Alpha-5 行"
+        "**在走到任何解析邏輯之前，就已經被整行過濾掉、悄悄消失**，不會報錯，"
+        "只是資料量少了一點，不容易被發現。修正後的正則改為 `[0-9A-HJ-NP-Z][0-9]{4}` "
+        "（排除易混淆字母I/O）。**教訓：格式假設常常藏在資料入口的守門邏輯裡，"
+        "不是最顯眼的那一行解析程式碼。**"
+    )
+
+    st.header("② 止血範圍：3個呼叫點，但實作不統一")
+    st.markdown(
+        "已修正的 3 個呼叫點：`download_TLE_unified.py`、`prc_maneuver/detect_maneuvers.py`"
+        "（兩者共用 `tle_catnr.decode_catnr()`），以及 `scenario-advanced01/scenario04/ingestion/"
+        "user_defined.py`（**這裡是獨立重寫的相容函式，沒有直接呼叫共用模組**）——"
+        "**老實承認這是技術債**：三個呼叫點都能正確解析，但實作方式不統一，"
+        "未來共用模組升級時，這第三處不會自動跟著改。"
+    )
+    st.markdown(
+        "驗證覆蓋：`tests/test_tle_catnr.py`（**29 個參數化測試案例**：7組編碼/解碼往返測試×3個函式、"
+        "6個異常輸入案例、1個舊格式回歸測試、1個超出範圍測試）＋ `tests/test_sixdigit_ingest.py`"
+        "（正則門檻與OMM整數欄位各1個測試）。"
+    )
+
+    st.header("③ 誠實的待辦：還沒治本的部分")
+    st.info(
+        "**B級（格式化輸出）已完成**：`synthetic_tle/formatter.py` 已用 `encode_catnr()` 正確輸出。\n\n"
+        "**C級（GP/OMM資料源遷移）仍是半成品**：`download_TLE_unified.py`／`backfill_tle_history.py` "
+        "已新增 `--source-format {3le,omm}` 參數，但 OMM（新一代軌道資料格式，原生支援任意位數"
+        "編目ID，不受Alpha-5 339999上限限制）尚未成為主要資料源——**這代表如果編目在"
+        "本專案完成OMM遷移之前就衝破339999，需要再一次應急止血**。"
+    )
+
+    st.markdown("---")
+    st.success(
+        "**判讀**：這是一個「在編目號進位臨界點前完成相容」的韌性工程案例，"
+        "但誠實地說它是「務實止血、留白治本」——A級（解析止血）做得紮實（29個測試案例"
+        "涵蓋完整），B級（輸出）已完成，但3個呼叫點實作沒有統一、C級（資料源根本性遷移）"
+        "仍未完成。**列出真實還沒做完的部分，比宣稱「已完全解決」更值得信任**——"
+        "尤其當資料庫裡已經有 945 顆真實的6位數編目衛星，這不是假設性的未來問題。"
+    )
+    st.caption("完整推導見 `docs/r8_addendum_TASA_alpha5_20260802.md` §G.2、§G.3；"
+              "程式 `tle_catnr.py`、測試 `tests/test_tle_catnr.py`、`tests/test_sixdigit_ingest.py`。")
+
+
+# ══ StoryMap 案例二十（2026-09-10 新增）══════════════════════════════════════════
+
+def render_storymap_case20():
+    if st.button(t("storymap_back"), key="back_from_case20"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title("案例二十：機動偵測能不能反過來，幫 Starlink 定位把關？")
+    st.subheader("LEO-PNT 的一個具體應用延伸——把案例十三的落差數字用起來")
+    st.caption("本頁數字沿用案例十三已計算之真實結果（284顆Starlink、約2,600萬個資料點），"
+              "本頁只做應用面的延伸論證，未新增計算。")
+
+    st.markdown(
+        "**問題背景**：低軌衛星星系（尤其 Starlink）因為顆數多、訊號強，"
+        "近年被討論作為 GPS 之外的低軌定位（LEO-PNT，Low Earth Orbit Positioning, "
+        "Navigation and Timing）備援或補充手段（見案例十一文獻列表之 *Inside GNSS* 產業評述"
+        "與低成本硬體實測案例）。但定位精度的前提，是**要先知道衛星自己的位置有多準**——"
+        "這正是本專案已經算過的東西。"
+    )
+
+    st.header("① 案例十三已經算出的數字，換一個角度看")
+    c1, c2, c3 = st.columns(3)
+    c1.metric("新鮮TLE（epoch<3小時）", "~1.5 km", "衛星自身位置誤差")
+    c2.metric("24～48小時後", "~13 km")
+    c3.metric("MEME精密星曆全程", "~5 m", "公尺級、穩定")
+    st.warning(
+        "**衛星自身的位置誤差，是定位精度的下限**——用一顆自己位置都有1.5公里不確定性的衛星"
+        "做測距定位，接收端算出來的位置不可能比這個更準。GPS 等傳統導航衛星系統要求"
+        "衛星星曆精度在**公尺級**，MEME 精密星曆勉強打到這個量級（~5m），"
+        "但**公開、免費、每天更新的 TLE，中位數 1.5 公里起跳——差了近三個數量級，"
+        "完全不夠格直接拿來做公尺級定位**。"
+    )
+
+    st.header("② 但機動偵測可以做的事：不是提升精度，是即時剔除「已知不可信」的衛星")
+    st.success(
+        "案例十三另一個已算出的數字：**曾機動的衛星，7 天後外推誤差中位數飆升到幾十公里"
+        "（約純外推衛星的十幾倍）**——這代表「剛做完機動」是一個可以被偵測系統即時標記出來的"
+        "強烈訊號。**如果一套 LEO-PNT 定位系統要用 Starlink 訊號做測距，機動偵測可以扮演"
+        "『星曆可信度即時守門』的角色**：不是讓 TLE 突然變準，而是**在使用前先篩掉"
+        "『這顆衛星最近機動過，TLE 暫時不可信』的目標**，避免把一顆位置誤差幾十公里的"
+        "衛星錯當成可用的測距源。"
+    )
+
+    st.header("③ 誠實的應用邊界")
+    st.info(
+        "**這是一個應用面的延伸論證，不是本專案已經驗證過的定位系統**。三件事需要說清楚：\n\n"
+        "1. 就算篩掉了剛機動的衛星，**剩下「安靜」的衛星本身 TLE 精度仍是公里級**，"
+        "距離公尺級定位還很遠——機動偵測解決的是「排除最壞的那批」，不是「讓剩下的變準」；\n"
+        "2. 真正要做到公尺級 LEO-PNT，需要的是 MEME 等級的精密星曆，"
+        "而這類星曆目前並非公開即時可得的資料；\n"
+        "3. 本專案的機動偵測系統本身只在 Starlink LEO 域完整驗證過（見案例十二①），"
+        "把它接進一套實際定位管線的可行性與延遲需求，仍是未來工作，不是現有成果。"
+    )
+
+    st.markdown("---")
+    st.markdown(
+        "**判讀**：這個案例的重點不是宣稱本專案已經做出 LEO-PNT 系統，"
+        "而是誠實指出**機動偵測技術有一條具體、合理、但尚未驗證的應用路徑**——"
+        "把「這套系統擅長什麼」（判斷一顆衛星最近是否機動過）跟「這個領域需要什麼」"
+        "（排除星曆暫時不可信的衛星）對上號，是把研究成果轉譯成應用價值的第一步，"
+        "但下一步的系統整合與延遲驗證，仍待完成。"
+    )
+    st.caption("延伸自案例十三之真實計算結果；LEO-PNT應用背景見案例十一文獻列表"
+              "（*Inside GNSS*《Inside LEO: LEO-PNT — Why Now?》、低成本硬體接收Starlink定位實測）。")
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -3966,7 +4571,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
     st.session_state["app_mode"] = _qp.get("mode")
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
-        "case11", "case12", "case13"):
+        "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -4005,6 +4610,20 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case12()
     elif _case == "case13":
         render_storymap_case13()
+    elif _case == "case14":
+        render_storymap_case14()
+    elif _case == "case15":
+        render_storymap_case15()
+    elif _case == "case16":
+        render_storymap_case16()
+    elif _case == "case17":
+        render_storymap_case17()
+    elif _case == "case18":
+        render_storymap_case18()
+    elif _case == "case19":
+        render_storymap_case19()
+    elif _case == "case20":
+        render_storymap_case20()
     else:
         render_storymap_landing()
     st.stop()

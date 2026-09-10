@@ -1,0 +1,100 @@
+{
+  "cluster_structure": {
+    "windows_per_satellite": {
+      "44343": 82,
+      "44349": 78,
+      "44350": 77,
+      "44351": 94,
+      "44353": 73,
+      "44358": 74
+    },
+    "window_overlap_fraction": 0.5,
+    "trials_per_cluster_median": 33,
+    "n_clusters": 478
+  },
+  "c_drag": {
+    "c_hat": 0.32,
+    "profile_ci95": [
+      0.28,
+      0.4
+    ],
+    "ll_at_c_hat": -0.1833,
+    "ll_at_c1": -0.1843,
+    "c1_inside_ci": false,
+    "note": "c 為由資料以最大概似估計之共用參數（全星/全節奏/全阻力域共用一值）"
+  },
+  "monotonicity": {
+    "strict": false,
+    "approx_tol0.05": true,
+    "isotonic_r2": 0.9999,
+    "n_bins": 20
+  },
+  "law_fit_v4": {
+    "boot_B": 2000,
+    "seed": 42,
+    "ci_type": "percentile",
+    "cluster_unit": "satellite×window (478)",
+    "snr50": 3.767,
+    "snr50_ci95": [
+      3.583,
+      3.961
+    ],
+    "beta": 5.253,
+    "beta_ci95": [
+      4.962,
+      5.585
+    ],
+    "snr90": 9.868,
+    "snr90_ci95": [
+      9.512,
+      10.197
+    ],
+    "delta_ll_per_sample": 0.0209,
+    "delta_ll_ci95": [
+      0.017,
+      0.025
+    ]
+  },
+  "law_fit_satellite_level": {
+    "n_clusters": 6,
+    "snr50_ci95": [
+      3.506,
+      4.07
+    ],
+    "note": "僅 6 叢集，重抽分佈粗糙——as-requested 敏感性揭露，非主推論"
+  },
+  "nonoverlap_subset": {
+    "n_trials": 7953,
+    "n_clusters": 241,
+    "snr50": 3.809,
+    "beta": 5.43
+  },
+  "time_split": {
+    "c_cal": 0.28,
+    "n_cal": 8778,
+    "n_test": 6996,
+    "eff": {
+      "held_out_logloss": 0.1237,
+      "brier": 0.0393,
+      "auc": 0.9773,
+      "snr50_cal": 3.87
+    },
+    "amp": {
+      "held_out_logloss": 0.1413,
+      "brier": 0.0446,
+      "auc": 0.9671,
+      "snr50_cal": 8.74
+    },
+    "eff_better_held_out": true
+  },
+  "cluster_cv5": {
+    "eff": {
+      "oof_logloss": 0.1835,
+      "oof_brier": 0.0555
+    },
+    "amp": {
+      "oof_logloss": 0.2044,
+      "oof_brier": 0.0632
+    }
+  }
+}
