@@ -4461,13 +4461,22 @@ def render_storymap_case19():
         "不是最顯眼的那一行解析程式碼。**"
     )
 
-    st.header("② 止血範圍：3個呼叫點，但實作不統一")
+    st.header("② 止血範圍：3個呼叫點，原本實作不統一——2026-09-10已收斂")
     st.markdown(
         "已修正的 3 個呼叫點：`download_TLE_unified.py`、`prc_maneuver/detect_maneuvers.py`"
         "（兩者共用 `tle_catnr.decode_catnr()`），以及 `scenario-advanced01/scenario04/ingestion/"
-        "user_defined.py`（**這裡是獨立重寫的相容函式，沒有直接呼叫共用模組**）——"
-        "**老實承認這是技術債**：三個呼叫點都能正確解析，但實作方式不統一，"
-        "未來共用模組升級時，這第三處不會自動跟著改。"
+        "user_defined.py`——**這一版審視本案例時發現，第三處原本是一份獨立重寫的相容函式，"
+        "沒有呼叫共用模組**，屬於「三個呼叫點都能正確解析，但實作方式不統一」的技術債。"
+    )
+    st.success(
+        "**已收斂**：`user_defined.py` 改為優先呼叫共用的 `tle_catnr.decode_catnr()`，"
+        "但**保留原本的本地實作作為 ImportError 時的備援**——因為 `scenario-advanced01` "
+        "這個應用設計上可以獨立部署（見其 `update_slim_publish_hf.bat`，獨立部署時只打包"
+        "資料庫檔案，不含主專案根目錄的 `.py` 模組），若直接假設一定能匯入到共用模組，"
+        "反而會在獨立部署場景下整個壞掉。**這不是單純的「刪掉重複程式碼」，"
+        "而是在「單一事實來源」與「獨立部署韌性」兩個目標間找一個都不犧牲的解法**"
+        "（仿照同目錄 `spacetrack.py` 既有的 try/except 降級寫法）。修改後原有 19 個"
+        "`test_user_defined.py` 測試全數通過。"
     )
     st.markdown(
         "驗證覆蓋：`tests/test_tle_catnr.py`（**29 個參數化測試案例**：7組編碼/解碼往返測試×3個函式、"
@@ -4487,13 +4496,16 @@ def render_storymap_case19():
     st.markdown("---")
     st.success(
         "**判讀**：這是一個「在編目號進位臨界點前完成相容」的韌性工程案例，"
-        "但誠實地說它是「務實止血、留白治本」——A級（解析止血）做得紮實（29個測試案例"
-        "涵蓋完整），B級（輸出）已完成，但3個呼叫點實作沒有統一、C級（資料源根本性遷移）"
-        "仍未完成。**列出真實還沒做完的部分，比宣稱「已完全解決」更值得信任**——"
-        "尤其當資料庫裡已經有 945 顆真實的6位數編目衛星，這不是假設性的未來問題。"
+        "但誠實地說它一開始是「務實止血、留白治本」——A級（解析止血）做得紮實（29個測試案例"
+        "涵蓋完整）、B級（輸出）已完成，**3個呼叫點實作不統一這一項已在本次反思後收斂**，"
+        "但C級（資料源根本性遷移到GP/OMM）仍未完成，仍是誠實的待辦。"
+        "**列出真實還沒做完的部分、並在發現當下就實際修正能修的部分，"
+        "比宣稱「已完全解決」更值得信任**——尤其當資料庫裡已經有 945 顆真實的6位數編目衛星，"
+        "這不是假設性的未來問題。"
     )
     st.caption("完整推導見 `docs/r8_addendum_TASA_alpha5_20260802.md` §G.2、§G.3；"
-              "程式 `tle_catnr.py`、測試 `tests/test_tle_catnr.py`、`tests/test_sixdigit_ingest.py`。")
+              "程式 `tle_catnr.py`、測試 `tests/test_tle_catnr.py`、`tests/test_sixdigit_ingest.py`、"
+              "`scenario-advanced01/tests/test_user_defined.py`。")
 
 
 # ══ StoryMap 案例二十（2026-09-10 新增）══════════════════════════════════════════
