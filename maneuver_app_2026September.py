@@ -87,97 +87,98 @@ L: dict[str, dict[str, str]] = {
     # ── StoryMap（2026-09-10 新增）─────────────────────────────────────────────
     "mode_tool": {"zh": "🛠️ 分析工具", "ja": "🛠️ 分析ツール", "en": "🛠️ Analysis Tool"},
     "mode_storymap": {"zh": "📖 StoryMap", "ja": "📖 StoryMap", "en": "📖 StoryMap"},
-    "storymap_lang_note": {"zh": "", "ja": "本ストーリーの本文は現時点で中国語版のみ提供しています（UIラベルは多言語対応）。",
-                           "en": "Story narrative text is currently Traditional Chinese only (UI labels are multilingual)."},
+    "storymap_lang_note": {"zh": "", "ja": "",
+                           "en": ""},
     "storymap_landing_title": {"zh": "📖 太空態勢感知 StoryMap", "ja": "📖 SSA StoryMap", "en": "📖 SSA StoryMap"},
     "storymap_landing_sub": {"zh": "用真實資料回答本專案最常被問到的技術問題——不是簡報結論，是可重跑、可複核的完整推導過程。",
-                             "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                             "ja": "実データで本プロジェクトに最もよく寄せられる技術的疑問に答える——スライドの結論ではなく、再実行・再検証可能な完全な導出過程である。",
+                             "en": "Answering this project's most frequently asked technical questions with real data — not slide-deck conclusions, but a complete, rerunnable, re-checkable derivation."},
     "storymap_case3_card_title": {"zh": "案例三：TLE 觀測窗要拉多長，才能抓到 Starlink 電推機動的明確證據？",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "事例三：TLEの観測窓をどれだけ長く取れば、Starlinkの電気推進マヌーバの明確な証拠をつかめるのか？", "en": "Case 3: How Long Must the TLE Observation Window Be to Catch Clear Evidence of Starlink Electric-Propulsion Maneuvers?"},
     "storymap_case3_card_desc": {"zh": "用兩顆真實衛星的 TLE 資料＋一組校準過的模擬實驗回答：答案分兩種完全不同的情境。",
-                                 "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                 "ja": "2機の実衛星のTLEデータと較正済みのシミュレーション実験で答える：答えは2つのまったく異なる状況に分かれる。", "en": "Answered using real TLE data from two satellites plus a calibrated simulation experiment: the answer splits into two completely different scenarios."},
     "storymap_enter_case": {"zh": "▶ 進入這個案例", "ja": "▶ Open", "en": "▶ Open"},
     "storymap_back": {"zh": "← 回到 StoryMap 首頁", "ja": "← Back", "en": "← Back"},
     "storymap_more_soon": {"zh": "更多案例陸續加入中……", "ja": "More cases coming soon…", "en": "More cases coming soon…"},
     "storymap_case4_card_title": {"zh": "案例四：23 顆外部標竿衛星的機動真值，從哪裡來、怎麼處理？",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "事例四：23機の外部ベンチマーク衛星の機動真値は、どこから来て、どう処理されているのか？", "en": "Case 4: Where Do the Maneuver Ground Truths for 23 External Benchmark Satellites Come From, and How Are They Processed?"},
     "storymap_case4_card_desc": {"zh": "14 顆開發樣本 + 9 顆從未參與開發的 hold-out 衛星——三個公開資料來源、免帳號下載，並用真實案例驗證 TLE 與獨立真值是否吻合。",
-                                 "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                 "ja": "開発用14機のサンプル＋開発に一切関与していないhold-out衛星9機——3つの公開データソース、アカウント登録不要でダウンロード可能。実際の事例を用いてTLEと独立した真値が一致するかを検証する。", "en": "14 development-set satellites + 9 hold-out satellites that never participated in development — three public data sources, no account required, validated with a real case whether TLEs match independent ground truth."},
     "storymap_case5_card_title": {"zh": "案例五：怎麼分辨「主動機動」跟「大氣阻力自然衰減」？",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "事例五：「能動的な機動」と「大気抵抗による自然減衰」をどう区別するか？", "en": "Case 5: How to Tell \"Active Maneuvering\" Apart from \"Natural Decay Due to Atmospheric Drag\""},
     "storymap_case5_card_desc": {"zh": "用 NRLMSIS 物理阻力模型逐衛星扣除自然衰減量——FORMOSAT-3A（純衰減）、Starlink（電推機動）、ISS（真實 reboost）、Van Allen A（再入）四顆真實衛星對照示範，含一個「差點誤報」的真實案例。",
-                                 "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                 "ja": "NRLMSIS物理抵抗モデルを用いて衛星ごとに自然減衰量を差し引く——FORMOSAT-3A（純粋な減衰）、Starlink（電気推進機動）、ISS（実際のリブースト）、Van Allen A（再突入）の4機の実衛星による対照実演。「誤検知になりかけた」実例も含む。", "en": "Using the NRLMSIS physical drag model to subtract natural decay satellite-by-satellite — a side-by-side demonstration with four real satellites: FORMOSAT-3A (pure decay), Starlink (electric-propulsion maneuvering), the ISS (real reboosts), and Van Allen A (reentry), including one real case that nearly triggered a false alarm."},
     "storymap_case6_card_title": {"zh": "案例六：Starlink 這種巨型星系，抓得到「一次調整一整批衛星」嗎？",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "事例六：Starlinkのような巨大コンステレーションで、「一度に衛星群をまとめて調整する」ことを検知できるのか？", "en": "Case 6: Can a Mega-Constellation Like Starlink Detect \"Adjusting an Entire Batch of Satellites at Once\"?"},
     "storymap_case6_card_desc": {"zh": "即時對上萬顆 Starlink 衛星做星系級分析：軌道面一致性、批量機動識別、隊形相位誤差——用真實資料回答「有沒有抓到批次事件」。",
-                                 "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                 "ja": "数万機のStarlink衛星に対してリアルタイムにコンステレーションレベルの分析を行う：軌道面の一貫性、一括機動の識別、フォーメーション位相誤差——実データを用いて「一括イベントを検知できたか」に答える。", "en": "Real-time constellation-wide analysis across tens of thousands of Starlink satellites: orbital-plane coherence, batch-maneuver identification, formation-phase error — answering \"did we catch a batch event?\" with real data."},
     "storymap_case7_card_title": {"zh": "案例七：兩顆衛星多近才算「危險接近」？Pc／TCA 怎麼算出來的？",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "事例七：2機の衛星がどれだけ近づけば「危険な接近」と言えるのか？Pc／TCAはどう算出されるのか？", "en": "Case 7: How Close Do Two Satellites Have to Get Before It Counts as a \"Dangerous Approach\"? How Are Pc and TCA Calculated?"},
     "storymap_case7_card_desc": {"zh": "兩個真實案例對照：TJS-10 對 TJS-3 的 GEO 抵近偵察，以及 ISS 對 Cygnus 貨運飛船的正常對接——同樣的「近距接近」，意義完全不同。",
-                                 "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                 "ja": "2つの実際の事例を対比：TJS-10によるTJS-3へのGEO接近偵察、およびISSとCygnus貨物船の正常なドッキング——同じ「近接接近」でも、その意味はまったく異なる。", "en": "Two real cases contrasted: TJS-10's GEO close-approach reconnaissance of TJS-3, versus the ISS's normal docking with the Cygnus cargo spacecraft — the same \"close approach,\" completely different meaning."},
     "storymap_case8_card_title": {"zh": "案例八：這個資料庫本身的故事——3.4 萬顆衛星、跨度 55 年、一次目錄大擴編",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "事例八：このデータベース自体の物語——3.4万機の衛星、55年間の時間幅、一度の大規模カタログ拡張", "en": "Case 8: The Story of the Database Itself — 34,000 Satellites, a 55-Year Span, and One Major Catalog Expansion"},
     "storymap_case8_card_desc": {"zh": "源自一次真實的使用者提問（「資料最早只到3月，分年parquet是不是沒啟用？」）——完整調查過程做成案例，即時查驗資料庫的真實跨度與一次目錄擴編事件。",
-                                 "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                 "ja": "ある実際のユーザーの質問（「データは今年の3月までしか遡れないが、年別parquetは有効になっていないのでは？」）から始まった——調査の全過程をそのまま事例にし、データベースの本当の時間幅と一度のカタログ拡張イベントをリアルタイムに確認する。", "en": "Started from a real user question (\"the data only goes back to March — was yearly-partitioned parquet never enabled?\") — the full investigation was turned into this case, checking the database's true span and a one-time catalog-expansion event live."},
     "storymap_case9_card_title": {"zh": "案例九：模型對「從沒看過的衛星」還準不準？三層擂台怎麼公平比較？",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "事例九：モデルは「一度も見たことのない衛星」に対してもなお正確なのか？三層アリーナはどう公平に比較するのか？", "en": "Case 9: Is the Model Still Accurate on Satellites It Has Never Seen? How Does the Three-Layer Arena Compare Fairly?"},
     "storymap_case9_card_desc": {"zh": "56 顆衛星整組保留、完全不參與訓練——真實 unseen-satellite hold-out 測試結果，對照規則式／傳統 ML／融合模型三層架構。",
-                                 "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                 "ja": "56機の衛星をまとめて除外し、訓練に一切関与させない——実際のunseen-satellite hold-outテスト結果を、ルールベース／従来型ML／融合モデルの三層構成と対照する。", "en": "56 satellites set aside as an entire group, never participating in training at all — real unseen-satellite hold-out test results, compared across the rule-based / classical-ML / fusion-model three-layer architecture."},
     "storymap_case10_card_title": {"zh": "案例十：能不能用 TLE 反推大氣密度？一個誠實的負面結論",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "事例十：TLEだけを使って大気密度を逆推定することはできるのか？誠実な負の結論", "en": "Case 10: Can Atmospheric Density Be Inferred Using TLEs Alone? An Honest Negative Conclusion"},
     "storymap_case10_card_desc": {"zh": "四次嘗試、三個根因——本專案沒有隱藏這次失敗：TLE 資料本身的限制，讓乾淨複現精密星曆等級的大氣密度斷層變得不可行，以及可行的下一步。",
-                                 "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                 "ja": "4回の試み、3つの根本原因——本プロジェクトはこの失敗を隠していない：TLEデータ自体の限界により、精密暦レベルの大気密度断面をクリーンに再現することは不可能であり、実行可能な次のステップも示す。", "en": "Four attempts, three root causes — this project does not hide this failure: the limitations inherent to TLE data make it infeasible to cleanly reproduce a precise-ephemeris-grade atmospheric-density map, plus a feasible next step."},
     "storymap_case11_card_title": {"zh": "案例十一：本專案站在哪些巨人的肩膀上？——文獻整理與回顧",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例十一：本プロジェクトはどの巨人の肩の上に立っているのか？——文献の整理とレビュー", "en": "Case 11: Whose Shoulders Does This Project Stand On? — A Literature Review"},
     "storymap_case11_card_desc": {"zh": "既有 TLE 機動偵測研究的四條路線、本專案與既有工作的差異，以及完整分類文獻列表（30 篇，含 DOI）。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "既存のTLE機動検知研究の4つの路線、本プロジェクトと既存研究との違い、そして完全な分類文献リスト（30篇、DOI付き）。", "en": "Four existing lines of TLE maneuver-detection research, how this project differs from existing work, and a complete classified literature list (30 entries, with DOIs)."},
     "storymap_case12_card_title": {"zh": "案例十二：這套系統，在哪些軌道類型上能信？哪些還不能？",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例十二：このシステムは、どの軌道タイプで信頼でき、どこではまだ信頼できないのか？", "en": "Case 12: On Which Orbit Types Can This System Be Trusted, and On Which Can It Not Yet?"},
     "storymap_case12_card_desc": {"zh": "誠實分級：已驗證有信心（Starlink LEO）、有特殊處理但驗證有限（再入判定）、"
                                        "有程式路徑缺量化驗證（GEO/MEO）、獨立支線未整合（Galileo）、"
                                        "已知不適用（HEO 全生命週期）與尚待測試的缺口（太陽同步）。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "誠実な階層分け：検証済みで確信あり（Starlink LEO）、特殊な処理はあるが検証は限定的（再突入判定）、コードの経路はあるが定量的検証を欠く（GEO/MEO）、独立した支流が未統合（Galileo）、既知の適用不可（HEO全ライフサイクル）、そしてまだテストされていないギャップ（太陽同期軌道）。", "en": "An honest tiering: validated with confidence (Starlink LEO), special handling but limited validation (reentry classification), a code path exists but lacks quantitative validation (GEO/MEO), an independent branch not yet integrated (Galileo), known not applicable (HEO's full life cycle), and a gap not yet tested (sun-synchronous orbits)."},
     "storymap_case13_card_title": {"zh": "案例十三：對幾十顆到上百顆 Starlink 跑 MEME 軌道外推，算出了什麼？",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例十三：数十機から百機規模のStarlink衛星に対してMEME軌道外挿を実行し、何が分かったのか？", "en": "Case 13: What Did Running MEME Orbit Extrapolation Across Dozens to Hundreds of Starlink Satellites Reveal?"},
     "storymap_case13_card_desc": {"zh": "大規模計算的結果與兩個意外的方法論陷阱：瞬時半長軸的短週期振盪誤標 99.5%、"
                                        "SpaceX 把計畫機動預先編入星曆檔——以及機動污染讓外推誤差暴增 14 倍的真實對比。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "大規模計算の結果と、2つの予期しなかった方法論的な落とし穴：瞬時軌道長半径の短周期振動により99.5%が誤ってラベル付けされたこと、SpaceXが計画済みの機動を暦ファイルに事前に組み込んでいたこと——そして機動汚染により外挿誤差が14倍に急増する実際の対比。", "en": "The results of a large-scale computation and two unexpected methodological traps: a short-period oscillation in the osculating semi-major axis mislabeling 99.5% of samples, SpaceX pre-writing planned maneuvers into ephemeris files — plus a real comparison showing maneuver contamination causing a 14-fold spike in extrapolation error."},
     "storymap_case1_card_title": {"zh": "案例一：從 TLE 偵測機動，到底可不可行？——演算法架構與流程全貌",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "事例一：TLEでマヌーバを検知することは、そもそも可能なのか？——アルゴリズム全体構成とワークフロー概観", "en": "Case 1: Is It Really Feasible to Detect Orbital Maneuvers from TLEs? — Algorithm Architecture and Full Pipeline Overview"},
     "storymap_case1_card_desc": {"zh": "整體架構流程圖＋多種方法一併說明：規則式、統計變點偵測、物理阻力殘差、機器學習、融合評分器怎麼組合起來，並用 14+9 顆衛星真值驗證可行性。",
-                                 "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                 "ja": "全体構成のフローチャート＋複数の手法をまとめて説明：ルールベース、統計的変化点検知、物理的抵抗残差、機械学習、融合スコアリングモデルがどう組み合わさっているかを示し、14+9機の衛星真値で実行可能性を検証する。", "en": "The full architecture pipeline diagram plus an overview of every method — how rule-based detection, statistical change-point detection, physical drag residuals, machine learning, and the fusion scoring model combine — validated for feasibility against 14+9 satellites of ground truth."},
     "storymap_case2_card_title": {"zh": "案例二：我們的方法，哪些用了 AI？哪些沒有？",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例二：我々の手法は、どこにAIを使い、どこに使っていないのか？", "en": "Case 2: Which of Our Methods Use AI, and Which Don't?"},
     "storymap_case2_card_desc": {"zh": "把所有方法依「完全不是AI／傳統機器學習／深度學習（已放棄）」清楚分類，並用真實數字回答「加了 AI 到底差多少」。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "すべての手法を「完全に非AI／経典機械学習／深層学習（放棄済み）」に明確に分類し、実データで「AIを加えると実際どれだけ違うのか」に答える。", "en": "All methods clearly classified as \"not AI at all / classical machine learning / deep learning (abandoned),\" answering \"how much difference does adding AI actually make\" with real numbers."},
     "storymap_case14_card_title": {"zh": "案例十四：本專案 vs 研究單位既有方法，同一擂台PK",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例十四：本プロジェクト vs 研究機関の既存手法、同一アリーナでのガチンコ対決", "en": "Case 14: This Project vs. an Existing Method from a Research Institution — a Head-to-Head Contest in the Same Arena"},
     "storymap_case14_card_desc": {"zh": "14星原始標竿統計上打平，擴大到23星、9顆真正hold-out後才顯著勝出——樣本規模如何改變結論的真實案例。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "14機の原初ベンチマークでは統計的に引き分けだったが、23機、9機の真のhold-outに拡大すると有意に勝利した——サンプル規模が結論をどう変えるかを示す実例。", "en": "A statistical tie on the original 14-satellite benchmark, turning into a significant win once expanded to 23 satellites with 9 genuine hold-outs — a real case of how sample scale changes the conclusion."},
     "storymap_case15_card_title": {"zh": "案例十五：從 TLE 反解機動的推力向量，能做到多準？",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例十五：TLEから機動の推力ベクトルを逆算する場合、どの程度の精度が得られるのか？", "en": "Case 15: How Accurately Can a Maneuver's Thrust Vector Be Inverted from TLEs?"},
     "storymap_case15_card_desc": {"zh": "用IDS/DORIS官方認證ΔV真值逐一核對：脈衝式化學推進沿軌反解幾乎完美(r=0.975)，但垂直軌道面分量、鄰近污染、電推連續推力三種情境誠實失效。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "IDS/DORISの公式認証済みΔV真値と一件ずつ照合：パルス式化学推進の沿軌道方向逆算はほぼ完璧(r=0.975)だが、軌道面垂直成分・近接汚染・電気推進の連続推力という3つの状況では誠実に失敗する。", "en": "Checked one by one against IDS/DORIS officially certified ΔV ground truth: along-track inversion for impulsive chemical propulsion is nearly perfect (r=0.975), but honestly fails under three conditions — the cross-track component, contamination from nearby events, and continuous electric-propulsion thrust."},
     "storymap_case16_card_title": {"zh": "案例十六：為什麼深度學習序列模型在這個任務上會輸？",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例十六：なぜ深層学習の系列モデルはこのタスクで敗れたのか？", "en": "Case 16: Why Does a Deep-Learning Sequence Model Lose at This Task?"},
     "storymap_case16_card_desc": {"zh": "bi-GRU（Model 3）完整負面結果剖析：逐點評估天花板AUC僅0.572，問題不在模型能力，在真值解析度本身。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "bi-GRU（Model 3）の完全な負の結果分析：逐点評価の理論上の天井はAUCわずか0.572——問題はモデルの能力ではなく、真値の解像度そのものにある。", "en": "A full post-mortem of the bi-GRU (Model 3) negative result: the point-wise evaluation ceiling is an AUC of only 0.572 — the problem isn't the model's capability, it's the ground-truth resolution itself."},
     "storymap_case17_card_title": {"zh": "案例十七：機動小到什麼程度，系統還抓得到？",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例十七：機動がどれだけ小さくなると、システムはもう検知できなくなるのか？", "en": "Case 17: How Small Can a Maneuver Be and Still Be Caught?"},
     "storymap_case17_card_desc": {"zh": "FORMOSAT-7合成注入實驗（15,775次試驗）：把最小可偵測量級寫成一條有信賴區間、可被驗證的法則，而非單一數字。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "FORMOSAT-7合成注入実験（15,775回の試行）：「最小検知可能量級」を単一の数字ではなく、信頼区間を持つ検証可能な法則として書き表す。", "en": "The FORMOSAT-7 synthetic injection experiment (15,775 trials): writing \"minimum detectable magnitude\" as a verifiable law with a confidence interval, rather than a single number."},
     "storymap_case18_card_title": {"zh": "案例十八：TLE 的雜訊地板，在不同高度長什麼樣？",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例十八：TLEの雑音床は、高度によってどのように異なるのか？", "en": "Case 18: What Does the TLE Noise Floor Look Like at Different Altitudes?"},
     "storymap_case18_card_desc": {"zh": "8顆被動測地球體橫跨800～19,126公里，以及一次差點被誤讀成「MEO本質上更雜」的月球攝動假訊號。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "8機の受動測地球体が800〜19,126kmにわたる；そして「MEOは本質的により雑音が多い」と誤読されかけた月の摂動による偽信号。", "en": "Eight passive geodetic spheres spanning 800–19,126 km, plus a lunar-perturbation false signal that was almost misread as \"MEO being inherently noisier.\""},
     "storymap_case19_card_title": {"zh": "案例十九：編目突破 10 萬顆那天，程式碼準備好了嗎？",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例十九：カタログが10万機を突破するその日、コードは準備できているか？", "en": "Case 19: The Day the Catalog Passes 100,000 Objects — Will the Code Be Ready?"},
     "storymap_case19_card_desc": {"zh": "6位數NORAD／Alpha-5遷移的真實工程故事：bug藏在資料入口的守門正則，而非顯眼的解析行；務實止血、誠實留白治本。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "6桁NORAD／Alpha-5移行の実際の工学的物語：バグは目立つ解析行ではなく、データ入口の守門正規表現に潜んでいた；実務的な応急処置と、誠実に残された根本対応。", "en": "The real engineering story of the 6-digit NORAD/Alpha-5 migration: the bug was hiding in the data-entry gatekeeping regex, not the obvious parsing line; a pragmatic fix, honestly leaving the root solution open."},
     "storymap_case20_card_title": {"zh": "案例二十：機動偵測能不能反過來，幫 Starlink 定位把關？",
-                                   "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                   "ja": "事例二十：機動検知を逆に使って、Starlinkの測位の信頼性を守れないか？", "en": "Case 20: Can Maneuver Detection Be Turned Around to Safeguard Starlink Positioning?"},
     "storymap_case20_card_desc": {"zh": "延伸案例十三「TLE vs MEME差三個數量級」的結論，論證機動偵測作為LEO-PNT星曆可信度即時守門機制的應用價值與邊界。",
-                                  "ja": "See narrative (ZH)", "en": "See narrative (ZH)"},
+                                  "ja": "事例十三の「TLE vs MEMEは3桁の差」という結論を延伸し、機動検知がLEO-PNTの暦の信頼性をリアルタイムに守るゲート機構としての応用価値と限界を論証する。", "en": "Extending Case 13's conclusion that \"TLE vs. MEME differ by three orders of magnitude,\" arguing for maneuver detection's application value and limits as a real-time ephemeris-trustworthiness gatekeeping mechanism for LEO-PNT."},
 
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
@@ -883,6 +884,11 @@ def t(key: str, **kwargs) -> str:
     d = L.get(key, {})
     s = d.get(_lang()) or d.get("zh") or key
     return s.format(**kwargs) if kwargs else s
+
+
+def T3(zh: str, ja: str, en: str) -> str:
+    """StoryMap 敘事文字三語內嵌小工具（不經過全域 L 字典，就地提供 zh/ja/en 三個版本）。"""
+    return {"zh": zh, "ja": ja, "en": en}.get(_lang(), zh)
 
 
 def tcols(df: pd.DataFrame) -> pd.DataFrame:
@@ -1861,12 +1867,16 @@ def _snr_curve_table(sigma_km: float, net_da_km: float = 1.0, k_days=(1, 3, 5, 7
 def render_storymap_landing():
     st.title(t("storymap_landing_title"))
     st.caption(t("storymap_landing_sub"))
-    if _lang() != "zh":
-        st.info(t("storymap_lang_note"))
-    st.caption(
+    st.caption(T3(
         "🔗 單獨分享此頁：在網址後加上 `?mode=storymap`（分享特定案例則再加 "
-        "`&case=case3`～`case2`），對方開啟連結即直接落地在 StoryMap，不需手動切換側欄。"
-    )
+        "`&case=case3`～`case2`），對方開啟連結即直接落地在 StoryMap，不需手動切換側欄。",
+        "🔗 本頁を個別に共有する：URLの末尾に `?mode=storymap` を追加する（特定の事例を共有する場合は "
+        "さらに `&case=case3`〜`case2` を追加する）。相手はリンクを開くと直接StoryMapに到達し、"
+        "サイドバーを手動で切り替える必要はない。",
+        "🔗 To share this page on its own: append `?mode=storymap` to the URL (add `&case=case3` through "
+        "`case2` to share a specific case); opening the link lands directly on StoryMap, with no need to "
+        "manually switch the sidebar.",
+    ))
 
     st.markdown("---")
     card9 = st.container(border=True)
@@ -1985,58 +1995,124 @@ def render_storymap_landing():
     st.caption(t("storymap_more_soon"))
 
 
+# --- render_storymap_case3 ---
 def render_storymap_case3():
     if st.button(t("storymap_back"), key="back_from_case3"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例三：TLE 觀測窗要拉多長，才能抓到 Starlink 電推機動的明確證據？")
-    st.subheader("答案分兩種情境：抬軌階段輕鬆看穿，站位保持階段才是真正的極限")
-    st.caption("本頁全部數字皆由下方之快取函式對本機／遠端 TLE 資料庫即時查驗計算，非預先寫死之靜態文字。")
+    st.title(T3(
+        "案例三：TLE 觀測窗要拉多長，才能抓到 Starlink 電推機動的明確證據？",
+        "事例三：TLEの観測窓をどれだけ長くすれば、Starlinkの電気推進機動の明確な証拠を捉えられるのか？",
+        "Case 3: How Long a TLE Observation Window Is Needed to Catch Clear Evidence of a Starlink Electric-Propulsion Maneuver?",
+    ))
+    st.subheader(T3(
+        "答案分兩種情境：抬軌階段輕鬆看穿，站位保持階段才是真正的極限",
+        "答えは2つの状況に分かれる：軌道上昇段階は容易に見抜けるが、ステーションキーピング段階こそが本当の限界である",
+        "The Answer Splits into Two Scenarios: Orbit-Raising Is Easy to See Through, Station-Keeping Is the Real Limit",
+    ))
+    st.caption(T3(
+        "本頁全部數字皆由下方之快取函式對本機／遠端 TLE 資料庫即時查驗計算，非預先寫死之靜態文字。",
+        "本頁のすべての数値は、下記のキャッシュ関数がローカル／リモートのTLEデータベースをリアルタイムに照会して算出したものであり、あらかじめ書き込まれた静的な文字列ではない。",
+        "All numbers on this page are computed live by the cached function below querying the local/remote TLE database, not pre-written static text.",
+    ))
 
-    st.markdown(
-        "**問題背景**：Starlink 的軌道機動幾乎全部靠電推（離子推進器）完成，"
+    st.markdown(T3(
+        "**問題背景**：Starlink 的軌道機動幾乎全部靠電推（電力推進，例如霍爾效應推進器或離子推進器）完成，"
         "電推可能是「發射後抬軌」的快速連續爬升，也可能是「在軌站位保持」的極小幅微調——"
         "這兩種情境的物理量級差了兩到三個數量級，答案完全不同。以下用兩顆真實衛星的 TLE 資料，"
-        "分別展示這兩種情境。"
-    )
+        "分別展示這兩種情境。",
+        "**問題の背景**：Starlinkの軌道機動はほぼすべて電気推進（電力推進、例えばホール効果スラスタやイオンエンジン）"
+        "によって行われる。電気推進は「打ち上げ後の軌道上昇」のような速い連続的な上昇であることもあれば、"
+        "「軌道上でのステーションキーピング」のような極めて小幅な微調整であることもある——"
+        "この2つの状況は物理的な量級が2〜3桁異なり、答えはまったく違ったものになる。以下では実在する"
+        "2機の衛星のTLEデータを用いて、それぞれの状況を示す。",
+        "**Problem background**: Starlink's orbital maneuvers are almost entirely performed via electric "
+        "propulsion (e.g., Hall-effect or ion thrusters), which can either be a fast, continuous climb for "
+        "\"post-launch orbit raising,\" or an extremely small-scale adjustment for \"on-orbit station-"
+        "keeping\" — these two scenarios differ in physical magnitude by two to three orders of magnitude, "
+        "giving completely different answers. The following uses TLE data from two real satellites to "
+        "illustrate each scenario in turn.",
+    ))
 
     data = load_case3_real_data()
 
-    # ── 情境一：抬軌（真實資料）──────────────────────────────────────────────
-    st.header("① 抬軌階段——1～2 天的典型 TLE 頻率就已經是壓倒性證據")
+    st.header(T3(
+        "① 抬軌階段——1～2 天的典型 TLE 頻率就已經是壓倒性證據",
+        "①軌道上昇段階——1〜2日という典型的なTLE頻度で、すでに圧倒的な証拠となる",
+        "① Orbit-raising: a typical 1–2 day TLE cadence is already overwhelming evidence",
+    ))
     if "raise_df" in data and not data["raise_df"].empty:
         r = data["raise_df"]
         meme = data.get("raise_meme_df", pd.DataFrame())
         has_meme = isinstance(meme, pd.DataFrame) and not meme.empty
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=r["epoch"], y=r["sma_km"], mode="lines+markers",
-                                 name="TLE 半長軸（逐筆，本節主軸）", line=dict(color="#4FC3F7")))
+                                 name=T3("TLE 半長軸（逐筆，本節主軸）", "TLE軌道長半径（逐次、本節の主軸）",
+                                         "TLE semi-major axis (per-record, this section's focus)"),
+                                 line=dict(color="#4FC3F7")))
         if has_meme:
             fig.add_trace(go.Scatter(x=meme["epoch"], y=meme["sma_km"], mode="lines",
-                                     name="MEME 精密星曆半長軸（逐分鐘真值）",
+                                     name=T3("MEME 精密星曆半長軸（逐分鐘真值）",
+                                             "MEME精密暦の軌道長半径（分刻みの真値）",
+                                             "MEME precise-ephemeris semi-major axis (minute-by-minute ground truth)"),
                                      line=dict(color="#FFD54F", width=1.2)))
+        title_suffix = T3("：TLE vs MEME 精密星曆對比" if has_meme else "（真實 TLE）",
+                          "：TLE対MEME精密暦の比較" if has_meme else "（実際のTLE）",
+                          ": TLE vs. MEME precise-ephemeris comparison" if has_meme else " (real TLE)")
         fig.update_layout(height=320, margin=dict(l=10, r=10, t=30, b=10),
-                          xaxis_title="時間（UTC）", yaxis_title="半長軸 a (km)",
+                          xaxis_title=T3("時間（UTC）", "時刻（UTC）", "Time (UTC)"),
+                          yaxis_title=T3("半長軸 a (km)", "軌道長半径 a (km)", "Semi-major axis a (km)"),
                           legend=dict(orientation="h", y=1.12),
-                          title="STARLINK-37457（NORAD 100294，2026-08-11 發射）之抬軌軌跡" +
-                                ("：TLE vs MEME 精密星曆對比" if has_meme else "（真實 TLE）"))
+                          title=T3(
+                              f"STARLINK-37457（NORAD 100294，2026-08-11 發射）之抬軌軌跡{title_suffix}",
+                              f"STARLINK-37457（NORAD 100294、2026-08-11打ち上げ）の軌道上昇軌跡{title_suffix}",
+                              f"Orbit-raising trajectory of STARLINK-37457 (NORAD 100294, launched 2026-08-11){title_suffix}",
+                          ))
         st.plotly_chart(fig, use_container_width=True)
         if has_meme:
-            st.caption(
-                f"MEME 精密星曆共 {len(meme):,} 個逐分鐘資料點，與 TLE 疊圖後可直接看出："
+            n_meme_str = f"{len(meme):,}"
+            st.caption(T3(
+                f"MEME 精密星曆共 {n_meme_str} 個逐分鐘資料點，與 TLE 疊圖後可直接看出："
                 "TLE 呈現的「跳一段、停一下」階梯狀，究竟是真實的推力排程（MEME 也是階梯狀），"
-                "還是純粹的 TLE 擬合/更新頻率造成的視覺假象（MEME 是平滑連續曲線）——見下方判讀。"
-            )
+                "還是純粹的 TLE 擬合/更新頻率造成的視覺假象（MEME 是平滑連續曲線）——見下方判讀。",
+                f"MEME精密暦は合計{n_meme_str}個の分刻みデータ点を持ち、TLEと重ね合わせることで直接確認できる："
+                "TLEに現れる「進んでは止まる」階段状の変化が、実際の推力スケジュール（MEMEも階段状）"
+                "によるものなのか、それとも純粋にTLEのフィッティング／更新頻度による視覚的な錯覚"
+                "（MEMEは滑らかな連続曲線）なのか——下記の判読を参照。",
+                f"The MEME precise ephemeris has {n_meme_str} minute-by-minute data points in total; "
+                "overlaying it on the TLE makes it possible to see directly whether the TLE's \"jump, then "
+                "pause\" staircase pattern reflects a real thrust schedule (MEME is also staircase-shaped), "
+                "or is purely a visual artifact of TLE fitting/update cadence (MEME is a smooth continuous "
+                "curve) — see the verdict below.",
+            ))
         else:
-            st.info(
+            st.info(T3(
                 "ℹ️ **此衛星目前無 MEME 精密星曆資料可疊圖比對**：本專案之 MEME 資料集（`data/raw/`）"
                 "是於 2026 年 5 月自「當時已在軌運作中」之 284 顆衛星名冊建立，"
                 "而 STARLINK-37457 於 2026-08-11（名冊建立之後）才發射，故不在既有 MEME 涵蓋範圍——"
                 "這不是系統限制，只是這顆衛星比資料集本身還新。若需要 TLE vs MEME 的抬軌階段真實對比，"
                 "可考慮向 SpaceX 公開端點另行下載此衛星之 MEME 檔案（`data/raw/STARLINK-37457/`），"
-                "本頁偵測到資料後會自動疊圖，無需修改程式。"
-            )
+                "本頁偵測到資料後會自動疊圖，無需修改程式。",
+                "ℹ️ **この衛星には現在、重ね合わせて比較できるMEME精密暦データがない**：本プロジェクトの"
+                "MEMEデータセット（`data/raw/`）は2026年5月に「当時すでに軌道上で運用されていた」"
+                "284機の衛星リストから構築されたものであり、STARLINK-37457は2026-08-11"
+                "（リスト作成後）に打ち上げられたため、既存のMEME適用範囲には含まれていない——"
+                "これはシステムの制約ではなく、単にこの衛星がデータセット自体よりも新しいというだけである。"
+                "TLEとMEMEの軌道上昇段階における実際の比較が必要な場合は、SpaceXの公開エンドポイントから"
+                "この衛星のMEMEファイル（`data/raw/STARLINK-37457/`）を別途ダウンロードすることを"
+                "検討されたい。本頁はデータを検知すると自動的に重ね合わせ表示するため、プログラムの"
+                "修正は不要である。",
+                "ℹ️ **This satellite currently has no MEME precise-ephemeris data available for overlay "
+                "comparison**: this project's MEME dataset (`data/raw/`) was built in May 2026 from a "
+                "roster of 284 satellites that were \"already operating on orbit at the time,\" while "
+                "STARLINK-37457 was launched on 2026-08-11 (after the roster was built), so it falls "
+                "outside existing MEME coverage — this is not a system limitation, just that this satellite "
+                "is newer than the dataset itself. If a real TLE-vs-MEME comparison during the orbit-"
+                "raising phase is needed, consider downloading this satellite's MEME file separately from "
+                "SpaceX's public endpoint (`data/raw/STARLINK-37457/`); this page will automatically "
+                "overlay it once the data is detected, with no code changes needed.",
+            ))
 
         rate = data.get("raise_active_rate_km_day")
         days = data.get("raise_active_days")
@@ -2044,11 +2120,15 @@ def render_storymap_case3():
         if rate is not None:
             sigma_ref = data.get("quiet_sigma_mad_km", 0.0275)
             snr_1day = rate / sigma_ref if sigma_ref else float("nan")
+            rate_str = f"{rate:.2f} km/" + T3("天", "日", "day")
+            da_days_str = T3(f"{days:.1f} 天內", f"{days:.1f}日以内", f"within {days:.1f} days")
+            snr_str = f"{snr_1day:.0f}σ"
             c1, c2, c3 = st.columns(3)
-            c1.metric("主動爬升期實測速率", f"{rate:.2f} km/天")
-            c2.metric("該階段實測總 Δa", f"{da_total:.1f} km", f"{days:.1f} 天內")
-            c3.metric("對應 1 天 TLE 間隔之 SNR", f"{snr_1day:.0f}σ")
-            st.markdown(
+            c1.metric(T3("主動爬升期實測速率", "能動的な上昇期の実測速度", "Measured rate during active climb"), rate_str)
+            c2.metric(T3("該階段實測總 Δa", "この段階で実測された総Δa", "Total measured Δa for this phase"),
+                     f"{da_total:.1f} km", da_days_str)
+            c3.metric(T3("對應 1 天 TLE 間隔之 SNR", "1日のTLE間隔に対応するSNR", "SNR corresponding to a 1-day TLE interval"), snr_str)
+            st.markdown(T3(
                 f"**判讀**：實測主動爬升速率約 **{rate:.1f} km/天**，"
                 f"以下方情境二量測到的真實雜訊底（σ≈{sigma_ref*1000:.0f} m）換算，"
                 f"**單一天的變化量對應 SNR（訊噪比，Signal-to-Noise Ratio；訊號強度相對於背景雜訊的倍數）"
@@ -2056,104 +2136,222 @@ def render_storymap_case3():
                 "**這個情境幾乎不需要「拉長觀測窗」的討論：TLE 更新頻率再低，1～2 天內就已是壓倒性的明確證據。**"
                 "\n\n仔細看上圖會發現真實軌跡不是平滑直線，而是「跳一段、停一下」的階梯狀——"
                 "這代表電推抬軌在 TLE 解析度下常呈現離散的推力弧＋滑行段落，而非連續平滑爬升"
-                "（詳細的推力弧形態分析見技術附錄十一.5、`thrust_arc_catalog.py`）。"
-            )
+                "（詳細的推力弧形態分析見技術附錄十一.5、`thrust_arc_catalog.py`）。",
+                f"**判読**：実測された能動的な上昇速度は約**{rate:.1f} km/日**であり、"
+                f"下記の状況2で実測された実際の雑音床（σ≈{sigma_ref*1000:.0f} m）で換算すると、"
+                f"**1日あたりの変化量に対応するSNR（信号対雑音比、Signal-to-Noise Ratio；信号強度と"
+                f"背景雑音との比）は≈{snr_1day:.0f}σに達する**——"
+                "これはいかなる合理的な判定閾値（通常2〜3σで明確な信号とみなされる）をも大きく上回る。"
+                "**この状況では「観測窓を長くする」議論はほぼ不要である：TLEの更新頻度がどれほど低くても、"
+                "1〜2日以内にすでに圧倒的な明確な証拠となる。**"
+                "\n\n上図をよく見ると、実際の軌跡は滑らかな直線ではなく、「進んでは止まる」階段状であることが"
+                "わかる——これは電気推進による軌道上昇が、TLEの解像度の下では連続的で滑らかな上昇ではなく、"
+                "離散的な推力弧＋滑走区間として現れることが多いことを示している"
+                "（推力弧の形態に関する詳細な分析は技術付録11.5、`thrust_arc_catalog.py`を参照）。",
+                f"**Verdict**: the measured active-climb rate is about **{rate:.1f} km/day**; converting "
+                f"this using the real noise floor measured in Scenario 2 below (σ≈{sigma_ref*1000:.0f} m), "
+                f"**the change over a single day corresponds to an SNR (signal-to-noise ratio — signal "
+                f"strength relative to background noise) of ≈{snr_1day:.0f}σ** — far exceeding any "
+                "reasonable determination threshold (typically 2–3σ is already considered a clear signal). "
+                "**This scenario barely needs a discussion of \"lengthening the observation window\": no "
+                "matter how low the TLE update cadence is, 1–2 days already provides overwhelming, clear "
+                "evidence.**\n\nLooking closely at the chart above, the real trajectory is not a smooth "
+                "line but a \"jump, then pause\" staircase — meaning electric-propulsion orbit-raising often "
+                "appears at TLE resolution as discrete thrust arcs plus coasting segments, rather than a "
+                "continuous smooth climb (see Technical Appendix §11.5 and `thrust_arc_catalog.py` for a "
+                "detailed thrust-arc morphology analysis).",
+            ))
     else:
-        st.warning("目前資料庫查無 STARLINK-37457（NORAD 100294）之 TLE，此區塊暫時無法顯示。")
+        st.warning(T3(
+            "目前資料庫查無 STARLINK-37457（NORAD 100294）之 TLE，此區塊暫時無法顯示。",
+            "現在のデータベースにはSTARLINK-37457（NORAD 100294）のTLEが見つからないため、この部分は"
+            "一時的に表示できない。",
+            "No TLE for STARLINK-37457 (NORAD 100294) currently found in the database; this section cannot be displayed for now.",
+        ))
 
     st.markdown("---")
 
-    # ── 情境二：站位保持（真實資料，量測雜訊底）──────────────────────────────
-    st.header("② 站位保持——真實雜訊底長什麼樣，抓到一次真實的小型修正")
+    st.header(T3(
+        "② 站位保持——真實雜訊底長什麼樣，抓到一次真實的小型修正",
+        "②ステーションキーピング——実際の雑音床がどのようなものか、実際の小規模な修正を一度捉える",
+        "② Station-keeping: what the real noise floor looks like, catching one genuine small correction",
+    ))
     if "quiet_df" in data and not data["quiet_df"].empty:
         q = data["quiet_df"]
         fig2 = go.Figure()
         fig2.add_trace(go.Scatter(x=q["epoch"], y=q["sma_km"], mode="lines+markers",
-                                  name="STARLINK-3005 半長軸", line=dict(color="#66BB6A")))
+                                  name=T3("STARLINK-3005 半長軸", "STARLINK-3005の軌道長半径", "STARLINK-3005 semi-major axis"),
+                                  line=dict(color="#66BB6A")))
         outlier = data.get("quiet_outlier")
         if outlier:
             fig2.add_vrect(x0=outlier["t0"], x1=outlier["t1"], fillcolor="#EF9A9A", opacity=0.35,
-                           line_width=0, annotation_text="偵測到的真實跳動", annotation_position="top left")
+                           line_width=0, annotation_text=T3("偵測到的真實跳動", "検知された実際の変動", "Detected real jump"),
+                           annotation_position="top left")
         fig2.update_layout(height=320, margin=dict(l=10, r=10, t=30, b=10),
-                           xaxis_title="時間（UTC）", yaxis_title="半長軸 a (km)",
-                           title="真實 TLE：STARLINK-3005（NORAD 48881，站位保持中）近 60 天")
+                           xaxis_title=T3("時間（UTC）", "時刻（UTC）", "Time (UTC)"),
+                           yaxis_title=T3("半長軸 a (km)", "軌道長半径 a (km)", "Semi-major axis a (km)"),
+                           title=T3("真實 TLE：STARLINK-3005（NORAD 48881，站位保持中）近 60 天",
+                                    "実際のTLE：STARLINK-3005（NORAD 48881、ステーションキーピング中）直近60日間",
+                                    "Real TLE: STARLINK-3005 (NORAD 48881, station-keeping) over the last 60 days"))
         st.plotly_chart(fig2, use_container_width=True)
 
         sigma_mad = data.get("quiet_sigma_mad_km")
         sigma_std = data.get("quiet_sigma_std_km")
         gap_h = data.get("quiet_median_gap_h")
         c1, c2, c3 = st.columns(3)
-        c1.metric("真實雜訊底 σ（穩健估計）", f"{sigma_mad*1000:.0f} m" if sigma_mad else "—")
-        c2.metric("典型 TLE 更新間隔（中位數）", f"{gap_h:.1f} 小時" if gap_h else "—")
-        c3.metric("含離群值之標準差", f"{sigma_std*1000:.0f} m" if sigma_std else "—",
-                 help="標準差比穩健估計（MAD）大，正是因為下面這次真實跳動把它拉高了")
+        c1.metric(T3("真實雜訊底 σ（穩健估計）", "実際の雑音床 σ（ロバスト推定）", "Real noise floor σ (robust estimate)"),
+                 f"{sigma_mad*1000:.0f} m" if sigma_mad else "—")
+        c2.metric(T3("典型 TLE 更新間隔（中位數）", "典型的なTLE更新間隔（中央値）", "Typical TLE update interval (median)"),
+                 (f"{gap_h:.1f} " + T3("小時", "時間", "hours")) if gap_h else "—")
+        c3.metric(T3("含離群值之標準差", "外れ値を含む標準偏差", "Standard deviation including the outlier"),
+                 f"{sigma_std*1000:.0f} m" if sigma_std else "—",
+                 help=T3("標準差比穩健估計（MAD）大，正是因為下面這次真實跳動把它拉高了",
+                         "標準偏差がロバスト推定（MAD）より大きいのは、まさに下記の実際の変動がそれを"
+                         "押し上げているためである",
+                         "The standard deviation is larger than the robust (MAD) estimate precisely because the real jump below pulls it up"))
 
         if outlier:
-            st.markdown(
+            da_m_str = f"{outlier['da_km']*1000:+.0f} m"
+            snr_str = f"{outlier['snr']:.0f}σ"
+            st.markdown(T3(
                 f"**這條「安靜」的衛星，60 天內其實藏了一次真實的小幅修正**：{outlier['t0']:%Y-%m-%d %H:%M} → "
-                f"{outlier['t1']:%Y-%m-%d %H:%M} UTC，半長軸變化 **{outlier['da_km']*1000:+.0f} m**，"
-                f"單步 SNR≈**{outlier['snr']:.0f}σ**——遠高於偵測門檻，這種量級的單次修正即使只隔一筆 TLE 也毫無疑問可以判定為機動。"
+                f"{outlier['t1']:%Y-%m-%d %H:%M} UTC，半長軸變化 **{da_m_str}**，"
+                f"單步 SNR≈**{snr_str}**——遠高於偵測門檻，這種量級的單次修正即使只隔一筆 TLE 也毫無疑問可以判定為機動。"
                 "\n\n真正困難的不是這種「一次到位」的修正，而是把同樣的淨位移，**拆成好幾天、每天挪一點點**執行的情況——"
-                "這正是下一節要處理的問題。"
-            )
-        st.caption(
-            f"本頁測得之穩健雜訊底（σ≈{sigma_mad*1000:.0f} m，若有資料）"
+                "這正是下一節要處理的問題。",
+                f"**この「静穏な」衛星には、60日間のうちに実は1回の実際の小規模な修正が隠れていた**："
+                f"{outlier['t0']:%Y-%m-%d %H:%M} → {outlier['t1']:%Y-%m-%d %H:%M} UTC、軌道長半径の変化"
+                f"**{da_m_str}**、単発SNR≈**{snr_str}**——検知閾値をはるかに上回っており、"
+                "この量級の単発修正は、TLEが1件しか間隔がなくても機動と判定することに何の疑いもない。"
+                "\n\n本当に難しいのは、このような「一気に完了する」修正ではなく、同じ正味の変位を"
+                "**数日に分けて、毎日少しずつ**実行するケースである——これがまさに次節で扱う問題である。",
+                f"**Hidden within this \"quiet\" satellite's 60 days is actually one genuine small "
+                f"correction**: {outlier['t0']:%Y-%m-%d %H:%M} → {outlier['t1']:%Y-%m-%d %H:%M} UTC, a "
+                f"semi-major-axis change of **{da_m_str}**, single-step SNR≈**{snr_str}** — far above the "
+                "detection threshold; a single correction of this magnitude can be judged a maneuver "
+                "without question even across just one TLE gap.\n\nThe real difficulty isn't this kind of "
+                "\"done in one shot\" correction, but the case where the same net displacement is **spread "
+                "across several days, moving a little each day** — which is exactly what the next section "
+                "addresses.",
+            ))
+        sigma_mad_str = f"{sigma_mad*1000:.0f} m" if sigma_mad else "—"
+        st.caption(T3(
+            f"本頁測得之穩健雜訊底（σ≈{sigma_mad_str}，若有資料）"
             "與技術附錄§10.5「Starlink 低軌帶 σ≈24–75 m」之既有結論一致，屬於該範圍偏低（乾淨）的一端；"
-            "不同衛星、不同時期之雜訊底會因追蹤幾何與大氣阻力狀態而異。"
-        )
+            "不同衛星、不同時期之雜訊底會因追蹤幾何與大氣阻力狀態而異。",
+            f"本頁で実測されたロバストな雑音床（σ≈{sigma_mad_str}、データがある場合）は、"
+            "技術付録§10.5「Starlinkの低軌道帯 σ≈24〜75 m」という既存の結論と一致しており、"
+            "その範囲の中でも低め（クリーンな）側に属する；異なる衛星、異なる時期の雑音床は、"
+            "追跡ジオメトリと大気抵抗の状態によって異なる。",
+            f"The robust noise floor measured on this page (σ≈{sigma_mad_str}, if data is available) is "
+            "consistent with the existing conclusion in Technical Appendix §10.5 (\"Starlink LEO band "
+            "σ≈24–75 m\"), sitting toward the lower (cleaner) end of that range; noise floors vary across "
+            "satellites and time periods depending on tracking geometry and atmospheric-drag conditions.",
+        ))
     else:
-        st.warning("目前資料庫查無 STARLINK-3005（NORAD 48881）之 TLE，此區塊暫時無法顯示。")
+        st.warning(T3(
+            "目前資料庫查無 STARLINK-3005（NORAD 48881）之 TLE，此區塊暫時無法顯示。",
+            "現在のデータベースにはSTARLINK-3005（NORAD 48881）のTLEが見つからないため、この部分は"
+            "一時的に表示できない。",
+            "No TLE for STARLINK-3005 (NORAD 48881) currently found in the database; this section cannot be displayed for now.",
+        ))
 
     st.markdown("---")
 
-    # ── 情境三：慢速電推站位保持——校準過的模擬（明確標示為模擬）─────────────
-    st.header("③ 如果同樣的位移拆成好幾天執行——校準過的模擬實驗")
-    st.markdown(
+    st.header(T3(
+        "③ 如果同樣的位移拆成好幾天執行——校準過的模擬實驗",
+        "③同じ変位を数日に分けて実行した場合——較正済みのシミュレーション実験",
+        "③ What if the same displacement is spread over several days? — a calibrated simulation experiment",
+    ))
+    st.markdown(T3(
         "上面兩個情境都是「單一步就看得到」的案例。真正的問題是：如果一次 1 公里等級的位移，"
         "不是一步到位，而是像真實電推 station-keeping 那樣**拆成 3 天、7 天、甚至 14 天**慢慢完成，"
         "會發生什麼事？這裡用情境二剛剛量到的真實雜訊底做基準，跑一個簡化的偵測率模擬"
-        "（完整版之嚴謹合成注入實驗見技術附錄§10.7、`gradual_arc_injection.py`，本頁為同一方法論之簡化重現）。"
-    )
+        "（完整版之嚴謹合成注入實驗見技術附錄§10.7、`gradual_arc_injection.py`，本頁為同一方法論之簡化重現）。",
+        "上記の2つの状況は、いずれも「一度で見える」事例であった。本当の問題は：もし1キロメートル級の変位が"
+        "一気に完了するのではなく、実際の電気推進によるステーションキーピングのように**3日、7日、あるいは"
+        "14日に分けて**ゆっくり完了する場合、何が起こるのか？ここでは状況2で実測したばかりの実際の雑音床を"
+        "基準として、簡略化した検知率シミュレーションを実行する（完全版の厳密な合成注入実験は技術付録§10.7、"
+        "`gradual_arc_injection.py`を参照。本頁は同じ方法論の簡略化した再現である）。",
+        "Both scenarios above were cases visible \"in a single step.\" The real question is: what happens "
+        "if a displacement on the order of 1 km isn't completed in one shot, but is instead completed "
+        "slowly like real electric-propulsion station-keeping, **spread over 3 days, 7 days, or even 14 "
+        "days**? This runs a simplified detection-rate simulation using the real noise floor just measured "
+        "in Scenario 2 as the baseline (see Technical Appendix §10.7 and `gradual_arc_injection.py` for the "
+        "full, rigorous synthetic-injection experiment; this page is a simplified reproduction of the same "
+        "methodology).",
+    ))
 
     sigma_options = {
-        "本頁剛測得之真實 σ（乾淨案例）": data.get("quiet_sigma_mad_km", 0.0275),
-        "技術附錄 Starlink 低軌帶下限 σ=24 m": 0.024,
-        "技術附錄 Starlink 低軌帶上限 σ=75 m": 0.075,
+        T3("本頁剛測得之真實 σ（乾淨案例）", "本頁で実測されたばかりの実際のσ（クリーンな事例）",
+           "Real σ just measured on this page (clean case)"): data.get("quiet_sigma_mad_km", 0.0275),
+        T3("技術附錄 Starlink 低軌帶下限 σ=24 m", "技術付録：Starlink低軌道帯の下限 σ=24 m",
+           "Technical Appendix: Starlink LEO band lower bound σ=24 m"): 0.024,
+        T3("技術附錄 Starlink 低軌帶上限 σ=75 m", "技術付録：Starlink低軌道帯の上限 σ=75 m",
+           "Technical Appendix: Starlink LEO band upper bound σ=75 m"): 0.075,
     }
-    sel = st.selectbox("選擇雜訊底假設", list(sigma_options.keys()), index=0)
+    sel = st.selectbox(T3("選擇雜訊底假設", "雑音床の仮定を選択", "Select a noise-floor assumption"),
+                       list(sigma_options.keys()), index=0)
     sigma_km = sigma_options[sel]
-    net_da = st.slider("假設淨機動位移（km）", 0.2, 5.0, 1.0, 0.1)
+    net_da = st.slider(T3("假設淨機動位移（km）", "想定する正味の機動変位（km）", "Assumed net maneuver displacement (km)"),
+                       0.2, 5.0, 1.0, 0.1)
 
     curve = _snr_curve_table(sigma_km, net_da)
+    day_suffix = T3(" 天", "日", " days")
     fig3 = go.Figure()
-    fig3.add_trace(go.Bar(x=curve["k_days"].astype(str) + " 天", y=curve["per_step_snr"],
+    fig3.add_trace(go.Bar(x=curve["k_days"].astype(str) + day_suffix, y=curve["per_step_snr"],
                           name="per-step SNR", marker_color="#4FC3F7", yaxis="y1"))
-    fig3.add_trace(go.Scatter(x=curve["k_days"].astype(str) + " 天", y=curve["approx_detect_rate"],
-                              name="近似偵測率", mode="lines+markers", marker_color="#FFD54F", yaxis="y2"))
+    fig3.add_trace(go.Scatter(x=curve["k_days"].astype(str) + day_suffix, y=curve["approx_detect_rate"],
+                              name=T3("近似偵測率", "近似検知率", "Approx. detection rate"),
+                              mode="lines+markers", marker_color="#FFD54F", yaxis="y2"))
     fig3.add_hline(y=2.0, line_dash="dash", line_color="#EF9A9A",
-                  annotation_text="SNR=2 判定門檻參考線", yref="y1")
+                  annotation_text=T3("SNR=2 判定門檻參考線", "SNR=2 判定閾値の参考線", "SNR=2 reference threshold line"),
+                  yref="y1")
     fig3.update_layout(
         height=360, margin=dict(l=10, r=10, t=30, b=10),
         yaxis=dict(title="per-step SNR"),
-        yaxis2=dict(title="近似偵測率", overlaying="y", side="right", range=[0, 1]),
+        yaxis2=dict(title=T3("近似偵測率", "近似検知率", "Approx. detection rate"), overlaying="y", side="right", range=[0, 1]),
         legend=dict(orientation="h", y=1.12),
-        title=f"淨 Δa={net_da:.1f} km、σ={sigma_km*1000:.0f} m 時，per-step SNR 與近似偵測率隨橫跨天數之變化",
+        title=T3(
+            f"淨 Δa={net_da:.1f} km、σ={sigma_km*1000:.0f} m 時，per-step SNR 與近似偵測率隨橫跨天數之變化",
+            f"正味Δa={net_da:.1f} km、σ={sigma_km*1000:.0f} mのとき、per-step SNRと近似検知率が"
+            "実行日数の広がりに応じてどう変化するか",
+            f"How per-step SNR and approximate detection rate vary with the number of days spanned, "
+            f"for net Δa={net_da:.1f} km, σ={sigma_km*1000:.0f} m",
+        ),
     )
     st.plotly_chart(fig3, use_container_width=True)
-    st.dataframe(curve.rename(columns={"k_days": "橫跨天數", "per_step_snr": "per-step SNR",
-                                       "approx_detect_rate": "近似偵測率"}),
+    col_days = T3("橫跨天數", "実行にかかる日数", "Days spanned")
+    st.dataframe(curve.rename(columns={"k_days": col_days, "per_step_snr": "per-step SNR",
+                                       "approx_detect_rate": T3("近似偵測率", "近似検知率", "Approx. detection rate")}),
                 hide_index=True, width="stretch")
 
     crossover = curve[curve["per_step_snr"] < 2.0]["k_days"].min()
-    st.markdown(
-        f"**在目前選定的假設下（σ={sigma_km*1000:.0f} m、淨 Δa={net_da:.1f} km），"
-        + (f"橫跨約 **{int(crossover)} 天**以上，per-step SNR 就會跌破 2，逐點偵測器開始明顯失靈。**"
-           if pd.notna(crossover) else "在所評估的天數範圍內，per-step SNR 皆未跌破 2，這組假設相對安全。**")
-    )
+    sigma_km_str = f"{sigma_km*1000:.0f} m"
+    if pd.notna(crossover):
+        crossover_str = str(int(crossover))
+        tail = T3(
+            f"橫跨約 **{crossover_str} 天**以上，per-step SNR 就會跌破 2，逐點偵測器開始明顯失靈。**",
+            f"約**{crossover_str}日**以上にわたって実行されると、per-step SNRは2を下回り、"
+            "逐点検知器の性能が明らかに低下し始める。**",
+            f"once spread across roughly **{crossover_str} days** or more, per-step SNR drops below 2, and "
+            "point-wise detectors start to noticeably fail.**",
+        )
+    else:
+        tail = T3(
+            "在所評估的天數範圍內，per-step SNR 皆未跌破 2，這組假設相對安全。**",
+            "評価した日数の範囲内では、per-step SNRは一度も2を下回らず、この一連の仮定は比較的安全である。**",
+            "within the range of days evaluated, per-step SNR never drops below 2 — this set of assumptions is relatively safe.**",
+        )
+    st.markdown(T3(
+        f"**在目前選定的假設下（σ={sigma_km_str}、淨 Δa={net_da:.1f} km），" + tail,
+        f"**現在選択されている仮定の下では（σ={sigma_km_str}、正味Δa={net_da:.1f} km）、" + tail,
+        f"**Under the currently selected assumptions (σ={sigma_km_str}, net Δa={net_da:.1f} km), " + tail,
+    ))
 
     st.markdown("---")
-    st.header("結論：這個問題有答案了嗎？")
-    st.success(
+    st.header(T3("結論：這個問題有答案了嗎？", "結論：この問いに答えは出たのか？", "Conclusion: Is There an Answer to This Question?"))
+    st.success(T3(
         "**有，答案分兩種情境**：\n\n"
         "1️⃣ **抬軌階段**：實測速率換算 SNR 高達數十倍，1～2 天的典型 TLE 更新頻率就已是壓倒性證據，"
         "不是本專案的難點，也不需要更長觀測窗。\n\n"
@@ -2164,9 +2362,47 @@ def render_storymap_case3():
         "3️⃣ **但有個容易被忽略的但書**：上述限制是「逐點線上偵測器」特有的——如果目的不是即時告警、"
         "而是事後回顧「這段期間有沒有累積淨位移」，直接比較窗口起點與終點（per-episode 而非 per-step），"
         "訊噪比其實還是很高、清楚可辨。換句話說，**明確證據其實存在於資料裡，只是現有演算法沒有用最適合的方式去讀它**——"
-        "這是一個比單純調整觀測窗長度更有希望的改善方向。"
-    )
-    st.caption("完整推導、合成注入實驗與委員意見回應見 `docs/期末報告_技術附錄_20260909.md` §10.7、§14、§18.2。")
+        "這是一個比單純調整觀測窗長度更有希望的改善方向。",
+        "**ある。答えは2つの状況に分かれる**：\n\n"
+        "1️⃣ **軌道上昇段階**：実測速度から換算したSNRは数十倍にも達し、1〜2日という典型的なTLE更新頻度で"
+        "すでに圧倒的な証拠となる。これは本プロジェクトにとっての難点ではなく、より長い観測窓も必要としない。"
+        "\n\n2️⃣ **ステーションキーピング段階**：本当の技術的ボトルネック。正味の変位が約1週間を超えて"
+        "実行される場合、既存の**逐点オンライン検知器**（CUSUM累積偏差／BOCPDベイズ変化点検知／"
+        "3σ-MAD中央値絶対偏差閾値——3種類の統計的変化点／外れ値検知手法、詳細な原理は事例一を参照）の"
+        "per-step SNRは信頼できる判定閾値を下回ってしまう——これは現在のTLEの雑音床の下での物理的な限界であり、"
+        "パラメータ調整で解決できる問題ではなく、精密暦（MEMEなど、感度が10〜50倍高い）に頼ってこそ"
+        "根本的に解決できる。\n\n3️⃣ **しかし見落とされがちな留保がある**：上記の限界は「逐点オンライン検知器」"
+        "特有のものである——もし目的がリアルタイムの警報ではなく、事後的に「この期間中に累積的な正味の変位が"
+        "あったかどうか」を振り返ることであれば、窓の始点と終点を直接比較する（per-stepではなくper-episode）"
+        "ことで、信号対雑音比は実は依然として非常に高く、はっきりと識別可能である。言い換えれば、"
+        "**明確な証拠は実際にはデータの中に存在しており、既存のアルゴリズムが最適な方法でそれを読み取って"
+        "いないだけである**——これは単純に観測窓の長さを調整するよりも見込みのある改善の方向性である。",
+        "**Yes, and the answer splits into two scenarios**:\n\n"
+        "1️⃣ **Orbit-raising**: the measured rate converts to an SNR of tens of times over, so a typical "
+        "1–2 day TLE update cadence is already overwhelming evidence — not a difficulty for this project, "
+        "and no longer observation window is needed.\n\n"
+        "2️⃣ **Station-keeping**: the real technical bottleneck. If a net displacement is executed spread "
+        "over more than roughly a week, the per-step SNR of existing **point-wise online detectors** "
+        "(CUSUM cumulative-sum / BOCPD Bayesian change-point detection / 3σ-MAD median-absolute-deviation "
+        "thresholding — three statistical change-point/outlier-detection methods; see Case 1 for detailed "
+        "principles) drops below a reliable determination threshold — this is a physical limitation set by "
+        "the current TLE noise floor, not something parameter tuning can fix; only a precise ephemeris "
+        "(such as MEME, 10–50× more sensitive) can address it at the root.\n\n"
+        "3️⃣ **But there's an easily overlooked caveat**: the limitation above is specific to \"point-wise "
+        "online detectors\" — if the goal isn't real-time alerting but rather retrospectively reviewing "
+        "\"whether there was cumulative net displacement over this period,\" directly comparing the start "
+        "and end of the window (per-episode rather than per-step) still yields a high, clearly "
+        "distinguishable signal-to-noise ratio. In other words, **clear evidence actually exists in the "
+        "data — existing algorithms simply aren't reading it in the most suitable way** — a more promising "
+        "direction for improvement than simply adjusting the observation-window length.",
+    ))
+    st.caption(T3(
+        "完整推導、合成注入實驗與委員意見回應見 `docs/期末報告_技術附錄_20260909.md` §10.7、§14、§18.2。",
+        "完全な導出、合成注入実験、審査委員の意見への回答は `docs/期末報告_技術附錄_20260909.md` "
+        "§10.7、§14、§18.2を参照。",
+        "Full derivation, synthetic-injection experiments, and responses to committee comments are in "
+        "`docs/期末報告_技術附錄_20260909.md` §10.7, §14, §18.2.",
+    ))
 
 
 # ══ 案例四（2026-09-10 新增）══════════════════════════════════════════════════
@@ -2199,65 +2435,161 @@ def load_case4_real_data() -> pd.DataFrame:
     return _dedup_by_gap(df, 30)
 
 
+# --- render_storymap_case4 ---
 def render_storymap_case4():
     if st.button(t("storymap_back"), key="back_from_case4"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例四：23 顆外部標竿衛星的機動真值，從哪裡來、怎麼處理？")
-    st.subheader("三個公開、免帳號來源，用真實案例驗證 TLE 是否對得上獨立真值")
-    st.caption(
+    st.title(T3(
+        "案例四：23 顆外部標竿衛星的機動真值，從哪裡來、怎麼處理？",
+        "事例四：23機の外部ベンチマーク衛星の機動真値は、どこから来て、どう処理されているのか？",
+        "Case 4: Where Do the Maneuver Ground Truths for 23 External Benchmark Satellites Come From, and How Are They Processed?",
+    ))
+    st.subheader(T3(
+        "三個公開、免帳號來源，用真實案例驗證 TLE 是否對得上獨立真值",
+        "3つの公開・アカウント不要のソースを用い、実事例でTLEが独立真値と一致するかを検証する",
+        "Three Public, Account-Free Sources — Validating with a Real Case Whether TLEs Match Independent Ground Truth",
+    ))
+    st.caption(T3(
         "本報告多處宣稱之「非自算、外部獨立真值」，具體是怎麼取得的？"
         "這裡完整交代「14 顆開發樣本」＋「9 顆從未參與開發的 hold-out 衛星」共 23 顆之機動真值來源，"
-        "並用一組真實案例驗證：TLE 看到的變化，是否真的對得上這份獨立真值。"
-    )
+        "並用一組真實案例驗證：TLE 看到的變化，是否真的對得上這份獨立真值。",
+        "本レポートの随所で述べられる「自己算出ではない、外部の独立した真値」とは、具体的にどう入手されたものか？"
+        "ここでは「開発用14機サンプル」＋「開発に一切関与していない9機のhold-out衛星」、合計23機の機動真値の出所を完全に説明し、"
+        "実際の事例を用いて、TLEで観測される変化が本当にこの独立真値と一致するかを検証する。",
+        "What exactly is behind this report's repeated claim of \"independent, externally sourced, not self-computed\" ground truth? "
+        "Here is the complete account of where the maneuver ground truth comes from for all 23 satellites — the \"14-satellite development sample\" "
+        "plus \"9 hold-out satellites that never participated in development\" — together with a real case validating whether the changes seen "
+        "in TLEs actually match this independent ground truth.",
+    ))
 
-    st.header("① 三個真值來源——這 23 顆星的真值不是同一個來源")
-    st.markdown(
+    st.header(T3(
+        "① 三個真值來源——這 23 顆星的真值不是同一個來源",
+        "① 3つの真値ソース——この23機の真値は単一のソースではない",
+        "① Three ground-truth sources — these 23 satellites' ground truth does not come from a single source",
+    ))
+    st.markdown(T3(
         "| 來源 | 涵蓋衛星 | 顆數 | 資料型態 | 時間系統 | 下載點 |\n"
         "|---|---|--:|---|---|---|\n"
         "| **A. IDS/DORIS 機動歷史檔** | 14 顆開發用測高星 ＋ hold-out 之 SPOT-2/3/4/5、Sentinel-6B | **19** | operator 認證機動日誌（含逐次 ΔV） | **TAI** | `ids-doris.org` |\n"
         "| **B. NASA PO.DAAC SOE 檔** | GRACE-A/B、GRACE-FO-C/D（全為 hold-out） | **4** | operator 認證推力事件（窗級） | **GPS 秒** | `archive.podaac.earthdata.nasa.gov` |\n"
-        "| **C. TACC 福衛七號 leoOrb** | 福衛七號 6 顆（非 23 顆之一，另作 TLE 誤差基準用） | 6 | SP3-c 精密定軌星曆 | **GPS 時** | `tacc.cwa.gov.tw` |\n"
-    )
-    st.success("**三個來源皆為公開、免帳號**——不需要 Earthdata、Space-Track 等任何登入即可直接下載，這正是「非自算」可信度的基礎：真值來自衛星操作方自己認證公布的紀錄，不是本專案自己算出來再拿來自我驗證。")
+        "| **C. TACC 福衛七號 leoOrb** | 福衛七號 6 顆（非 23 顆之一，另作 TLE 誤差基準用） | 6 | SP3-c 精密定軌星曆 | **GPS 時** | `tacc.cwa.gov.tw` |\n",
+        "| ソース | 対象衛星 | 機数 | データ形式 | 時刻系 | ダウンロード元 |\n"
+        "|---|---|--:|---|---|---|\n"
+        "| **A. IDS/DORIS 機動履歴ファイル** | 開発用の14機の高度計衛星＋hold-outのSPOT-2/3/4/5、Sentinel-6B | **19** | オペレータ認証済み機動ログ（逐次ΔV含む） | **TAI** | `ids-doris.org` |\n"
+        "| **B. NASA PO.DAAC SOEファイル** | GRACE-A/B、GRACE-FO-C/D（すべてhold-out） | **4** | オペレータ認証済み推力イベント（窓単位） | **GPS秒** | `archive.podaac.earthdata.nasa.gov` |\n"
+        "| **C. TACC 福衛七号 leoOrb** | 福衛七号6機（23機には含まれない、TLE誤差の基準用） | 6 | SP3-c精密軌道暦 | **GPS時** | `tacc.cwa.gov.tw` |\n",
+        "| Source | Satellites covered | Count | Data type | Time system | Download point |\n"
+        "|---|---|--:|---|---|---|\n"
+        "| **A. IDS/DORIS maneuver history files** | The 14 development-set altimetry satellites + hold-out SPOT-2/3/4/5, Sentinel-6B | **19** | Operator-certified maneuver logs (with per-burn ΔV) | **TAI** | `ids-doris.org` |\n"
+        "| **B. NASA PO.DAAC SOE files** | GRACE-A/B, GRACE-FO-C/D (all hold-out) | **4** | Operator-certified thrust events (window-level) | **GPS seconds** | `archive.podaac.earthdata.nasa.gov` |\n"
+        "| **C. TACC FORMOSAT-7 leoOrb** | 6 FORMOSAT-7 satellites (not among the 23; used separately as a TLE-error baseline) | 6 | SP3-c precise orbit ephemeris | **GPS time** | `tacc.cwa.gov.tw` |\n",
+    ))
+    st.success(T3(
+        "**三個來源皆為公開、免帳號**——不需要 Earthdata、Space-Track 等任何登入即可直接下載，這正是「非自算」可信度的基礎："
+        "真值來自衛星操作方自己認證公布的紀錄，不是本專案自己算出來再拿來自我驗證。",
+        "**3つのソースはいずれも公開・アカウント不要**——Earthdata、Space-Trackなどへのログイン不要で直接ダウンロードできる。"
+        "これこそが「自己算出ではない」という信頼性の基盤である：真値は衛星運用者自身が認証・公表した記録に由来し、"
+        "本プロジェクトが自ら算出して自己検証に使っているものではない。",
+        "**All three sources are public and require no account** — no login of any kind (Earthdata, Space-Track, etc.) is needed "
+        "to download them directly. This is precisely the foundation of the 'not self-computed' credibility: the ground truth "
+        "comes from records certified and published by the satellite operators themselves, not computed by this project and "
+        "then used to validate itself.",
+    ))
 
-    st.header("② 14 顆開發 vs 9 顆 hold-out 的分組與來源歸屬")
-    st.markdown(
+    st.header(T3(
+        "② 14 顆開發 vs 9 顆 hold-out 的分組與來源歸屬",
+        "② 開発用14機とhold-out 9機の分類とソースの帰属",
+        "② Grouping and source attribution: 14 development satellites vs. 9 hold-out satellites",
+    ))
+    st.markdown(T3(
         "| 分組 | 衛星 | 來源 |\n"
         "|---|---|---|\n"
         "| **14 顆開發用** | Jason-1、Jason-2、Jason-3、Sentinel-6A、TOPEX/Poseidon、CryoSat-2、Envisat、Sentinel-3A、Sentinel-3B、SARAL、SWOT、HY-2A、HY-2C、HY-2D | 全部 **A. IDS** |\n"
         "| **9 顆 hold-out** | SPOT-2、SPOT-3、SPOT-4、SPOT-5、Sentinel-6B | **A. IDS**（5 顆） |\n"
-        "| | GRACE-A、GRACE-B、GRACE-FO-C、GRACE-FO-D | **B. PO.DAAC**（4 顆） |\n"
-    )
-    st.markdown(
+        "| | GRACE-A、GRACE-B、GRACE-FO-C、GRACE-FO-D | **B. PO.DAAC**（4 顆） |\n",
+        "| グループ | 衛星 | ソース |\n"
+        "|---|---|---|\n"
+        "| **開発用14機** | Jason-1、Jason-2、Jason-3、Sentinel-6A、TOPEX/Poseidon、CryoSat-2、Envisat、Sentinel-3A、Sentinel-3B、SARAL、SWOT、HY-2A、HY-2C、HY-2D | すべて **A. IDS** |\n"
+        "| **hold-out 9機** | SPOT-2、SPOT-3、SPOT-4、SPOT-5、Sentinel-6B | **A. IDS**（5機） |\n"
+        "| | GRACE-A、GRACE-B、GRACE-FO-C、GRACE-FO-D | **B. PO.DAAC**（4機） |\n",
+        "| Group | Satellites | Source |\n"
+        "|---|---|---|\n"
+        "| **14 development satellites** | Jason-1, Jason-2, Jason-3, Sentinel-6A, TOPEX/Poseidon, CryoSat-2, Envisat, Sentinel-3A, Sentinel-3B, SARAL, SWOT, HY-2A, HY-2C, HY-2D | All source **A (IDS)** |\n"
+        "| **9 hold-out satellites** | SPOT-2, SPOT-3, SPOT-4, SPOT-5, Sentinel-6B | Source **A, IDS** (5 satellites) |\n"
+        "| | GRACE-A, GRACE-B, GRACE-FO-C, GRACE-FO-D | Source **B, PO.DAAC** (4 satellites) |\n",
+    ))
+    st.markdown(T3(
         "**這 9 顆 hold-out 怎麼選出來的**：具「LEO ＋ 公開機動真值」者共 18 顆 IDS/DORIS 測高星；"
         "扣掉 4 顆較老舊的 SPOT（成像任務、2010 年前 TLE 品質較差、姿態框架真值），"
         "得到現代乾淨的 14 顆做開發。**這 9 顆 hold-out 是「14 星之外全部剩餘可用者」，"
         "不是為了讓結果好看而挑選出來的**——把 4 顆 SPOT 放回來，加上原本就在 IDS 名單內、"
-        "但未列入 14 顆開發集的 Sentinel-6B，再加上不在 IDS 名單、需另尋 PO.DAAC 來源的 GRACE 四姊妹。"
-    )
+        "但未列入 14 顆開發集的 Sentinel-6B，再加上不在 IDS 名單、需另尋 PO.DAAC 來源的 GRACE 四姊妹。",
+        "**このhold-out 9機はどう選ばれたか**：「LEO＋公開された機動真値」を持つIDS/DORIS高度計衛星は合計18機ある。"
+        "そのうち比較的古い4機のSPOT（撮像ミッションで2010年以前はTLE品質が低く、姿勢基準系の真値である）を除外し、"
+        "現代的でクリーンな14機を開発用とした。**このhold-out 9機は「14機以外で利用可能な残り全機」であり、"
+        "結果を良く見せるために選び出されたものではない**——4機のSPOTを戻し、もともとIDSリストにはあったが"
+        "開発用14機セットには含めなかったSentinel-6Bを加え、さらにIDSリストにはなくPO.DAACから別途ソースを"
+        "探す必要があったGRACE四姉妹を加えたものである。",
+        "**How these 9 hold-out satellites were chosen**: there are 18 IDS/DORIS altimetry satellites in total with "
+        "'LEO plus publicly available maneuver ground truth.' Removing 4 older SPOT satellites (imaging missions, poorer "
+        "TLE quality before 2010, attitude-frame-referenced ground truth) leaves a clean, modern set of 14 for development. "
+        "**These 9 hold-out satellites are simply 'everything usable left over outside the 14,' not a set cherry-picked to "
+        "make results look good** — the 4 SPOT satellites are added back, along with Sentinel-6B (already on the IDS list "
+        "but not included in the 14-satellite development set), plus the four GRACE sibling satellites (not on the IDS list "
+        "at all, requiring a separate PO.DAAC source).",
+    ))
 
-    st.header("③ 處理這些資料最容易出錯的地方")
-    st.warning(
+    st.header(T3(
+        "③ 處理這些資料最容易出錯的地方",
+        "③ このデータ処理で最も間違えやすい点",
+        "③ Where this data is easiest to get wrong",
+    ))
+    st.warning(T3(
         "**三個來源的時間系統各不相同，是最容易出錯之處**：IDS 用 **TAI**、"
         "PO.DAAC 的 SOE 檔用 **GPS 秒（自 J2000 起算）**、leoOrb 精密星曆用 **GPS 時**——"
         "三者與 UTC 皆有數十秒的固定差距。這個差距對「事件發生在哪一天」看似無傷大雅，"
         "但對接下來要比對的**機動時刻定位精度**（本報告中位數約 2.7 小時）而言，"
         "數十秒的系統性偏移若沒扣除，會讓每一次比對都固定偏移、稀釋掉真正的精度數字。"
         "本專案之解析器（`ids_man_parse.py`／`soe_build_truth_grace.py`）已內建對應換算，"
-        "並各自留一條回歸測試防止未來改版時再次弄錯。"
-    )
+        "並各自留一條回歸測試防止未來改版時再次弄錯。",
+        "**3つのソースの時刻系がそれぞれ異なることが、最も間違えやすい点である**：IDSは **TAI**、"
+        "PO.DAACのSOEファイルは **GPS秒（J2000起点）**、leoOrb精密暦は **GPS時**を用いており、"
+        "いずれもUTCとの間に数十秒の固定的な差がある。この差は「イベントがどの日に発生したか」という点では"
+        "一見無害に見えるが、この後で照合する**機動時刻の特定精度**（本レポートでは中央値約2.7時間）にとっては、"
+        "数十秒の系統的なずれを差し引かなければ、すべての照合が一定方向にずれてしまい、本来の精度の数値が"
+        "薄まってしまう。本プロジェクトのパーサー（`ids_man_parse.py`／`soe_build_truth_grace.py`）にはこれらの"
+        "換算があらかじめ組み込まれており、それぞれに回帰テストを設けて将来の改版時に再び間違えることを防いでいる。",
+        "**The fact that the three sources use different time systems is the easiest place to make a mistake**: "
+        "IDS uses **TAI**, PO.DAAC's SOE files use **GPS seconds (counted from J2000)**, and the leoOrb precise ephemeris "
+        "uses **GPS time** — all three have a fixed offset of tens of seconds from UTC. This offset seems harmless for "
+        "'which day an event occurred,' but for the **maneuver-timing precision** being compared next (a median of about "
+        "2.7 hours in this report), failing to remove a systematic offset of tens of seconds would shift every single "
+        "comparison in a fixed direction, diluting the true precision figure. This project's parsers "
+        "(`ids_man_parse.py` / `soe_build_truth_grace.py`) have the corresponding conversions built in, each with its own "
+        "regression test to prevent the mistake from recurring in future revisions.",
+    ))
 
-    st.header("④ 真實案例：Jason-3 的一次「升軌又降回來」站位保持")
+    st.header(T3(
+        "④ 真實案例：Jason-3 的一次「升軌又降回來」站位保持",
+        "④ 実事例：Jason-3の「軌道を上げてまた下げる」ステーションキーピングの一例",
+        "④ A real case: one instance of Jason-3 'raising orbit, then lowering it back' during station-keeping",
+    ))
     df = load_case4_real_data()
     if df.empty:
-        st.warning("目前資料庫查無 Jason-3（NORAD 41240）之 TLE，此區塊暫時無法顯示。")
+        st.warning(T3(
+            "目前資料庫查無 Jason-3（NORAD 41240）之 TLE，此區塊暫時無法顯示。",
+            "現在データベースにJason-3（NORAD 41240）のTLEが見つからないため、このセクションは表示できません。",
+            "No TLE data for Jason-3 (NORAD 41240) is currently available in the database, so this section cannot be displayed.",
+        ))
     else:
         events = [(pd.Timestamp(t, tz="UTC"), da, lbl) for t, da, lbl in _JASON3_TRUTH_EVENTS]
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=df["epoch"], y=df["sma_km"], mode="lines+markers",
-                                 name="TLE 半長軸（本專案 space_db）", line=dict(color="#4FC3F7")))
+                                 name=T3("TLE 半長軸（本專案 space_db）", "TLE軌道長半径（本プロジェクト space_db）",
+                                         "TLE semi-major axis (this project's space_db)"),
+                                 line=dict(color="#4FC3F7")))
         y_top, y_bot = float(df["sma_km"].max()), float(df["sma_km"].min())
         for i, (te, da, lbl) in enumerate(events):
             te_str = te.isoformat()
@@ -2267,32 +2599,65 @@ def render_storymap_case4():
                               showarrow=False, yshift=12 if i % 2 == 0 else -12,
                               font=dict(color="#EF9A9A", size=10))
         fig.update_layout(height=360, margin=dict(l=10, r=10, t=30, b=10),
-                          xaxis_title="時間（UTC）", yaxis_title="半長軸 a (km)",
-                          title="Jason-3（NORAD 41240）2026-06-20～07-02：TLE 實測 vs IDS/DORIS 獨立真值標記")
+                          xaxis_title=T3("時間（UTC）", "時刻（UTC）", "Time (UTC)"),
+                          yaxis_title=T3("半長軸 a (km)", "軌道長半径 a (km)", "Semi-major axis a (km)"),
+                          title=T3(
+                              "Jason-3（NORAD 41240）2026-06-20～07-02：TLE 實測 vs IDS/DORIS 獨立真值標記",
+                              "Jason-3（NORAD 41240）2026-06-20～07-02：TLE実測値 vs IDS/DORIS独立真値マーカー",
+                              "Jason-3 (NORAD 41240) 2026-06-20 to 07-02: Observed TLE vs. IDS/DORIS Independent Ground-Truth Markers",
+                          ))
         st.plotly_chart(fig, use_container_width=True)
 
-        st.markdown(
-            "**IDS/DORIS 真值記載**（`ids-doris.org` 公開機動日誌，operator 認證，非本專案自算）："
-        )
-        ev_df = pd.DataFrame(_JASON3_TRUTH_EVENTS, columns=["真值時刻（UTC）", "真值 Δa (km)", "說明"])
+        st.markdown(T3(
+            "**IDS/DORIS 真值記載**（`ids-doris.org` 公開機動日誌，operator 認證，非本專案自算）：",
+            "**IDS/DORIS真値の記録**（`ids-doris.org`の公開機動ログ、オペレータ認証済み、本プロジェクトの自己算出ではない）：",
+            "**IDS/DORIS ground-truth record** (public maneuver log from `ids-doris.org`, operator-certified, not self-computed by this project):",
+        ))
+        col_truth_time = T3("真值時刻（UTC）", "真値時刻（UTC）", "Ground-truth time (UTC)")
+        col_truth_da = T3("真值 Δa (km)", "真値 Δa (km)", "Ground-truth Δa (km)")
+        col_truth_desc = T3("說明", "説明", "Description")
+        ev_df = pd.DataFrame(_JASON3_TRUTH_EVENTS, columns=[col_truth_time, col_truth_da, col_truth_desc])
         st.dataframe(ev_df, hide_index=True, width="stretch")
 
         net_up = sum(da for _, da, _ in _JASON3_TRUTH_EVENTS[:2])
         net_down = sum(da for _, da, _ in _JASON3_TRUTH_EVENTS[2:])
-        st.success(
-            f"**判讀**：真值記載 06-23／06-24 有兩次共 **+{net_up:.3f} km** 的升軌點火，"
-            f"06-25／06-26 又有兩次共 **{net_down:.3f} km** 的降軌點火——這是典型的「站位保持死區來回」操作"
+        net_up_str = f"{net_up:.3f}"
+        net_down_str = f"{net_down:.3f}"
+        st.success(T3(
+            f"**判讀**：真值記載 06-23／06-24 有兩次共 **+{net_up_str} km** 的升軌點火，"
+            f"06-25／06-26 又有兩次共 **{net_down_str} km** 的降軌點火——這是典型的「站位保持死區來回」操作"
             "（先讓軌道略升，衰減一段時間後再修正回來）。"
             "**上圖的真實 TLE 曲線精確重現了這個先升後降的形狀**，時間點與真值標記完全對齊，"
             "淨變化量級也與真值相符（約 0.28～0.30 km）——這是本報告一貫方法論的具體示範：**用完全獨立、"
-            "operator 自己認證的第三方紀錄，驗證我方從公開 TLE 讀出的訊號是否可信，而非球員兼裁判。**"
-        )
+            "operator 自己認證的第三方紀錄，驗證我方從公開 TLE 讀出的訊號是否可信，而非球員兼裁判。**",
+            f"**判読**：真値記録によれば、06-23／06-24に計2回、**+{net_up_str} km**の上昇バーンがあり、"
+            f"06-25／06-26にも計2回、**{net_down_str} km**の降下バーンがあった——これは典型的な"
+            "「ステーションキーピングのデッドバンド往復」操作である（まず軌道をわずかに上げ、しばらく減衰させてから修正する）。"
+            "**上図の実際のTLE曲線は、この上昇後下降という形状を正確に再現しており**、時刻は真値マーカーと完全に一致し、"
+            "正味の変化量も真値と一致している（約0.28〜0.30 km）——これは本レポート全体を貫く方法論の具体的な実演である："
+            "**完全に独立した、オペレータ自身が認証した第三者記録を用いて、公開TLEから読み取った我々の信号が信頼できるかどうかを"
+            "検証する。自らが選手兼審判を務めるのではない。**",
+            f"**Verdict**: the ground truth records two up-burns on 06-23/06-24 totaling **+{net_up_str} km**, and two "
+            f"down-burns on 06-25/06-26 totaling **{net_down_str} km** — a classic 'station-keeping dead-band round trip' "
+            "(letting the orbit rise slightly, then correcting back down after a period of decay). **The real TLE curve "
+            "above precisely reproduces this rise-then-fall shape**, with timing perfectly aligned to the ground-truth "
+            "markers and a net magnitude of change that matches the ground truth (about 0.28–0.30 km) — a concrete "
+            "demonstration of this report's consistent methodology: **using completely independent, operator-certified "
+            "third-party records to validate whether the signal we read from public TLEs is trustworthy, rather than "
+            "being both player and referee.**",
+        ))
 
-    st.caption(
+    st.caption(T3(
         "完整三來源之下載、篩選條件、例外處理與 23 顆完整清單，見 "
         "`docs/TASA_資料取得與處理_真值與精密星曆/`（README.md 及 01–04 號文件）；"
-        "本節數字之可重現指令見該包 README §五。"
-    )
+        "本節數字之可重現指令見該包 README §五。",
+        "3つのソースすべての取得方法、選別条件、例外処理、23機の完全なリストは "
+        "`docs/TASA_資料取得與處理_真值與精密星曆/`（README.mdおよび01–04番の文書）を参照。"
+        "本節の数値を再現するコマンドは同パッケージのREADME §5を参照。",
+        "Full download procedures, filtering criteria, exception handling, and the complete list of all 23 satellites "
+        "for all three sources are in `docs/TASA_資料取得與處理_真值與精密星曆/` (README.md and documents 01–04); "
+        "reproducible commands for this section's numbers are in that package's README §5.",
+    ))
 
 
 # ══ StoryMap 案例五～七（2026-09-10 新增）══════════════════════════════════════
@@ -2327,28 +2692,69 @@ def load_case5_real_data() -> dict:
     return out
 
 
+# --- render_storymap_case5 ---
 def render_storymap_case5():
     if st.button(t("storymap_back"), key="back_from_case5"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例五：怎麼分辨「主動機動」跟「大氣阻力自然衰減」？")
-    st.subheader("物理阻力殘差模型＋再入守門：四顆真實衛星的對照示範")
-    st.caption("本頁全部數字皆由下方之快取函式對本機／遠端 TLE 資料庫即時查驗計算，非預先寫死之靜態文字。")
+    st.title(T3(
+        "案例五：怎麼分辨「主動機動」跟「大氣阻力自然衰減」？",
+        "事例五：「能動的機動」と「大気抵抗による自然減衰」をどう区別するのか？",
+        "Case 5: How Do You Tell Apart an \"Active Maneuver\" from \"Natural Decay Due to Atmospheric Drag\"?",
+    ))
+    st.subheader(T3(
+        "物理阻力殘差模型＋再入守門：四顆真實衛星的對照示範",
+        "物理的抵抗残差モデル＋再突入ガード：4機の実在衛星による対照実演",
+        "A Physical Drag-Residual Model Plus a Reentry Gate: A Side-by-Side Demonstration with Four Real Satellites",
+    ))
+    st.caption(T3(
+        "本頁全部數字皆由下方之快取函式對本機／遠端 TLE 資料庫即時查驗計算，非預先寫死之靜態文字。",
+        "本頁のすべての数値は、下記のキャッシュ関数がローカル／リモートのTLEデータベースをリアルタイムに"
+        "照会して算出したものであり、あらかじめ書き込まれた静的な文字列ではない。",
+        "All numbers on this page are computed live by the cached function below querying the local/remote "
+        "TLE database, not pre-written static text.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：低軌衛星的半長軸每天都在變小——這是大氣阻力造成的自然衰減，"
         "太陽活動越強（F10.7，10.7 公分波長太陽無線電通量，是最常用的太陽活動強度指標，越高代表太陽越活躍）"
         "衰減越快，跟「機動」完全無關。單看 |Δa| 沒辦法分辨兩者：一顆衛星今天掉了 50 公尺，"
         "可能是正常的阻力衰減，也可能是一次微幅機動。\n\n"
         "本專案的作法是先用 **NRLMSIS-2.1 半經驗大氣密度模型**，逐衛星算出「這段時間阻力理論上應該讓軌道掉多少」"
         "（`da/dt = -B·ρ·√(μa)`，B 為逐衛星自我校準的等效彈道係數），再從實測 Δa 中扣掉這個理論值——"
-        "**扣除後還剩下的殘差，才是真正需要解釋的訊號**（機動、或模型解釋不了的異常）。"
-    )
+        "**扣除後還剩下的殘差，才是真正需要解釋的訊號**（機動、或模型解釋不了的異常）。",
+        "**問題の背景**：低軌道衛星の軌道長半径は毎日小さくなっていく——これは大気抵抗による自然減衰であり、"
+        "太陽活動が強いほど（F10.7、波長10.7センチメートルの太陽電波束であり、最もよく使われる太陽活動強度"
+        "指標。値が高いほど太陽が活発であることを示す）減衰は速くなるが、「機動」とはまったく無関係である。"
+        "|Δa|だけを見ても両者を区別することはできない：ある衛星が今日50メートル下がったとしても、正常な"
+        "抵抗減衰かもしれないし、微小な機動かもしれない。\n\n"
+        "本プロジェクトのアプローチは、まず**NRLMSIS-2.1半経験的大気密度モデル**を用いて、衛星ごとに"
+        "「この期間、抵抗によって理論上軌道はどれだけ下がるはずか」を算出し（`da/dt = -B·ρ·√(μa)`、Bは"
+        "衛星ごとに自己較正される等価弾道係数）、次に実測されたΔaからこの理論値を差し引く——"
+        "**差し引いた後に残る残差こそが、本当に説明を要する信号**（機動、あるいはモデルでは説明できない"
+        "異常）である。",
+        "**Problem background**: a LEO satellite's semi-major axis shrinks a little every day — this is "
+        "natural decay caused by atmospheric drag, decaying faster the stronger solar activity is (F10.7, "
+        "the 10.7 cm solar radio flux, the most commonly used indicator of solar-activity intensity; higher "
+        "means more active), and has nothing to do with \"maneuvers.\" Looking at |Δa| alone can't "
+        "distinguish the two: a satellite that dropped 50 m today could be normal drag decay, or it could "
+        "be a small maneuver.\n\n"
+        "This project's approach is to first use the **NRLMSIS-2.1 semi-empirical atmospheric-density "
+        "model** to compute, satellite by satellite, \"how much the orbit should theoretically drop from "
+        "drag over this period\" (`da/dt = -B·ρ·√(μa)`, where B is a per-satellite, self-calibrated "
+        "effective ballistic coefficient), then subtract that theoretical value from the actually measured "
+        "Δa — **whatever residual remains after subtraction is the signal that genuinely needs "
+        "explanation** (a maneuver, or an anomaly the model can't account for).",
+    ))
 
     data = load_case5_real_data()
 
-    st.header("四顆真實衛星對照：殘差長什麼樣子？")
+    st.header(T3(
+        "四顆真實衛星對照：殘差長什麼樣子？",
+        "4機の実在衛星の比較：残差はどのような形をしているか？",
+        "Comparing Four Real Satellites: What Does the Residual Look Like?",
+    ))
     cols = st.columns(2)
     for i, (nid, lbl) in enumerate(_CASE3_SATS):
         d = data.get(nid, {})
@@ -2356,41 +2762,80 @@ def render_storymap_case5():
             st.subheader(lbl)
             df = d.get("df", pd.DataFrame())
             if df.empty:
-                st.info(f"NORAD {nid} 目前資料庫中無足夠 TLE，略過。")
+                st.info(T3(f"NORAD {nid} 目前資料庫中無足夠 TLE，略過。",
+                          f"NORAD {nid} は現在のデータベースに十分なTLEがないため、省略する。",
+                          f"NORAD {nid} does not have enough TLE data in the current database; skipping."))
                 continue
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=df["epoch"], y=df["drag_resid_da"], mode="lines",
-                                     line=dict(color="#64B5F6", width=1), name="阻力殘差 Δa (km)"))
+                                     line=dict(color="#64B5F6", width=1),
+                                     name=T3("阻力殘差 Δa (km)", "抵抗残差 Δa (km)", "Drag residual Δa (km)")))
             flagged = df[df["is_maneuver"]]
             if not flagged.empty:
                 fig.add_trace(go.Scatter(x=flagged["epoch"], y=flagged["drag_resid_da"], mode="markers",
-                                         marker=dict(color="#EF5350", size=6, symbol="x"), name="判定為機動"))
+                                         marker=dict(color="#EF5350", size=6, symbol="x"),
+                                         name=T3("判定為機動", "機動と判定", "Determined as maneuver")))
             fig.update_layout(height=260, margin=dict(l=10, r=10, t=10, b=10),
-                              yaxis_title="殘差 Δa (km)", showlegend=False,
+                              yaxis_title=T3("殘差 Δa (km)", "残差 Δa (km)", "Residual Δa (km)"), showlegend=False,
                               plot_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig, use_container_width=True, key=f"case5_chart_{nid}")
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("資料筆數", f"{d['n']:,}")
-            m2.metric("殘差中位數", f"{d['med']*1000:.1f} m")
-            m3.metric("殘差最大值", f"{d['max']:.2f} km")
-            m4.metric("判定為機動", f"{d['n_flag']}")
+            m1.metric(T3("資料筆數", "データ件数", "Number of records"), f"{d['n']:,}")
+            m2.metric(T3("殘差中位數", "残差中央値", "Median residual"), f"{d['med']*1000:.1f} m")
+            m3.metric(T3("殘差最大值", "残差最大値", "Maximum residual"), f"{d['max']:.2f} km")
+            m4.metric(T3("判定為機動", "機動と判定", "Determined as maneuver"), f"{d['n_flag']}")
             if d.get("reentry"):
-                st.warning(
+                max_str = f"{d['max']:.0f} km"
+                st.warning(T3(
                     f"⚠️ **再入守門觸發**：此衛星近地點已降到再入判準範圍，原始阻力殘差模型（非 secular）"
-                    f"在這裡會爆量到最高 **{d['max']:.0f} km**——如果沒有 `is_reentry_decay()` 這道守門，"
+                    f"在這裡會爆量到最高 **{max_str}**——如果沒有 `is_reentry_decay()` 這道守門，"
                     f"系統會誤判成一次前所未見的巨大機動。守門邏輯直接判定「自然再入，機動=0」，"
-                    f"上圖標記為機動的點數因此正確地是 **0**。"
-                )
+                    f"上圖標記為機動的點數因此正確地是 **0**。",
+                    f"⚠️ **再突入ガードが作動**：この衛星の近地点はすでに再突入判定範囲まで下がっており、"
+                    f"元の（secularではない）抵抗残差モデルはここで最大**{max_str}**まで爆発的に膨れ上がる——"
+                    "もし`is_reentry_decay()`によるこのガードがなければ、システムはこれを前例のない巨大な"
+                    "機動と誤判定してしまう。ガードのロジックは直接「自然再突入、機動＝0」と判定するため、"
+                    "上図で機動としてマークされる点数は正しく**0**となっている。",
+                    f"⚠️ **Reentry gate triggered**: this satellite's perigee has already dropped into the "
+                    f"reentry-determination range, where the raw (non-secular) drag-residual model would "
+                    f"balloon up to as high as **{max_str}** — without the `is_reentry_decay()` gate, the "
+                    "system would misjudge this as an unprecedented, massive maneuver. The gating logic "
+                    "directly determines \"natural reentry, maneuver = 0,\" so the number of points flagged "
+                    "as a maneuver in the chart above is correctly **0**.",
+                ))
 
     st.markdown("---")
-    st.success(
+    st.success(T3(
         "**判讀**：FORMOSAT-3A（穩定低軌、無機動）的殘差幾乎全部貼著 0；STARLINK-30273 "
         "的殘差有明顯超過門檻的尖峰，對應真實電推站位保持；ISS 因為橫跨 1998–2026 近 28 年真實推進器 "
         "reboost 歷史（本次對話中才剛從只有 2026-03 之後的殘缺資料，回補到完整 1998 年至今），"
         "殘差尖峰數量遠高於前兩者；Van Allen A 展示的是「模型會出錯，但系統設計了守門」的真實案例——"
-        "**沒有物理阻力模型會把正常衰減當機動，沒有再入守門則會把再入當成史上最大機動。三道防線缺一不可。**"
-    )
-    st.caption("方法完整推導見 `atmospheric_drag.py`（NRLMSIS 阻力殘差）與 `docs/期末報告_技術附錄_20260909.md` §六～六.5。")
+        "**沒有物理阻力模型會把正常衰減當機動，沒有再入守門則會把再入當成史上最大機動。三道防線缺一不可。**",
+        "**判読**：FORMOSAT-3A（安定した低軌道、機動なし）の残差はほぼすべて0に張り付いている；"
+        "STARLINK-30273の残差には閾値を明らかに超えるピークがあり、実際の電気推進によるステーション"
+        "キーピングに対応している；ISSは1998〜2026年の約28年間にわたる実際の推進器によるリブースト"
+        "履歴を持つため（本対話の中でちょうど、2026年3月以降しかなかった不完全なデータから、"
+        "1998年から現在までの完全なデータへと補完されたばかりである）、残差ピークの数は前の2つより"
+        "はるかに多い；Van Allen Aは「モデルは間違えることがあるが、システムにはガードが設計されている」"
+        "という実際の事例を示している——**物理的抵抗モデルがなければ正常な減衰を機動と誤認し、再突入ガード"
+        "がなければ再突入を史上最大の機動と誤認してしまう。3つの防御線はどれも欠かすことができない。**",
+        "**Verdict**: FORMOSAT-3A's residual (stable LEO, no maneuvers) sits almost entirely at 0; "
+        "STARLINK-30273's residual has clear peaks exceeding the threshold, corresponding to real "
+        "electric-propulsion station-keeping; ISS, spanning nearly 28 years (1998–2026) of real thruster "
+        "reboost history (only just backfilled during this very conversation from incomplete data starting "
+        "in 2026-03 to the complete record from 1998 to the present), shows far more residual peaks than "
+        "the other two; Van Allen A demonstrates a real case of \"the model can be wrong, but the system "
+        "was designed with a gate\" — **without a physical drag model, normal decay would be mistaken for "
+        "a maneuver; without a reentry gate, reentry would be mistaken for the largest maneuver in "
+        "history. None of these three lines of defense can be dispensed with.**",
+    ))
+    st.caption(T3(
+        "方法完整推導見 `atmospheric_drag.py`（NRLMSIS 阻力殘差）與 `docs/期末報告_技術附錄_20260909.md` §六～六.5。",
+        "完全な方法の導出は `atmospheric_drag.py`（NRLMSIS抵抗残差）および "
+        "`docs/期末報告_技術附錄_20260909.md` §六〜六.5を参照。",
+        "The full method derivation is in `atmospheric_drag.py` (NRLMSIS drag residual) and "
+        "`docs/期末報告_技術附錄_20260909.md` §6–6.5.",
+    ))
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -2415,92 +2860,194 @@ def load_case6_real_data(days: int = 30) -> dict:
     return R
 
 
+# --- render_storymap_case6 ---
 def render_storymap_case6():
     if st.button(t("storymap_back"), key="back_from_case6"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例六：Starlink 這種巨型星系，抓得到「一次調整一整批衛星」嗎？")
-    st.subheader("軌道面一致性、批量機動、隊形相位——三個角度即時檢驗上萬顆衛星")
-    st.caption("本頁對整個 Starlink 星系即時計算，資料量較大，首次載入可能需要數十秒。")
+    st.title(T3(
+        "案例六：Starlink 這種巨型星系，抓得到「一次調整一整批衛星」嗎？",
+        "事例六：Starlinkのような巨大コンステレーションで、「一度に衛星をまとめて調整する」ことを検知できるのか？",
+        "Case 6: Can \"Adjusting an Entire Batch of Satellites at Once\" Be Caught in a Mega-Constellation Like Starlink?",
+    ))
+    st.subheader(T3(
+        "軌道面一致性、批量機動、隊形相位——三個角度即時檢驗上萬顆衛星",
+        "軌道面の一貫性、一括機動、隊形の位相——3つの角度から数万機の衛星をリアルタイムに検証する",
+        "Orbital-Plane Coherence, Batch Maneuvers, and Formation Phase — Checking Tens of Thousands of Satellites Live from Three Angles",
+    ))
+    st.caption(T3(
+        "本頁對整個 Starlink 星系即時計算，資料量較大，首次載入可能需要數十秒。",
+        "本頁はStarlinkコンステレーション全体をリアルタイムに計算するため、データ量が多く、初回の読み込みには"
+        "数十秒かかることがある。",
+        "This page computes live across the entire Starlink constellation; the data volume is large, so the "
+        "first load may take tens of seconds.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：單顆衛星的機動偵測回答的是「這一顆有沒有動」；但 Starlink 有上萬顆衛星，"
         "有時候真正該問的是「有沒有一整批衛星同一天一起動」——這種集體行為（批次部署、軌道面重組）"
         "跟個別衛星的例行站位保持，代表完全不同的意義。以下用最近 30 天的真實資料，"
-        "從三個角度檢驗：**軌道面是否一致**、**有沒有異常大量衛星同天機動**、**隊形相位有沒有跑掉**。"
-    )
+        "從三個角度檢驗：**軌道面是否一致**、**有沒有異常大量衛星同天機動**、**隊形相位有沒有跑掉**。",
+        "**問題の背景**：単一衛星の機動検知が答えるのは「この1機が動いたかどうか」であるが、Starlinkには"
+        "数万機の衛星があり、時に本当に問うべきなのは「ある1日にまとめて1つのバッチ全体が動いたかどうか」"
+        "である——このような集団的な振る舞い（一括展開、軌道面の再編成）は、個々の衛星の定型的な"
+        "ステーションキーピングとはまったく異なる意味を持つ。以下では直近30日間の実際のデータを用いて、"
+        "3つの角度から検証する：**軌道面が一貫しているか**、**異常に多くの衛星が同じ日に機動していないか**、"
+        "**隊形の位相がずれていないか**。",
+        "**Problem background**: single-satellite maneuver detection answers \"did this one satellite "
+        "move\"; but Starlink has tens of thousands of satellites, and sometimes the real question is "
+        "\"did an entire batch of satellites move together on the same day\" — this kind of collective "
+        "behavior (batch deployment, orbital-plane reorganization) means something completely different "
+        "from an individual satellite's routine station-keeping. The following uses real data from the "
+        "last 30 days to check from three angles: **whether orbital planes are coherent**, **whether an "
+        "abnormally large number of satellites maneuvered on the same day**, and **whether formation phase "
+        "has drifted**.",
+    ))
 
     days = 30
     R = load_case6_real_data(days)
     if not R:
-        st.warning("目前資料庫中 Starlink 資料不足，無法計算。")
+        st.warning(T3(
+            "目前資料庫中 Starlink 資料不足，無法計算。",
+            "現在のデータベースにはStarlinkのデータが不足しており、計算できない。",
+            "Insufficient Starlink data in the current database; unable to compute.",
+        ))
         return
 
     date0, date1 = R["window"]
-    st.info(f"分析窗：**{date0.date()} ～ {date1.date()}**（{R['n_sats']:,} 顆衛星、{R['n_tle']:,} 筆 TLE）")
+    st.info(T3(
+        f"分析窗：**{date0.date()} ～ {date1.date()}**（{R['n_sats']:,} 顆衛星、{R['n_tle']:,} 筆 TLE）",
+        f"分析窓：**{date0.date()} 〜 {date1.date()}**（{R['n_sats']:,}機の衛星、{R['n_tle']:,}件のTLE）",
+        f"Analysis window: **{date0.date()} to {date1.date()}** ({R['n_sats']:,} satellites, {R['n_tle']:,} TLEs)",
+    ))
 
     planes, batch, formation = R["planes"], R["batch"], R["formation"]
 
-    st.header("① 軌道面一致性：同一個軌道面的衛星，傾角應該幾乎完全一樣")
+    st.header(T3(
+        "① 軌道面一致性：同一個軌道面的衛星，傾角應該幾乎完全一樣",
+        "①軌道面の一貫性：同一軌道面上の衛星は、傾斜角がほぼ完全に一致しているはずである",
+        "① Orbital-plane coherence: satellites in the same orbital plane should have nearly identical inclinations",
+    ))
     nflag_p = int(planes["flag_plane_incoherent"].sum())
     fig1 = go.Figure()
     pv = planes.sort_values("di_std_deg", ascending=False)
     colors = ["#EF5350" if f else "#90A4AE" for f in pv["flag_plane_incoherent"]]
     fig1.add_trace(go.Bar(x=pv["plane"], y=pv["di_std_deg"], marker_color=colors, name="Δi std (deg)"))
     fig1.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10),
-                       yaxis_title="傾角變化標準差 (deg)", xaxis_title="軌道面",
+                       yaxis_title=T3("傾角變化標準差 (deg)", "傾斜角変化の標準偏差 (deg)", "Std. dev. of inclination change (deg)"),
+                       xaxis_title=T3("軌道面", "軌道面", "Orbital plane"),
                        plot_bgcolor="rgba(0,0,0,0)", showlegend=False)
     st.plotly_chart(fig1, use_container_width=True, key="case6_planes")
-    st.caption(f"門檻＝中位數 + 3σ（自適應，非固定值）。紅色＝異常偏高的 {nflag_p} 個軌道面，"
-              f"共 {len(planes)} 個軌道面中。")
+    st.caption(T3(
+        f"門檻＝中位數 + 3σ（自適應，非固定值）。紅色＝異常偏高的 {nflag_p} 個軌道面，"
+        f"共 {len(planes)} 個軌道面中。",
+        f"閾値＝中央値＋3σ（適応的であり、固定値ではない）。赤色＝異常に高い{nflag_p}個の軌道面"
+        f"（全{len(planes)}個の軌道面中）。",
+        f"Threshold = median + 3σ (adaptive, not a fixed value). Red = the {nflag_p} orbital planes with "
+        f"abnormally high values, out of {len(planes)} orbital planes total.",
+    ))
 
-    st.header("② 批量機動識別：有沒有異常多顆衛星同一天一起機動？")
+    st.header(T3(
+        "② 批量機動識別：有沒有異常多顆衛星同一天一起機動？",
+        "②一括機動の識別：異常に多くの衛星が同じ日に一緒に機動していないか？",
+        "② Batch-maneuver identification: did an abnormally large number of satellites maneuver together on the same day?",
+    ))
     K = R["K"]
     bv = batch.sort_values("day")
     fig2 = go.Figure()
     fig2.add_trace(go.Bar(x=bv["day"].astype(str), y=bv["n_maneuvering"],
                           marker_color=["#EF5350" if f else "#64B5F6" for f in bv["flag_batch"]],
-                          name="同天機動衛星數"))
+                          name=T3("同天機動衛星數", "同日に機動した衛星数", "Satellites maneuvering the same day")))
     fig2.add_hline(y=K, line=dict(color="#EF9A9A", dash="dot"),
-                   annotation_text=f"批量門檻 K≈{K:.0f}（mean+3σ）")
+                   annotation_text=T3(f"批量門檻 K≈{K:.0f}（mean+3σ）", f"一括閾値 K≈{K:.0f}（mean+3σ）",
+                                     f"Batch threshold K≈{K:.0f} (mean+3σ)"))
     fig2.update_layout(height=280, margin=dict(l=10, r=10, t=30, b=10),
-                       yaxis_title="同天機動衛星數", plot_bgcolor="rgba(0,0,0,0)", showlegend=False)
+                       yaxis_title=T3("同天機動衛星數", "同日に機動した衛星数", "Satellites maneuvering the same day"),
+                       plot_bgcolor="rgba(0,0,0,0)", showlegend=False)
     st.plotly_chart(fig2, use_container_width=True, key="case6_batch")
     nflag_b = int(batch["flag_batch"].sum())
     max_day = batch.loc[batch["n_maneuvering"].idxmax()]
-    st.caption(f"觀測窗內單日最高 **{int(max_day['n_maneuvering'])} 顆**（{max_day['day']}），"
-              f"門檻 K≈{K:.0f}；判定為「批量事件日」共 **{nflag_b} 天**。")
+    st.caption(T3(
+        f"觀測窗內單日最高 **{int(max_day['n_maneuvering'])} 顆**（{max_day['day']}），"
+        f"門檻 K≈{K:.0f}；判定為「批量事件日」共 **{nflag_b} 天**。",
+        f"観測窓内で単日最多**{int(max_day['n_maneuvering'])}機**（{max_day['day']}）、"
+        f"閾値K≈{K:.0f}；「一括イベント日」と判定された日数は合計**{nflag_b}日**。",
+        f"The highest single-day count within the observation window is **{int(max_day['n_maneuvering'])} "
+        f"satellites** ({max_day['day']}), against a threshold of K≈{K:.0f}; **{nflag_b} day(s)** were "
+        "determined to be \"batch-event days.\"",
+    ))
 
-    st.header("③ 隊形相位誤差：同一軌道面內的衛星間距，有沒有跑掉？")
+    st.header(T3(
+        "③ 隊形相位誤差：同一軌道面內的衛星間距，有沒有跑掉？",
+        "③隊形位相誤差：同一軌道面内の衛星間隔は、ずれていないか？",
+        "③ Formation phase error: has the spacing between satellites within the same orbital plane drifted?",
+    ))
     fv = formation.sort_values("phase_resid_std_deg", ascending=False)
     fig3 = go.Figure()
     fig3.add_trace(go.Bar(x=fv["plane"].head(15), y=fv["phase_resid_std_deg"].head(15),
-                          marker_color="#FFB74D", name="相位殘差 std (deg)"))
+                          marker_color="#FFB74D", name=T3("相位殘差 std (deg)", "位相残差 std (deg)", "Phase residual std (deg)")))
     fig3.update_layout(height=260, margin=dict(l=10, r=10, t=10, b=10),
-                       yaxis_title="相位殘差標準差 (deg)", xaxis_title="軌道面（前 15 名）",
+                       yaxis_title=T3("相位殘差標準差 (deg)", "位相残差の標準偏差 (deg)", "Std. dev. of phase residual (deg)"),
+                       xaxis_title=T3("軌道面（前 15 名）", "軌道面（上位15）", "Orbital plane (top 15)"),
                        plot_bgcolor="rgba(0,0,0,0)", showlegend=False)
     st.plotly_chart(fig3, use_container_width=True, key="case6_formation")
     n_outliers = int(formation["n_outliers"].sum())
-    st.caption(f"{len(formation)} 個軌道面中，相位離群衛星總數 **{n_outliers} 顆**。")
+    st.caption(T3(
+        f"{len(formation)} 個軌道面中，相位離群衛星總數 **{n_outliers} 顆**。",
+        f"{len(formation)}個の軌道面のうち、位相の外れ値となる衛星の総数は**{n_outliers}機**。",
+        f"Across {len(formation)} orbital planes, the total number of phase-outlier satellites is "
+        f"**{n_outliers}**.",
+    ))
 
     st.markdown("---")
     if nflag_b == 0:
-        st.success(
+        max_n_str = str(int(max_day["n_maneuvering"]))
+        st.success(T3(
             f"**判讀（誠實揭露）**：這 {days} 天真實資料裡，"
-            f"**沒有任何一天觸發批量機動門檻**（最高 {int(max_day['n_maneuvering'])} 顆 < K≈{K:.0f} 顆）——"
+            f"**沒有任何一天觸發批量機動門檻**（最高 {max_n_str} 顆 < K≈{K:.0f} 顆）——"
             "這本身就是一個有意義的負面結果：Starlink 的電推機動是持續性、分散式的個別衛星站位保持，"
             f"不是集中式的全星系同步動作。但軌道面一致性上仍抓到 **{nflag_p} 個**傾角異常偏高的軌道面"
-            "（可能是新一批尚未完全settle的衛星、或殼層間的協同傾角調整），值得後續追蹤。"
-        )
+            "（可能是新一批尚未完全settle的衛星、或殼層間的協同傾角調整），值得後續追蹤。",
+            f"**判読（誠実な開示）**：この{days}日間の実際のデータの中では、"
+            f"**一括機動閾値を超えた日は1日もなかった**（最多{max_n_str}機 < K≈{K:.0f}機）——"
+            "これ自体が意味のある負の結果である：Starlinkの電気推進機動は継続的で分散的な個々の衛星の"
+            f"ステーションキーピングであり、集中的な全コンステレーション同期動作ではない。ただし軌道面の"
+            f"一貫性については依然として**{nflag_p}個**の傾斜角が異常に高い軌道面を検出している"
+            "（まだ完全にsettleしていない新しいバッチの衛星、あるいはシェル間の協調的な傾斜角調整の"
+            "可能性がある）。今後の追跡に値する。",
+            f"**Verdict (honest disclosure)**: within these {days} days of real data, "
+            f"**no day triggered the batch-maneuver threshold** (highest was {max_n_str} satellites < "
+            f"K≈{K:.0f}) — this is itself a meaningful negative result: Starlink's electric-propulsion "
+            "maneuvers are continuous, distributed, individual-satellite station-keeping, not a "
+            f"centralized, whole-constellation synchronized action. However, orbital-plane coherence still "
+            f"flagged **{nflag_p}** planes with abnormally high inclination variance (possibly a new batch "
+            "of satellites not yet fully settled, or coordinated inclination adjustment between shells), "
+            "worth tracking further.",
+        ))
     else:
         bd = batch[batch["flag_batch"]]
-        st.success(
+        days_list = ", ".join(str(d) for d in bd["day"].head(5))
+        st.success(T3(
             f"**判讀**：偵測到 **{nflag_b} 天**觸發批量機動門檻"
-            f"（{', '.join(str(d) for d in bd['day'].head(5))}），"
-            f"同時軌道面一致性上有 {nflag_p} 個異常軌道面——兩者對照可用於判斷是否為真實批次部署/重組事件。"
-        )
-    st.caption("方法完整推導見 `constellation_anomaly.py`；可用 `python constellation_anomaly.py --list` 查看其他已支援星系（OneWeb/Qianfan/Yaogan/Gaofen/Jilin）。")
+            f"（{days_list}），"
+            f"同時軌道面一致性上有 {nflag_p} 個異常軌道面——兩者對照可用於判斷是否為真實批次部署/重組事件。",
+            f"**判読**：一括機動閾値を超えた日を**{nflag_b}日**検知した（{days_list}）。"
+            f"同時に軌道面の一貫性についても{nflag_p}個の異常な軌道面がある——両者を照合することで、"
+            "実際の一括展開／再編成イベントかどうかを判断できる。",
+            f"**Verdict**: **{nflag_b} day(s)** triggered the batch-maneuver threshold ({days_list}), "
+            f"and orbital-plane coherence also flagged {nflag_p} anomalous planes — comparing the two can "
+            "help determine whether this is a genuine batch-deployment/reorganization event.",
+        ))
+    st.caption(T3(
+        "方法完整推導見 `constellation_anomaly.py`；可用 `python constellation_anomaly.py --list` "
+        "查看其他已支援星系（OneWeb/Qianfan/Yaogan/Gaofen/Jilin）。",
+        "完全な方法の導出は `constellation_anomaly.py` を参照。`python constellation_anomaly.py --list` "
+        "で他にサポートされているコンステレーション（OneWeb/Qianfan/Yaogan/Gaofen/Jilin）を確認できる。",
+        "The full method derivation is in `constellation_anomaly.py`; run "
+        "`python constellation_anomaly.py --list` to see other supported constellations "
+        "(OneWeb/Qianfan/Yaogan/Gaofen/Jilin).",
+    ))
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -2533,89 +3080,212 @@ def _case7_dist_chart(pair: dict, title: str, key: str):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=rel["t"], y=rel["d"], mode="lines+markers",
                              line=dict(color="#BA68C8", width=1.5), marker=dict(size=3),
-                             name="相對距離 (km)"))
+                             name=T3("相對距離 (km)", "相対距離 (km)", "Relative distance (km)")))
     fig.update_layout(height=280, margin=dict(l=10, r=10, t=30, b=10), title=title,
-                      yaxis_title="相對距離 (km)", plot_bgcolor="rgba(0,0,0,0)", showlegend=False)
+                      yaxis_title=T3("相對距離 (km)", "相対距離 (km)", "Relative distance (km)"),
+                      plot_bgcolor="rgba(0,0,0,0)", showlegend=False)
     st.plotly_chart(fig, use_container_width=True, key=key)
 
 
+# --- render_storymap_case7 ---
 def render_storymap_case7():
     if st.button(t("storymap_back"), key="back_from_case7"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例七：兩顆衛星多近才算「危險接近」？Pc／TCA 怎麼算出來的？")
-    st.subheader("同樣的距離量級，非合作抵近與計畫內對接是完全不同的故事")
-    st.caption("本頁全部數字皆由下方之快取函式對本機／遠端 TLE 資料庫即時以 SGP4 重建相對軌跡計算。")
+    st.title(T3(
+        "案例七：兩顆衛星多近才算「危險接近」？Pc／TCA 怎麼算出來的？",
+        "事例七：2機の衛星がどれだけ近づけば「危険接近」と言えるのか？Pc／TCAはどう算出されるのか？",
+        "Case 7: How Close Do Two Satellites Have to Get to Be a \"Dangerous Approach\"? How Are Pc/TCA Computed?",
+    ))
+    st.subheader(T3(
+        "同樣的距離量級，非合作抵近與計畫內對接是完全不同的故事",
+        "同じ距離の量級であっても、非協力的な接近と計画的なドッキングとではまったく異なる話になる",
+        "The Same Distance Scale Tells Completely Different Stories for a Non-Cooperative Approach vs. a Planned Docking",
+    ))
+    st.caption(T3(
+        "本頁全部數字皆由下方之快取函式對本機／遠端 TLE 資料庫即時以 SGP4 重建相對軌跡計算。",
+        "本頁のすべての数値は、下記のキャッシュ関数がローカル／リモートのTLEデータベースに対して"
+        "SGP4でリアルタイムに相対軌道を再構築して算出したものである。",
+        "All numbers on this page are computed live by the cached function below, reconstructing relative "
+        "trajectories via SGP4 against the local/remote TLE database.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：「兩顆衛星距離 15 公里」跟「兩顆衛星距離 15 公里」，可能代表完全不同的事情——"
         "取決於這兩顆衛星「打算不打算」靠近彼此。本案例對照兩個真實事件：一個是**非合作／意圖不明**的 "
         "GEO 抵近，一個是**合作／計畫內**的太空站貨運對接。兩者的最近距離量級接近，但意義天差地遠。\n\n"
         "本案例會用到兩個核心指標：**TCA**（Time of Closest Approach，最接近時刻——兩顆衛星預測軌跡"
         "距離最短的那一刻）與 **Pc**（Probability of Collision，碰撞機率——綜合最近距離與雙方軌道"
-        "不確定性算出的一個 0～1 數字，越接近 1 代表碰撞風險越高）。"
-    )
+        "不確定性算出的一個 0～1 數字，越接近 1 代表碰撞風險越高）。",
+        "**問題の背景**：「2機の衛星が15キロメートル離れている」ことは、状況によってまったく異なる意味を"
+        "持ちうる——それは、この2機の衛星が互いに近づこうと「意図しているかどうか」による。本事例では"
+        "2つの実際の事例を対比する：1つは**非協力的／意図不明**なGEOでの接近、もう1つは**協力的／計画的**な"
+        "宇宙ステーションへの貨物船ドッキングである。両者の最接近距離の量級は近いが、意味はまったく異なる。"
+        "\n\n本事例では2つの中核指標を用いる：**TCA**（Time of Closest Approach、最接近時刻——2機の衛星の"
+        "予測軌道の距離が最も短くなる瞬間）と**Pc**（Probability of Collision、衝突確率——最接近距離と"
+        "双方の軌道の不確実性を総合して算出される0〜1の数値であり、1に近いほど衝突リスクが高いことを"
+        "示す）。",
+        "**Problem background**: \"two satellites 15 km apart\" can mean completely different things "
+        "depending on whether the two satellites \"intend\" to approach each other or not. This case "
+        "compares two real events: a **non-cooperative/intent-unknown** GEO approach, and a "
+        "**cooperative/planned** space-station cargo docking. The closest-approach distances for the two "
+        "are similar in magnitude, but their meanings are worlds apart.\n\n"
+        "This case uses two core metrics: **TCA** (Time of Closest Approach — the moment the predicted "
+        "trajectories of two satellites are closest together) and **Pc** (Probability of Collision — a "
+        "number from 0 to 1 computed from the closest distance combined with both satellites' orbital "
+        "uncertainty; closer to 1 means higher collision risk).",
+    ))
 
     data = load_case7_real_data()
 
-    st.header("① TJS-10 抵近 TJS-3（GEO，2024 年春）")
+    st.header(T3(
+        "① TJS-10 抵近 TJS-3（GEO，2024 年春）",
+        "①TJS-10がTJS-3に接近（GEO、2024年春）",
+        "① TJS-10 Approaches TJS-3 (GEO, Spring 2024)",
+    ))
     tjs = data.get("tjs")
     if tjs:
         s = tjs["summary"]
-        _case7_dist_chart(tjs, "TJS-10 (58204) 相對 TJS-3 (43874) 之距離", "case7_tjs")
+        _case7_dist_chart(tjs, T3("TJS-10 (58204) 相對 TJS-3 (43874) 之距離", "TJS-10 (58204) の TJS-3 (43874) に対する距離",
+                                  "Distance of TJS-10 (58204) relative to TJS-3 (43874)"), "case7_tjs")
         c1, c2, c3 = st.columns(3)
-        c1.metric("起始距離", f"{s['d_first']:.0f} km")
-        c2.metric("最近距離 (TCA)", f"{s['d_min']:.1f} km")
-        c3.metric("結束距離", f"{s['d_last']:.0f} km")
-        st.markdown(
+        c1.metric(T3("起始距離", "開始時の距離", "Starting distance"), f"{s['d_first']:.0f} km")
+        c2.metric(T3("最近距離 (TCA)", "最接近距離 (TCA)", "Closest distance (TCA)"), f"{s['d_min']:.1f} km")
+        c3.metric(T3("結束距離", "終了時の距離", "Ending distance"), f"{s['d_last']:.0f} km")
+        tca_str = s['d_min_t'][:16].replace('T', ' ')
+        dmin_str = f"{s['d_min']:.1f} km"
+        st.markdown(T3(
             "TJS-10（中國「通信技術試驗衛星」系列，任務不公開）與同軌位的 TJS-3 共位在 173°E 附近。"
             "2024 年 5 月 15–16 日，TJS-10 兩次真實半長軸機動（各 +11 公里量級）啟動西移，"
-            f"15 日後在 **{s['d_min_t'][:16].replace('T',' ')} UTC 以 {s['d_min']:.1f} km** 從 TJS-3 東側掠過到西側，"
+            f"15 日後在 **{tca_str} UTC 以 {dmin_str}** 從 TJS-3 東側掠過到西側，"
             "隨即再兩次反向機動煞車，最終停在 TJS-3 西側 65–85 公里處——**這是需要主動推進才能完成的軌跡反轉**，"
-            "不是自然漂移。此案例常被歸類為「共位檢視／抵近偵察」行為。"
-        )
+            "不是自然漂移。此案例常被歸類為「共位檢視／抵近偵察」行為。",
+            "TJS-10（中国の「通信技術試験衛星」シリーズ、任務は非公開）は、同じ軌道位置のTJS-3と共に"
+            "東経173°付近に共在している。2024年5月15〜16日、TJS-10は2回の実際の軌道長半径機動"
+            "（それぞれ+11キロメートル級）を行い西方向への移動を開始し、15日後の"
+            f"**{tca_str} UTCに{dmin_str}**でTJS-3の東側から西側へと通過した。"
+            "その直後にさらに2回の逆方向の減速機動を行い、最終的にTJS-3の西側65〜85キロメートルの位置に"
+            "留まった——**これは能動的な推進がなければ完了できない軌道の反転**であり、自然な漂移ではない。"
+            "この事例はしばしば「共在監視／接近偵察」行為に分類される。",
+            "TJS-10 (China's \"Communication Technology Test Satellite\" series, mission undisclosed) is "
+            "co-located near 173°E with TJS-3 at the same orbital slot. On May 15–16, 2024, TJS-10 executed "
+            "two real semi-major-axis maneuvers (each on the order of +11 km) to begin moving westward; "
+            f"15 days later, at **{tca_str} UTC, it passed from TJS-3's east side to its west side at a "
+            f"distance of {dmin_str}**, then executed two more reverse braking maneuvers, ultimately "
+            "settling 65–85 km west of TJS-3 — **this is a trajectory reversal that requires active "
+            "propulsion to accomplish**, not natural drift. This case is commonly classified as "
+            "\"co-location inspection / close-approach reconnaissance\" behavior.",
+        ))
     else:
-        st.info("目前資料庫中無 TJS-10/TJS-3 之 TLE 重疊窗，略過。")
+        st.info(T3(
+            "目前資料庫中無 TJS-10/TJS-3 之 TLE 重疊窗，略過。",
+            "現在のデータベースにはTJS-10／TJS-3のTLEの重複期間がないため、省略する。",
+            "No overlapping TLE window for TJS-10/TJS-3 in the current database; skipping.",
+        ))
 
-    st.header("② ISS 對接 Cygnus NG-24 貨運飛船（LEO，2026 年 4 月）")
+    st.header(T3(
+        "② ISS 對接 Cygnus NG-24 貨運飛船（LEO，2026 年 4 月）",
+        "②ISSがCygnus NG-24貨物船とドッキング（LEO、2026年4月）",
+        "② ISS Docks with the Cygnus NG-24 Cargo Spacecraft (LEO, April 2026)",
+    ))
     cyg = data.get("cygnus")
     if cyg:
         s = cyg["summary"]
-        _case7_dist_chart(cyg, "ISS (ZARYA) 相對 CYGNUS NG-24 之距離", "case7_cygnus")
+        _case7_dist_chart(cyg, T3("ISS (ZARYA) 相對 CYGNUS NG-24 之距離", "ISS (ZARYA) の CYGNUS NG-24 に対する距離",
+                                  "Distance of ISS (ZARYA) relative to CYGNUS NG-24"), "case7_cygnus")
         c1, c2, c3 = st.columns(3)
-        c1.metric("剛入軌時距離", f"{s['d_first']:,.0f} km")
-        c2.metric("最遠曾拉開到", f"{s['d_max']:,.0f} km")
-        c3.metric("對接時距離", "≈0 km")
-        st.markdown(
+        c1.metric(T3("剛入軌時距離", "軌道投入直後の距離", "Distance right after orbit insertion"), f"{s['d_first']:,.0f} km")
+        c2.metric(T3("最遠曾拉開到", "最も離れた距離", "Farthest separation reached"), f"{s['d_max']:,.0f} km")
+        c3.metric(T3("對接時距離", "ドッキング時の距離", "Distance at docking"), "≈0 km")
+        dmax_str = f"{s['d_max']:,.0f} km"
+        st.markdown(T3(
             "Cygnus NG-24 貨運飛船發射入軌後，軌道相位尚未對齊 ISS，前兩天距離曾一度拉開到超過 "
-            f"**{s['d_max']:,.0f} km**——這是正常的相位追趕過程（振幅逐漸收斂的靠近震盪），"
-            "**不是異常軌跡**。到 4 月 17 日左右完成最終逼近，正式對接後兩者軌道基本重合。"
-        )
+            f"**{dmax_str}**——這是正常的相位追趕過程（振幅逐漸收斂的靠近震盪），"
+            "**不是異常軌跡**。到 4 月 17 日左右完成最終逼近，正式對接後兩者軌道基本重合。",
+            "Cygnus NG-24貨物船は打ち上げられ軌道投入された後、軌道位相がまだISSと一致していなかったため、"
+            f"最初の2日間は距離が一時**{dmax_str}**を超えるまで開いた——これは正常な位相追跡過程"
+            "（振幅が徐々に収束していく接近振動）であり、**異常な軌跡ではない**。4月17日頃に最終接近を"
+            "完了し、正式にドッキングした後は両者の軌道はほぼ完全に重なった。",
+            f"After the Cygnus NG-24 cargo spacecraft launched and reached orbit, its orbital phase was not "
+            f"yet aligned with the ISS, and the distance briefly widened to over **{dmax_str}** during the "
+            "first two days — this is a normal phase-catch-up process (an approach oscillation with "
+            "gradually converging amplitude), **not an anomalous trajectory**. Final approach was completed "
+            "around April 17, after which the two orbits essentially coincided following the official "
+            "docking.",
+        ))
         row = data.get("iss_pc_row")
         if isinstance(row, pd.DataFrame) and not row.empty:
             r0 = row.iloc[0]
-            st.warning(
+            tca_str2 = str(r0['tca_utc'])[:16]
+            miss_m_str = f"{r0['miss_distance_km']*1000:.1f}"
+            pc_str = f"{r0['pc']:.4f}"
+            st.warning(T3(
                 f"**耐人尋味的對照**：本專案的自動化 Pc 篩選管線（`conjunction_events.parquet`）"
-                f"對這一組真實接近事件（TCA {str(r0['tca_utc'])[:16]} UTC，最近距離僅 "
-                f"**{r0['miss_distance_km']*1000:.1f} 公尺**）計算出 **Pc = {r0['pc']:.4f}，"
+                f"對這一組真實接近事件（TCA {tca_str2} UTC，最近距離僅 "
+                f"**{miss_m_str} 公尺**）計算出 **Pc = {pc_str}，"
                 f"風險等級 = {r0['risk_label']}**——單看這組數字，跟一次真正危險的抵近事件幾乎無法區分。"
                 "但這其實是一次完全計畫內、雙方都知情配合的太空站貨運對接，安全等級最高。"
                 "**這正是本案例要傳達的重點**：Pc/TCA 的距離幾何計算本身無法分辨「合作」與「非合作」，"
-                "必須額外比對飛行計畫、發射任務資料庫，才能判斷一次近距接近究竟是操作正常還是真正的威脅。"
-            )
+                "必須額外比對飛行計畫、發射任務資料庫，才能判斷一次近距接近究竟是操作正常還是真正的威脅。",
+                f"**興味深い対比**：本プロジェクトの自動化Pcスクリーニングパイプライン"
+                f"（`conjunction_events.parquet`）は、この実際の接近イベント（TCA {tca_str2} UTC、"
+                f"最接近距離はわずか**{miss_m_str}メートル**）に対して**Pc = {pc_str}、"
+                f"リスクレベル = {r0['risk_label']}**と算出した——この数値だけを見れば、本当に危険な"
+                "接近イベントとほとんど区別がつかない。しかしこれは実際には完全に計画内であり、双方が"
+                "承知の上で協力した宇宙ステーションへの貨物船ドッキングであり、安全レベルは最高である。"
+                "**これこそが本事例が伝えたい核心である**：Pc/TCAの距離幾何学的計算そのものでは"
+                "「協力的」か「非協力的」かを区別できず、飛行計画や打ち上げ任務データベースと追加で"
+                "照合してはじめて、ある近接接近が正常な運用なのか本当の脅威なのかを判断できる。",
+                f"**A striking contrast**: this project's automated Pc-screening pipeline "
+                f"(`conjunction_events.parquet`) computed, for this real close-approach event (TCA "
+                f"{tca_str2} UTC, closest distance only **{miss_m_str} meters**), **Pc = {pc_str}, risk "
+                f"level = {r0['risk_label']}** — looking at these numbers alone, this is almost "
+                "indistinguishable from a genuinely dangerous approach event. But this is actually a fully "
+                "planned space-station cargo docking, with both parties fully aware and cooperating — the "
+                "highest possible safety level. **This is exactly the point this case makes**: the "
+                "distance-geometry computation behind Pc/TCA cannot, by itself, distinguish \"cooperative\" "
+                "from \"non-cooperative\"; flight plans and launch mission databases must be cross-"
+                "referenced in addition, to determine whether a close approach is routine operation or a "
+                "genuine threat.",
+            ))
     else:
-        st.info("目前資料庫中無 ISS/Cygnus NG-24 之 TLE 重疊窗，略過。")
+        st.info(T3(
+            "目前資料庫中無 ISS/Cygnus NG-24 之 TLE 重疊窗，略過。",
+            "現在のデータベースにはISS／Cygnus NG-24のTLEの重複期間がないため、省略する。",
+            "No overlapping TLE window for ISS/Cygnus NG-24 in the current database; skipping.",
+        ))
 
     st.markdown("---")
-    st.success(
+    st.success(T3(
         "**判讀**：TJS-10×TJS-3 與 ISS×Cygnus 的最近距離都在「公里到公尺」量級，"
         "純粹看距離／Pc 數字本身無法分辨兩者的意圖差異——前者是非合作的抵近偵察（需要額外比對軌道機動特徵"
         "如反轉軌跡、共位歷史），後者是合作的計畫性對接（有公開發射任務資料佐證）。"
-        "**這也是為什麼實務上的 SSA/SDA 分析從不能只看單一 Pc 數字，而要結合任務資料庫、機動歷史與外部情資。**"
-    )
-    st.caption("方法完整推導見 `conjunction_viz.py`（compute_pair_series，SGP4 相對運動重建）；"
-              "TJS-10×TJS-3 案例另有互動版四視角 3D 視覺化於 `figs/rpo_tjs10_tjs3_2024.html`。")
+        "**這也是為什麼實務上的 SSA/SDA 分析從不能只看單一 Pc 數字，而要結合任務資料庫、機動歷史與外部情資。**",
+        "**判読**：TJS-10×TJS-3とISS×Cygnusの最接近距離はいずれも「キロメートルからメートル」の量級に"
+        "あるが、距離／Pcの数値だけを見ても両者の意図の違いを区別することはできない——前者は非協力的な"
+        "接近偵察（軌道反転や共在履歴といった軌道機動の特徴を追加で照合する必要がある）であり、後者は"
+        "協力的な計画的ドッキング（公開された打ち上げ任務データによる裏付けがある）である。"
+        "**これこそが、実務上のSSA/SDA分析が単一のPc数値だけを見ることは決してなく、任務データベース、"
+        "機動履歴、外部情報を組み合わせなければならない理由である。**",
+        "**Verdict**: the closest distances for both TJS-10×TJS-3 and ISS×Cygnus fall in the \"kilometer to "
+        "meter\" range, and looking at distance/Pc numbers alone cannot distinguish the difference in "
+        "intent between them — the former is non-cooperative approach reconnaissance (requiring additional "
+        "cross-referencing of orbital-maneuver signatures such as trajectory reversal and co-location "
+        "history), while the latter is cooperative, planned docking (corroborated by public launch-mission "
+        "data). **This is exactly why real-world SSA/SDA analysis can never rely on a single Pc number "
+        "alone, and must combine it with mission databases, maneuver history, and external intelligence.**",
+    ))
+    st.caption(T3(
+        "方法完整推導見 `conjunction_viz.py`（compute_pair_series，SGP4 相對運動重建）；"
+        "TJS-10×TJS-3 案例另有互動版四視角 3D 視覺化於 `figs/rpo_tjs10_tjs3_2024.html`。",
+        "完全な方法の導出は `conjunction_viz.py`（compute_pair_series、SGP4による相対運動の再構築）を"
+        "参照。TJS-10×TJS-3の事例には、`figs/rpo_tjs10_tjs3_2024.html` にインタラクティブな四視点3D"
+        "可視化も用意されている。",
+        "The full method derivation is in `conjunction_viz.py` (compute_pair_series, SGP4 relative-motion "
+        "reconstruction); the TJS-10×TJS-3 case also has an interactive four-viewpoint 3D visualization at "
+        "`figs/rpo_tjs10_tjs3_2024.html`.",
+    ))
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -2652,84 +3322,198 @@ def load_case8_real_data() -> dict:
     }
 
 
+# --- render_storymap_case8 ---
 def render_storymap_case8():
     if st.button(t("storymap_back"), key="back_from_case8"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例八：這個資料庫本身的故事——3.4 萬顆衛星、跨度 55 年、一次目錄大擴編")
-    st.subheader("從一個真實的使用者提問出發的資料庫健檢")
-    st.caption("本頁全部數字皆由下方之快取函式對本機／遠端 TLE 資料庫即時查驗計算，非預先寫死之靜態文字。")
+    st.title(T3(
+        "案例八：這個資料庫本身的故事——3.4 萬顆衛星、跨度 55 年、一次目錄大擴編",
+        "事例八：このデータベース自体の物語——3.4万機の衛星、55年間にわたる範囲、一度の大規模なカタログ拡張",
+        "Case 8: The Story of This Database Itself — 34,000 Satellites, a 55-Year Span, One Massive Catalog Expansion",
+    ))
+    st.subheader(T3(
+        "從一個真實的使用者提問出發的資料庫健檢",
+        "実際のユーザーからの質問を出発点としたデータベースの健全性チェック",
+        "A Database Health Check Sparked by a Real User Question",
+    ))
+    st.caption(T3(
+        "本頁全部數字皆由下方之快取函式對本機／遠端 TLE 資料庫即時查驗計算，非預先寫死之靜態文字。",
+        "本頁のすべての数値は、下記のキャッシュ関数がローカル／リモートのTLEデータベースをリアルタイムに"
+        "照会して算出したものであり、あらかじめ書き込まれた静的な文字列ではない。",
+        "All numbers on this page are computed live by the cached function below querying the local/remote "
+        "TLE database, not pre-written static text.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**這個案例的起點是一個真實的使用者提問**：「目前 App 上看到的資料最早只到今年 3 月，"
         "當初設計的『分年 parquet』架構是不是沒有真正啟用？」——這個問題的調查過程本身，"
-        "就是一次很好的資料庫健檢示範，所以把它原封不動做成一個案例。"
-    )
+        "就是一次很好的資料庫健檢示範，所以把它原封不動做成一個案例。",
+        "**この事例の出発点は、実際のユーザーからの質問である**：「現在アプリで見えるデータは今年3月までしか"
+        "遡れないが、当初設計された『年別parquet』アーキテクチャは実際には有効になっていないのではないか？」"
+        "——この問いの調査プロセス自体が、データベースの健全性チェックの良い実演となるため、そのまま"
+        "1つの事例として作成した。",
+        "**This case's starting point is a real user question**: \"The data currently visible in the app "
+        "only goes back to March of this year — was the 'per-year parquet' architecture originally designed "
+        "never actually activated?\" — the process of investigating this question turned out to be an "
+        "excellent demonstration of a database health check, so it was made into a case exactly as it "
+        "happened.",
+    ))
 
     data = load_case8_real_data()
     span_days = (data["span_hi"] - data["span_lo"]).days
 
-    st.header("① 全庫真實跨度：不是只有 3 月，是 55 年")
+    st.header(T3(
+        "① 全庫真實跨度：不是只有 3 月，是 55 年",
+        "①データベース全体の実際の範囲：3月だけではなく、55年間である",
+        "① The Database's True Span: Not Just March, but 55 Years",
+    ))
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("衛星總數", f"{data['n_sats']:,}")
-    c2.metric("TLE 總筆數", f"{data['n_rows']:,}")
-    c3.metric("最早資料", f"{data['span_lo'].date()}")
-    c4.metric("最新資料", f"{data['span_hi'].date()}")
-    st.caption(f"跨度約 **{span_days/365.25:.0f} 年**；其中 **{data['n_pre2020']} 顆衛星**"
-              f"在 2020 年以前就已有 TLE 紀錄（多為長期追蹤之標竿／既有衛星）。")
+    c1.metric(T3("衛星總數", "衛星総数", "Total satellites"), f"{data['n_sats']:,}")
+    c2.metric(T3("TLE 總筆數", "TLE総件数", "Total TLE records"), f"{data['n_rows']:,}")
+    c3.metric(T3("最早資料", "最古のデータ", "Earliest data"), f"{data['span_lo'].date()}")
+    c4.metric(T3("最新資料", "最新のデータ", "Latest data"), f"{data['span_hi'].date()}")
+    span_years_str = f"{span_days/365.25:.0f}"
+    st.caption(T3(
+        f"跨度約 **{span_years_str} 年**；其中 **{data['n_pre2020']} 顆衛星**"
+        f"在 2020 年以前就已有 TLE 紀錄（多為長期追蹤之標竿／既有衛星）。",
+        f"範囲は約**{span_years_str}年**；そのうち**{data['n_pre2020']}機の衛星**は2020年以前から既に"
+        "TLE記録があった（多くは長期追跡されている標竿衛星／既存衛星である）。",
+        f"The span is about **{span_years_str} years**; of these, **{data['n_pre2020']} satellites** "
+        "already had TLE records before 2020 (mostly long-tracked benchmark/legacy satellites).",
+    ))
 
-    st.header("② 逐月新收錄衛星數：3～4 月的斷崖式擴編")
+    st.header(T3(
+        "② 逐月新收錄衛星數：3～4 月的斷崖式擴編",
+        "②月別の新規登録衛星数：3〜4月の急激な拡張",
+        "② New Satellites Added per Month: the March–April Cliff-Edge Expansion",
+    ))
     m = data["monthly"]
     fig = go.Figure()
     colors = ["#EF5350" if ym in ("2026-03", "2026-04") else "#64B5F6" for ym in m["first_ym"]]
     fig.add_trace(go.Bar(x=m["first_ym"], y=m["n_new_sats"], marker_color=colors))
     fig.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10),
-                      yaxis_title="當月「首次出現」衛星數", plot_bgcolor="rgba(0,0,0,0)",
+                      yaxis_title=T3("當月「首次出現」衛星數", "当月「初出現」の衛星数", "Satellites appearing for the first time that month"),
+                      plot_bgcolor="rgba(0,0,0,0)",
                       xaxis=dict(tickangle=-60, tickmode="auto", nticks=25))
     st.plotly_chart(fig, use_container_width=True, key="case8_monthly")
     mar_apr = int(m[m["first_ym"].isin(["2026-03", "2026-04"])]["n_new_sats"].sum())
-    st.warning(
+    mar_apr_str = f"{mar_apr:,}"
+    pct_str = f"{mar_apr/data['n_sats']*100:.0f}%"
+    st.warning(T3(
         f"⚠️ **紅色兩根長條就是使用者觀察到的「3 月現象」的真正原因**：2026 年 3～4 月，"
-        f"單月就有 **{mar_apr:,} 顆衛星**是「首次」被收錄進追蹤管線——佔全庫 {data['n_sats']:,} 顆衛星的 "
-        f"**{mar_apr/data['n_sats']*100:.0f}%**。這是一次一次性的目錄擴編事件（追蹤範圍從幾百～兩千顆核心衛星，"
+        f"單月就有 **{mar_apr_str} 顆衛星**是「首次」被收錄進追蹤管線——佔全庫 {data['n_sats']:,} 顆衛星的 "
+        f"**{pct_str}**。這是一次一次性的目錄擴編事件（追蹤範圍從幾百～兩千顆核心衛星，"
         "擴大到近乎全量的公開在軌目錄），**不是分年 parquet 沒啟用、也不是舊資料遺失**——"
-        "新收錄物件的「歷史」本來就只能從收錄當下開始，無法回溯抓到收錄前的資料。"
-    )
+        "新收錄物件的「歷史」本來就只能從收錄當下開始，無法回溯抓到收錄前的資料。",
+        f"⚠️ **赤い2本のバーこそが、ユーザーが観察した『3月現象』の真の原因である**：2026年3〜4月、"
+        f"単月で**{mar_apr_str}機の衛星**が追跡パイプラインに「初めて」登録された——これはデータベース"
+        f"全体{data['n_sats']:,}機の**{pct_str}**を占める。これは一度限りのカタログ拡張イベントである"
+        "（追跡範囲が数百〜2千機程度の中核衛星から、ほぼ全量の公開軌道上カタログへと拡大した）。"
+        "**年別parquetが有効になっていないわけでも、古いデータが失われたわけでもない**——新規登録された"
+        "オブジェクトの「履歴」は、そもそも登録された時点からしか記録できず、登録前のデータを遡って"
+        "取得することはできない。",
+        f"⚠️ **The two red bars are the real reason behind the \"March phenomenon\" the user observed**: in "
+        f"March–April 2026, **{mar_apr_str} satellites** were added to the tracking pipeline for the "
+        f"\"first time\" in a single month — {pct_str} of the database's {data['n_sats']:,} satellites. "
+        "This was a one-time catalog-expansion event (tracking coverage grew from a few hundred to two "
+        "thousand core satellites to nearly the entire public on-orbit catalog); **it is not the per-year "
+        "parquet failing to activate, nor old data being lost** — a newly added object's \"history\" can "
+        "only ever start from the moment it was added; data from before it was added cannot be retrieved "
+        "retroactively.",
+    ))
 
-    st.header("③ 具體案例：ISS（NORAD 25544）")
+    st.header(T3(
+        "③ 具體案例：ISS（NORAD 25544）",
+        "③具体的な事例：ISS（NORAD 25544）",
+        "③ A Concrete Case: ISS (NORAD 25544)",
+    ))
     iss = data["iss"]
     if iss is not None:
         i1, i2, i3 = st.columns(3)
-        i1.metric("目前最早 TLE", f"{pd.Timestamp(iss['first_epoch']).date()}")
-        i2.metric("目前最新 TLE", f"{pd.Timestamp(iss['last_epoch']).date()}")
-        i3.metric("目前筆數", f"{int(iss['n']):,}")
+        i1.metric(T3("目前最早 TLE", "現在の最古のTLE", "Current earliest TLE"), f"{pd.Timestamp(iss['first_epoch']).date()}")
+        i2.metric(T3("目前最新 TLE", "現在の最新のTLE", "Current latest TLE"), f"{pd.Timestamp(iss['last_epoch']).date()}")
+        i3.metric(T3("目前筆數", "現在の件数", "Current record count"), f"{int(iss['n']):,}")
         if pd.Timestamp(iss["first_epoch"]) > pd.Timestamp("2020-01-01", tz="UTC"):
-            st.info(
+            first_epoch_str = f"{pd.Timestamp(iss['first_epoch']).date()}"
+            st.info(T3(
                 "**這正是使用者問題點名的具體案例**：ISS 從 1998 年就已在軌，但（在本次調查當下）"
-                f"資料庫裡最早的 TLE 只到 **{pd.Timestamp(iss['first_epoch']).date()}**——"
+                f"資料庫裡最早的 TLE 只到 **{first_epoch_str}**——"
                 "跟上面②的擴編事件時間點完全吻合，證實 ISS 正是當時新收錄的一顆衛星，而非它以前的資料遺失或損毀。\n\n"
                 "**本次對話中已對本機資料庫完成回補**：用 `backfill_tle_history.py 25544` 向 Space-Track 補抓 "
                 "gp_history，新增 **47,038 筆**，最早 epoch 推回到 **1998-11-20**（ISS 發射入軌當月）——"
-                "待下次資料集（`RhynoWu/starlink-maneuver-db`）重新匯出／同步後，此處數字會更新為完整 28 年歷史。"
-            )
+                "待下次資料集（`RhynoWu/starlink-maneuver-db`）重新匯出／同步後，此處數字會更新為完整 28 年歷史。",
+                "**これこそがユーザーの質問が指摘していた具体的な事例である**：ISSは1998年から既に軌道上に"
+                f"あるが、（今回の調査時点で）データベース内の最古のTLEは**{first_epoch_str}**までしか"
+                "遡れない——これは上記②の拡張イベントの時期と完全に一致しており、ISSはまさにその時に"
+                "新規登録された衛星の1つであり、それ以前のデータが失われたり破損したりしたわけではないことを"
+                "裏付けている。\n\n**本対話の中で、ローカルデータベースに対する補完がすでに完了している**："
+                "`backfill_tle_history.py 25544` を用いてSpace-Trackからgp_historyを追加取得し、"
+                "**47,038件**を新規追加、最古のepochを**1998-11-20**（ISS打ち上げ・軌道投入の月）まで"
+                "遡らせた——次回データセット（`RhynoWu/starlink-maneuver-db`）の再エクスポート／同期後、"
+                "ここの数値は完全な28年間の履歴に更新される。",
+                "**This is exactly the concrete case the user's question pointed to**: the ISS has been on "
+                f"orbit since 1998, but (at the time of this investigation) the earliest TLE in the "
+                f"database only went back to **{first_epoch_str}** — matching exactly the timing of the "
+                "expansion event in ② above, confirming that the ISS was simply a satellite newly added at "
+                "that time, not one whose earlier data had been lost or corrupted.\n\n**During this very "
+                "conversation, the local database has already been backfilled**: using "
+                "`backfill_tle_history.py 25544` to fetch additional gp_history from Space-Track, adding "
+                "**47,038 records** and pushing the earliest epoch back to **1998-11-20** (the month the "
+                "ISS launched and reached orbit) — once the dataset (`RhynoWu/starlink-maneuver-db`) is "
+                "next re-exported/synced, the numbers here will update to reflect the complete 28-year "
+                "history.",
+            ))
         else:
-            st.success(
-                f"ISS 目前資料已回補到 **{pd.Timestamp(iss['first_epoch']).date()}**（完整歷史），"
-                "本案例描述的「3 月斷點」問題已修復。"
-            )
-    st.caption(f"目前執行環境：資料後端 = `{data['backend']}`（local＝本機全庫 space_db.duckdb；"
-              "hf＝遠端 httpfs 直查 HuggingFace Dataset）。")
+            first_epoch_str2 = f"{pd.Timestamp(iss['first_epoch']).date()}"
+            st.success(T3(
+                f"ISS 目前資料已回補到 **{first_epoch_str2}**（完整歷史），"
+                "本案例描述的「3 月斷點」問題已修復。",
+                f"ISSのデータは現在**{first_epoch_str2}**まで補完済み（完全な履歴）であり、"
+                "本事例で説明された「3月の断絶」問題はすでに修正されている。",
+                f"The ISS's data has now been backfilled to **{first_epoch_str2}** (complete history), and "
+                "the \"March cliff\" issue described in this case has been fixed.",
+            ))
+    st.caption(T3(
+        f"目前執行環境：資料後端 = `{data['backend']}`（local＝本機全庫 space_db.duckdb；"
+        "hf＝遠端 httpfs 直查 HuggingFace Dataset）。",
+        f"現在の実行環境：データバックエンド = `{data['backend']}`（local＝ローカルの全データベース "
+        "space_db.duckdb；hf＝リモートhttpfsによるHuggingFace Datasetへの直接照会）。",
+        f"Current runtime environment: data backend = `{data['backend']}` (local = the full local database "
+        "space_db.duckdb; hf = remote httpfs querying the HuggingFace Dataset directly).",
+    ))
 
     st.markdown("---")
-    st.success(
+    st.success(T3(
         "**判讀**：「資料看起來從某個時間點才開始」幾乎都不代表資料遺失或架構沒生效，"
         "而是要先問「這顆衛星是什麼時候被納入追蹤範圍的」——這是所有長期累積型資料庫最容易被誤解的特徵。"
         "分年 parquet 分割邏輯確實寫在 `export_to_hf_parquet.py`（`PARTITION_BY (year)`），"
         "但只在單表超過 2,500 萬列時才觸發；本庫 `raw_tle_archive` 目前約 1,954 萬列，未達門檻，"
-        "因此維持單檔——這與「3 月斷崖」是兩件完全獨立的事。"
-    )
-    st.caption("方法完整推導：本案例之調查對話記錄；相關程式見 `export_to_hf_parquet.py`、`backfill_tle_history.py`。")
+        "因此維持單檔——這與「3 月斷崖」是兩件完全獨立的事。",
+        "**判読**：「データがある時点からしか始まっていないように見える」ことは、ほとんどの場合データの"
+        "喪失やアーキテクチャが機能していないことを意味しない。むしろまず「この衛星がいつ追跡範囲に"
+        "組み込まれたのか」を問うべきである——これはあらゆる長期蓄積型データベースにおいて最も誤解され"
+        "やすい特徴である。年別parquet分割ロジックは確かに `export_to_hf_parquet.py`（`PARTITION_BY "
+        "(year)`）に書かれているが、単一テーブルが2,500万行を超えた場合にのみ発動する；本データベースの "
+        "`raw_tle_archive` は現在約1,954万行であり、閾値に達していないため単一ファイルのままである——"
+        "これは「3月の断崖」とはまったく独立した別の事柄である。",
+        "**Verdict**: \"data appears to start only from a certain point in time\" almost never means data "
+        "loss or a non-functioning architecture — the first question should be \"when was this satellite "
+        "brought into the tracking scope\" — this is the feature most easily misunderstood in any "
+        "long-accumulating database. The per-year parquet-partitioning logic is indeed written in "
+        "`export_to_hf_parquet.py` (`PARTITION_BY (year)`), but it only triggers once a single table "
+        "exceeds 25 million rows; this database's `raw_tle_archive` currently has about 19.54 million rows, "
+        "below that threshold, so it remains a single file — this is a completely separate matter from the "
+        "\"March cliff.\"",
+    ))
+    st.caption(T3(
+        "方法完整推導：本案例之調查對話記錄；相關程式見 `export_to_hf_parquet.py`、`backfill_tle_history.py`。",
+        "完全な方法の導出：本事例の調査対話記録を参照。関連プログラムは `export_to_hf_parquet.py`、"
+        "`backfill_tle_history.py` を参照。",
+        "The full derivation is the investigation conversation for this case; related code is in "
+        "`export_to_hf_parquet.py` and `backfill_tle_history.py`.",
+    ))
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -2757,83 +3541,205 @@ def load_case9_real_data() -> dict:
     return out
 
 
+# --- render_storymap_case9 ---
 def render_storymap_case9():
     if st.button(t("storymap_back"), key="back_from_case9"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例九：模型對「從沒看過的衛星」還準不準？三層擂台怎麼公平比較？")
-    st.subheader("Unseen-satellite hold-out：不讓模型背答案的誠實測試")
-    st.caption(
+    st.title(T3(
+        "案例九：模型對「從沒看過的衛星」還準不準？三層擂台怎麼公平比較？",
+        "事例九：モデルは「一度も見たことのない衛星」に対しても正確なのか？三層同一擂台はどう公平に比較するのか？",
+        "Case 9: Is the Model Still Accurate on Satellites It Has Never Seen? How Does the Three-Layer Common Arena Compare Fairly?",
+    ))
+    st.subheader(T3(
+        "Unseen-satellite hold-out：不讓模型背答案的誠實測試",
+        "Unseen-satellite hold-out：モデルに答えを暗記させない誠実なテスト",
+        "Unseen-Satellite Hold-Out: An Honest Test That Doesn't Let the Model Memorize the Answers",
+    ))
+    st.caption(T3(
         "本頁數字讀取自離線批次評測輸出（`data/benchmark/*_20260803.csv`）——"
         "這項評測本身涉及對全庫 284 顆衛星重跑 5 通道統計偵測器＋交叉驗證訓練，屬分鐘級批次工作，"
-        "不適合在網頁點擊時即時重算，因此展示的是**凍結、可重現的評測結果**，而非即時查詢。"
-    )
+        "不適合在網頁點擊時即時重算，因此展示的是**凍結、可重現的評測結果**，而非即時查詢。",
+        "本頁の数値はオフラインのバッチ評価出力（`data/benchmark/*_20260803.csv`）から読み込んだもので"
+        "ある——この評価自体はデータベース全体の284機の衛星に対して5チャネルの統計検知器＋交差検証訓練を"
+        "再実行することを含み、分単位のバッチ処理作業に属するため、ウェブページのクリック時にリアルタイムに"
+        "再計算するのには適さない。したがってここで示されているのは**凍結された、再現可能な評価結果**であり、"
+        "リアルタイムのクエリではない。",
+        "The numbers on this page are read from offline batch-evaluation output "
+        "(`data/benchmark/*_20260803.csv`) — this evaluation itself involves rerunning the 5-channel "
+        "statistical detectors plus cross-validated training across all 284 satellites in the database, a "
+        "minutes-long batch job unsuitable for live recomputation on a page click, so what's shown here is "
+        "a **frozen, reproducible evaluation result**, not a live query.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：機動偵測模型很容易「背answer」——如果訓練跟測試用到同一批衛星，"
         "模型可能只是記住了每顆衛星的個別特徵，而不是真的學會「機動長什麼樣子」。"
         "真正誠實的測試方法，是把一整批衛星**完全藏起來、從頭到尾不讓模型看過**，"
-        "再拿訓練好的模型去猜這些陌生衛星的機動——這就是 unseen-satellite hold-out。"
-    )
+        "再拿訓練好的模型去猜這些陌生衛星的機動——這就是 unseen-satellite hold-out。",
+        "**問題の背景**：機動検知モデルは「答えを暗記」しやすい——もし訓練とテストで同じ衛星群を使えば、"
+        "モデルは単に各衛星の個別の特徴を記憶しただけで、本当に「機動とはどのようなものか」を学習した"
+        "わけではないかもしれない。本当に誠実なテスト方法は、まるごと1バッチの衛星を**完全に隠し、"
+        "最初から最後までモデルに見せない**ようにし、訓練済みのモデルをこれらの未知の衛星の機動推定に"
+        "適用することである——これがunseen-satellite hold-outである。",
+        "**Problem background**: maneuver-detection models can easily \"memorize the answer\" — if training "
+        "and testing use the same batch of satellites, the model might simply be memorizing each "
+        "satellite's individual features rather than genuinely learning \"what a maneuver looks like.\" The "
+        "truly honest way to test is to **completely hide an entire batch of satellites, never letting the "
+        "model see them at all**, then applying the trained model to guess maneuvers on these unfamiliar "
+        "satellites — this is the unseen-satellite hold-out.",
+    ))
 
     data = load_case9_real_data()
 
-    st.header("① Unseen-satellite hold-out 怎麼做的？")
-    st.markdown(
+    st.header(T3(
+        "① Unseen-satellite hold-out 怎麼做的？",
+        "①Unseen-satellite hold-outはどのように行われるのか？",
+        "① How Is the Unseen-Satellite Hold-Out Done?",
+    ))
+    st.markdown(T3(
         f"從全庫 **{data['n_sats']}** 顆有精密星曆真值的 Starlink 衛星中，"
         "用固定亂數種子（`np.random.default_rng(2026)`）隨機留出 **20%（56 顆）整組**，"
         "訓練另外 228 顆的模型後，直接套用到這 56 顆從沒見過的衛星身上——"
         "判定門檻也完全只用訓練折的資料決定，測試折的資料連「用來選門檻」都不准碰。"
-        f"（正樣本 unit **{data['n_pos']:,}** 個、負樣本 unit **{data['n_neg']:,}** 個）"
-    )
+        f"（正樣本 unit **{data['n_pos']:,}** 個、負樣本 unit **{data['n_neg']:,}** 個）",
+        f"精密暦の真値を持つデータベース全体の**{data['n_sats']}**機のStarlink衛星から、"
+        "固定された乱数シード（`np.random.default_rng(2026)`）を用いてランダムに**20%（56機）を"
+        "まるごと**除外し、残りの228機でモデルを訓練した後、この一度も見たことのない56機の衛星に"
+        "直接適用する——判定閾値もすべて訓練フォールドのデータのみから決定され、テストフォールドの"
+        "データは「閾値の選定に使う」ことすら許されない。（正例unit **"
+        f"{data['n_pos']:,}**個、負例unit **{data['n_neg']:,}**個）",
+        f"From the **{data['n_sats']}** Starlink satellites in the database with precise-ephemeris ground "
+        "truth, a fixed random seed (`np.random.default_rng(2026)`) is used to randomly hold out **20% "
+        "(56 satellites) as an entire group**; after training a model on the remaining 228, it is applied "
+        "directly to these 56 satellites the model has never seen — the determination threshold is also "
+        "decided entirely from the training fold's data, with the test fold's data forbidden from being "
+        f"touched even for \"threshold selection.\" (positive units: **{data['n_pos']:,}**, negative "
+        f"units: **{data['n_neg']:,}**)",
+    ))
     if not data["blind"].empty:
         bl = data["blind"].copy()
-        bl.columns = ["情境", "AUC", "大型機動召回率", "整體召回率", "誤報率(FPR)", "測試 unit 數"]
-        st.dataframe(bl.style.format({"AUC": "{:.3f}", "大型機動召回率": "{:.1%}",
-                                       "整體召回率": "{:.1%}", "誤報率(FPR)": "{:.3f}"}),
+        col_scenario = T3("情境", "シナリオ", "Scenario")
+        col_auc = "AUC"
+        col_rec_large = T3("大型機動召回率", "大規模機動の再現率", "Large-maneuver recall")
+        col_rec_all = T3("整體召回率", "全体の再現率", "Overall recall")
+        col_fpr = T3("誤報率(FPR)", "誤検知率(FPR)", "False-positive rate (FPR)")
+        col_n = T3("測試 unit 數", "テストunit数", "Test unit count")
+        bl.columns = [col_scenario, col_auc, col_rec_large, col_rec_all, col_fpr, col_n]
+        st.dataframe(bl.style.format({col_auc: "{:.3f}", col_rec_large: "{:.1%}",
+                                       col_rec_all: "{:.1%}", col_fpr: "{:.3f}"}),
                     use_container_width=True, hide_index=True)
-        st.caption("「out-of-time」是另一種嚴格測試：用前 60% 時間的資料訓練、後 40% 完全未來的資料盲測——"
-                  "兩者都比一般的隨機切分測試嚴格得多。")
+        st.caption(T3(
+            "「out-of-time」是另一種嚴格測試：用前 60% 時間的資料訓練、後 40% 完全未來的資料盲測——"
+            "兩者都比一般的隨機切分測試嚴格得多。",
+            "「out-of-time」はもう一つの厳格なテストである：時間の前60%のデータで訓練し、"
+            "後40%のまったく未来のデータで盲検テストを行う——いずれも一般的なランダム分割テストより"
+            "はるかに厳格である。",
+            "\"Out-of-time\" is another rigorous test: training on the first 60% of the time period and "
+            "blind-testing on the completely future final 40% — both are far more rigorous than an "
+            "ordinary random split test.",
+        ))
 
-    st.header("② 三層架構同一擂台：規則式 vs 傳統 ML（單通道）vs 融合模型")
+    st.header(T3(
+        "② 三層架構同一擂台：規則式 vs 傳統 ML（單通道）vs 融合模型",
+        "②三層アーキテクチャの同一擂台：ルールベース vs 古典的ML（単一チャネル）vs 融合モデル",
+        "② The Three-Layer Common Arena: Rule-Based vs. Classical ML (Single-Channel) vs. Fusion Model",
+    ))
     if not data["arena"].empty:
         ar = data["arena"].copy()
         fig = go.Figure()
         colors = ["#EF5350" if "naive" in m else ("#66BB6A" if "L3" in m else "#64B5F6")
                  for m in ar["method"]]
-        fig.add_trace(go.Bar(x=ar["method"], y=ar["recall"], marker_color=colors, name="召回率"))
+        fig.add_trace(go.Bar(x=ar["method"], y=ar["recall"], marker_color=colors,
+                             name=T3("召回率", "再現率", "Recall")))
         fig.update_layout(height=340, margin=dict(l=10, r=10, t=10, b=120),
-                          yaxis_title="整體召回率", xaxis=dict(tickangle=-45),
+                          yaxis_title=T3("整體召回率", "全体の再現率", "Overall recall"), xaxis=dict(tickangle=-45),
                           plot_bgcolor="rgba(0,0,0,0)", showlegend=False)
         st.plotly_chart(fig, use_container_width=True, key="case9_arena")
         l3 = ar[ar["method"].str.contains("L3")].iloc[0]
         naive = ar[ar["method"].str.contains("naive")].iloc[0]
         l1 = ar[ar["method"].str.contains("L1")].iloc[0]
-        st.caption(
-            f"融合模型（L3）召回率 **{l3['recall']:.1%}**（大型機動 {l3['rec_large']:.1%}），"
-            f"遠高於純規則式 L1 的 {l1['recall']:.1%}，也遠高於隨機基準 naive 的 {naive['recall']:.1%}——"
-            "naive 接近 0 正好證明這個測試集不是靠「亂猜也能矇對」的資料洩漏撐出來的高分。"
-        )
+        l3_recall_str = f"{l3['recall']:.1%}"
+        l3_rec_large_str = f"{l3['rec_large']:.1%}"
+        l1_recall_str = f"{l1['recall']:.1%}"
+        naive_recall_str = f"{naive['recall']:.1%}"
+        st.caption(T3(
+            f"融合模型（L3）召回率 **{l3_recall_str}**（大型機動 {l3_rec_large_str}），"
+            f"遠高於純規則式 L1 的 {l1_recall_str}，也遠高於隨機基準 naive 的 {naive_recall_str}——"
+            "naive 接近 0 正好證明這個測試集不是靠「亂猜也能矇對」的資料洩漏撐出來的高分。",
+            f"融合モデル（L3）の再現率は**{l3_recall_str}**（大規模機動では{l3_rec_large_str}）であり、"
+            f"純粋なルールベースのL1の{l1_recall_str}をはるかに上回り、ランダムな基準naiveの"
+            f"{naive_recall_str}をも大きく上回る——naiveがほぼ0であることは、このテストセットが"
+            "「当てずっぽうでも当たってしまう」ようなデータリークによって高スコアを支えられているのでは"
+            "ないことを裏付けている。",
+            f"The fusion model (L3) achieves a recall of **{l3_recall_str}** (large maneuvers: "
+            f"{l3_rec_large_str}), far higher than pure rule-based L1's {l1_recall_str}, and far higher "
+            f"than the random baseline naive's {naive_recall_str} — naive being close to 0 is exactly what "
+            "proves this test set's high score isn't propped up by data leakage that would let random "
+            "guessing succeed too.",
+        ))
 
-    st.header("③ 逐衛星戰績：哪些衛星模型表現最差？")
+    st.header(T3(
+        "③ 逐衛星戰績：哪些衛星模型表現最差？",
+        "③衛星ごとの成績：どの衛星でモデルの成績が最も悪いのか？",
+        "③ Per-Satellite Performance: Which Satellites Does the Model Perform Worst On?",
+    ))
     if not data["worst"].empty:
         w = data["worst"].copy()
-        w.columns = ["NORAD ID", "正樣本 unit 數", "命中數", "召回率"]
-        st.dataframe(w.style.format({"召回率": "{:.1%}"}), use_container_width=True, hide_index=True)
-        st.caption(f"（僅列出正樣本≥2 個之衛星以避免小樣本雜訊）另有 **{data['perfect_n']} 顆**衛星的正樣本 unit 全數命中（召回率 100%）。"
-                  "沒有隱藏最差表現——這正是誠實揭露模型限制的一部分。")
+        col_norad = "NORAD ID"
+        col_npos = T3("正樣本 unit 數", "正例unit数", "Positive unit count")
+        col_nhit = T3("命中數", "的中数", "Hit count")
+        col_recall2 = T3("召回率", "再現率", "Recall")
+        w.columns = [col_norad, col_npos, col_nhit, col_recall2]
+        st.dataframe(w.style.format({col_recall2: "{:.1%}"}), use_container_width=True, hide_index=True)
+        st.caption(T3(
+            f"（僅列出正樣本≥2 個之衛星以避免小樣本雜訊）另有 **{data['perfect_n']} 顆**"
+            "衛星的正樣本 unit 全數命中（召回率 100%）。"
+            "沒有隱藏最差表現——這正是誠實揭露模型限制的一部分。",
+            f"（正例が2個以上ある衛星のみを掲載し、小サンプルによる雑音を避けている）このほか、"
+            f"**{data['perfect_n']}機**の衛星は正例unitがすべて的中している（再現率100%）。"
+            "最も悪い成績を隠していない——これこそがモデルの限界を誠実に開示することの一部である。",
+            f"(only satellites with ≥2 positive units are listed, to avoid small-sample noise) An "
+            f"additional **{data['perfect_n']} satellites** had all their positive units correctly hit "
+            "(100% recall). The worst performance is not hidden — this is part of honestly disclosing the "
+            "model's limitations.",
+        ))
 
     st.markdown("---")
-    st.success(
+    st.success(T3(
         "**判讀**：AUC（Area Under Curve，ROC 曲線下面積——分類器整體判別力的常用指標，"
         "1.0 為完美、0.5 為隨機亂猜）達 0.98、大型機動召回率 100%"
         "（81 個大型事件全中，Wilson 95% CI [0.955, 1.000]）——"
         "在完全沒看過的衛星上依然成立，代表模型學到的是可泛化的機動特徵，不是死記個別衛星。"
         "out-of-time 測試的 AUC 略降到 0.94，是誠實的次要限制：時間越久，星系操作模式可能緩慢漂移，"
-        "泛化力會比對「同時期陌生衛星」略打折扣，但仍遠優於任何單一規則或單通道方法。"
-    )
-    st.caption("完整推導與逐切片穩定度分析見 `three_layer_common_eval.py`、`docs/期末報告_技術附錄_20260909.md` §13.2、表 13-3／13-11。")
+        "泛化力會比對「同時期陌生衛星」略打折扣，但仍遠優於任何單一規則或單通道方法。",
+        "**判読**：AUC（Area Under Curve、ROC曲線下面積——分類器全体の判別力を示すよく使われる指標で、"
+        "1.0が完璧、0.5がランダムな当てずっぽうを意味する）は0.98に達し、大規模機動の再現率は100%"
+        "（81件の大規模イベントすべてが的中、Wilson 95%信頼区間[0.955, 1.000]）——これは一度も見たことの"
+        "ない衛星に対しても成り立っており、モデルが学習したのは汎化可能な機動の特徴であって、個々の衛星を"
+        "丸暗記したのではないことを示している。out-of-timeテストのAUCはやや低下して0.94となったが、"
+        "これは誠実な副次的限界である：時間が経つほど、コンステレーションの運用パターンは緩やかに"
+        "ドリフトしうるため、「同時期の未知の衛星」に対する場合よりも汎化力はやや割り引かれるが、"
+        "それでも単一のルールや単一チャネルの手法をはるかに上回っている。",
+        "**Verdict**: AUC (Area Under Curve, the area under the ROC curve — a common metric for a "
+        "classifier's overall discriminative power, where 1.0 is perfect and 0.5 is random guessing) "
+        "reaches 0.98, with 100% recall on large maneuvers (all 81 large events caught, Wilson 95% CI "
+        "[0.955, 1.000]) — holding up even on satellites never seen before, meaning the model has learned "
+        "generalizable maneuver features rather than memorizing individual satellites. The out-of-time "
+        "test's AUC drops slightly to 0.94, an honest secondary limitation: the longer the time gap, the "
+        "more a constellation's operating patterns may slowly drift, so generalization is somewhat "
+        "discounted compared to \"unfamiliar satellites from the same period,\" though still far better "
+        "than any single rule or single-channel method.",
+    ))
+    st.caption(T3(
+        "完整推導與逐切片穩定度分析見 `three_layer_common_eval.py`、`docs/期末報告_技術附錄_20260909.md` "
+        "§13.2、表 13-3／13-11。",
+        "完全な導出と切片ごとの安定性分析は `three_layer_common_eval.py`、"
+        "`docs/期末報告_技術附錄_20260909.md` §13.2、表13-3／13-11を参照。",
+        "The full derivation and per-slice stability analysis are in `three_layer_common_eval.py` and "
+        "`docs/期末報告_技術附錄_20260909.md` §13.2, Tables 13-3/13-11.",
+    ))
 
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -2843,16 +3749,32 @@ def load_case10_real_data() -> pd.DataFrame:
     return pd.read_csv(p) if p.exists() else pd.DataFrame()
 
 
+# --- render_storymap_case10 ---
 def render_storymap_case10():
     if st.button(t("storymap_back"), key="back_from_case10"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例十：能不能只用 TLE 反推大氣密度？")
-    st.subheader("一個誠實的負面結論與方法上限")
-    st.caption("本頁所有數字來自離線分析輸出檔 `thermosphere_kyoto_repro.csv`，記錄的是一次「未能成功複現目標結果」的真實嘗試。")
+    st.title(T3(
+        "案例十：能不能只用 TLE 反推大氣密度？",
+        "事例十：TLEだけを用いて大気密度を逆算することはできるのか？",
+        "Case 10: Can Atmospheric Density Be Inverted from TLEs Alone?",
+    ))
+    st.subheader(T3(
+        "一個誠實的負面結論與方法上限",
+        "誠実な負の結論と手法の限界",
+        "An Honest Negative Conclusion and the Method's Limits",
+    ))
+    st.caption(T3(
+        "本頁所有數字來自離線分析輸出檔 `thermosphere_kyoto_repro.csv`，記錄的是一次「未能成功複現目標結果」的真實嘗試。",
+        "本頁のすべての数値はオフライン分析出力ファイル `thermosphere_kyoto_repro.csv` に由来し、"
+        "「目標結果の再現に成功しなかった」実際の試みを記録したものである。",
+        "All numbers on this page come from the offline analysis output file "
+        "`thermosphere_kyoto_repro.csv`, recording a real attempt that \"failed to successfully reproduce "
+        "the target result.\"",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：日本京都大學團隊（Yamamoto, 2026, *Earth, Planets and Space*, 78, Article 175）"
         "利用約 1,200 顆 Starlink 衛星的精密星曆，在約 482 公里高度反演出隨緯度與地方時變化的大氣密度 2D 分布圖——"
         "包括日側因太陽加熱而膨脹、夜側收縮的「密度鼓包」（地球大氣受陽光加熱後像被曬熱的氣球一樣局部膨脹，"
@@ -2862,97 +3784,254 @@ def render_storymap_case10():
         "但 TLE 的設計初衷是「粗略軌道預報」，精度只有百公尺到公里級，遠低於精密星曆——"
         "**本案例要誠實回答的是：這個落差，最後會不會真的讓結果做不出來。**\n\n"
         "本專案想問：如果只用免費、公開的 TLE（而非昂貴的精密星曆），有沒有機會做出類似等級的結果？"
-        "本案例誠實展示結論：**做不到，並說明為什麼做不到**。"
-    )
-    st.caption(
+        "本案例誠實展示結論：**做不到，並說明為什麼做不到**。",
+        "**問題の背景**：京都大学のチーム（Yamamoto, 2026, *Earth, Planets and Space*, 78, Article 175）"
+        "は、約1,200機のStarlink衛星の精密暦を用いて、高度約482kmにおいて緯度と地方時によって変化する"
+        "大気密度の2D分布図を逆算した——太陽による加熱で日側が膨張し、夜側が収縮する「密度バルジ」"
+        "（地球大気が太陽光で加熱されると、まるで温められた風船のように局所的に膨張し、昼側の密度が"
+        "夜側よりも明らかに高くなる現象）を含む。\n\n"
+        "**なぜTLEでもできると期待する人がいるのか**：TLEは毎日無料で公開更新され、地球上のほぼすべての"
+        "軌道上衛星をカバーしている。そこから大気密度を逆算できれば、無料の全球宇宙天気センサーネットワーク"
+        "を手に入れたに等しい。しかしTLEの設計本来の目的は「大まかな軌道予報」であり、精度は数百メートルから"
+        "キロメートル級に過ぎず、精密暦をはるかに下回る——**本事例が誠実に答えたいのは、この差が最終的に"
+        "本当に結果を出せなくしてしまうのかどうかである。**\n\n"
+        "本プロジェクトが問いたいのは：無料で公開されているTLEだけを使い（高価な精密暦を使わずに）、"
+        "同様のレベルの結果を出せる見込みがあるかどうかである。本事例は結論を誠実に示す："
+        "**できない。そして、なぜできないのかを説明する**。",
+        "**Problem background**: a Kyoto University team (Yamamoto, 2026, *Earth, Planets and Space*, 78, "
+        "Article 175) used precise ephemerides from about 1,200 Starlink satellites to invert a 2D "
+        "atmospheric-density map at about 482 km altitude, varying by latitude and local time — including "
+        "the \"density bulge\" where the dayside expands from solar heating and the nightside contracts "
+        "(Earth's atmosphere expands locally when heated by sunlight, like a balloon warmed in the sun, so "
+        "the dayside density is noticeably higher than the nightside).\n\n"
+        "**Why someone might expect TLEs to do the same**: TLEs are updated daily, free, and public, "
+        "covering nearly every satellite on orbit worldwide — being able to invert atmospheric density from "
+        "them would be like getting a free, global space-weather sensor network. But TLEs were originally "
+        "designed for \"rough orbit prediction,\" with accuracy only at the hundred-meter to kilometer "
+        "level, far below precise ephemerides — **what this case honestly answers is whether that gap "
+        "ultimately makes the result impossible to achieve.**\n\n"
+        "This project asked: using only free, public TLEs (rather than expensive precise ephemerides), is "
+        "there any chance of producing a result of similar caliber? This case honestly presents the "
+        "conclusion: **no, it cannot be done, and here is why.**",
+    ))
+    st.caption(T3(
         "📄 原始論文：Yamamoto, T. (2026). *Earth, Planets and Space*, 78, Article 175. "
         "京都大學團隊以約 1,200 顆 Starlink 衛星的精密星曆，反演熱層密度隨緯度與地方時變化的 2D 分布（本案例的參照基準）。"
-        "本頁未直接附上全文連結——建議以上述書目資訊在期刊官網或 Google Scholar 搜尋全文，避免引用未經核對的第三方連結。"
-    )
+        "本頁未直接附上全文連結——建議以上述書目資訊在期刊官網或 Google Scholar 搜尋全文，避免引用未經核對的第三方連結。",
+        "📄 原論文：Yamamoto, T. (2026). *Earth, Planets and Space*, 78, Article 175。京都大学チームは"
+        "約1,200機のStarlink衛星の精密暦を用いて、熱圏密度が緯度と地方時によって変化する2D分布を逆算した"
+        "（本事例の参照基準）。本頁では全文へのリンクを直接掲載していない——上記の書誌情報を用いて"
+        "ジャーナル公式サイトまたはGoogle Scholarで全文を検索することを推奨する。未確認の第三者リンクの"
+        "引用を避けるためである。",
+        "📄 Original paper: Yamamoto, T. (2026). *Earth, Planets and Space*, 78, Article 175. The Kyoto "
+        "University team inverted a 2D distribution of thermospheric density varying by latitude and local "
+        "time using precise ephemerides from about 1,200 Starlink satellites (the reference benchmark for "
+        "this case). This page does not include a direct link to the full text — the bibliographic "
+        "information above is recommended for searching the journal's official site or Google Scholar, to "
+        "avoid citing unverified third-party links.",
+    ))
 
     df = load_case10_real_data()
 
-    st.header("① 嘗試過程：四個版本，一次比一次更嚴謹")
-    st.markdown("**版本 1｜純 TLE 版**")
-    st.markdown(
+    st.header(T3(
+        "① 嘗試過程：四個版本，一次比一次更嚴謹",
+        "①試みの過程：4つのバージョン、回を追うごとに厳密に",
+        "① The Attempt Process: Four Versions, Each More Rigorous Than the Last",
+    ))
+    st.markdown(T3("**版本 1｜純 TLE 版**", "**バージョン1｜純TLE版**", "**Version 1 | Pure-TLE version**"))
+    st.markdown(T3(
         "篩選軌道高度單調下降、處於衰變末期的衛星（共 **584 顆**），"
-        "利用 NRLMSIS 大氣模型校準後，從衰減率反推密度隨高度的變化剖面。"
-    )
-    st.markdown("**版本 2｜MEME 精密星曆版**")
-    st.markdown(
+        "利用 NRLMSIS 大氣模型校準後，從衰減率反推密度隨高度的變化剖面。",
+        "軌道高度が単調に低下し、減衰末期にある衛星（合計**584機**）を選別し、NRLMSIS大気モデルで"
+        "較正した後、減衰率から高度に伴う密度変化のプロファイルを逆算する。",
+        "Filtering for satellites with monotonically decreasing orbital altitude, in the terminal phase of "
+        "decay (584 satellites total), and after calibrating against the NRLMSIS atmospheric model, "
+        "inverting the density-vs-altitude profile from the decay rate.",
+    ))
+    st.markdown(T3("**版本 2｜MEME 精密星曆版**", "**バージョン2｜MEME精密暦版**", "**Version 2 | MEME precise-ephemeris version**"))
+    st.markdown(T3(
         "改用 **283 顆** Starlink 衛星的精密位置/速度資料（MEME），"
         "以「比能量法」（specific energy method——用軌道能量隨時間的損耗速率反推阻力大小）直接估算大氣密度，"
-        "避開純 TLE 版本的擬合誤差。"
-    )
-    st.markdown("**版本 3｜逐星自校準版**")
-    st.markdown(
+        "避開純 TLE 版本的擬合誤差。",
+        "**283機**のStarlink衛星の精密な位置／速度データ（MEME）に切り替え、「比エネルギー法」"
+        "（specific energy method——軌道エネルギーが時間とともに失われる速度から抵抗の大きさを逆算する"
+        "手法）を用いて大気密度を直接推定し、純TLE版のフィッティング誤差を回避する。",
+        "Switching to precise position/velocity data (MEME) from 283 Starlink satellites, directly "
+        "estimating atmospheric density using the \"specific energy method\" (inferring drag magnitude from "
+        "the rate at which orbital energy is lost over time), avoiding the fitting error of the pure-TLE "
+        "version.",
+    ))
+    st.markdown(T3("**版本 3｜逐星自校準版**", "**バージョン3｜衛星ごとの自己較正版**", "**Version 3 | Per-satellite self-calibrated version**"))
+    st.markdown(T3(
         "將資料切成 **924 個**阻力弧段，對每顆衛星單獨校準「彈道係數」（ballistic coefficient——"
-        "描述衛星形狀/質量對阻力有多敏感的一個係數），嘗試壓低因姿態與外形不確定造成的雜訊。"
-    )
-    st.markdown("**版本 4｜忠實複現京大方法版（本頁資料來源）**")
-    st.markdown(
+        "描述衛星形狀/質量對阻力有多敏感的一個係數），嘗試壓低因姿態與外形不確定造成的雜訊。",
+        "データを**924個**の抵抗弧に分割し、衛星ごとに個別に「弾道係数」（ballistic coefficient——"
+        "衛星の形状／質量が抵抗にどれだけ敏感かを表す係数）を較正し、姿勢や形状の不確実性による雑音を"
+        "抑えることを試みる。",
+        "Splitting the data into 924 drag arcs and calibrating a \"ballistic coefficient\" (describing how "
+        "sensitive a satellite's shape/mass is to drag) individually for each satellite, attempting to "
+        "suppress noise caused by attitude and shape uncertainty.",
+    ))
+    st.markdown(T3("**版本 4｜忠實複現京大方法版（本頁資料來源）**",
+                   "**バージョン4｜京都大学の手法を忠実に再現した版（本頁のデータ出所）**",
+                   "**Version 4 | A Faithful Reproduction of the Kyoto Method (the Data Source for This Page)**"))
+    n_df_str = str(len(df))
+    st.markdown(T3(
         "進一步改用 EGM96 12 階重力場（比一般簡化模型更精確的地球重力場模型）計算比能量，"
-        f"盡可能貼近京大團隊的方法設定，最終得到 **{len(df)} 個**「乾淨」阻力弧段的密度比對結果。"
-    )
+        f"盡可能貼近京大團隊的方法設定，最終得到 **{n_df_str} 個**「乾淨」阻力弧段的密度比對結果。",
+        "さらにEGM96の12次重力場モデル（一般的な簡略化モデルより精密な地球重力場モデル）を用いて"
+        f"比エネルギーを計算し、京都大学チームの手法設定にできる限り近づけ、最終的に**{n_df_str}個**の"
+        "「クリーンな」抵抗弧の密度比較結果を得た。",
+        f"Going further by using the EGM96 12th-degree gravity field (a more precise Earth gravity-field "
+        "model than typical simplified ones) to compute specific energy, staying as close as possible to "
+        f"the Kyoto team's method settings, ultimately obtaining density-comparison results for "
+        f"**{n_df_str}** \"clean\" drag arcs.",
+    ))
 
     if not df.empty:
-        st.header("② 真實比對：本專案反推密度 vs NRLMSIS 模型密度")
+        st.header(T3(
+            "② 真實比對：本專案反推密度 vs NRLMSIS 模型密度",
+            "②実際の比較：本プロジェクトが逆算した密度 vs NRLMSISモデルの密度",
+            "② The Real Comparison: This Project's Inverted Density vs. NRLMSIS Model Density",
+        ))
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=df["rho_msis"], y=df["rho_obs"], mode="markers",
-                                 marker=dict(color="#FFB74D", size=6, opacity=0.7), name="151 個真實阻力弧"))
+                                 marker=dict(color="#FFB74D", size=6, opacity=0.7),
+                                 name=T3("151 個真實阻力弧", "151個の実際の抵抗弧", "151 real drag arcs")))
         lo, hi = df["rho_msis"].min(), df["rho_msis"].max()
         fig.add_trace(go.Scatter(x=[lo, hi], y=[lo, hi], mode="lines",
-                                 line=dict(color="#90A4AE", dash="dot"), name="完全吻合線"))
+                                 line=dict(color="#90A4AE", dash="dot"),
+                                 name=T3("完全吻合線", "完全一致線", "Perfect-match line")))
         fig.update_layout(height=360, margin=dict(l=10, r=10, t=10, b=10),
-                          xaxis_title="NRLMSIS 模型密度 (kg/m³)", yaxis_title="本專案反推密度 (kg/m³)",
+                          xaxis_title=T3("NRLMSIS 模型密度 (kg/m³)", "NRLMSISモデル密度 (kg/m³)", "NRLMSIS model density (kg/m³)"),
+                          yaxis_title=T3("本專案反推密度 (kg/m³)", "本プロジェクトの逆算密度 (kg/m³)", "This project's inverted density (kg/m³)"),
                           plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig, use_container_width=True, key="case10_scatter")
         ratio = df["ratio"]
         c1, c2, c3 = st.columns(3)
-        c1.metric("比值中位數", f"{ratio.median():.2f}")
-        c2.metric("比值 IQR", f"{ratio.quantile(.25):.2f}～{ratio.quantile(.75):.2f}")
-        c3.metric("有效阻力弧數", f"{len(df)}")
-        st.caption(
+        c1.metric(T3("比值中位數", "比の中央値", "Median ratio"), f"{ratio.median():.2f}")
+        c2.metric(T3("比值 IQR", "比のIQR", "Ratio IQR"), f"{ratio.quantile(.25):.2f}～{ratio.quantile(.75):.2f}")
+        c3.metric(T3("有效阻力弧數", "有効な抵抗弧数", "Valid drag-arc count"), f"{len(df)}")
+        st.caption(T3(
             "在理想情況下，如果反推結果完美，每個點應該緊貼圖中的灰色虛線（反推密度＝NRLMSIS 密度）。"
             "實際結果卻是點群散布極廣：中位數雖然落在 1.00（代表整體沒有系統性偏差），"
             "但四分位距 0.39～1.24 代表同一高度下，反推密度可能只有模型值的 4 成，也可能高達 1.2 倍——"
-            "**這種大幅離散，就是「無法乾淨複現京大結果」的直接視覺證據，而不是文字上空泛地說『效果不好』。**"
-        )
+            "**這種大幅離散，就是「無法乾淨複現京大結果」的直接視覺證據，而不是文字上空泛地說『效果不好』。**",
+            "理想的には、逆算結果が完璧であれば、各点は図中のグレーの破線（逆算密度＝NRLMSIS密度）に"
+            "ぴったり沿うはずである。しかし実際の結果は点群が非常に広く散らばっている：中央値は1.00に"
+            "位置している（全体として系統的な偏りがないことを示す）ものの、四分位範囲は0.39〜1.24であり、"
+            "同じ高度において逆算密度がモデル値の4割程度になることも、1.2倍に達することもあることを"
+            "示している——**この大きなばらつきこそが、「京都大学の結果をきれいに再現できない」ことの"
+            "直接的な視覚的証拠であり、単に文章で『効果が良くない』と述べるだけのものではない。**",
+            "Ideally, if the inversion were perfect, every point would hug the gray dashed line in the "
+            "figure (inverted density = NRLMSIS density). The actual result instead shows an extremely "
+            "wide scatter: although the median sits at 1.00 (indicating no overall systematic bias), the "
+            "interquartile range of 0.39–1.24 means that at the same altitude, the inverted density could "
+            "be only 40% of the model value, or as high as 1.2 times it — **this large scatter is the "
+            "direct visual evidence of \"being unable to cleanly reproduce the Kyoto result,\" rather than "
+            "a vague verbal claim that 'it doesn't work well.'**",
+        ))
 
-    st.header("③ 三個根因：為什麼做不到")
-    st.markdown("**根因 1｜樣本本身有偏差**")
-    st.markdown(
+    st.header(T3(
+        "③ 三個根因：為什麼做不到",
+        "③3つの根本原因：なぜできないのか",
+        "③ Three Root Causes: Why It Can't Be Done",
+    ))
+    st.markdown(T3("**根因 1｜樣本本身有偏差**", "**根本原因1｜サンプル自体に偏りがある**", "**Root cause 1 | The sample itself is biased**"))
+    st.markdown(T3(
         "能篩選出「軌道高度單調下降、乾淨到適合反推」的衛星，幾乎都是壽命末期、姿態失控的離軌衛星。"
         "對這些衛星來說，軌道衰減主要由「翻滾姿態造成的有效阻力面積變化」主導，而不是真實大氣密度的變化。\n\n"
         "結果是：反推出的「密度尺度高度」（scale height——大氣密度隨高度每增加這個距離就衰減為原本的約 37%，"
         "數值越貼近真實大氣模型代表反推越準）高達 **−120 公里**（負值代表密度隨高度上升反而增加，物理上不合理），"
-        "對照 NRLMSIS 在該高度應有的約 **58 公里**。"
-    )
-    st.markdown("**根因 2｜B\\* 循環論證**")
-    st.markdown(
+        "對照 NRLMSIS 在該高度應有的約 **58 公里**。",
+        "「軌道高度が単調に低下し、逆算に適するほどクリーンな」衛星として選別できるのは、ほぼすべて"
+        "寿命末期にあり姿勢制御を失った離軌衛星である。これらの衛星にとって、軌道減衰は主に"
+        "「タンブリング姿勢による有効抵抗面積の変化」に支配されており、実際の大気密度の変化ではない。"
+        "\n\n結果として：逆算された「密度スケールハイト」（scale height——高度がこの距離だけ増えるごとに"
+        "大気密度が元の約37%まで減衰する量であり、真の大気モデルに近いほど逆算が正確であることを示す）は"
+        "**−120キロメートル**にも達する（負の値は高度が上がるほど密度がかえって増加することを意味し、"
+        "物理的に不合理である）。これは、その高度でNRLMSISが示すべき約**58キロメートル**とは対照的である。",
+        "The satellites that can be selected as having \"monotonically decreasing orbital altitude, clean "
+        "enough for inversion\" are almost all end-of-life, attitude-uncontrolled decaying satellites. For "
+        "these satellites, orbital decay is dominated mainly by \"changes in effective drag area caused by "
+        "tumbling attitude,\" not by genuine changes in atmospheric density.\n\n"
+        "The result: the inverted \"density scale height\" (the distance over which atmospheric density "
+        "decays to about 37% of its value as altitude increases; the closer to a real atmospheric model, "
+        "the more accurate the inversion) comes out to as much as **−120 km** (a negative value means "
+        "density actually increases with altitude, which is physically unreasonable), compared to the "
+        "roughly **58 km** NRLMSIS would predict at that altitude.",
+    ))
+    st.markdown(T3("**根因 2｜B\\* 循環論證**", "**根本原因2｜B\\*の循環論法**", "**Root cause 2 | B\\* circular reasoning**"))
+    st.markdown(T3(
         "TLE 中的彈道係數 B\\* 本身就是從軌道衰減率反推出來的參數。當我們再用 B\\* 去除衰減率來推算密度時，"
         "等於是「用答案去除答案」，密度訊號在計算過程中被自己抵消掉一部分。\n\n"
         "這會導致反推出的尺度高度被拉平到約 **212 公里**，遠大於真實大氣的 58 公里，"
-        "代表密度隨高度的真實變化被嚴重低估、訊號被磨平了。"
-    )
-    st.markdown("**根因 3｜軌道覆蓋太稀疏＋TLE 本身雜訊大**")
-    st.markdown(
+        "代表密度隨高度的真實變化被嚴重低估、訊號被磨平了。",
+        "TLE中の弾道係数B\\*自体が、軌道減衰率から逆算されたパラメータである。B\\*を用いて減衰率を"
+        "除して密度を推算するとき、それは「答えで答えを割る」ことに等しく、密度信号は計算の過程で"
+        "自分自身によって一部相殺されてしまう。\n\n"
+        "これにより、逆算されたスケールハイトは約**212キロメートル**まで平坦化されてしまい、実際の"
+        "大気の58キロメートルをはるかに上回る。これは、高度に伴う密度の実際の変化が大幅に過小評価され、"
+        "信号が均されてしまったことを意味する。",
+        "The ballistic coefficient B\\* in a TLE is itself a parameter inverted from the orbital decay "
+        "rate. When B\\* is then used to divide out the decay rate to infer density, it amounts to "
+        "\"dividing the answer by the answer,\" and the density signal partially cancels itself out during "
+        "the calculation.\n\n"
+        "This causes the inverted scale height to flatten out to about **212 km**, far larger than the "
+        "real atmosphere's 58 km, meaning the true variation of density with altitude is severely "
+        "underestimated — the signal gets smoothed away.",
+    ))
+    st.markdown(T3("**根因 3｜軌道覆蓋太稀疏＋TLE 本身雜訊大**",
+                   "**根本原因3｜軌道カバレッジが疎らすぎる＋TLE自体の雑音が大きい**",
+                   "**Root cause 3 | Orbital coverage too sparse + TLEs themselves are noisy**"))
+    st.markdown(T3(
         "Starlink 主力殼層集中在約 53° 傾角，極軌衛星只有約 13 顆。在「緯度×地方時」這張 2D 網格上，"
         "很多格子幾乎沒有資料，空間取樣嚴重不足；再加上 TLE 本身的位置/速度誤差通常達百公尺到公里級，"
         "最終反推出的密度場空間相關係數只有 **r = 0.42**（0 代表毫無關聯、1 代表完全一致，"
-        "0.42 屬於低到中度相關）——完全沒有重現出京大版本清晰可見的日側密度鼓包。"
-    )
-    st.info(
+        "0.42 屬於低到中度相關）——完全沒有重現出京大版本清晰可見的日側密度鼓包。",
+        "Starlinkの主力シェルは傾斜角約53°に集中しており、極軌道衛星はわずか約13機しかない。"
+        "「緯度×地方時」という2Dグリッド上では、多くのセルにほとんどデータがなく、空間サンプリングが"
+        "著しく不足している。さらにTLE自体の位置／速度誤差は通常数百メートルからキロメートル級に達する。"
+        "最終的に逆算された密度場の空間相関係数はわずか**r = 0.42**（0は無相関、1は完全一致を意味し、"
+        "0.42は低〜中程度の相関に属する）——京都大学版ではっきりと見えた日側の密度バルジをまったく"
+        "再現できなかった。",
+        "Starlink's main shells are concentrated around a 53° inclination, with only about 13 polar "
+        "satellites. On the \"latitude × local time\" 2D grid, many cells have almost no data, leaving "
+        "spatial sampling severely inadequate; combined with TLEs' own position/velocity errors, typically "
+        "at the hundred-meter to kilometer level, the resulting inverted density field's spatial "
+        "correlation coefficient is only **r = 0.42** (0 means no correlation, 1 means perfect agreement; "
+        "0.42 falls in the low-to-moderate range) — completely failing to reproduce the clearly visible "
+        "dayside density bulge from the Kyoto version.",
+    ))
+    st.info(T3(
         "**後續 MEME 精密星曆版的追加診斷**：即使把輸入資料換成精密星曆、並逐星自校準彈道係數，"
         "每個阻力弧段的密度估計仍卡在約 **0.62 dex** 的離散度"
         "（dex 是以 10 為底的對數尺度單位，0.62 dex 代表上下浮動約 **4 倍**），校準前後幾乎沒有明顯改善——"
         "顯示真正的瓶頸不只是上面三個 TLE 特有的根因，而是更根本的：**單一比能量法**（只靠軌道能量變化這"
         "一個訊號反推阻力）**本身的精度上限**。即使輸入資料從 TLE 升級到精密星曆，這個方法能提取的資訊量"
-        "依然不足以支撐京大等級的 2D 密度斷層重建。"
-    )
+        "依然不足以支撐京大等級的 2D 密度斷層重建。",
+        "**その後のMEME精密暦版による追加診断**：入力データを精密暦に切り替え、衛星ごとに弾道係数を"
+        "自己較正しても、各抵抗弧の密度推定は依然として約**0.62 dex**のばらつき（dexは10を底とする"
+        "対数スケールの単位であり、0.62 dexは上下約**4倍**の変動を意味する）に留まり、較正の前後で"
+        "ほとんど明らかな改善は見られなかった——これは、真のボトルネックが上記3つのTLE特有の根本原因"
+        "だけではなく、より根本的な問題、すなわち**単一の比エネルギー法**（軌道エネルギー変化という"
+        "この1つの信号のみに頼って抵抗を逆算する手法）**それ自体の精度の上限**にあることを示している。"
+        "入力データをTLEから精密暦に格上げしても、この手法が抽出できる情報量は、京都大学レベルの2D密度"
+        "断層再構築を支えるにはなお不十分である。",
+        "**A further diagnosis from the follow-up MEME precise-ephemeris version**: even after switching "
+        "the input data to precise ephemerides and self-calibrating the ballistic coefficient per "
+        "satellite, the density estimate for each drag arc remains stuck at a scatter of about **0.62 "
+        "dex** (dex is a base-10 logarithmic unit; 0.62 dex means fluctuating up or down by roughly "
+        "**4×**), with almost no clear improvement before versus after calibration — showing that the real "
+        "bottleneck isn't only the three TLE-specific root causes above, but something more fundamental: "
+        "**the inherent precision ceiling of the single specific-energy method itself** (inferring drag "
+        "from the single signal of orbital-energy change alone). Even upgrading the input data from TLEs "
+        "to precise ephemerides, the amount of information this method can extract still isn't enough to "
+        "support a Kyoto-caliber 2D density-tomography reconstruction.",
+    ))
 
     st.markdown("---")
-    st.warning(
+    st.warning(T3(
         "**可行的下一步**（誠實給出，而非假裝問題已解決）——若未來想繼續朝這個方向推進，建議路線：\n\n"
         "① **改用 SpaceX 公開的精密星曆直接算加速度**：避開 TLE 中 B\\* 的循環論證，"
         "直接從位置/速度時間序列估算阻力加速度（本專案已部分執行此路線）；\n\n"
@@ -2961,21 +4040,76 @@ def render_storymap_case10():
         "③ **降低目標，從 2D 斷層改為全球平均指標**：不強求重建京大等級的緯度×地方時 2D 密度斷層，"
         "先做「全球平均密度隨太陽活動變化」的定性指標，作為既有大氣模型的輔助校驗資料；\n\n"
         "④ **若要真正重現京大等級結果**：需要 POD（精密定軌）等級的逐點阻力加速度反演法，"
-        "配合更嚴謹的誤差模型與資料同化，這已超出本專案目前「簡化比能量法」路線的可及範圍。"
-    )
-    st.caption("完整技術推導見 `thermosphere_kyoto_repro.py`、`thermosphere_meme_bccal.py`、"
-              "`docs/研究_Starlink熱層密度_TLE限制_20260807.md`。")
+        "配合更嚴謹的誤差模型與資料同化，這已超出本專案目前「簡化比能量法」路線的可及範圍。",
+        "**実行可能な次の一手**（誠実に示すものであり、問題がすでに解決したかのように装うものではない）——"
+        "今後この方向でさらに前進したい場合、以下の路線を提案する：\n\n"
+        "① **SpaceXが公開する精密暦を用いて直接加速度を計算する**：TLE中のB\\*の循環論法を回避し、"
+        "位置／速度の時系列から直接抵抗加速度を推定する（本プロジェクトはすでにこの路線を一部実行済み）；"
+        "\n\n② **運用中の衛星について、「純粋な抵抗の空白期間」を抽出する**：2回のステーションキーピングの"
+        "間で、推力による干渉がほとんどない弧を選んで弾道係数を再較正し、姿勢と推力による信号の混同を"
+        "減らす；\n\n③ **目標を引き下げ、2D断層から全球平均指標へ切り替える**：京都大学レベルの緯度×"
+        "地方時2D密度断層の再構築を無理に目指すのではなく、まず「太陽活動に伴う全球平均密度の変化」という"
+        "定性的な指標を作成し、既存の大気モデルの補助的な検証データとする；\n\n④ **京都大学レベルの結果を"
+        "真に再現したい場合**：POD（精密軌道決定）レベルの逐点抵抗加速度逆算法が必要であり、より厳密な"
+        "誤差モデルとデータ同化を組み合わせる必要がある。これは本プロジェクトの現在の「簡略化比エネルギー"
+        "法」路線が到達できる範囲をすでに超えている。",
+        "**Viable next steps** (given honestly, rather than pretending the problem is already solved) — if "
+        "someone wanted to keep pushing in this direction, the suggested routes are:\n\n"
+        "① **Switch to computing acceleration directly from SpaceX's public precise ephemerides**: avoiding "
+        "the B\\* circular-reasoning problem in TLEs, estimating drag acceleration directly from the "
+        "position/velocity time series (this project has already partially pursued this route);\n\n"
+        "② **For operational satellites, extract \"pure drag windows\" free of thrust**: between two "
+        "station-keeping events, select arcs with almost no thrust interference to recalibrate the "
+        "ballistic coefficient, reducing signal aliasing from attitude and thrust;\n\n"
+        "③ **Lower the target, from a 2D tomography map to a global-average indicator**: rather than "
+        "insisting on reconstructing a Kyoto-caliber latitude × local-time 2D density map, first produce a "
+        "qualitative indicator of \"how global average density varies with solar activity,\" as a "
+        "supplementary check against existing atmospheric models;\n\n"
+        "④ **To genuinely reproduce Kyoto-caliber results**: a POD (precise orbit determination)-grade, "
+        "point-by-point drag-acceleration inversion method is needed, combined with a more rigorous error "
+        "model and data assimilation — this is already beyond the reach of this project's current "
+        "\"simplified specific-energy method\" approach.",
+    ))
+    st.caption(T3(
+        "完整技術推導見 `thermosphere_kyoto_repro.py`、`thermosphere_meme_bccal.py`、"
+        "`docs/研究_Starlink熱層密度_TLE限制_20260807.md`。",
+        "完全な技術的導出は `thermosphere_kyoto_repro.py`、`thermosphere_meme_bccal.py`、"
+        "`docs/研究_Starlink熱層密度_TLE限制_20260807.md` を参照。",
+        "The full technical derivation is in `thermosphere_kyoto_repro.py`, `thermosphere_meme_bccal.py`, "
+        "and `docs/研究_Starlink熱層密度_TLE限制_20260807.md`.",
+    ))
 
     st.markdown("---")
-    st.success(
+    st.success(T3(
         "**本案例的啟示**：這個負面結果其實提供了兩個重要訊息——\n\n"
         "1. **TLE 不適合用來做高精度大氣密度反演**：它的設計目標是提供粗略軌道預報，而非精密物理參數反演；\n"
         "2. **方法本身也有資訊上限**：即使把輸入資料從 TLE 升級到精密星曆，單一比能量法仍不足以支撐 "
         "2D 密度斷層的重建，問題不只出在資料，也出在方法本身能萃取的資訊量。\n\n"
         "對後續研究者來說，與其硬把 TLE 推到它設計範圍之外，不如把資源投入在取得更高品質的軌道資料"
         "（POD、精密星曆）、以及發展更完整的阻力反演框架（含誤差模型、資料同化、多源資料融合）——"
-        "這才是更接近京大團隊成果的可持續路線。"
-    )
+        "這才是更接近京大團隊成果的可持續路線。",
+        "**本事例が示唆すること**：この負の結果は実は2つの重要な情報を提供している——\n\n"
+        "1. **TLEは高精度な大気密度逆算には適していない**：その設計目標は大まかな軌道予報を提供することで"
+        "あり、精密な物理パラメータの逆算ではない；\n"
+        "2. **手法自体にも情報の上限がある**：入力データをTLEから精密暦に格上げしても、単一の比エネルギー"
+        "法は2D密度断層の再構築を支えるにはなお不十分であり、問題はデータだけでなく、手法自体が抽出できる"
+        "情報量にもある。\n\n"
+        "後続の研究者にとっては、TLEを無理にその設計範囲の外へ押し広げるよりも、より高品質な軌道データ"
+        "（POD、精密暦）の取得や、より完全な抵抗逆算フレームワーク（誤差モデル、データ同化、複数データ源の"
+        "融合を含む）の開発に資源を投じる方が、京都大学チームの成果により近づく持続可能な路線である。",
+        "**What this case teaches us**: this negative result actually offers two important lessons —\n\n"
+        "1. **TLEs are unsuitable for high-precision atmospheric-density inversion**: they were designed "
+        "to provide rough orbit prediction, not precise physical-parameter inversion;\n"
+        "2. **The method itself also has an information ceiling**: even upgrading the input data from TLEs "
+        "to precise ephemerides, a single specific-energy method still isn't enough to support "
+        "reconstructing a 2D density map — the problem lies not only in the data but also in how much "
+        "information the method itself can extract.\n\n"
+        "For future researchers, rather than forcing TLEs beyond their designed scope, it would be more "
+        "productive to invest resources in obtaining higher-quality orbital data (POD, precise "
+        "ephemerides) and developing a more complete drag-inversion framework (including error modeling, "
+        "data assimilation, and multi-source data fusion) — a more sustainable path toward results closer "
+        "to the Kyoto team's.",
+    ))
 
 
 # ══ StoryMap 案例一～二（2026-09-10 新增，置頂）══════════════════════════════════
@@ -2985,14 +4119,38 @@ def _pipeline_flowchart_fig() -> go.Figure:
     高對比版：實心飽和底色＋白色粗體字，非 AI／AI 兩色系分色，加大字級。"""
     boxes = [
         # (x, y, w, h, label, color)
-        (0.3, 5.5, 3.0, 1.0, "①  TLE 逐日下載<br>（Space-Track／CelesTrak）", "#0D47A1"),
-        (0.3, 4.1, 3.0, 1.0, "②  換算軌道根數<br>（SGP4 → a/e/i/RAAN/…）", "#0D47A1"),
-        (-0.2, 2.5, 1.9, 1.0, "③a  L1 規則式<br>P1–P6 門檻<br><b>非 AI</b>", "#37474F"),
-        (1.85, 2.5, 1.9, 1.0, "③b  L2 統計通道<br>CUSUM/BOCPD/SSA/MAD3σ<br><b>非 AI</b>", "#37474F"),
-        (3.9, 2.5, 1.9, 1.0, "③c  物理阻力殘差<br>NRLMSIS<br><b>非 AI</b>", "#37474F"),
-        (5.95, 2.5, 1.9, 1.0, "③d  ML 分類器<br>LightGBM（MEME 訓練）<br><b>AI</b>", "#6A1B9A"),
-        (1.85, 1.1, 3.9, 1.0, "④  L3 融合評分器　HistGradientBoosting　<b>AI</b>", "#6A1B9A"),
-        (1.85, -0.2, 3.9, 0.9, "⑤  最終機率＋判定<br>（對照 14+9 顆真值驗證）", "#1B5E20"),
+        (0.3, 5.5, 3.0, 1.0, T3(
+            "①  TLE 逐日下載<br>（Space-Track／CelesTrak）",
+            "①  TLE毎日ダウンロード<br>（Space-Track／CelesTrak）",
+            "①  Daily TLE download<br>(Space-Track / CelesTrak)"), "#0D47A1"),
+        (0.3, 4.1, 3.0, 1.0, T3(
+            "②  換算軌道根數<br>（SGP4 → a/e/i/RAAN/…）",
+            "②  軌道要素へ変換<br>（SGP4 → a/e/i/RAAN/…）",
+            "②  Convert to orbital elements<br>(SGP4 → a/e/i/RAAN/…)"), "#0D47A1"),
+        (-0.2, 2.5, 1.9, 1.0, T3(
+            "③a  L1 規則式<br>P1–P6 門檻<br><b>非 AI</b>",
+            "③a  L1ルールベース<br>P1–P6閾値<br><b>非AI</b>",
+            "③a  L1 rule-based<br>P1–P6 thresholds<br><b>Non-AI</b>"), "#37474F"),
+        (1.85, 2.5, 1.9, 1.0, T3(
+            "③b  L2 統計通道<br>CUSUM/BOCPD/SSA/MAD3σ<br><b>非 AI</b>",
+            "③b  L2統計チャネル<br>CUSUM/BOCPD/SSA/MAD3σ<br><b>非AI</b>",
+            "③b  L2 statistical channels<br>CUSUM/BOCPD/SSA/MAD3σ<br><b>Non-AI</b>"), "#37474F"),
+        (3.9, 2.5, 1.9, 1.0, T3(
+            "③c  物理阻力殘差<br>NRLMSIS<br><b>非 AI</b>",
+            "③c  物理的抵抗残差<br>NRLMSIS<br><b>非AI</b>",
+            "③c  Physical drag residual<br>NRLMSIS<br><b>Non-AI</b>"), "#37474F"),
+        (5.95, 2.5, 1.9, 1.0, T3(
+            "③d  ML 分類器<br>LightGBM（MEME 訓練）<br><b>AI</b>",
+            "③d  MLクラシファイア<br>LightGBM（MEME訓練）<br><b>AI</b>",
+            "③d  ML classifier<br>LightGBM (trained on MEME)<br><b>AI</b>"), "#6A1B9A"),
+        (1.85, 1.1, 3.9, 1.0, T3(
+            "④  L3 融合評分器　HistGradientBoosting　<b>AI</b>",
+            "④  L3融合スコアリングモデル　HistGradientBoosting　<b>AI</b>",
+            "④  L3 fusion scoring model, HistGradientBoosting  <b>AI</b>"), "#6A1B9A"),
+        (1.85, -0.2, 3.9, 0.9, T3(
+            "⑤  最終機率＋判定<br>（對照 14+9 顆真值驗證）",
+            "⑤  最終確率＋判定<br>（14+9機の真値で検証）",
+            "⑤  Final probability + determination<br>(validated against 14+9 satellites of ground truth)"), "#1B5E20"),
     ]
     fig = go.Figure()
     for x, y, w, h, label, color in boxes:
@@ -3023,70 +4181,178 @@ def _pipeline_flowchart_fig() -> go.Figure:
     return fig
 
 
+# --- render_storymap_case1 ---
 def render_storymap_case1():
     if st.button(t("storymap_back"), key="back_from_case1"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例一：從 TLE 偵測機動，到底可不可行？")
-    st.subheader("演算法架構與流程全貌（StoryMap 入口／總覽案例）")
-    st.caption("本頁為 StoryMap 的總覽案例：先看懂整體架構，後面每個案例都是這張圖裡某一塊的深入展開。")
+    st.title(T3(
+        "案例一：從 TLE 偵測機動，到底可不可行？",
+        "事例一：TLEから機動を検知することは、そもそも可能なのか？",
+        "Case 1: Is Detecting Maneuvers from TLEs Actually Feasible?",
+    ))
+    st.subheader(T3(
+        "演算法架構與流程全貌（StoryMap 入口／總覽案例）",
+        "アルゴリズムアーキテクチャと処理フローの全体像（StoryMapの入口／総覧事例）",
+        "The Full Algorithm Architecture and Pipeline (StoryMap Entry Point / Overview Case)",
+    ))
+    st.caption(T3(
+        "本頁為 StoryMap 的總覽案例：先看懂整體架構，後面每個案例都是這張圖裡某一塊的深入展開。",
+        "本頁はStoryMapの総覧事例である：まず全体のアーキテクチャを理解すれば、以降の各事例はすべて"
+        "この図の中のある部分を掘り下げたものである。",
+        "This page is StoryMap's overview case: understand the overall architecture first, and every "
+        "subsequent case is a deep dive into one piece of this diagram.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**核心問題**：公開、免費、每天更新一次、定位精度只有百公尺量級的 TLE，"
         "能不能拿來偵測衛星的軌道機動？（正因為它免費、覆蓋全球幾乎所有在軌衛星、歷史又長，"
         "才會讓人想拿它來做這件事——但它的設計初衷其實是「粗略軌道預報」，不是精密物理量測。）\n\n"
         "**本專案的答案**：可以，但必須用對方法組合，而且一定要用獨立的機動真值"
-        "（精密星曆或官方紀錄）反覆驗證，**不能只靠「看起來合理」就相信結果**。"
-    )
+        "（精密星曆或官方紀錄）反覆驗證，**不能只靠「看起來合理」就相信結果**。",
+        "**核心的問い**：公開・無料で、1日1回更新され、測位精度が数百メートル級に過ぎないTLEを、"
+        "衛星の軌道機動の検知に使うことができるのか？（それが無料で、地球上のほぼすべての軌道上衛星をカバーし、"
+        "履歴も長いからこそ、これを使いたくなるのだが——その設計本来の目的は実は「大まかな軌道予報」であり、"
+        "精密な物理計測ではない。）\n\n"
+        "**本プロジェクトの答え**：可能である。ただし正しい手法の組み合わせを用い、必ず独立した機動の真値"
+        "（精密暦または公式記録）で繰り返し検証しなければならない。**「もっともらしく見える」というだけで"
+        "結果を信じてはならない**。",
+        "**Core question**: can a TLE — public, free, updated once a day, with positioning accuracy only on "
+        "the order of hundreds of meters — be used to detect a satellite's orbital maneuvers? (It's "
+        "precisely because it's free, covers nearly every satellite on orbit worldwide, and has a long "
+        "history that people want to use it for this — but it was originally designed for \"rough orbit "
+        "prediction,\" not precise physical measurement.)\n\n"
+        "**This project's answer**: yes, but only with the right combination of methods, and only when "
+        "repeatedly validated against independent maneuver ground truth (precise ephemerides or official "
+        "records) — **the result cannot simply be trusted because it \"looks reasonable.\"**",
+    ))
 
-    st.header("① 整體流程")
+    st.header(T3("① 整體流程", "①全体の流れ", "① The Overall Pipeline"))
     st.plotly_chart(_pipeline_flowchart_fig(), use_container_width=True, key="case1_flowchart")
-    st.caption("下方文字說明中，每個步驟前面的顏色標記對應流程圖中的色塊：　"
-              "🔵 藍＝資料前處理　⬛ 灰＝非 AI（規則／統計／物理模型）　🟣 紫＝AI（機器學習）　🟢 綠＝最終驗證")
+    st.caption(T3(
+        "下方文字說明中，每個步驟前面的顏色標記對應流程圖中的色塊：　"
+        "🔵 藍＝資料前處理　⬛ 灰＝非 AI（規則／統計／物理模型）　🟣 紫＝AI（機器學習）　🟢 綠＝最終驗證",
+        "以下の文章説明において、各ステップの前にある色のマークは、フロー図中の色ブロックに対応している：　"
+        "🔵 青＝データ前処理　⬛ グレー＝非AI（ルール／統計／物理モデル）　🟣 紫＝AI（機械学習）　🟢 緑＝最終検証",
+        "In the text explanations below, the color marker before each step corresponds to a colored block "
+        "in the flowchart: 🔵 Blue = data preprocessing, ⬛ Gray = non-AI (rules/statistics/physical model), "
+        "🟣 Purple = AI (machine learning), 🟢 Green = final validation",
+    ))
 
-    st.markdown("**🔵 ①② 資料前處理**")
-    st.markdown(
+    st.markdown(T3("**🔵 ①② 資料前處理**", "**🔵①②データ前処理**", "**🔵 ①② Data Preprocessing**"))
+    st.markdown(T3(
         "每日從 Space-Track 或 CelesTrak 下載最新 TLE，利用 SGP4（一套標準化的軌道傳播演算法）"
         "換算成時間序列形式的軌道根數（描述軌道形狀與方位的一組數字），包括半長軸、離心率、傾角等。"
-        "這些「軌道根數時序」就是後續所有偵測方法的共同輸入訊號。"
-    )
+        "這些「軌道根數時序」就是後續所有偵測方法的共同輸入訊號。",
+        "毎日Space-TrackまたはCelesTrakから最新のTLEをダウンロードし、SGP4（標準化された軌道伝播アルゴリズム）"
+        "を用いて時系列形式の軌道要素（軌道の形状と方位を記述する一連の数値、半長軸・離心率・傾斜角などを含む）"
+        "へと変換する。この「軌道要素時系列」が、以降のすべての検知手法に共通する入力信号となる。",
+        "Fresh TLEs are downloaded daily from Space-Track or CelesTrak and converted, using SGP4 (a "
+        "standardized orbit-propagation algorithm), into a time series of orbital elements (a set of "
+        "numbers describing an orbit's shape and orientation), including semi-major axis, eccentricity, "
+        "inclination, and so on. This \"orbital-element time series\" is the shared input signal for every "
+        "detection method that follows.",
+    ))
 
-    st.markdown("**③ 四種平行偵測方法**（同一份軌道根數時序，同時送進四種原理完全不同的通道——詳細分類見案例二）")
-    st.markdown(
+    st.markdown(T3(
+        "**③ 四種平行偵測方法**（同一份軌道根數時序，同時送進四種原理完全不同的通道——詳細分類見案例二）",
+        "**③4種類の並行検知手法**（同一の軌道要素時系列を、原理がまったく異なる4つのチャネルに同時に"
+        "入力する——詳細な分類は事例二を参照）",
+        "**③ Four Parallel Detection Methods** (the same orbital-element time series fed simultaneously "
+        "into four channels with completely different underlying principles — see Case 2 for detailed classification)",
+    ))
+    st.markdown(T3(
         "**⬛ L1 規則式 P1–P6**：人工訂定的硬門檻規則，例如「半長軸變化量 |Δa| 超過某個值」就標記為可能機動。"
-        "優點是最容易理解、最容易解釋；缺點是誤報與漏報都偏高，單獨使用不夠可靠。"
-    )
-    st.markdown(
+        "優點是最容易理解、最容易解釋；缺點是誤報與漏報都偏高，單獨使用不夠可靠。",
+        "**⬛ L1ルールベース P1–P6**：人手で設定されたハード閾値ルールであり、例えば「軌道長半径の変化量"
+        "|Δa|がある値を超えたら」機動の可能性ありとフラグを立てる。利点は最も理解しやすく、最も説明しやすい"
+        "こと；欠点は誤検知と見逃しの両方が高くなりがちで、単独使用では信頼性が不十分であること。",
+        "**⬛ L1 rule-based P1–P6**: manually set hard-threshold rules — for example, flagging a possible "
+        "maneuver whenever the semi-major-axis change |Δa| exceeds some value. The advantage is that it's "
+        "the easiest to understand and explain; the disadvantage is that both false positives and missed "
+        "detections tend to be high, making it unreliable when used alone.",
+    ))
+    st.markdown(T3(
         "**⬛ L2 統計變點偵測**：CUSUM（累積偏離量）、BOCPD（貝葉斯變點偵測）、SSA（奇異譜分析）、"
-        "MAD3σ（以中位數絕對偏差設門檻）四個經典統計通道，各自用不同的數學定義去捕捉「訊號突然改變」的時刻。"
-    )
-    st.markdown(
+        "MAD3σ（以中位數絕對偏差設門檻）四個經典統計通道，各自用不同的數學定義去捕捉「訊號突然改變」的時刻。",
+        "**⬛ L2統計的変化点検知**：CUSUM（累積偏差）、BOCPD（ベイズ的変化点検知）、SSA（特異スペクトル解析）、"
+        "MAD3σ（中央値絶対偏差による閾値設定）という4つの古典的統計チャネルがあり、それぞれ異なる数学的定義を"
+        "用いて「信号が突然変化する」瞬間を捉える。",
+        "**⬛ L2 statistical change-point detection**: four classic statistical channels — CUSUM "
+        "(cumulative sum), BOCPD (Bayesian online change-point detection), SSA (singular spectrum "
+        "analysis), and MAD3σ (thresholding via median absolute deviation) — each using a different "
+        "mathematical definition to capture the moment a signal suddenly changes.",
+    ))
+    st.markdown(T3(
         "**⬛ 物理阻力殘差**：先用 NRLMSIS 大氣密度模型估算「這段時間單純由大氣阻力造成的軌道衰減應該是多少」，"
-        "再從實際觀測的軌道變化中扣掉這部分——剩下的「殘差」才是真正需要由機動來解釋的訊號（詳細推導見案例五）。"
-    )
-    st.markdown(
+        "再從實際觀測的軌道變化中扣掉這部分——剩下的「殘差」才是真正需要由機動來解釋的訊號（詳細推導見案例五）。",
+        "**⬛物理的抵抗残差**：まずNRLMSIS大気密度モデルを用いて「この期間に純粋に大気抵抗によって"
+        "生じるはずの軌道減衰量」を推定し、次に実際に観測された軌道変化からこの分を差し引く——残った"
+        "「残差」こそが、本当に機動によって説明されるべき信号である（詳細な導出は事例五を参照）。",
+        "**⬛ Physical drag residual**: first, the NRLMSIS atmospheric-density model estimates \"how much "
+        "orbital decay should occur purely from atmospheric drag over this period,\" then that amount is "
+        "subtracted from the actually observed orbital change — the remaining \"residual\" is the signal "
+        "that genuinely needs to be explained by a maneuver (see Case 5 for the detailed derivation).",
+    ))
+    st.markdown(T3(
         "**🟣 ML 分類器**：用 14 顆擁有精密星曆真值的衛星資料，訓練一個 LightGBM（一種梯度提升樹模型）分類器，"
-        "直接學習「有機動 vs 無機動」在軌道根數時序上的特徵模式。"
-    )
+        "直接學習「有機動 vs 無機動」在軌道根數時序上的特徵模式。",
+        "**🟣MLクラシファイア**：精密暦の真値を持つ14機の衛星データを用いて、LightGBM（勾配ブースティング"
+        "決定木モデルの一種）分類器を訓練し、「機動あり vs 機動なし」が軌道要素時系列上でどのような"
+        "特徴パターンを示すかを直接学習する。",
+        "**🟣 ML classifier**: using data from 14 satellites with precise-ephemeris ground truth, a "
+        "LightGBM (a gradient-boosted tree model) classifier is trained to directly learn the feature "
+        "patterns that distinguish \"maneuver\" from \"no maneuver\" in the orbital-element time series.",
+    ))
 
-    st.markdown("**🟣 ④ 融合**")
-    st.markdown(
+    st.markdown(T3("**🟣 ④ 融合**", "**🟣④融合**", "**🟣 ④ Fusion**"))
+    st.markdown(T3(
         "L3 融合評分器把前面所有通道的分數（規則分數、統計變點分數、阻力殘差分數、ML 分類機率）當作特徵，"
         "訓練一個 HistGradientBoosting（一種能穩健處理大量特徵與缺值的梯度提升模型）模型來統一裁決——"
-        "**不是隨便選一種方法的結果，而是讓模型學會在什麼情況下該相信哪一個通道**，綜合所有訊號做出最終判定。"
-    )
+        "**不是隨便選一種方法的結果，而是讓模型學會在什麼情況下該相信哪一個通道**，綜合所有訊號做出最終判定。",
+        "L3融合スコアリングモデルは、前述のすべてのチャネルのスコア（ルールスコア、統計的変化点スコア、"
+        "抵抗残差スコア、ML分類確率）を特徴量として、HistGradientBoosting（大量の特徴量と欠損値を"
+        "ロバストに処理できる勾配ブースティングモデル）を訓練し、統一的な裁定を行う——"
+        "**いずれか一つの手法の結果を適当に選ぶのではなく、モデルにどの状況でどのチャネルを信頼すべきかを"
+        "学習させ**、すべての信号を総合して最終判定を下す。",
+        "The L3 fusion scoring model treats the scores from all the preceding channels (the rule-based "
+        "score, the statistical change-point score, the drag-residual score, and the ML classification "
+        "probability) as features, training a HistGradientBoosting model (a gradient-boosting model that "
+        "robustly handles large numbers of features and missing values) to make a unified determination — "
+        "**rather than simply picking the result of one method, it lets the model learn which channel to "
+        "trust under which circumstances**, reaching a final determination by synthesizing all signals.",
+    ))
 
-    st.markdown("**🟢 ⑤ 驗證**")
-    st.markdown(
+    st.markdown(T3("**🟢 ⑤ 驗證**", "**🟢⑤検証**", "**🟢 ⑤ Validation**"))
+    st.markdown(T3(
         "最終判定結果會與兩組機動真值逐一核對：「原始 14 顆開發樣本」＋「9 顆完全沒參與開發的 hold-out 衛星」"
         "（用來測試模型是否真的學到可泛化的機動特徵，而不是背答案）。"
         "機動真值來源包括 IDS/DORIS（國際多普勒衛星定軌系統之精密軌道）、"
         "NASA PO.DAAC、TACC 等機構提供的精密星曆（詳細來源與處理見案例四）。"
-        "**換句話說：本專案的績效不是自己說了算，而是用獨立、外部的高精度資料反覆驗證過。**"
-    )
+        "**換句話說：本專案的績效不是自己說了算，而是用獨立、外部的高精度資料反覆驗證過。**",
+        "最終的な判定結果は、2組の機動真値と一件ずつ照合される：「元の14機の開発用サンプル」＋"
+        "「開発にまったく関与していない9機のhold-out衛星」（モデルが本当に汎化可能な機動の特徴を"
+        "学習したのか、それとも答えを暗記しただけなのかを検証するために用いる）。機動真値の出所には"
+        "IDS/DORIS（国際ドップラー衛星測位軌道決定システムの精密軌道）、NASA PO.DAAC、TACCなどの"
+        "機関が提供する精密暦が含まれる（詳細な出所と処理は事例四を参照）。**言い換えれば："
+        "本プロジェクトの性能は自称ではなく、独立した外部の高精度データによって繰り返し検証されたもの"
+        "である。**",
+        "The final determination is checked one by one against two sets of maneuver ground truth: the "
+        "\"original 14 development satellites\" plus \"9 hold-out satellites that never participated in "
+        "development at all\" (used to test whether the model has genuinely learned generalizable maneuver "
+        "features, rather than memorizing answers). Sources of maneuver ground truth include precise "
+        "ephemerides provided by IDS/DORIS (the International DORIS Service's precise orbits), NASA "
+        "PO.DAAC, and TACC (see Case 4 for detailed sources and processing). **In other words: this "
+        "project's performance is not self-declared, but repeatedly validated against independent, "
+        "external, high-precision data.**",
+    ))
 
-    st.header("② 可行性驗證：這套組合方法，準不準？")
+    st.header(T3(
+        "② 可行性驗證：這套組合方法，準不準？",
+        "②実現可能性の検証：この組み合わせ手法は、正確なのか？",
+        "② Feasibility Validation: How Accurate Is This Combined Method?",
+    ))
     arena = load_case9_real_data().get("arena", pd.DataFrame())
     if not arena.empty:
         fig = go.Figure()
@@ -3094,59 +4360,159 @@ def render_storymap_case1():
                  for m in arena["method"]]
         fig.add_trace(go.Bar(x=arena["method"], y=arena["recall"], marker_color=colors))
         fig.update_layout(height=320, margin=dict(l=10, r=10, t=10, b=120),
-                          yaxis_title="整體召回率", xaxis=dict(tickangle=-45),
+                          yaxis_title=T3("整體召回率", "全体の再現率", "Overall recall"), xaxis=dict(tickangle=-45),
                           plot_bgcolor="rgba(0,0,0,0)", showlegend=False)
         st.plotly_chart(fig, use_container_width=True, key="case1_methods")
         l3 = arena[arena["method"].str.contains("L3")].iloc[0]
-        st.success(
-            f"**答案是肯定的**：融合模型的整體召回率達 **{l3['recall']:.1%}**，"
-            f"對大型機動事件召回率更高達 **{l3['rec_large']:.1%}**，"
+        recall_str = f"{l3['recall']:.1%}"
+        rec_large_str = f"{l3['rec_large']:.1%}"
+        st.success(T3(
+            f"**答案是肯定的**：融合模型的整體召回率達 **{recall_str}**，"
+            f"對大型機動事件召回率更高達 **{rec_large_str}**，"
             "而且在完全沒參與訓練的 hold-out 衛星上，AUC 仍達 0.98（見案例九的 unseen-satellite 測試）——"
             "這代表模型不是「背下 14 顆衛星的答案」，而是真的學到可泛化的機動特徵，"
-            "即使換到新的衛星上，依然能維持高水準的偵測能力。"
-        )
-    st.caption("方法逐一展開見：案例五（物理阻力殘差）、案例九（三層擂台公平比較）、案例四（真值資料從哪來）、"
-              "案例二（哪些步驟用了 AI、哪些沒有）。")
+            "即使換到新的衛星上，依然能維持高水準的偵測能力。",
+            f"**答えは肯定的である**：融合モデルの全体的な再現率は**{recall_str}**に達し、"
+            f"大規模な機動イベントに対する再現率はさらに**{rec_large_str}**にまで達する。"
+            "しかも訓練にまったく参加していないhold-out衛星においても、AUCは0.98を維持している"
+            "（事例九のunseen-satelliteテストを参照）——これはモデルが「14機の衛星の答えを暗記した」"
+            "のではなく、本当に汎化可能な機動の特徴を学習したことを示しており、新しい衛星に切り替えても"
+            "高水準の検知能力を維持できる。",
+            f"**The answer is yes**: the fusion model achieves an overall recall of **{recall_str}**, "
+            f"rising to **{rec_large_str}** for large maneuver events, and even on hold-out satellites that "
+            "never participated in training, AUC still reaches 0.98 (see Case 9's unseen-satellite test) — "
+            "meaning the model did not \"memorize the answers for 14 satellites,\" but genuinely learned "
+            "generalizable maneuver features, maintaining a high level of detection capability even on new "
+            "satellites.",
+        ))
+    st.caption(T3(
+        "方法逐一展開見：案例五（物理阻力殘差）、案例九（三層擂台公平比較）、案例四（真值資料從哪來）、"
+        "案例二（哪些步驟用了 AI、哪些沒有）。",
+        "各手法の詳細な展開は次を参照：事例五（物理的抵抗残差）、事例九（三層同一擂台の公平な比較）、"
+        "事例四（真値データの出所）、事例二（どのステップにAIが使われ、どれが使われていないか）。",
+        "Each method is expanded on further in: Case 5 (physical drag residual), Case 9 (fair three-layer "
+        "common-arena comparison), Case 4 (where the ground-truth data comes from), and Case 2 (which "
+        "steps use AI and which don't).",
+    ))
 
     st.markdown("---")
-    st.info(
+    st.info(T3(
         "**如何使用本 StoryMap**：若你是第一次接觸本系列，建議的閱讀順序是——\n\n"
         "**案例一**（本頁）：看懂整體架構與流程　→　**案例二**：了解哪些步驟用了 AI、哪些沒有　→　"
         "**案例三～八**：深入各個關鍵技術環節（觀測窗長度、真值資料、阻力模型、星系批量偵測、危險接近、資料庫本身）　→　"
         "**案例九**：看 hold-out 衛星上的泛化表現　→　**案例十**：看一個誠實的負面結果與方法上限。\n\n"
-        "你也可以直接從 StoryMap 首頁跳到自己感興趣的案例，再把本頁當作「地圖」隨時回來對照。"
-    )
+        "你也可以直接從 StoryMap 首頁跳到自己感興趣的案例，再把本頁當作「地圖」隨時回來對照。",
+        "**本StoryMapの使い方**：本シリーズに初めて触れる方には、次の読み順をお勧めする——\n\n"
+        "**事例一**（本頁）：全体のアーキテクチャと処理フローを理解する　→　**事例二**：どのステップに"
+        "AIが使われ、どれが使われていないかを理解する　→　**事例三〜八**：各重要技術要素を掘り下げる"
+        "（観測窓の長さ、真値データ、抵抗モデル、コンステレーション一括検知、危険接近、データベース自体）　→　"
+        "**事例九**：hold-out衛星における汎化性能を見る　→　**事例十**：誠実な負の結果と手法の限界を見る。\n\n"
+        "StoryMapのトップページから直接興味のある事例に飛び、本頁を「地図」としていつでも参照し直すことも"
+        "できる。",
+        "**How to use this StoryMap**: if this is your first time encountering this series, the recommended "
+        "reading order is —\n\n"
+        "**Case 1** (this page): understand the overall architecture and pipeline → **Case 2**: learn "
+        "which steps use AI and which don't → **Cases 3–8**: dive into key technical topics in depth "
+        "(observation-window length, ground-truth data, drag models, constellation-wide batch detection, "
+        "close approaches, the database itself) → **Case 9**: see generalization performance on hold-out "
+        "satellites → **Case 10**: see an honest negative result and the method's limits.\n\n"
+        "You can also jump directly from the StoryMap homepage to whichever case interests you, and use "
+        "this page as a \"map\" to refer back to at any time.",
+    ))
 
 
+# --- render_storymap_case2 ---
 def render_storymap_case2():
     if st.button(t("storymap_back"), key="back_from_case2"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例二：我們的方法，哪些用了 AI？哪些沒有？")
-    st.subheader("分層混合架構：AI／非AI／已嘗試放棄的深度學習，邊界劃在哪裡")
-    st.caption("這一頁專門回答一個常見的疑問：前面案例展示的成果，到底是「AI 做的」還是「傳統方法做的」？")
+    st.title(T3(
+        "案例二：我們的方法，哪些用了 AI？哪些沒有？",
+        "事例二：私たちの手法のうち、どこにAIが使われ、どこには使われていないのか？",
+        "Case 2: Which Parts of Our Method Use AI, and Which Don't?",
+    ))
+    st.subheader(T3(
+        "分層混合架構：AI／非AI／已嘗試放棄的深度學習，邊界劃在哪裡",
+        "階層型ハイブリッドアーキテクチャ：AI／非AI／試みたが放棄した深層学習、その境界線はどこにあるのか",
+        "A Layered Hybrid Architecture: Where the Line Falls Among AI / Non-AI / Deep Learning (Tried and Abandoned)",
+    ))
+    st.caption(T3(
+        "這一頁專門回答一個常見的疑問：前面案例展示的成果，到底是「AI 做的」還是「傳統方法做的」？",
+        "本頁は一つのよくある疑問に専門的に答える：前の事例で示された成果は、いったい「AIによるもの」なのか、"
+        "それとも「伝統的な手法によるもの」なのか？",
+        "This page exists to answer a common question directly: are the results shown in the earlier cases "
+        "\"done by AI,\" or \"done by classical methods\"?",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**先講結論**：這是一個**分層混合架構**，不是「全部都是 AI」也不是「完全沒有 AI」——"
-        "每一層方法有沒有用 AI，取決於「這個問題有沒有足夠的真值資料可以學」以及「需不需要對任何衛星都成立的物理保證」。"
-    )
+        "每一層方法有沒有用 AI，取決於「這個問題有沒有足夠的真值資料可以學」以及「需不需要對任何衛星都成立的物理保證」。",
+        "**まず結論から言うと**：これは**階層型ハイブリッドアーキテクチャ**であり、「すべてがAI」でもなければ"
+        "「まったくAIを使っていない」わけでもない——各層の手法にAIを使うかどうかは、「この問題に学習に"
+        "十分な真値データがあるかどうか」、および「どんな衛星に対しても成り立つ物理的な保証が必要かどうか」に"
+        "よって決まる。",
+        "**The conclusion first**: this is a **layered hybrid architecture** — neither \"all AI\" nor \"no AI "
+        "at all\" — whether a given layer uses AI depends on \"whether there's enough ground-truth data for "
+        "this problem to learn from\" and \"whether a physical guarantee that holds for any satellite is "
+        "required.\"",
+    ))
 
-    st.header("① 三個分類：完全不是 AI／傳統機器學習／深度學習（已放棄）")
+    st.header(T3(
+        "① 三個分類：完全不是 AI／經典機器學習／深度學習（已放棄）",
+        "①3つの分類：まったくAIではない／古典的機械学習／深層学習（放棄済み）",
+        "① Three Categories: Not AI at All / Classical Machine Learning / Deep Learning (Abandoned)",
+    ))
     rows = [
-        ("🔧 完全不是 AI（寫死的規則／統計公式／物理模型）",
-         "L1 規則式 P1–P6　·　L2 統計變點偵測（CUSUM／BOCPD／SSA／MAD3σ）　·　NRLMSIS 大氣阻力物理模型",
-         "所有參數都是人工設定或物理常數，不從訓練資料學習權重；對任何衛星、任何時候都用同一套公式，"
-         "**可以完全解釋每一個判定是怎麼算出來的**。"),
-        ("🤖 傳統機器學習（從真值資料學規則）",
-         "LightGBM 機動分類器（14 顆 MEME 精密星曆訓練）　·　L3 融合評分器 HistGradientBoosting　·　"
-         "Model 2 Isolation Forest（無監督異常偵測）",
-         "這幾個模型的參數是從真實機動真值資料「學」出來的，能捕捉規則式方法寫不出來的複雜組合條件，"
-         "犧牲一部分「人類可讀性」換取更高的準確率。"),
-        ("🧠 深度學習（嘗試過，因負面結果而放棄）",
-         "bi-GRU 序列標註器（Model 3）",
-         "曾嘗試用遞迴神經網路直接對整段軌道時序做序列標註，但實測**沒有比傳統方法更好的判別力**、"
-         "且在未訓練過的衛星上（OOD）表現崩潰——誠實記錄這個負面結果，繼續使用效果更好、更穩定的 Model 2。"),
+        (T3("🔧 完全不是 AI（寫死的規則／統計公式／物理模型）",
+            "🔧まったくAIではない（ハードコードされたルール／統計式／物理モデル）",
+            "🔧 Not AI at all (hardcoded rules / statistical formulas / physical models)"),
+         T3("L1 規則式 P1–P6　·　L2 統計變點偵測（CUSUM／BOCPD／SSA／MAD3σ）　·　NRLMSIS 大氣阻力物理模型",
+            "L1ルールベース P1–P6　・　L2統計的変化点検知（CUSUM／BOCPD／SSA／MAD3σ）　・　"
+            "NRLMSIS大気抵抗物理モデル",
+            "L1 rule-based P1–P6 · L2 statistical change-point detection (CUSUM/BOCPD/SSA/MAD3σ) · "
+            "NRLMSIS atmospheric-drag physical model"),
+         T3("所有參數都是人工設定或物理常數，不從訓練資料學習權重；對任何衛星、任何時候都用同一套公式，"
+            "**可以完全解釋每一個判定是怎麼算出來的**。",
+            "すべてのパラメータは人手で設定されたものか物理定数であり、訓練データから重みを学習することはない；"
+            "どんな衛星、どんな時であっても同じ式を用いるため、**すべての判定がどのように算出されたかを"
+            "完全に説明できる**。",
+            "All parameters are manually set or physical constants, with no weights learned from training "
+            "data; the same formula is used for any satellite at any time, so **every determination can be "
+            "fully explained in terms of how it was computed**.")),
+        (T3("🤖 經典機器學習（從真值資料學規則）",
+            "🤖古典的機械学習（真値データからルールを学習する）",
+            "🤖 Classical machine learning (learning rules from ground-truth data)"),
+         T3("LightGBM 機動分類器（14 顆 MEME 精密星曆訓練）　·　L3 融合評分器 HistGradientBoosting　·　"
+            "Model 2 Isolation Forest（無監督異常偵測）",
+            "LightGBM機動分類器（14機のMEME精密暦で訓練）　・　L3融合スコアリングモデル "
+            "HistGradientBoosting　・　Model 2 Isolation Forest（教師なし異常検知）",
+            "LightGBM maneuver classifier (trained on 14 satellites' MEME precise ephemerides) · L3 fusion "
+            "scoring model, HistGradientBoosting · Model 2 Isolation Forest (unsupervised anomaly detection)"),
+         T3("這幾個模型的參數是從真實機動真值資料「學」出來的，能捕捉規則式方法寫不出來的複雜組合條件，"
+            "犧牲一部分「人類可讀性」換取更高的準確率。",
+            "これらのモデルのパラメータは、実際の機動真値データから「学習」されたものであり、ルールベースの"
+            "手法では書き表せない複雑な組み合わせ条件を捉えることができる。一部の「人間による可読性」を"
+            "犠牲にして、より高い精度を得ている。",
+            "These models' parameters are \"learned\" from real maneuver ground-truth data, able to capture "
+            "complex combinatorial conditions that rule-based methods cannot express, trading away some "
+            "\"human readability\" for higher accuracy.")),
+        (T3("🧠 深度學習（嘗試過，因負面結果而放棄）",
+            "🧠深層学習（試みたが、負の結果により放棄）",
+            "🧠 Deep learning (tried, abandoned due to a negative result)"),
+         T3("bi-GRU 序列標註器（Model 3）",
+            "bi-GRU系列ラベリング器（Model 3）",
+            "bi-GRU sequence labeler (Model 3)"),
+         T3("曾嘗試用遞迴神經網路直接對整段軌道時序做序列標註，但實測**沒有比傳統方法更好的判別力**、"
+            "且在未訓練過的衛星上（OOD）表現崩潰——誠實記錄這個負面結果，繼續使用效果更好、更穩定的 Model 2。",
+            "再帰型ニューラルネットワークを用いて軌道時系列全体を直接系列ラベリングすることを試みたが、"
+            "実測の結果**古典的手法より優れた判別力は得られず**、訓練していない衛星（OOD）では性能が"
+            "崩壊した——この負の結果を誠実に記録し、より効果的で安定したModel 2を引き続き使用している。",
+            "An attempt was made to use a recurrent neural network to directly perform sequence labeling "
+            "across the entire orbital time series, but in testing it showed **no better discriminative "
+            "power than classical methods**, and its performance collapsed on untrained (OOD) satellites — "
+            "this negative result is honestly recorded, and the more effective, more stable Model 2 "
+            "continues to be used.")),
     ]
     for title, methods, note in rows:
         with st.container(border=True):
@@ -3154,42 +4520,91 @@ def render_storymap_case2():
             st.markdown(f"　{methods}")
             st.caption(note)
 
-    st.header("② 加了 AI 到底差多少？用真實數字回答")
+    st.header(T3(
+        "② 加了 AI 到底差多少？用真實數字回答",
+        "②AIを加えると実際どれほど違うのか？実際の数値で答える",
+        "② How Much Difference Does Adding AI Actually Make? Answered with Real Numbers",
+    ))
     arena = load_case9_real_data().get("arena", pd.DataFrame())
     if not arena.empty:
         l1 = arena[arena["method"].str.contains("L1")].iloc[0]
         cusum = arena[arena["method"].str.contains("cusum")].iloc[0]
         l3 = arena[arena["method"].str.contains("L3")].iloc[0]
         naive = arena[arena["method"].str.contains("naive")].iloc[0]
+        col_method = T3("方法", "手法", "Method")
+        col_is_ai = T3("是否為 AI", "AIかどうか", "Is it AI?")
+        col_recall = T3("召回率", "再現率", "Recall")
+        methods_labels = T3(
+            ["naive 隨機（下限對照）", "L1 規則式（非 AI）", "L2 最佳單通道 cusum（非 AI）",
+             "L3 融合評分器（傳統 ML）"],
+            ["naiveランダム（下限対照）", "L1ルールベース（非AI）", "L2最良単一チャネル cusum（非AI）",
+             "L3融合スコアリングモデル（古典的ML）"],
+            ["naive random (lower-bound control)", "L1 rule-based (non-AI)",
+             "L2 best single channel, cusum (non-AI)", "L3 fusion scoring model (classical ML)"],
+        )
+        is_ai_labels = T3(["—", "否", "否", "是（HistGradientBoosting）"],
+                          ["—", "いいえ", "いいえ", "はい（HistGradientBoosting）"],
+                          ["—", "No", "No", "Yes (HistGradientBoosting)"])
         comp = pd.DataFrame({
-            "方法": ["naive 隨機（下限對照）", "L1 規則式（非 AI）", "L2 最佳單通道 cusum（非 AI）",
-                    "L3 融合評分器（傳統 ML）"],
-            "是否為 AI": ["—", "否", "否", "是（HistGradientBoosting）"],
-            "召回率": [naive["recall"], l1["recall"], cusum["recall"], l3["recall"]],
+            col_method: methods_labels,
+            col_is_ai: is_ai_labels,
+            col_recall: [naive["recall"], l1["recall"], cusum["recall"], l3["recall"]],
         })
         fig = go.Figure()
-        fig.add_trace(go.Bar(x=comp["方法"], y=comp["召回率"],
+        fig.add_trace(go.Bar(x=comp[col_method], y=comp[col_recall],
                              marker_color=["#B0BEC5", "#78909C", "#78909C", "#66BB6A"]))
         fig.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=80),
-                          yaxis_title="整體召回率", xaxis=dict(tickangle=-20),
+                          yaxis_title=T3("整體召回率", "全体の再現率", "Overall recall"), xaxis=dict(tickangle=-20),
                           plot_bgcolor="rgba(0,0,0,0)", showlegend=False)
         st.plotly_chart(fig, use_container_width=True, key="case2_ai_compare")
-        st.dataframe(comp.style.format({"召回率": "{:.1%}"}), use_container_width=True, hide_index=True)
-        st.success(
-            f"**沒有 AI（規則＋單一統計通道）最高只能到 {cusum['recall']:.1%} 召回率；"
-            f"加上 AI（融合評分器）跳升到 {l3['recall']:.1%}**——差距主要來自融合模型能同時權衡多個弱訊號的組合，"
+        st.dataframe(comp.style.format({col_recall: "{:.1%}"}), use_container_width=True, hide_index=True)
+        cusum_recall_str = f"{cusum['recall']:.1%}"
+        l3_recall_str = f"{l3['recall']:.1%}"
+        st.success(T3(
+            f"**沒有 AI（規則＋單一統計通道）最高只能到 {cusum_recall_str} 召回率；"
+            f"加上 AI（融合評分器）跳升到 {l3_recall_str}**——差距主要來自融合模型能同時權衡多個弱訊號的組合，"
             "而不是只認一種模式。但非 AI 方法的價值在於：任何時候都能解釋「為什麼判定機動」，"
-            "這也是為什麼系統把它們保留當作 L1/L2 的第一線，而不是直接跳過去只用 AI。"
-        )
+            "這也是為什麼系統把它們保留當作 L1/L2 的第一線，而不是直接跳過去只用 AI。",
+            f"**AIを使わない場合（ルール＋単一統計チャネル）は最高でも再現率{cusum_recall_str}にしか"
+            f"達しないが、AI（融合スコアリングモデル）を加えると{l3_recall_str}まで跳ね上がる**——"
+            "この差は主に、融合モデルが複数の弱い信号の組み合わせを同時に評価できることによるものであり、"
+            "単一のパターンしか認識しないからではない。しかし非AI手法の価値は、いつでも「なぜ機動と"
+            "判定したのか」を説明できる点にある——これこそが、システムがそれらをL1/L2の第一線として"
+            "残し、単純にAIだけに飛びつかない理由である。",
+            f"**Without AI (rules plus a single statistical channel), recall tops out at {cusum_recall_str}; "
+            f"adding AI (the fusion scoring model) jumps it to {l3_recall_str}**** — the gap comes mainly "
+            "from the fusion model's ability to weigh combinations of multiple weak signals simultaneously, "
+            "rather than recognizing only one pattern. But the value of non-AI methods lies in always being "
+            "able to explain \"why a maneuver was determined\" — which is exactly why the system keeps them "
+            "as the L1/L2 front line, rather than skipping straight to AI alone.",
+        ))
 
     st.markdown("---")
-    st.info(
+    st.info(T3(
         "**判讀**：「用不用 AI」不是單選題，而是**依任務需求分層選擇**——"
         "解釋性優先、資料稀疏、或需要對任何衛星（含從未見過的）都成立物理保證的環節，用非 AI 方法；"
         "有足夠真值資料、追求最高準確率的最終裁決環節，用傳統機器學習；"
-        "深度學習則先誠實驗證過「有沒有真的帶來額外好處」，沒有就不勉強用。"
-    )
-    st.caption("完整方法清單見 `docs/期末報告_技術附錄_20260909.md`；bi-GRU 負面結果見 `ml_bigru_labeler.py`。")
+        "深度學習則先誠實驗證過「有沒有真的帶來額外好處」，沒有就不勉強用。",
+        "**判読**：「AIを使うかどうか」は二者択一の問題ではなく、**タスクの要求に応じて階層的に選択する**"
+        "ものである——説明可能性を優先する、データが乏しい、あるいはどんな衛星（未見のものを含む）に"
+        "対しても成り立つ物理的保証が必要な部分には非AI手法を用いる；十分な真値データがあり、最高精度を"
+        "追求する最終裁定の部分には古典的機械学習を用いる；深層学習については、まず「本当に追加の利益を"
+        "もたらすかどうか」を誠実に検証し、もたらさないのであれば無理に使わない。",
+        "**Verdict**: \"whether to use AI\" is not a binary choice but **a layered decision made according "
+        "to the task's needs** — non-AI methods are used where explainability is the priority, data is "
+        "scarce, or a physical guarantee holding for any satellite (including ones never seen before) is "
+        "required; classical machine learning is used at the final-determination stage, where there's "
+        "enough ground-truth data and the highest accuracy is the goal; deep learning is only used after "
+        "honestly verifying \"whether it genuinely provides additional benefit\" — and if it doesn't, it "
+        "isn't forced in.",
+    ))
+    st.caption(T3(
+        "完整方法清單見 `docs/期末報告_技術附錄_20260909.md`；bi-GRU 負面結果見 `ml_bigru_labeler.py`。",
+        "完全な手法一覧は `docs/期末報告_技術附錄_20260909.md` を参照。bi-GRUの負の結果は "
+        "`ml_bigru_labeler.py` を参照。",
+        "The complete method list is in `docs/期末報告_技術附錄_20260909.md`; the bi-GRU negative result is "
+        "in `ml_bigru_labeler.py`.",
+    ))
 
 
 # ══ StoryMap 案例十一（2026-09-10 新增）══════════════════════════════════════════
@@ -3307,82 +4722,195 @@ _LIT_EXTERNAL_NOTE = (
 _LIT_EXTERNAL_DOI = "[DOI](https://doi.org/10.11887/j.cn.202404005)"
 
 
+# --- render_storymap_case11 ---
 def render_storymap_case11():
     if st.button(t("storymap_back"), key="back_from_case11"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例十一：本專案站在哪些巨人的肩膀上？")
-    st.subheader("文獻整理與回顧（方法論的知識地圖）")
-    st.caption("本文獻整理自本專案技術報告之附錄與相關研究章節（`docs/期中報告_MEME_TLE_20260715_r10.md` 附錄 C、"
-              "`docs/conf_ssa_maneuver_2026.md` §2），並非本頁新查找之文獻。"
-              "本案例在整個 StoryMap 中扮演的角色，是幫每個技術案例標出它在既有研究地圖上的座標。")
+    st.title(T3(
+        "案例十一：本專案站在哪些巨人的肩膀上？",
+        "事例十一：本プロジェクトはどの巨人の肩の上に立っているのか？",
+        "Case 11: Whose Shoulders Does This Project Stand On?",
+    ))
+    st.subheader(T3(
+        "文獻整理與回顧（方法論的知識地圖）",
+        "文献整理とレビュー（方法論の知識地図）",
+        "A Literature Survey and Review (A Methodological Knowledge Map)",
+    ))
+    st.caption(T3(
+        "本文獻整理自本專案技術報告之附錄與相關研究章節（`docs/期中報告_MEME_TLE_20260715_r10.md` 附錄 C、"
+        "`docs/conf_ssa_maneuver_2026.md` §2），並非本頁新查找之文獻。"
+        "本案例在整個 StoryMap 中扮演的角色，是幫每個技術案例標出它在既有研究地圖上的座標。",
+        "本文献は本プロジェクトの技術報告書の付録および関連研究の章（`docs/期中報告_MEME_TLE_20260715_r10.md` "
+        "付録C、`docs/conf_ssa_maneuver_2026.md` §2）から整理したものであり、本頁で新たに調査した文献では"
+        "ない。StoryMap全体における本事例の役割は、各技術事例が既存の研究地図上のどこに位置するかを"
+        "示すことである。",
+        "This literature survey is compiled from this project's technical-report appendix and related-work "
+        "chapter (`docs/期中報告_MEME_TLE_20260715_r10.md` Appendix C, `docs/conf_ssa_maneuver_2026.md` "
+        "§2), not newly researched for this page. This case's role within the overall StoryMap is to mark "
+        "each technical case's coordinates on the existing research map.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**為什麼要做文獻回顧？**\n\n"
         "任何一個「這樣做應該可行」的方法，都可能已經有人做過、甚至已經證明行不通。"
         "文獻回顧的目的不是列一堆引用充版面，而是老實回答兩個問題：\n\n"
         "- **別人已經做到哪裡了？**\n"
         "- **本專案的方法，跟既有做法比起來，差異究竟在哪裡？**\n\n"
         "對本專案而言，這份回顧幫助我們：**避免重複造輪子**、**清楚定位自己的創新點**、"
-        "**理解既有方法的極限在哪裡**。"
-    )
+        "**理解既有方法的極限在哪裡**。",
+        "**なぜ文献レビューを行うのか？**\n\n"
+        "「こうすればうまくいくはずだ」というどんな手法も、すでに誰かが試みたことがあるかもしれず、"
+        "あるいはすでにうまくいかないことが証明されているかもしれない。文献レビューの目的は、引用を"
+        "羅列して分量を稼ぐことではなく、2つの問いに正直に答えることである：\n\n"
+        "- **他の人はすでにどこまで到達しているのか？**\n"
+        "- **本プロジェクトの手法は、既存のやり方と比べて、具体的にどこが異なるのか？**\n\n"
+        "本プロジェクトにとって、このレビューは：**車輪の再発明を避ける**、**自らの革新点を明確に位置づける**、"
+        "**既存手法の限界がどこにあるかを理解する**ことに役立つ。",
+        "**Why do a literature review?**\n\n"
+        "Any method that seems like \"this approach should work\" may already have been tried by someone "
+        "else — or already proven not to work. The purpose of a literature review isn't to pad the page "
+        "with citations, but to honestly answer two questions:\n\n"
+        "- **How far has other work already gotten?**\n"
+        "- **How does this project's method actually differ from existing approaches?**\n\n"
+        "For this project, this review helps us: **avoid reinventing the wheel**, **clearly position our "
+        "own innovations**, and **understand where existing methods' limits lie**.",
+    ))
 
-    st.header("① 既有研究的四條路線")
-    st.markdown(
+    st.header(T3("① 既有研究的四條路線", "①既存研究の4つの路線", "① Four Lines of Existing Research"))
+    st.markdown(T3(
         "TLE 由 SGP4/SDP4（兩套標準化的軌道傳播演算法）攝動模型產生，其半長軸精度受大氣阻力建模與擬合誤差影響"
-        "（Hoots & Roehrich, 1980；Vallado et al., 2006）。以 TLE 偵測機動的既有作法，大致可以歸成四條路線："
-    )
-    st.markdown("**路線 1｜軌道力學基礎**")
-    st.markdown(
+        "（Hoots & Roehrich, 1980；Vallado et al., 2006）。以 TLE 偵測機動的既有作法，大致可以歸成四條路線：",
+        "TLEはSGP4/SDP4（2つの標準化された軌道伝播アルゴリズム）の摂動モデルによって生成され、その"
+        "軌道長半径の精度は大気抵抗モデリングとフィッティング誤差の影響を受ける（Hoots & Roehrich, 1980；"
+        "Vallado et al., 2006）。TLEを用いて機動を検知する既存の手法は、おおむね4つの路線に分類できる：",
+        "TLEs are produced by SGP4/SDP4 (two standardized orbit-propagation algorithms) perturbation "
+        "models, and their semi-major-axis accuracy is affected by atmospheric-drag modeling and fitting "
+        "error (Hoots & Roehrich, 1980; Vallado et al., 2006). Existing approaches to detecting maneuvers "
+        "from TLEs broadly fall into four lines:",
+    ))
+    st.markdown(T3("**路線 1｜軌道力學基礎**", "**路線1｜軌道力学の基礎**", "**Line 1 | Orbital-mechanics fundamentals**"))
+    st.markdown(T3(
         "研究 SGP4 傳播模型本身的誤差特性，是所有後續方法的地基——"
-        "包括理解 TLE 在不同軌道區間、不同時間跨度下的系統誤差與隨機誤差。"
-    )
-    st.markdown("**路線 2｜單一統計量門檻**")
-    st.markdown(
+        "包括理解 TLE 在不同軌道區間、不同時間跨度下的系統誤差與隨機誤差。",
+        "SGP4伝播モデル自体の誤差特性を研究することは、以降のすべての手法の土台である——TLEが異なる"
+        "軌道帯域、異なる時間スパンにおいてどのような系統誤差・偶然誤差を持つかを理解することを含む。",
+        "Studying the error characteristics of the SGP4 propagation model itself is the foundation for "
+        "every method that follows — including understanding TLEs' systematic and random errors across "
+        "different orbital regimes and time spans.",
+    ))
+    st.markdown(T3("**路線 2｜單一統計量門檻**", "**路線2｜単一統計量による閾値**", "**Line 2 | Single-statistic thresholding**"))
+    st.markdown(T3(
         "以半長軸變化量 |Δa| 門檻、多項式或 LOWESS（局部加權回歸）曲線擬合為主"
         "（Lemmens & Krag, 2014；Patera, 2008；Kelecy et al., 2007）。\n"
         "- 優點：實作簡單、計算成本低\n"
-        "- 缺點：誤報與漏報難以兼顧，對小機動或雜訊大的情況特別敏感"
-    )
-    st.markdown("**路線 3｜統計變點偵測**")
-    st.markdown(
+        "- 缺點：誤報與漏報難以兼顧，對小機動或雜訊大的情況特別敏感",
+        "軌道長半径の変化量|Δa|の閾値、多項式またはLOWESS（局所加重回帰）曲線フィッティングを主とする"
+        "（Lemmens & Krag, 2014；Patera, 2008；Kelecy et al., 2007）。\n"
+        "- 利点：実装が簡単で計算コストが低い\n"
+        "- 欠点：誤検知と見逃しを同時に抑えることが難しく、小規模な機動や雑音の大きい状況に特に敏感である",
+        "Primarily thresholding on the semi-major-axis change |Δa|, or polynomial/LOWESS (locally weighted "
+        "regression) curve fitting (Lemmens & Krag, 2014; Patera, 2008; Kelecy et al., 2007).\n"
+        "- Advantages: simple to implement, low computational cost\n"
+        "- Disadvantages: hard to balance false positives against missed detections, especially sensitive "
+        "to small maneuvers or high-noise conditions",
+    ))
+    st.markdown(T3("**路線 3｜統計變點偵測**", "**路線3｜統計的変化点検知**", "**Line 3 | Statistical change-point detection**"))
+    st.markdown(T3(
         "CUSUM（累積偏離量，Page, 1954）、貝氏線上變點 BOCPD（Adams & MacKay, 2007）、"
         "奇異譜分析 SSA（Golyandina et al., 2001）、穩健 MAD（以中位數絕對偏差設門檻，"
         "Rousseeuw & Croux, 1993）等經典方法。\n"
         "- 各方法對「訊號突然改變」有不同的數學定義\n"
-        "- 單獨使用時，召回率與誤報率難以同時優化"
-    )
-    st.markdown("**路線 4｜物理阻力模型**")
-    st.markdown(
+        "- 單獨使用時，召回率與誤報率難以同時優化",
+        "CUSUM（累積偏差、Page, 1954）、ベイズ的オンライン変化点検知BOCPD（Adams & MacKay, 2007）、"
+        "特異スペクトル解析SSA（Golyandina et al., 2001）、ロバストなMAD（中央値絶対偏差で閾値を設定、"
+        "Rousseeuw & Croux, 1993）などの古典的手法。\n"
+        "- 各手法は「信号が急変する」ことについて異なる数学的定義を持つ\n"
+        "- 単独で用いた場合、再現率と誤検知率を同時に最適化することは難しい",
+        "Classic methods such as CUSUM (cumulative sum, Page, 1954), Bayesian online change-point "
+        "detection (BOCPD, Adams & MacKay, 2007), singular spectrum analysis (SSA, Golyandina et al., "
+        "2001), and robust MAD (thresholding via median absolute deviation, Rousseeuw & Croux, 1993).\n"
+        "- Each method defines \"a sudden change in signal\" mathematically in a different way\n"
+        "- Used alone, recall and false-positive rate are difficult to optimize simultaneously",
+    ))
+    st.markdown(T3("**路線 4｜物理阻力模型**", "**路線4｜物理的抵抗モデル**", "**Line 4 | Physical drag models**"))
+    st.markdown(T3(
         "以 NRLMSISE-00（Picone et al., 2002）、NRLMSIS 2.0（Emmert et al., 2021）等半經驗大氣密度模型，"
         "作為扣除自然衰減的阻力殘差通道（詳見案例五）。\n"
         "- 優點：有物理基礎，可解釋性高\n"
-        "- 缺點：依賴大氣模型的準確度，太陽活動劇烈時期誤差會放大"
-    )
+        "- 缺點：依賴大氣模型的準確度，太陽活動劇烈時期誤差會放大",
+        "NRLMSISE-00（Picone et al., 2002）、NRLMSIS 2.0（Emmert et al., 2021）などの半経験的大気密度"
+        "モデルを、自然減衰を差し引くための抵抗残差チャネルとして用いる（詳細は事例五を参照）。\n"
+        "- 利点：物理的根拠があり説明可能性が高い\n"
+        "- 欠点：大気モデルの精度に依存し、太陽活動が激しい時期には誤差が拡大する",
+        "Using semi-empirical atmospheric-density models such as NRLMSISE-00 (Picone et al., 2002) and "
+        "NRLMSIS 2.0 (Emmert et al., 2021) as a drag-residual channel for subtracting natural decay (see "
+        "Case 5 for details).\n"
+        "- Advantages: physically grounded, highly interpretable\n"
+        "- Disadvantages: dependent on the accuracy of the atmospheric model, with errors amplified during "
+        "periods of intense solar activity",
+    ))
 
-    st.header("② 本專案與既有工作的差異")
-    st.markdown(
+    st.header(T3("② 本專案與既有工作的差異", "②本プロジェクトと既存の研究との違い", "② How This Project Differs from Existing Work"))
+    st.markdown(T3(
         "既有機動偵測文獻多半**以單一偵測器為終點**——選定一種統計量或門檻，調好參數就結案。"
-        "本專案的做法不同，差異有兩點："
-    )
-    st.success(
+        "本專案的做法不同，差異有兩點：",
+        "既存の機動検知文献の多くは**単一の検知器を到達点とする**——ある統計量や閾値を選び、パラメータを"
+        "調整すれば完了とする。本プロジェクトのアプローチは異なり、違いは2点ある：",
+        "Most existing maneuver-detection literature **treats a single detector as the end point** — pick "
+        "one statistic or threshold, tune the parameters, and call it done. This project's approach differs "
+        "in two ways:",
+    ))
+    st.success(T3(
         "**差異 1｜融合多通道，而非單一偵測器**\n\n"
         "本專案不以單一偵測器為終點，而是用融合層整合物理模型與多個統計通道的訊號"
         "（詳見案例一的架構全貌、案例二的 AI/非AI 分類）——"
-        "讓模型學會在什麼情況下該相信哪一個通道，綜合所有訊號做出最終判定，而非隨便選一種方法的結果。"
-    )
-    st.success(
+        "讓模型學會在什麼情況下該相信哪一個通道，綜合所有訊號做出最終判定，而非隨便選一種方法的結果。",
+        "**違い1｜単一検知器ではなく、複数チャネルの融合**\n\n"
+        "本プロジェクトは単一の検知器を到達点とせず、融合層によって物理モデルと複数の統計チャネルの信号を"
+        "統合する（詳細は事例一の全体構成、事例二のAI／非AI分類を参照）——モデルにどの状況でどのチャネルを"
+        "信頼すべきかを学習させ、すべての信号を総合して最終判定を下す。単純にいずれか一つの手法の結果を"
+        "選ぶのではない。",
+        "**Difference 1 | Fusing multiple channels, not a single detector**\n\n"
+        "Rather than treating a single detector as the end point, this project uses a fusion layer to "
+        "integrate signals from a physical model and multiple statistical channels (see Case 1's full "
+        "architecture and Case 2's AI/non-AI classification) — letting the model learn which channel to "
+        "trust under which circumstances, and reaching a final determination by synthesizing all signals, "
+        "rather than simply picking the result of one method.",
+    ))
+    st.success(T3(
         "**差異 2｜嚴格的真值分級與泛化驗證**\n\n"
         "在方法論上，本專案嚴格處理真值分級與泛化驗證——這一點在既有機動偵測文獻中**少有系統性報告**。"
         "多數既有研究要嘛沒有獨立真值（用自己的偵測結果驗證自己），要嘛沒有測試「模型對沒看過的目標還準不準」"
         "（詳見案例四的真值來源分級、案例九的 unseen-satellite hold-out）。\n\n"
-        "**泛化驗證的重要性在於**：避免模型只是「背下特定衛星或時期的答案」，而是真的學到可遷移到新目標的機動特徵。"
-    )
+        "**泛化驗證的重要性在於**：避免模型只是「背下特定衛星或時期的答案」，而是真的學到可遷移到新目標的機動特徵。",
+        "**違い2｜真値の厳格な階層化と汎化検証**\n\n"
+        "方法論上、本プロジェクトは真値の階層化と汎化検証を厳格に扱っている——この点は既存の機動検知文献"
+        "では**体系的に報告されることが少ない**。既存研究の多くは、独立した真値を持たない（自らの検知結果で"
+        "自らを検証している）か、「モデルが未見の対象に対してもなお正確か」を検証していない（詳細は事例四の"
+        "真値ソースの階層化、事例九のunseen-satellite hold-outを参照）。\n\n"
+        "**汎化検証が重要である理由は**：モデルが特定の衛星や時期の答えを単に暗記しているだけではなく、"
+        "新しい対象に転用可能な機動特徴を本当に学習していることを保証するためである。",
+        "**Difference 2 | Rigorous ground-truth tiering and generalization validation**\n\n"
+        "Methodologically, this project rigorously handles ground-truth tiering and generalization "
+        "validation — something **rarely reported systematically** in existing maneuver-detection "
+        "literature. Most existing studies either lack independent ground truth (validating their own "
+        "detection results against themselves), or never test \"whether the model is still accurate on "
+        "targets it has never seen\" (see Case 4's ground-truth source tiering and Case 9's unseen-"
+        "satellite hold-out).\n\n"
+        "**Generalization validation matters because** it guards against a model that has merely "
+        "\"memorized the answers for a specific satellite or time period,\" ensuring instead that it has "
+        "genuinely learned maneuver features that transfer to new targets.",
+    ))
 
-    st.header("③ 完整分類文獻列表")
-    with st.expander("🧭 如果想從頭讀起：建議入門路線", expanded=False):
-        st.markdown(
+    st.header(T3("③ 完整分類文獻列表", "③完全な分類文献リスト", "③ The Complete Classified Literature List"))
+    with st.expander(T3(
+        "🧭 如果想從頭讀起：建議入門路線",
+        "🧭 最初から読みたい方へ：おすすめの入門ルート",
+        "🧭 If You Want to Start From the Beginning: A Recommended Entry Route",
+    ), expanded=False):
+        st.markdown(T3(
             "若你是第一次接觸 TLE 機動偵測，建議的閱讀順序是：\n\n"
             "1. **軌道力學基礎**：Hoots & Roehrich (1980)、Vallado et al. (2006)"
             "——理解 SGP4 與 TLE 的基本假設與誤差來源；\n"
@@ -3393,30 +4921,76 @@ def render_storymap_case11():
             "4. **物理模型**：Picone et al. (2002, NRLMSISE-00)、Emmert et al. (2021, NRLMSIS 2.0)"
             "——理解大氣密度建模如何用於阻力殘差；\n"
             "5. **機器學習**：Ke et al. (2017, LightGBM)、Lundberg & Lee (2017, SHAP)"
-            "——理解本專案使用的 ML 工具。"
-        )
+            "——理解本專案使用的 ML 工具。",
+            "TLE機動検知に初めて触れるなら、次の順序で読むことをお勧めする：\n\n"
+            "1. **軌道力学の基礎**：Hoots & Roehrich (1980)、Vallado et al. (2006)"
+            "——SGP4とTLEの基本的な仮定と誤差の出所を理解する；\n"
+            "2. **単一閾値手法**：Kelecy et al. (2007)、Lemmens & Krag (2014)"
+            "——最も直感的な手法とその限界を見る；\n"
+            "3. **統計的変化点**：Page (1954, CUSUM)、Adams & MacKay (2007, BOCPD)"
+            "——古典的な変化点検知の数学的発想を理解する；\n"
+            "4. **物理モデル**：Picone et al. (2002, NRLMSISE-00)、Emmert et al. (2021, NRLMSIS 2.0)"
+            "——大気密度モデリングが抵抗残差にどう使われるかを理解する；\n"
+            "5. **機械学習**：Ke et al. (2017, LightGBM)、Lundberg & Lee (2017, SHAP)"
+            "——本プロジェクトが使用するMLツールを理解する。",
+            "If this is your first time encountering TLE maneuver detection, the recommended reading order "
+            "is:\n\n"
+            "1. **Orbital-mechanics fundamentals**: Hoots & Roehrich (1980), Vallado et al. (2006) — "
+            "understanding SGP4's and TLE's basic assumptions and sources of error;\n"
+            "2. **Single-threshold methods**: Kelecy et al. (2007), Lemmens & Krag (2014) — seeing the "
+            "most intuitive approach and its limits;\n"
+            "3. **Statistical change-points**: Page (1954, CUSUM), Adams & MacKay (2007, BOCPD) — "
+            "understanding the mathematical ideas behind classic change-point detection;\n"
+            "4. **Physical models**: Picone et al. (2002, NRLMSISE-00), Emmert et al. (2021, NRLMSIS 2.0) "
+            "— understanding how atmospheric-density modeling feeds into drag residuals;\n"
+            "5. **Machine learning**: Ke et al. (2017, LightGBM), Lundberg & Lee (2017, SHAP) — "
+            "understanding the ML tools this project uses.",
+        ))
 
-    df_refs = pd.DataFrame(_LIT_REFS, columns=["類別", "文獻", "連結"])
-    for cat in df_refs["類別"].unique():
-        with st.expander(f"📚 {cat}（{(df_refs['類別'] == cat).sum()} 篇）", expanded=False):
-            for i, (_, row) in enumerate(df_refs[df_refs["類別"] == cat].iterrows(), start=1):
-                st.markdown(f"{i}. {row['文獻']} {row['連結']}")
+    col_cat = T3("類別", "カテゴリ", "Category")
+    col_lit = T3("文獻", "文献", "Reference")
+    col_link = T3("連結", "リンク", "Link")
+    df_refs = pd.DataFrame(_LIT_REFS, columns=[col_cat, col_lit, col_link])
+    for cat in df_refs[col_cat].unique():
+        with st.expander(f"📚 {cat}（{(df_refs[col_cat] == cat).sum()} " + T3("篇", "篇", "papers") + "）", expanded=False):
+            for i, (_, row) in enumerate(df_refs[df_refs[col_cat] == cat].iterrows(), start=1):
+                st.markdown(f"{i}. {row[col_lit]} {row[col_link]}")
             if cat == "SSA 領域與評估方法學":
-                st.caption(
+                st.caption(T3(
                     "註：本小節標題中的「SSA」指 Space Situational Awareness（太空情境意識），"
                     "與路線 3「統計變點偵測」中的 SSA（Singular Spectrum Analysis，奇異譜分析）為不同概念，"
-                    "兩者恰好同縮寫，本頁其餘位置提到 SSA 皆指後者（奇異譜分析）。"
-                )
+                    "兩者恰好同縮寫，本頁其餘位置提到 SSA 皆指後者（奇異譜分析）。",
+                    "注：ここでの「SSA」はSpace Situational Awareness（宇宙状況認識）を指し、路線3の統計的"
+                    "変化点検知におけるSSA（特異スペクトル解析、Singular Spectrum Analysis）とは異なる概念で"
+                    "あり、たまたま同じ略称になっている。本頁の他の箇所で言及されるSSAはすべて後者"
+                    "（特異スペクトル解析）を指す。",
+                    "Note: \"SSA\" in this subsection's heading refers to Space Situational Awareness, a "
+                    "different concept from the SSA (Singular Spectrum Analysis) in Line 3's statistical "
+                    "change-point detection — the two happen to share the same abbreviation. Everywhere "
+                    "else on this page, SSA refers to the latter (Singular Spectrum Analysis).",
+                ))
 
-    with st.expander("📚 機動偵測方法與外部真值（含一篇兩岸署名政策適用文獻）", expanded=False):
+    with st.expander(T3(
+        "📚 機動偵測方法與外部真值（含一篇兩岸署名政策適用文獻）",
+        "📚 機動検知手法と外部真値（両岸署名ポリシー適用文献1篇を含む）",
+        "📚 Maneuver-Detection Methods and External Ground Truth (Including One Reference Subject to the Cross-Strait Attribution Policy)",
+    ), expanded=False):
         st.markdown(f"1. {_LIT_EXTERNAL_NOTE} {_LIT_EXTERNAL_DOI}")
-        st.caption(
+        st.caption(T3(
             "說明：此為**外部獨立文獻**，作者與本案執行單位無任何關聯，不構成同儕或合作關係——"
-            "引用僅作為「事件級人工計數評估」之領域慣例佐證，以及 SGP4 半長軸誤差數量級之外部佐證。"
-        )
+            "引用僅作為「事件級人工計數評估」之領域慣例佐證，以及 SGP4 半長軸誤差數量級之外部佐證。",
+            "説明：これは**外部独立文献**であり、著者は本プロジェクトの実施主体と一切関係がなく、"
+            "同僚関係や協力関係を構成しない——引用は「イベントレベルの人手カウント評価」という分野慣行の"
+            "裏付け、およびSGP4軌道長半径誤差の量級に関する外部的裏付けとしてのみ用いる。",
+            "Note: this is an **external, independent piece of literature**; its author has no "
+            "relationship whatsoever with the entity carrying out this project, and it does not constitute "
+            "a peer or collaborative relationship — it is cited only as domain-convention support for "
+            "\"event-level manual-count evaluation,\" and as external corroboration for the order of "
+            "magnitude of SGP4 semi-major-axis error.",
+        ))
 
     st.markdown("---")
-    st.info(
+    st.info(T3(
         "**本案例的啟示**：這份文獻回顧告訴我們三件事——\n\n"
         "1. **TLE 機動偵測不是新問題**：從 2007 年 Kelecy 的 TLE 偵測研究，到 2020 年代的統計變點與 ML 方法，"
         "領域已經累積近 20 年的經驗；\n"
@@ -3424,13 +4998,42 @@ def render_storymap_case11():
         "都難以同時兼顧召回率與誤報率；\n"
         "3. **本專案的創新點在於融合與驗證**：透過多通道融合與嚴格的真值分級、泛化驗證，"
         "本專案在方法論上補足了既有文獻中較少系統性處理的環節。\n\n"
-        "換句話說：**本專案不是從零開始，而是站在這些巨人的肩膀上，往「更可靠、更可解釋、更可泛化」的方向再推一步。**"
-    )
-    st.caption(
+        "換句話說：**本專案不是從零開始，而是站在這些巨人的肩膀上，往「更可靠、更可解釋、更可泛化」的方向再推一步。**",
+        "**本事例が示唆すること**：この文献レビューは3つのことを教えてくれる——\n\n"
+        "1. **TLE機動検知は新しい問題ではない**：2007年のKelecyによるTLE検知研究から、2020年代の統計的"
+        "変化点手法やML手法まで、この分野はすでに約20年の経験を蓄積している；\n"
+        "2. **単一手法には本質的な限界がある**：単一の閾値、単一の統計的変化点手法、あるいは単一の物理"
+        "モデルのいずれであっても、再現率と誤検知率を同時に満たすことは難しい；\n"
+        "3. **本プロジェクトの革新点は融合と検証にある**：複数チャネルの融合と、真値の厳格な階層化・"
+        "汎化検証を通じて、本プロジェクトは既存文献であまり体系的に扱われてこなかった部分を方法論的に"
+        "補完している。\n\n"
+        "言い換えれば：**本プロジェクトはゼロから始めたのではなく、これらの巨人の肩の上に立ち、"
+        "「より信頼でき、より説明可能で、より汎化可能」な方向へさらに一歩進めたものである。**",
+        "**What this case teaches us**: this literature review tells us three things —\n\n"
+        "1. **TLE maneuver detection is not a new problem**: from Kelecy's TLE-detection research in 2007 "
+        "to the statistical change-point and ML methods of the 2020s, the field has accumulated nearly 20 "
+        "years of experience;\n"
+        "2. **Any single method has inherent limits**: whether a single threshold, a single statistical "
+        "change-point method, or a single physical model, none can easily satisfy both recall and "
+        "false-positive rate at once;\n"
+        "3. **This project's innovation lies in fusion and validation**: through multi-channel fusion and "
+        "rigorous ground-truth tiering and generalization validation, this project methodologically fills "
+        "in a gap that existing literature has rarely addressed systematically.\n\n"
+        "In other words: **this project did not start from zero — it stands on the shoulders of these "
+        "giants, pushing one step further in the direction of \"more reliable, more interpretable, more "
+        "generalizable.\"**",
+    ))
+    st.caption(T3(
         "完整書目（含全部 30 筆條目與名詞縮寫對照表）見 "
         "`docs/期中報告_MEME_TLE_20260715_r10.md` 附錄 C／附錄 D；"
-        "本專案方法定位之完整論述見 `docs/conf_ssa_maneuver_2026.md` §2「相關研究」。"
-    )
+        "本專案方法定位之完整論述見 `docs/conf_ssa_maneuver_2026.md` §2「相關研究」。",
+        "完全な書誌（全30件の項目と略語対照表を含む）は `docs/期中報告_MEME_TLE_20260715_r10.md` "
+        "付録C／付録Dを参照。本プロジェクトの手法の位置づけに関する完全な論述は "
+        "`docs/conf_ssa_maneuver_2026.md` §2「関連研究」を参照。",
+        "The complete bibliography (all 30 entries plus a glossary of abbreviations) is in "
+        "`docs/期中報告_MEME_TLE_20260715_r10.md` Appendix C/D; the full account of this project's "
+        "methodological positioning is in `docs/conf_ssa_maneuver_2026.md` §2, \"Related Work.\"",
+    ))
 
 
 # ══ StoryMap 案例十二（2026-09-10 新增）══════════════════════════════════════════
@@ -3496,37 +5099,82 @@ def load_case12_sso_classification() -> pd.DataFrame:
     return pd.read_csv(p) if p.exists() else pd.DataFrame()
 
 
+# --- render_storymap_case12 ---
 def render_storymap_case12():
     if st.button(t("storymap_back"), key="back_from_case12"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例十二：這套系統，在哪些軌道類型上能信？哪些還不能？")
-    st.subheader("適合、不適合與尚待測試的軌道類型整理")
-    st.caption("整理自技術附錄之量化驗收章節與各程式模組之實際邏輯——本頁目的是誠實劃出「量化驗證過」跟"
-              "「程式碼可以跑、但沒有真值可以核對」之間的界線，兩者不能混為一談。")
+    st.title(T3(
+        "案例十二：這套系統，在哪些軌道類型上能信？哪些還不能？",
+        "事例十二：このシステムは、どの軌道タイプでは信頼でき、どれではまだ信頼できないのか？",
+        "Case 12: Which Orbit Types Can This System Be Trusted On, and Which Not Yet?",
+    ))
+    st.subheader(T3(
+        "適合、不適合與尚待測試的軌道類型整理",
+        "適合、不適合、そしてまだテストされていない軌道タイプの整理",
+        "A Breakdown of Suitable, Unsuitable, and Not-Yet-Tested Orbit Types",
+    ))
+    st.caption(T3(
+        "整理自技術附錄之量化驗收章節與各程式模組之實際邏輯——本頁目的是誠實劃出「量化驗證過」跟"
+        "「程式碼可以跑、但沒有真值可以核對」之間的界線，兩者不能混為一談。",
+        "技術付録の定量的検収の章と各プログラムモジュールの実際のロジックから整理したものである——"
+        "本頁の目的は、「定量的に検証済み」と「コードは動くが照合できる真値がない」の境界線を誠実に"
+        "引くことであり、両者を混同してはならない。",
+        "Compiled from the technical appendix's quantitative-acceptance chapter and the actual logic of "
+        "each code module — this page's purpose is to honestly draw the line between \"quantitatively "
+        "validated\" and \"the code runs, but there's no ground truth to check it against,\" which must "
+        "not be conflated.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**為什麼要做這個整理**：一套偵測系統公布的召回率、AUC 這些數字，"
         "只有在「跟訓練/驗證時同一種母體」的資料上才可信。把在 Starlink 上驗證出的準確率，"
         "直接套用到從沒驗證過的 GEO 衛星、拿來做宣稱，是常見但不誠實的做法。"
-        "本頁把系統對每一種軌道類型的把握程度，如實分成四級。"
-    )
+        "本頁把系統對每一種軌道類型的把握程度，如實分成四級。",
+        "**なぜこの整理を行うのか**：ある検知システムが公表する再現率やAUCといった数値は、"
+        "「訓練／検証時と同じ母集団」のデータに対してのみ信頼できる。Starlinkで検証された精度を、"
+        "一度も検証したことのないGEO衛星にそのまま当てはめて主張することは、よくあるが不誠実な"
+        "やり方である。本頁ではシステムが各軌道タイプに対してどれだけ把握できているかを、ありのままに"
+        "4段階に分けて示す。",
+        "**Why do this breakdown**: the recall and AUC numbers a detection system publishes are only "
+        "trustworthy on data \"drawn from the same population as training/validation.\" Taking accuracy "
+        "validated on Starlink and directly applying it as a claim about GEO satellites that have never "
+        "been validated is a common but dishonest practice. This page honestly sorts the system's level of "
+        "confidence for each orbit type into four tiers.",
+    ))
 
-    st.header("① 已驗證、有信心")
-    st.success(
+    st.header(T3("① 已驗證、有信心", "①検証済み、確信あり", "① Validated, With Confidence"))
+    st.success(T3(
         "**LEO 星座級站台保持（以 Starlink 為主）**\n\n"
         "融合評分器（L3）在 284 顆有 MEME 精密星曆真值的 Starlink 衛星上，ROC-AUC 達 **0.982**，"
         "大型機動事件召回率 **97.3%**（n=405 個事件）；"
         "在 **56 顆完全沒參與訓練**的 hold-out 衛星上，AUC 仍達 **0.980**，大型機動召回率 **100%**（81/81，"
         "詳見案例九）。\n\n"
         "**但要老實說清楚驗證的邊界**：這組數字的驗證母體僅止於「284 顆有精密星曆真值可核對的 Starlink 衛星」，"
-        "技術附錄本身也明白寫著**不可外推到非 Starlink 的衛星**。"
-    )
+        "技術附錄本身也明白寫著**不可外推到非 Starlink 的衛星**。",
+        "**LEOコンステレーション級のステーションキーピング（主にStarlink）**\n\n"
+        "融合スコアリングモデル（L3）は、MEME精密暦の真値を持つ284機のStarlink衛星において"
+        "ROC-AUCが**0.982**に達し、大規模機動イベントの再現率は**97.3%**（n=405イベント）；"
+        "訓練に**まったく参加していない56機**のhold-out衛星でもAUCは**0.980**に達し、大規模機動の"
+        "再現率は**100%**（81/81、詳細は事例九を参照）。\n\n"
+        "**しかし検証の境界を誠実に述べる必要がある**：この数値群の検証母集団は「精密暦の真値で照合"
+        "できる284機のStarlink衛星」に限られており、技術付録自体にも**Starlink以外の衛星には外挿"
+        "できない**と明記されている。",
+        "**LEO constellation-scale station-keeping (mainly Starlink)**\n\n"
+        "The fusion scoring model (L3) achieves an ROC-AUC of **0.982** on 284 Starlink satellites with "
+        "MEME precise-ephemeris ground truth, with **97.3%** recall on large maneuver events (n=405 "
+        "events); on **56 hold-out satellites that never participated in training at all**, AUC still "
+        "reaches **0.980**, with **100%** recall on large maneuvers (81/81, see Case 9 for details).\n\n"
+        "**But the boundaries of this validation must be stated honestly**: this set of numbers' "
+        "validation population is limited to \"284 Starlink satellites with precise-ephemeris ground truth "
+        "to check against\"; the technical appendix itself explicitly states this **cannot be extrapolated "
+        "to non-Starlink satellites**.",
+    ))
 
-    st.header("② 有特殊處理機制、部分驗證")
+    st.header(T3("② 有特殊處理機制、部分驗證", "②特別な処理機構があり、部分的に検証済み", "② Has a Special Handling Mechanism, Partially Validated"))
     reentry_val = load_case12_reentry_validation()
-    st.warning(
+    st.warning(T3(
         "**LEO 自然再入／衰減 vs 站台保持維持（含 HEO 末期再入段）**\n\n"
         "系統用 `is_reentry_decay()` 這道守門邏輯，依「近地點高度」＋「45 天窗衰減斜率」區分"
         "「正在自然再入」與「靠推進器維持軌道」（例如 ISS／天宮）：近地點極低（如 Van Allen A 衛星末期）"
@@ -3535,18 +5183,48 @@ def render_storymap_case12():
         "**2026-09-10 反思本案例後已擴大驗證樣本**：原本只用 4 個手選案例做邏輯正確性檢查，"
         "樣本太小。改用客觀、不依賴人工標籤的真值定義重新驗證——"
         "**真陽性**＝近地點高度曾跌破 120 km、且此後 14 天以上再無任何 TLE（追蹤徹底中止，代表已真實燒毀）；"
-        "**真陰性**＝ISS、天宮核心艙，加上隨機抽樣的長期追蹤 Starlink（全程近地點 >300 km，靠站位保持維持）。"
-    )
+        "**真陰性**＝ISS、天宮核心艙，加上隨機抽樣的長期追蹤 Starlink（全程近地點 >300 km，靠站位保持維持）。",
+        "**LEOの自然再突入／減衰 vs ステーションキーピングによる維持（HEO末期再突入段を含む）**\n\n"
+        "システムは `is_reentry_decay()` というガードロジックを用いて、「近地点高度」＋「45日窓の減衰"
+        "傾斜」に基づき「自然再突入中」と「推進器で軌道を維持している」（ISS／天宮など）を区別する："
+        "近地点が極めて低い（Van Allen A衛星末期など）、または近地点が低く急速に低下している場合、"
+        "直接「自然再突入、機動＝0」と判定し、物理的抵抗モデルがこの種の激しい非線形減衰に対して"
+        "大量の誤検知を起こすのを防ぐ（詳細は事例五、事例十を参照）。\n\n"
+        "**2026-09-10に本事例を見直した際に検証サンプルをすでに拡大した**：もともとは4件の手選りした"
+        "事例でロジックの正しさを確認していただけであり、サンプルが少なすぎた。人手のラベルに依存しない"
+        "客観的な真値定義に切り替えて再検証した——**真陽性**＝近地点高度が120kmを下回ったことがあり、"
+        "その後14日以上TLEがまったくない（追跡が完全に途絶え、実際に燃え尽きたことを意味する）；"
+        "**真陰性**＝ISS、天宮コアモジュール、およびランダムに抽出した長期追跡Starlink"
+        "（全期間で近地点>300km、ステーションキーピングにより維持）。",
+        "**LEO natural reentry/decay vs. propulsively maintained station-keeping (including HEO's late-"
+        "stage reentry phase)**\n\n"
+        "The system uses the `is_reentry_decay()` gating logic, distinguishing \"actively undergoing "
+        "natural reentry\" from \"being maintained on orbit by thrusters\" (e.g., ISS/Tiangong) based on "
+        "\"perigee altitude\" plus \"45-day-window decay slope\": satellites with an extremely low perigee "
+        "(e.g., Van Allen A late in life) or a low, rapidly dropping perigee are directly determined to be "
+        "\"natural reentry, maneuver = 0,\" preventing the physical drag model from generating a flood of "
+        "false positives on this kind of violently nonlinear decay (see Cases 5 and 10 for details).\n\n"
+        "**The validation sample has now been expanded following a 2026-09-10 review of this case**: "
+        "originally only 4 hand-picked cases were used for a logic-correctness check, too small a sample. "
+        "Re-validation now uses an objective ground-truth definition that doesn't rely on manual labels — "
+        "**true positive** = perigee altitude has dropped below 120 km, and no further TLE at all for 14+ "
+        "days afterward (tracking has completely stopped, meaning it genuinely burned up); **true "
+        "negative** = ISS, the Tiangong core module, plus a random sample of long-tracked Starlink "
+        "satellites (perigee >300 km throughout, maintained via station-keeping).",
+    ))
     if not reentry_val.empty:
         n_re = int(reentry_val["expected"].sum())
         n_qt = int((~reentry_val["expected"]).sum())
         tp = int(((reentry_val["expected"]) & (reentry_val["predicted"])).sum())
         tn = int(((~reentry_val["expected"]) & (~reentry_val["predicted"])).sum())
         c1, c2, c3 = st.columns(3)
-        c1.metric("確認再入衛星", f"{n_re} 顆", f"recall {tp}/{n_re}")
-        c2.metric("確認安靜衛星", f"{n_qt} 顆", f"specificity {tn}/{n_qt}")
-        c3.metric("總樣本數", f"{len(reentry_val)} 顆")
-        st.success(
+        c1.metric(T3("確認再入衛星", "確認済み再突入衛星", "Confirmed reentry satellites"),
+                 T3(f"{n_re} 顆", f"{n_re}機", f"{n_re}"), f"recall {tp}/{n_re}")
+        c2.metric(T3("確認安靜衛星", "確認済み静穏衛星", "Confirmed quiet satellites"),
+                 T3(f"{n_qt} 顆", f"{n_qt}機", f"{n_qt}"), f"specificity {tn}/{n_qt}")
+        c3.metric(T3("總樣本數", "総サンプル数", "Total sample size"),
+                 T3(f"{len(reentry_val)} 顆", f"{len(reentry_val)}機", f"{len(reentry_val)}"))
+        st.success(T3(
             f"**擴大後的結果**：{len(reentry_val)} 顆真實衛星（16 顆確認再入，涵蓋 Cluster-II、"
             "多型火箭殘骸、Van Allen A 等；42 顆確認安靜，含 ISS／天宮／40 顆隨機 Starlink）——"
             f"再入 recall **{tp}/{n_re} = 100%**（Wilson 95% CI [80.6%, 100%]），"
@@ -3554,14 +5232,44 @@ def render_storymap_case12():
             "**老實補充兩點**：① n=16 的正類樣本，Wilson 下界僅 80.6%，還稱不上大樣本統計驗證，"
             "只是比原本 4 案例扎實一倍以上；② 真值定義是本頁自建的物理判準（近地點崩潰＋追蹤中止），"
             "不是像案例四那樣的第三方獨立真值（IDS/DORIS 等）——**這一層仍應標示為「部分驗證」，"
-            "但已經是有實際數字支撐的部分驗證，不再是純邏輯煙霧測試**。"
-        )
+            "但已經是有實際數字支撐的部分驗證，不再是純邏輯煙霧測試**。",
+            f"**拡大後の結果**：{len(reentry_val)}機の実在衛星（16機が確認済み再突入、Cluster-II、"
+            "複数種のロケット残骸、Van Allen Aなどを含む；42機が確認済み静穏、ISS／天宮／40機の"
+            "ランダムなStarlinkを含む）——再突入recall **{tp}/{n_re} = 100%**"
+            "（Wilson 95%信頼区間[80.6%, 100%]）、静穏specificity **{tn}/{n_qt} = 100%**"
+            "（Wilson 95%信頼区間[91.6%, 100%]）。\n\n"
+            "**誠実に2点補足する**：①n=16の正例サンプルでは、Wilson下限はわずか80.6%であり、"
+            "大規模サンプルによる統計的検証とはまだ言えない。元の4事例より1倍以上しっかりしている"
+            "だけである；②真値の定義は本頁独自に構築した物理的判定基準（近地点の崩壊＋追跡の途絶）"
+            "であり、事例四のような第三者独立真値（IDS/DORISなど）ではない——**この階層は依然として"
+            "「部分検証」と表示すべきだが、すでに実際の数値に裏付けられた部分検証であり、単なる"
+            "ロジックのスモークテストではなくなっている**。".format(tp=tp, n_re=n_re, tn=tn, n_qt=n_qt),
+            f"**Results after expansion**: {len(reentry_val)} real satellites (16 confirmed reentries, "
+            "covering Cluster-II, several types of rocket debris, Van Allen A, and others; 42 confirmed "
+            "quiet, including ISS/Tiangong/40 randomly sampled Starlink satellites) — reentry recall "
+            f"**{tp}/{n_re} = 100%** (Wilson 95% CI [80.6%, 100%]), quiet specificity **{tn}/{n_qt} = "
+            "100%** (Wilson 95% CI [91.6%, 100%]).\n\n"
+            "**Two honest caveats**: ① with n=16 positive-class samples, the Wilson lower bound is only "
+            "80.6% — not yet a large-sample statistical validation, just more than twice as solid as the "
+            "original 4 cases; ② the ground-truth definition is a physical criterion built for this page "
+            "(perigee collapse plus tracking cessation), not third-party independent ground truth like "
+            "Case 4's (IDS/DORIS, etc.) — **this tier should still be labeled \"partially validated,\" but "
+            "it is now a partial validation backed by real numbers, no longer a pure logic smoke test**.",
+        ))
     else:
-        st.info("擴大驗證之輸出檔案 `data/benchmark/reentry_gate_validation_20260910.csv` 目前找不到，"
-               "顯示的仍是原始 4 案例邏輯檢查。可執行 `python validate_reentry_gate.py` 重新產生。")
+        st.info(T3(
+            "擴大驗證之輸出檔案 `data/benchmark/reentry_gate_validation_20260910.csv` 目前找不到，"
+            "顯示的仍是原始 4 案例邏輯檢查。可執行 `python validate_reentry_gate.py` 重新產生。",
+            "拡大検証の出力ファイル `data/benchmark/reentry_gate_validation_20260910.csv` が現在見つから"
+            "ないため、表示されているのは元の4事例のロジックチェックのままである。"
+            "`python validate_reentry_gate.py` を実行して再生成できる。",
+            "The expanded-validation output file `data/benchmark/reentry_gate_validation_20260910.csv` "
+            "cannot currently be found; what's shown is still the original 4-case logic check. Run "
+            "`python validate_reentry_gate.py` to regenerate it.",
+        ))
 
-    st.header("③ 有程式路徑、但缺乏量化驗證")
-    st.info(
+    st.header(T3("③ 有程式路徑、但缺乏量化驗證", "③処理経路はあるが、定量的検証が欠けている", "③ Has a Code Path, but Lacks Quantitative Validation"))
+    st.info(T3(
         "**GEO／MEO（地球同步軌道／中軌道）**\n\n"
         "系統的路由機制會把非 Starlink 域的目標導向 Model 2（無監督 Isolation Forest 異常偵測）"
         "＋ NRLMSIS 物理殘差。技術附錄記載「已以 GEO/HEO 實例驗證路由正確」——"
@@ -3570,26 +5278,81 @@ def render_storymap_case12():
         "換句話說：**目前只驗證了「路走對了」，還沒驗證「走到終點後準不準」**。\n\n"
         "**GEO 近距接近／RPO 案例**（TJS-10×TJS-3、Shenlong——詳見案例七）：屬於 SGP4/TLE 幾何重建的"
         "**描述性、調查性視覺化**，程式本身就註明「精度為 SGP4/TLE 等級（GEO 上約公里級）」——"
-        "這是把真實事件的軌跡重建出來給人看，並不是一套本專案獨立驗證過召回率的機動偵測器。"
-    )
+        "這是把真實事件的軌跡重建出來給人看，並不是一套本專案獨立驗證過召回率的機動偵測器。",
+        "**GEO／MEO（静止軌道／中軌道）**\n\n"
+        "システムのルーティング機構は、Starlink以外の領域の対象をModel 2（教師なしIsolation Forest"
+        "異常検知）＋NRLMSIS物理残差へと振り分ける。技術付録には「GEO/HEOの実例でルーティングの"
+        "正しさを検証済み」と記載されている——**しかしこれは「ルーティングロジックがGEO対象を正しく"
+        "Model 2へ振り分けられる」ことを証明したにすぎず、「GEO軌道上での機動検知の再現率／誤検知率が"
+        "定量的に検証済み」であることを意味しない**。両者はまったく異なるレベルの検証である。"
+        "言い換えれば：**現時点では「経路が正しい」ことしか検証されておらず、「終点に到達した後の"
+        "精度」はまだ検証されていない**。\n\n"
+        "**GEOの近接接近／RPO事例**（TJS-10×TJS-3、Shenlong——詳細は事例七を参照）：SGP4/TLEによる"
+        "幾何再構築の**記述的、調査的な可視化**に属し、プログラム自体が「精度はSGP4/TLE級"
+        "（GEO上で約キロメートル級）」と注記している——これは実際のイベントの軌跡を再構築して人に"
+        "見せるものであり、本プロジェクトが独立に再現率を検証した機動検知器ではない。",
+        "**GEO/MEO (geosynchronous orbit / medium Earth orbit)**\n\n"
+        "The system's routing mechanism directs targets outside the Starlink domain to Model 2 "
+        "(unsupervised Isolation Forest anomaly detection) plus the NRLMSIS physical residual. The "
+        "technical appendix records that \"routing correctness has been validated with GEO/HEO examples\" "
+        "— **but this only proves that \"the routing logic correctly directs a GEO target to Model 2,\" "
+        "which is not the same as \"maneuver-detection recall/false-positive rate on GEO orbits has been "
+        "quantitatively validated\"** — these are completely different levels of validation. In other "
+        "words: **only \"the routing is correct\" has been validated so far, not \"how accurate it is once "
+        "it gets there.\"**\n\n"
+        "**GEO close-approach/RPO cases** (TJS-10×TJS-3, Shenlong — see Case 7 for details): these are "
+        "**descriptive, investigative visualizations** based on SGP4/TLE geometric reconstruction; the "
+        "code itself notes \"accuracy is at the SGP4/TLE level (roughly kilometer-scale at GEO)\" — this "
+        "reconstructs a real event's trajectory for people to see, and is not a maneuver detector whose "
+        "recall this project has independently validated.",
+    ))
     geo_scope = load_case12_geo_meo_scope()
     if not geo_scope.empty:
         n_total = len(geo_scope)
         vc = geo_scope["orbit_class"].value_counts()
         c1, c2, c3 = st.columns(3)
-        c1.metric("路由至 Model 2 的 GEO/MEO/GEO+ 目標", f"{n_total:,} 顆")
-        c2.metric("其中 GEO／GEO+", f"{int(vc.get('GEO', 0) + vc.get('GEO+', 0)):,} 顆")
-        c3.metric("做過個案軌跡核對", "2 顆", "TJS-10×TJS-3、Shenlong")
-        st.caption(
+        c1.metric(T3("路由至 Model 2 的 GEO/MEO/GEO+ 目標", "Model 2へルーティングされたGEO/MEO/GEO+対象",
+                    "GEO/MEO/GEO+ targets routed to Model 2"),
+                 T3(f"{n_total:,} 顆", f"{n_total:,}機", f"{n_total:,}"))
+        c2.metric(T3("其中 GEO／GEO+", "うちGEO／GEO+", "Of which GEO/GEO+"),
+                 T3(f"{int(vc.get('GEO', 0) + vc.get('GEO+', 0)):,} 顆",
+                    f"{int(vc.get('GEO', 0) + vc.get('GEO+', 0)):,}機",
+                    f"{int(vc.get('GEO', 0) + vc.get('GEO+', 0)):,}"))
+        c3.metric(T3("做過個案軌跡核對", "個別事例の軌跡照合を実施", "Cases with individual trajectory verification"),
+                 T3("2 顆", "2機", "2"), T3("TJS-10×TJS-3、Shenlong", "TJS-10×TJS-3、Shenlong", "TJS-10×TJS-3, Shenlong"))
+        vc_geo = int(vc.get('GEO', 0))
+        vc_meo = int(vc.get('MEO', 0))
+        vc_geop = int(vc.get('GEO+', 0))
+        st.caption(T3(
             f"**2026-09-10 反思本案例後補上的規模量化**：資料庫最新快照中，被 `classify_orbit()` "
-            f"分類為 GEO／MEO／GEO+ 的目標共 **{n_total:,} 顆**（GEO {int(vc.get('GEO', 0)):,}、"
-            f"MEO {int(vc.get('MEO', 0)):,}、GEO+ {int(vc.get('GEO+', 0)):,}），依規則全數路由到 Model 2。"
+            f"分類為 GEO／MEO／GEO+ 的目標共 **{n_total:,} 顆**（GEO {vc_geo:,}、"
+            f"MEO {vc_meo:,}、GEO+ {vc_geop:,}），依規則全數路由到 Model 2。"
             f"這不是偵測準確率驗證——只是把「目前完全沒有個案核對過的範圍」量到多大："
             f"**{n_total:,} 顆之中，只有 2 顆做過個案軌跡重建，其餘 {n_total - 2:,} 顆從未被人核對過**。"
-            "規模越大，越不該用 2 個案例去暗示涵蓋全體。"
-        )
-    with st.expander("🧭 若要把這一級升等，可行的下一步驗證路線", expanded=False):
-        st.markdown(
+            "規模越大，越不該用 2 個案例去暗示涵蓋全體。",
+            f"**2026-09-10に本事例を見直した際に補足した規模の定量化**：データベースの最新スナップ"
+            f"ショットにおいて、`classify_orbit()` によってGEO／MEO／GEO+に分類された対象は合計"
+            f"**{n_total:,}機**（GEO {vc_geo:,}、MEO {vc_meo:,}、GEO+ {vc_geop:,}）であり、"
+            "ルールに従ってすべてModel 2へルーティングされている。これは検知精度の検証ではなく、"
+            "「現時点でまったく個別照合されていない範囲」がどれほどの規模かを測っただけである："
+            f"**{n_total:,}機のうち、個別の軌跡再構築が行われたのはわずか2機であり、残りの"
+            f"{n_total - 2:,}機は一度も人手で照合されたことがない**。規模が大きいほど、2つの事例で"
+            "全体をカバーしているかのように示唆すべきではない。",
+            f"**Scale quantification added following a 2026-09-10 review of this case**: in the latest "
+            f"database snapshot, targets classified as GEO/MEO/GEO+ by `classify_orbit()` total "
+            f"**{n_total:,}** (GEO {vc_geo:,}, MEO {vc_meo:,}, GEO+ {vc_geop:,}), all routed to Model 2 by "
+            "rule. This is not a detection-accuracy validation — it merely measures how large the "
+            f"\"currently entirely un-verified-case-by-case range\" is: **of these {n_total:,}, only 2 have "
+            f"had individual trajectory reconstructions done, and the remaining {n_total - 2:,} have never "
+            "been checked by a human at all**. The larger the scale, the less appropriate it is to let 2 "
+            "cases imply coverage of the whole.",
+        ))
+    with st.expander(T3(
+        "🧭 若要把這一級升等，可行的下一步驗證路線",
+        "🧭 この階層を格上げするための、実行可能な次の検証ステップ",
+        "🧭 Viable Next Steps for Upgrading This Tier",
+    ), expanded=False):
+        st.markdown(T3(
             "1. **建立 GEO/MEO 的最小可行真值集**：精密星曆稀缺、機動真值多為操作機密，"
             "但可先整理已知公開機動事件（TJS 系列、Shenlong、GEO 通訊衛星站位調整）——"
             "以新聞稿、追蹤網站公開軌跡、學術論文中的案例，建立一份「事件級真值」清單；\n"
@@ -3598,11 +5361,36 @@ def render_storymap_case12():
             "標記為「高機率機動事件」，作為初步（非嚴格）驗證集；\n"
             "3. **在 StoryMap 中持續更新分級**：等真的跑出量化召回率/誤報率數字，"
             "再把這一級從「有程式路徑、缺乏量化驗證」正式升級到「部分驗證」或更高——"
-            "在那之前，誠實維持現在的分級，比提前宣稱更重要。"
-        )
+            "在那之前，誠實維持現在的分級，比提前宣稱更重要。",
+            "1. **GEO/MEOの最小実行可能な真値セットを構築する**：精密暦は乏しく、機動の真値の多くは"
+            "運用上の機密であるが、まず既知の公開された機動イベント（TJSシリーズ、Shenlong、GEO通信"
+            "衛星のステーション調整）を整理することはできる——プレスリリース、追跡サイトが公開する"
+            "軌跡、学術論文中の事例を用いて「イベントレベルの真値」リストを構築する；\n"
+            "2. **半真値（proxy ground truth）による相互照合**：公式記録のないGEO衛星については、"
+            "「軌道要素の急変＋運用者の公告＋報道」の三者相互照合を用いて「高確率機動イベント」として"
+            "マークし、初歩的な（厳密ではない）検証セットとする；\n"
+            "3. **StoryMap内で分類を継続的に更新する**：定量的な再現率／誤検知率の数値が実際に出た"
+            "時点で、この階層を「処理経路はあるが定量的検証が欠けている」から正式に「部分検証」以上へ"
+            "格上げする——それまでは、先走って主張するよりも、現在の分類を誠実に維持することの方が"
+            "重要である。",
+            "1. **Build a minimum viable ground-truth set for GEO/MEO**: precise ephemerides are scarce "
+            "and maneuver ground truth is mostly operationally confidential, but known public maneuver "
+            "events (the TJS series, Shenlong, GEO comsat station adjustments) could be compiled first — "
+            "building an \"event-level ground truth\" list from press releases, public trajectories from "
+            "tracking sites, and cases in academic papers;\n"
+            "2. **Cross-check against proxy ground truth**: for GEO satellites without official records, "
+            "cross-check three sources — sudden orbital-element changes, operator announcements, and news "
+            "reports — flagging matches as \"high-probability maneuver events\" for a preliminary "
+            "(non-rigorous) validation set;\n"
+            "3. **Keep updating the tiering within StoryMap**: once quantitative recall/false-positive-rate "
+            "numbers are actually produced, formally upgrade this tier from \"has a code path, lacks "
+            "quantitative validation\" to \"partially validated\" or higher — until then, honestly "
+            "maintaining the current tier matters more than claiming ahead of the evidence.",
+        ))
 
-    st.header("④ 獨立研究支線，尚未整合進主管線")
-    st.info(
+    st.header(T3("④ 獨立研究支線，尚未整合進主管線", "④独立した研究支線であり、主パイプラインにはまだ統合されていない",
+                "④ An Independent Research Branch, Not Yet Integrated into the Main Pipeline"))
+    st.info(T3(
         "**Galileo MEO 精密星曆比對**：`mgex_galileo/` 是一條獨立的 SP3 精密星曆比對管線，"
         "用來量化 TLE/SGP4 對 Galileo 衛星的預報誤差量級。"
         "**2026-09-10 反思本案例後訂正規模**：這組數字並非抽查——現有輸出"
@@ -3617,31 +5405,108 @@ def render_storymap_case12():
         "MEO 的法向誤差」。\n\n"
         "無論如何，這條支線**目前只在 App 裡有一個獨立分頁展示這些誤差數字，尚未接入 L1/L2/L3 融合"
         "偵測管線**，不能算是「機動偵測已驗證涵蓋 MEO」——擴大到全量 30 顆，補強的是「誤差量級的樣本"
-        "規模」，不是「機動偵測準確率」，這兩者仍是案例十二一貫要區分清楚的兩件事。"
-    )
+        "規模」，不是「機動偵測準確率」，這兩者仍是案例十二一貫要區分清楚的兩件事。",
+        "**Galileo MEO精密暦比較**：`mgex_galileo/` はTLE/SGP4のGalileo衛星に対する予報誤差の量級を"
+        "定量化するための独立したSP3精密暦比較パイプラインである。"
+        "**2026-09-10に本事例を見直した際に規模を訂正**：この数値群は抽出調査ではない——既存の出力"
+        "（`data/galileo_comparison/summary_2026-06-23.csv`）は**すでに全30機のGalileo衛星、"
+        "120日間の時間窓をカバーしている**：接線方向誤差のRMSは**2.1〜21.4キロメートル**、"
+        "法線方向は**76.5〜128.6キロメートル**である。\n\n"
+        "**しかし方法論上の警告を誠実に補足する必要がある**：法線方向のこの数値群は**「微分アーティ"
+        "ファクト」によって汚染されている可能性がある**——MGEXのGalileo SP3ファイル自体には速度の"
+        "記録がなく、パイプラインは位置から数値微分で速度を逆算してRTN座標系を構築している。本"
+        "プロジェクトは既知の真の速度を持つ別の精密測高衛星群（Jason-3）で対照実験を行った：同じ差分"
+        "処理手法で、ピーク間**131.9キロメートル**を測定したが、真値はわずか**14.4キロメートル**"
+        "だった——純粋に処理方法によって生じた偽信号であり、真の信号より約10倍大きい。つまり、"
+        "Galileoのこの法線方向76〜129キロメートルという数値は、**上限が主に微分アーティファクトに"
+        "由来する可能性があり、SGP4の真の物理誤差ではない**可能性が高く、保守的に解釈すべきであり、"
+        "「SGP4のMEOに対する法線誤差」として直接引用すべきではない。\n\n"
+        "いずれにせよ、この支線は**現在アプリ内で独立した1つのタブでこれらの誤差数値を表示している"
+        "だけであり、まだL1/L2/L3融合検知パイプラインには組み込まれていない**——「機動検知はMEOを"
+        "カバーするよう検証済み」とは言えない。全30機に拡大したことで補強されたのは「誤差量級の"
+        "サンプル規模」であり、「機動検知の精度」ではない。両者は事例十二が一貫して区別すべき"
+        "2つの事柄である。",
+        "**Galileo MEO precise-ephemeris comparison**: `mgex_galileo/` is an independent SP3 precise-"
+        "ephemeris comparison pipeline used to quantify the magnitude of TLE/SGP4's forecast error for "
+        "Galileo satellites. **Scale corrected following a 2026-09-10 review of this case**: this data is "
+        "not a spot check — the existing output (`data/galileo_comparison/summary_2026-06-23.csv`) "
+        "**already covers all 30 Galileo satellites across a 120-day window**: along-track error RMS falls "
+        "in the range **2.1–21.4 km**, and cross-track error in **76.5–128.6 km**.\n\n"
+        "**But an honest methodological caveat must be added**: the cross-track numbers may be "
+        "**contaminated by a \"differentiation artifact\"** — MGEX's Galileo SP3 files carry no velocity "
+        "records at all, and the pipeline numerically differentiates position to back out velocity in "
+        "order to build the RTN coordinate frame; this project ran a control experiment on a separate "
+        "batch of precise altimetry satellites with known true velocity (Jason-3): the same differencing "
+        "approach measured a peak-to-peak of **131.9 km**, while the ground truth was only **14.4 km** — a "
+        "purely processing-induced false signal, nearly 10× larger than the real one. In other words, "
+        "Galileo's cross-track figure of 76–129 km **may have its upper bound driven mainly by the "
+        "differentiation artifact rather than genuine SGP4 physical error**, and should be interpreted "
+        "conservatively — it should not be cited directly as \"SGP4's cross-track error at MEO.\"\n\n"
+        "In any case, this branch **currently only displays these error numbers on a separate tab within "
+        "the app and has not yet been wired into the L1/L2/L3 fusion detection pipeline** — it cannot be "
+        "counted as \"maneuver detection validated to cover MEO.\" Expanding to the full 30 satellites "
+        "strengthens the \"sample scale for error magnitude,\" not \"maneuver-detection accuracy\" — these "
+        "remain two things Case 12 consistently distinguishes.",
+    ))
 
-    st.header("⑤ 有掃描、但無法判斷是否真的有效")
-    st.warning(
+    st.header(T3("⑤ 有掃描、但無法判斷是否真的有效", "⑤スキャンは行われているが、本当に有効かどうか判断できない",
+                "⑤ Scanned, but Whether It's Actually Effective Cannot Be Determined"))
+    st.warning(T3(
         "**非 Starlink 的 LEO 星系（OneWeb、千帆、遙感等）**\n\n"
         "星系級批量分析（詳見案例六）支援 19 個星系型號的軌道面/批量機動/隊形掃描，"
         "OneWeb、千帆等星系目前回報「零異常」——**但這組零異常沒辦法區分是「這個星系真的很安靜」，"
         "還是「模型對非 Starlink 域本來就不敏感、抓不到」**，因為這些星系沒有精密星曆真值可以逐一核對。"
-        "零異常是一個誠實但曖昧的結果，不能直接當作「系統在這些星系上表現良好」的證據。"
-    )
+        "零異常是一個誠實但曖昧的結果，不能直接當作「系統在這些星系上表現良好」的證據。",
+        "**Starlink以外のLEOコンステレーション（OneWeb、千帆、遥感など）**\n\n"
+        "コンステレーション級の一括分析（詳細は事例六を参照）は19のコンステレーション型式の軌道面／"
+        "一括機動／隊形スキャンをサポートしており、OneWeb、千帆などのコンステレーションは現在"
+        "「異常ゼロ」と報告している——**しかしこの異常ゼロという結果は、「このコンステレーションが"
+        "本当に静穏である」のか、「モデルがStarlink以外の領域にはそもそも敏感でなく検知できない」のかを"
+        "区別できない**。なぜならこれらのコンステレーションには照合できる精密暦の真値がないからである。"
+        "異常ゼロは誠実だが曖昧な結果であり、「システムがこれらのコンステレーションで良好な性能を発揮"
+        "している」ことの証拠として直接扱うことはできない。",
+        "**Non-Starlink LEO constellations (OneWeb, Qianfan, remote-sensing constellations, etc.)**\n\n"
+        "Constellation-scale batch analysis (see Case 6 for details) supports orbital-plane/batch-"
+        "maneuver/formation scanning for 19 constellation types; OneWeb, Qianfan, and other constellations "
+        "currently report \"zero anomalies\" — **but this zero-anomaly result cannot distinguish between "
+        "\"this constellation is genuinely quiet\" and \"the model simply isn't sensitive to, and can't "
+        "catch anything in, the non-Starlink domain\"**, because these constellations have no precise-"
+        "ephemeris ground truth to check against one by one. Zero anomalies is an honest but ambiguous "
+        "result, and cannot be taken directly as evidence that \"the system performs well on these "
+        "constellations.\"",
+    ))
     inj_a = load_case12_injection_persat()
     inj_b = load_case12_injection_plane()
     inj_c = load_case12_injection_formation()
     inj_d = load_case12_injection_batch()
     if not inj_a.empty:
-        st.markdown(
+        st.markdown(T3(
             "**2026-09-10 反思本案例後補上的注入式合成真值測試**：既然沒有外部真值，"
             "改用「已知的真實機動量級」疊加到「真實的 OneWeb／千帆 TLE 雜訊背景」上，"
             "看現行邏輯能不能在真實雜訊底下抓到它。**同日再擴充為四個方向**：單顆衛星 Δa"
             "（改用多次隨機注入時刻的 Monte Carlo，取代原本單一時間點的估計）、軌道面 Δi 注入、"
-            "陣型相位注入，以及最關鍵的——直接端到端驗證「一整批衛星同時機動」是否真的會被標記。"
-        )
+            "陣型相位注入，以及最關鍵的——直接端到端驗證「一整批衛星同時機動」是否真的會被標記。",
+            "**2026-09-10に本事例を見直した際に補足した注入式合成真値テスト**：外部真値がない以上、"
+            "「既知の実際の機動量級」を「実際のOneWeb／千帆のTLE雑音背景」に重ね合わせ、既存のロジックが"
+            "実際の雑音の下でそれを検知できるかを見る方式に切り替えた。**同日さらに4つの方向へ拡張**："
+            "単一衛星のΔa（複数回のランダムな注入時刻によるMonte Carloに切り替え、元の単一時点の推定を"
+            "置き換えた）、軌道面Δi注入、隊形位相注入、そして最も重要なもの——「まるごと1バッチの衛星が"
+            "同時に機動した」場合に本当にフラグが立つかを直接エンドツーエンドで検証する。",
+            "**An injection-based synthetic ground-truth test added following a 2026-09-10 review of this "
+            "case**: since there's no external ground truth, this switches to overlaying \"known real "
+            "maneuver magnitudes\" onto \"real OneWeb/Qianfan TLE noise backgrounds,\" to see whether the "
+            "current logic can catch it under real noise. **Expanded the same day into four directions**: "
+            "single-satellite Δa (switched to a Monte Carlo over multiple random injection times, replacing "
+            "the original single-time-point estimate), orbital-plane Δi injection, formation-phase "
+            "injection, and — most critically — directly end-to-end validating whether \"an entire batch of "
+            "satellites maneuvering simultaneously\" actually gets flagged.",
+        ))
 
-        st.markdown("**A. 單顆衛星 Δa（Monte Carlo，每個量級 30 次隨機試驗）**")
+        st.markdown(T3(
+            "**A. 單顆衛星 Δa（Monte Carlo，每個量級 30 次隨機試驗）**",
+            "**A. 単一衛星のΔa（Monte Carlo、各量級につき30回のランダム試行）**",
+            "**A. Single-satellite Δa (Monte Carlo, 30 random trials per magnitude)**",
+        ))
         fig_a = go.Figure()
         for cname, color in [("OneWeb", "#42A5F5"), ("Qianfan", "#FFA726")]:
             sub = inj_a[inj_a["constellation"] == cname].sort_values("inject_mag_km")
@@ -3653,37 +5518,56 @@ def render_storymap_case12():
                                 array=(sub["ci_hi"] - sub["detect_rate"]) * 100,
                                 arrayminus=(sub["detect_rate"] - sub["ci_lo"]) * 100)))
         fig_a.add_vline(x=2.0, line_dash="dot", line_color="#EF5350",
-                        annotation_text="現行 2km 判定門檻")
+                        annotation_text=T3("現行 2km 判定門檻", "現行の2km判定閾値", "Current 2km determination threshold"))
         fig_a.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10),
-                            xaxis_title="注入的半長軸階躍量級 (km)", yaxis_title="偵測率 (%，含 Wilson 95% CI)",
+                            xaxis_title=T3("注入的半長軸階躍量級 (km)", "注入した軌道長半径ステップ量級 (km)",
+                                          "Injected semi-major-axis step magnitude (km)"),
+                            yaxis_title=T3("偵測率 (%，含 Wilson 95% CI)", "検知率 (%、Wilson 95%信頼区間を含む)",
+                                          "Detection rate (%, with Wilson 95% CI)"),
                             plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=1.15))
         st.plotly_chart(fig_a, use_container_width=True, key="case12_injection_a")
-        st.caption(
+        st.caption(T3(
             "0.5～1km 幾乎測不到，**3km 以上兩個星系皆達 97～100% 偵測率**。"
             "千帆的曲線在 1～2km 附近不單調（1km 反而比 2km 偵測率高），"
             "這正呼應下面的老實補充——千帆的真實背景雜訊本身就不乾淨，30 次隨機試驗撞到的"
-            "真實雜訊有時會抵銷、有時會疊加注入訊號，不是程式錯誤。"
-        )
+            "真實雜訊有時會抵銷、有時會疊加注入訊號，不是程式錯誤。",
+            "0.5〜1kmではほぼ検知できず、**3km以上では両コンステレーションとも97〜100%の検知率**に"
+            "達する。千帆の曲線は1〜2km付近で単調ではない（1kmの方が2kmより検知率が高い）。"
+            "これはまさに下記の誠実な補足と呼応するものである——千帆の実際の背景雑音自体がクリーンで"
+            "なく、30回のランダム試行がぶつかる実際の雑音は、時に注入信号を相殺し、時に重ね合わさる"
+            "のであり、プログラムのバグではない。",
+            "At 0.5–1 km, detection is nearly impossible; **above 3 km, both constellations reach 97–100% "
+            "detection**. Qianfan's curve is non-monotonic around 1–2 km (1 km actually has a higher "
+            "detection rate than 2 km), echoing the honest caveat below — Qianfan's real background noise "
+            "is itself not clean, and the real noise the 30 random trials happen to hit sometimes cancels "
+            "out and sometimes stacks with the injected signal; this is not a code bug.",
+        ))
 
         if not inj_b.empty:
-            st.markdown("**B. 軌道面 Δi 注入——意外發現：「盲區甜甜圈」**")
+            st.markdown(T3(
+                "**B. 軌道面 Δi 注入——意外發現：「盲區甜甜圈」**",
+                "**B. 軌道面Δi注入——予想外の発見：「ブラインドゾーン・ドーナツ」**",
+                "**B. Orbital-Plane Δi Injection — an Unexpected Finding: the \"Blind-Spot Donut\"**",
+            ))
             fig_b = go.Figure()
             for cname, color in [("OneWeb", "#42A5F5"), ("Qianfan", "#FFA726")]:
                 sub = inj_b[inj_b["constellation"] == cname].sort_values("inject_mag_deg")
                 if not sub.empty:
                     fig_b.add_trace(go.Scatter(
                         x=sub["inject_mag_deg"], y=sub["detect_rate"] * 100, mode="lines+markers",
-                        name=f"{cname} 偵測率", line=dict(color=color, width=2)))
+                        name=cname + T3(" 偵測率", " 検知率", " detection rate"), line=dict(color=color, width=2)))
                     fig_b.add_trace(go.Scatter(
                         x=sub["inject_mag_deg"], y=sub["escape_rate"] * 100, mode="lines+markers",
-                        name=f"{cname} 逃逸率", line=dict(color=color, width=1.5, dash="dot")))
+                        name=cname + T3(" 逃逸率", " 逃避率", " escape rate"), line=dict(color=color, width=1.5, dash="dot")))
             fig_b.add_vline(x=0.5, line_dash="dot", line_color="#FFD54F",
-                            annotation_text="殼層分群間隙門檻 0.5°")
+                            annotation_text=T3("殼層分群間隙門檻 0.5°", "シェル分群ギャップ閾値 0.5°", "Shell-grouping gap threshold 0.5°"))
             fig_b.update_layout(height=300, margin=dict(l=10, r=10, t=10, b=10),
-                                xaxis_title="注入的傾角變化量級 (deg)", yaxis_title="%",
+                                xaxis_title=T3("注入的傾角變化量級 (deg)", "注入した傾斜角変化量級 (deg)",
+                                              "Injected inclination-change magnitude (deg)"),
+                                yaxis_title="%",
                                 plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=1.18))
             st.plotly_chart(fig_b, use_container_width=True, key="case12_injection_b")
-            st.error(
+            st.error(T3(
                 "**這是本次擴充最重要的意外發現**：注入 0.05° 太小，偵測率 0%（低於雜訊地板，合理）；"
                 "**注入 0.1°～0.5° 之間，兩個星系偵測率都是 100%**；但**一旦注入量級達到 1°"
                 "（超過 `assign_planes()` 用來分群軌道面的 0.5° 傾角間隙門檻），偵測率直接摔回 0%，"
@@ -3691,11 +5575,41 @@ def render_storymap_case12():
                 "原本的軌道面分組**，變成一顆孤立的「新軌道面」（因為少於 3 顆同組門檻而被整個過濾掉），"
                 "根本沒有機會被 Δi 標準差邏輯檢查到。**換句話說：機動量級越大，反而越容易被系統的"
                 "分群前處理本身「看不見」**——這是一個只有做注入測試才會發現的方法論陷阱，"
-                "純粹看歷史「零異常」紀錄完全不會意識到這個盲區存在。"
-            )
+                "純粹看歷史「零異常」紀錄完全不會意識到這個盲區存在。",
+                "**これは今回の拡張における最も重要な予想外の発見である**：0.05°の注入は小さすぎ、"
+                "検知率0%（雑音床を下回っており、妥当である）；**0.1°〜0.5°の注入では、両コンステレー"
+                "ションとも検知率100%**である；しかし**注入量級が1°に達すると（`assign_planes()` が"
+                "軌道面を分群する際に用いる0.5°の傾斜角ギャップ閾値を超えると）、検知率は直ちに0%に"
+                "落ち込み、逃避率は100%**になる——信号が小さすぎて見えないのではなく、**注入された"
+                "傾斜角変化が大きすぎて、この衛星を元の軌道面グループから直接弾き出してしまう**ため、"
+                "孤立した「新しい軌道面」となり（同グループの最低3機という閾値を満たさず、丸ごと"
+                "フィルタリングされてしまう）、そもそもΔi標準偏差ロジックによってチェックされる機会が"
+                "ない。**言い換えれば：機動量級が大きくなるほど、かえってシステムの分群前処理そのものに"
+                "よって『見えなく』なりやすい**——これは注入テストを行って初めて発見できる方法論上の"
+                "落とし穴であり、単に過去の「異常ゼロ」の記録を見ているだけでは、このブラインドゾーンの"
+                "存在にまったく気づかない。",
+                "**This is the most important unexpected finding from this expansion**: injecting 0.05° is "
+                "too small, giving 0% detection (below the noise floor, reasonable); **between injections "
+                "of 0.1°–0.5°, both constellations detect at 100%**; but **once the injected magnitude "
+                "reaches 1° (exceeding the 0.5° inclination-gap threshold `assign_planes()` uses to group "
+                "orbital planes), detection collapses straight to 0%, with a 100% escape rate** — it's not "
+                "that the signal is too small to see, but that **the injected inclination change is large "
+                "enough to knock this satellite clean out of its original orbital-plane grouping**, turning "
+                "it into an isolated \"new orbital plane\" (which gets filtered out entirely for falling "
+                "below the minimum-3-satellites-per-group threshold), so it never even gets a chance to be "
+                "checked by the Δi standard-deviation logic. **In other words: the larger the maneuver "
+                "magnitude, the more likely the system's own pre-grouping step is to render it "
+                "\"invisible\"** — a methodological trap that can only be discovered by running an "
+                "injection test; simply looking at the historical \"zero anomalies\" record would never "
+                "reveal that this blind spot exists.",
+            ))
 
         if not inj_c.empty:
-            st.markdown("**C. 陣型相位注入**")
+            st.markdown(T3(
+                "**C. 陣型相位注入**",
+                "**C. 隊形位相注入**",
+                "**C. Formation-Phase Injection**",
+            ))
             fig_c = go.Figure()
             for cname, color in [("OneWeb", "#42A5F5"), ("Qianfan", "#FFA726")]:
                 sub = inj_c[inj_c["constellation"] == cname].sort_values("inject_mag_deg")
@@ -3704,84 +5618,198 @@ def render_storymap_case12():
                         x=sub["inject_mag_deg"], y=sub["detect_rate"] * 100, mode="lines+markers",
                         name=cname, line=dict(color=color, width=2)))
             fig_c.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10),
-                                xaxis_title="注入的相位偏移量級 (deg)", yaxis_title="偵測率 (%)",
+                                xaxis_title=T3("注入的相位偏移量級 (deg)", "注入した位相オフセット量級 (deg)",
+                                              "Injected phase-offset magnitude (deg)"),
+                                yaxis_title=T3("偵測率 (%)", "検知率 (%)", "Detection rate (%)"),
                                 plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=1.15))
             st.plotly_chart(fig_c, use_container_width=True, key="case12_injection_c")
-            st.caption(
+            st.caption(T3(
                 "1° 幾乎測不到、2° 附近約 50%、5° 以上穩定在 87～97%——但**從未真正摸到 100%**："
                 "因為被注入的那一顆衛星自己會拉高該軌道面的殘差標準差（判定門檻用 3×標準差），"
-                "等於機動量級越大，門檻也跟著自己被墊高一些，形成一個溫和的自我遮蔽效應。"
-            )
+                "等於機動量級越大，門檻也跟著自己被墊高一些，形成一個溫和的自我遮蔽效應。",
+                "1°ではほぼ検知できず、2°付近で約50%、5°以上では87〜97%で安定する——しかし"
+                "**決して本当の意味で100%に達することはない**：注入された当の衛星自身が、その軌道面の"
+                "残差標準偏差を押し上げてしまう（判定閾値は3×標準偏差を用いる）ためであり、機動量級が"
+                "大きくなるほど、閾値も自ら少しずつ底上げされてしまい、緩やかな自己遮蔽効果を形成する。",
+                "At 1°, detection is nearly impossible; around 2° it's about 50%; above 5° it stabilizes at "
+                "87–97% — but **it never truly reaches 100%**: because the injected satellite itself raises "
+                "that orbital plane's residual standard deviation (the threshold uses 3× standard "
+                "deviation), meaning the larger the maneuver magnitude, the more the threshold itself gets "
+                "pushed up too, creating a mild self-masking effect.",
+            ))
 
         if not inj_d.empty:
-            st.markdown("**D. 批量機動端到端驗證（直接回答「抓得到一整批衛星嗎」）**")
+            st.markdown(T3(
+                "**D. 批量機動端到端驗證（直接回答「抓得到一整批衛星嗎」）**",
+                "**D. 一括機動のエンドツーエンド検証（「まるごと1バッチの衛星を検知できるか」に直接答える）**",
+                "**D. End-to-End Batch-Maneuver Validation (Directly Answering \"Can It Catch an Entire Batch of Satellites?\")**",
+            ))
+            col_const = T3("星系", "コンステレーション", "Constellation")
+            col_ninj = T3("同時注入顆數", "同時注入機数", "Satellites injected simultaneously")
+            col_tday = T3("測試日", "テスト日", "Test day")
+            col_flagr = T3("觸發批量旗標比例", "一括フラグ発動率", "Batch-flag trigger rate")
+            col_avgn = T3("當天平均機動顆數", "当日の平均機動機数", "Avg. maneuvering satellites that day")
+            col_kb = T3("注入前基線K", "注入前基線K", "Baseline K before injection")
+            col_ki = T3("注入後K(含當天)", "注入後K(当日含む)", "K after injection (incl. test day)")
+            col_ke = T3("注入後K(排除當天)", "注入後K(当日除く)", "K after injection (excl. test day)")
             d_disp = inj_d.rename(columns={
-                "constellation": "星系", "n_injected": "同時注入顆數", "test_day": "測試日",
-                "flag_rate": "觸發批量旗標比例", "avg_n_maneuvering_that_day": "當天平均機動顆數",
-                "K_baseline_before_injection": "注入前基線K", "avg_K_including_test_day": "注入後K(含當天)",
-                "avg_K_excluding_test_day": "注入後K(排除當天)"})[
-                ["星系", "同時注入顆數", "測試日", "觸發批量旗標比例", "當天平均機動顆數",
-                 "注入前基線K", "注入後K(含當天)", "注入後K(排除當天)"]]
+                "constellation": col_const, "n_injected": col_ninj, "test_day": col_tday,
+                "flag_rate": col_flagr, "avg_n_maneuvering_that_day": col_avgn,
+                "K_baseline_before_injection": col_kb, "avg_K_including_test_day": col_ki,
+                "avg_K_excluding_test_day": col_ke})[
+                [col_const, col_ninj, col_tday, col_flagr, col_avgn, col_kb, col_ki, col_ke]]
             st.dataframe(
-                d_disp.style.format({"觸發批量旗標比例": "{:.0%}", "當天平均機動顆數": "{:.1f}",
-                                     "注入前基線K": "{:.1f}", "注入後K(含當天)": "{:.1f}",
-                                     "注入後K(排除當天)": "{:.1f}"}),
+                d_disp.style.format({col_flagr: "{:.0%}", col_avgn: "{:.1f}",
+                                     col_kb: "{:.1f}", col_ki: "{:.1f}", col_ke: "{:.1f}"}),
                 use_container_width=True, hide_index=True)
             k_oneweb = inj_d.loc[inj_d["constellation"] == "OneWeb", "K_baseline_before_injection"]
             k_qianfan = inj_d.loc[inj_d["constellation"] == "Qianfan", "K_baseline_before_injection"]
-            st.error(
+            k_oneweb_str = f"{k_oneweb.iloc[0]:.1f}"
+            k_qianfan_str = f"{k_qianfan.iloc[0]:.0f}"
+            st.error(T3(
                 f"**第二個重要意外發現：兩個星系的「批量」判定門檻天差地遠**。"
-                f"OneWeb 的背景基線極安靜，K≈**{k_oneweb.iloc[0]:.1f}** 顆／天——"
+                f"OneWeb 的背景基線極安靜，K≈**{k_oneweb_str}** 顆／天——"
                 "只要同時注入 2 顆衛星就立刻超標、100% 被標記為批量事件；"
-                f"但千帆目前的背景本身變動就很劇烈，K≈**{k_qianfan.iloc[0]:.0f}** 顆／天——"
+                f"但千帆目前的背景本身變動就很劇烈，K≈**{k_qianfan_str}** 顆／天——"
                 "同時注入 2 顆完全不會被標記（正確的陰性對照），但這也代表**如果千帆真的發生一次"
                 "涉及數十顆衛星的協同機動，只要沒超過這個上百顆的自適應門檻，系統一樣會判定「正常」**。"
                 "門檻用 mean+3σ 自適應設計的立意是避開誤報，但代價是：**背景越不安分的星系，"
                 "批量偵測的『警覺線』反而被自己的雜訊墊得越高**——這也解釋了為什麼千帆的日常監控"
-                "會持續回報「零異常」：不是系統看不到明顯的機動，而是它預設的『正常背景』範圍本身很寬。"
-            )
-            st.caption(
+                "會持續回報「零異常」：不是系統看不到明顯的機動，而是它預設的『正常背景』範圍本身很寬。",
+                f"**2つ目の重要な予想外の発見：2つのコンステレーションの「一括」判定閾値はまったく"
+                f"異なる**。OneWebの背景基線は極めて静穏であり、K≈**{k_oneweb_str}**機／日——"
+                "同時に2機を注入するだけで直ちに閾値を超え、100%が一括イベントとしてマークされる；"
+                f"しかし千帆の現在の背景はそれ自体が激しく変動しており、K≈**{k_qianfan_str}**機／日——"
+                "2機を同時注入してもまったくマークされない（正しい陰性対照ではある）が、これはまた"
+                "**千帆で本当に数十機の衛星が関わる協調的な機動が発生したとしても、この百機規模の適応"
+                "閾値を超えない限り、システムは同様に「正常」と判定してしまう**ことを意味する。"
+                "閾値をmean+3σの適応設計にした狙いは誤検知を避けることだが、その代償は：**背景が"
+                "不安定なコンステレーションほど、一括検知の『警戒線』はかえって自身の雑音によって"
+                "押し上げられてしまう**ことである——これは、なぜ千帆の日常監視が「異常ゼロ」を"
+                "報告し続けるのかも説明している：システムが明らかな機動を見逃しているのではなく、"
+                "その既定の『正常な背景』の範囲自体が非常に広いのである。",
+                f"**A second important unexpected finding: the two constellations' \"batch\" determination "
+                f"thresholds differ enormously**. OneWeb's background baseline is extremely quiet, K≈"
+                f"**{k_oneweb_str}** satellites/day — simply injecting 2 satellites simultaneously "
+                "immediately exceeds the threshold, with 100% flagged as a batch event; but Qianfan's "
+                f"current background itself fluctuates wildly, K≈**{k_qianfan_str}** satellites/day — "
+                "injecting 2 satellites simultaneously isn't flagged at all (a correct negative control), "
+                "but this also means **if Qianfan genuinely experienced a coordinated maneuver involving "
+                "dozens of satellites, as long as it didn't exceed this hundred-satellite-scale adaptive "
+                "threshold, the system would still judge it \"normal\"**. The intent behind the mean+3σ "
+                "adaptive-threshold design is to avoid false positives, but the cost is: **the noisier a "
+                "constellation's background, the higher its own noise pushes up the batch-detection "
+                "\"alert line\"** — this also explains why Qianfan's routine monitoring keeps reporting "
+                "\"zero anomalies\": not because the system can't see an obvious maneuver, but because its "
+                "default \"normal background\" range is itself very wide.",
+            ))
+            st.caption(T3(
                 "測試方法：把同一個真實可偵測量級（5km，依上方 A 測試已知≥3km幾乎必被逐星邏輯抓到）"
                 "同時疊加到 N 顆真實衛星的同一天，重跑完整 `analyze()`，檢查該天是否觸發 `flag_batch`。"
                 "這是刻意理想化的合成情境（真實批量事件各衛星量級/時間點會有分散度），"
                 "測出的偵測率可能比真實批量事件更樂觀，用途是刻劃系統的敏感度地圖，不是宣稱這就是"
-                "真實批量事件的偵測率。"
-            )
+                "真實批量事件的偵測率。",
+                "テスト方法：同一の実際に検知可能な量級（5km、上記Aテストにより≥3kmはほぼ確実に個別衛星"
+                "ロジックで検知されることが判明済み）をN機の実際の衛星の同じ日に同時に重ね合わせ、"
+                "完全な `analyze()` を再実行し、その日に `flag_batch` が発動するかを確認する。これは"
+                "意図的に理想化された合成シナリオである（実際の一括イベントでは各衛星の量級／時刻に"
+                "ばらつきがある）。測定された検知率は実際の一括イベントより楽観的である可能性があり、"
+                "その用途はシステムの感度地図を描くことであって、これが実際の一括イベントの検知率で"
+                "あると主張するものではない。",
+                "Test method: the same real, detectable magnitude (5 km — per Test A above, known to be "
+                "caught almost certainly by the per-satellite logic at ≥3 km) is overlaid simultaneously "
+                "onto N real satellites on the same day, then the full `analyze()` is rerun to check "
+                "whether `flag_batch` triggers that day. This is a deliberately idealized synthetic "
+                "scenario (real batch events have dispersion in each satellite's magnitude/timing); the "
+                "measured detection rate may be more optimistic than for a real batch event — its purpose "
+                "is to map the system's sensitivity, not to claim this is the detection rate for a real "
+                "batch event.",
+            ))
 
-        st.success(
+        st.success(T3(
             "**四項測試合起來的判讀**：「零異常」在單顆衛星機動夠大（≥3km）時是可信的——"
             "確實抓得到。但兩個新發現讓誠實的分級更精確：**機動量級太大反而可能逃過軌道面一致性檢查**"
             "（分群前處理的盲區），以及**批量偵測的『多大算異常』門檻，會被該星系自己的背景雜訊高低"
             "自動撐大或縮小**——千帆目前的門檻高到數十顆衛星同時異常都可能被判定為正常。"
             "這一級維持「有掃描、但無法判斷是否真的有效」的分級不變，但現在對「哪裡有效、哪裡有盲區」"
-            "已經有具體數字可以指認，而不是含糊地說『不確定』。"
-        )
+            "已經有具體數字可以指認，而不是含糊地說『不確定』。",
+            "**4項目のテストを合わせた判読**：単一衛星の機動が十分に大きい（≥3km）場合、「異常ゼロ」は"
+            "信頼できる——確かに検知できている。しかし2つの新しい発見によって、誠実な分類がより"
+            "精緻になった：**機動量級が大きすぎるとかえって軌道面一貫性チェックをすり抜ける可能性がある**"
+            "（分群前処理のブラインドゾーン）、そして**一括検知の『どれだけ大きければ異常か』という閾値は、"
+            "そのコンステレーション自身の背景雑音の高低によって自動的に押し広げられたり縮められたりする**"
+            "——千帆の現在の閾値は、数十機の衛星が同時に異常を起こしても正常と判定されうるほど高い。"
+            "この階層は「スキャンは行われているが、本当に有効かどうか判断できない」という分類を維持する"
+            "が、今では「どこで有効で、どこにブラインドゾーンがあるか」を、曖昧に『不確実』と言うのでは"
+            "なく、具体的な数値で指摘できるようになった。",
+            "**Combined verdict from the four tests**: \"zero anomalies\" is credible when a single "
+            "satellite's maneuver is large enough (≥3 km) — it genuinely gets caught. But two new findings "
+            "sharpen the honest tiering further: **too-large maneuver magnitudes can actually escape the "
+            "orbital-plane coherence check** (a blind spot in the pre-grouping step), and **the batch-"
+            "detection threshold for \"how big counts as anomalous\" gets automatically inflated or shrunk "
+            "by that constellation's own background noise level** — Qianfan's current threshold is high "
+            "enough that dozens of satellites going anomalous simultaneously could still be judged normal. "
+            "This tier remains \"scanned, but whether it's actually effective cannot be determined,\" but "
+            "now there are concrete numbers to point to for \"where it works and where the blind spots "
+            "are,\" rather than a vague \"uncertain.\"",
+        ))
 
-    st.header("⑥ 已知不適用的情境")
-    st.error(
+    st.header(T3("⑥ 已知不適用的情境", "⑥適用外であることが判明している状況", "⑥ Situations Known to Be Inapplicable"))
+    st.error(T3(
         "**HEO 非末期再入段（正常橢圓軌道運行階段）**\n\n"
         "物理阻力殘差模型（NRLMSIS）在真正的高橢圓軌道上**不適用**——"
         "遠地點階段的軌道變化主要由月球/太陽等第三體攝動主導，而不是大氣阻力，"
         "用阻力模型硬套會得出完全不合理的結果（詳見案例十的 −120 公里尺度高度案例）。"
         "`is_reentry_decay()` 自己的程式註解也寫明：「Cluster 類 HEO 的近地點早年很高，"
         "只有末期才俯衝，全期 median 會漏判」——目前的再入守門只是末期低近地點階段的安全網，"
-        "**不是涵蓋 HEO 全生命週期的解法**。"
-    )
+        "**不是涵蓋 HEO 全生命週期的解法**。",
+        "**HEOの非末期再突入段階（正常な楕円軌道運用段階）**\n\n"
+        "物理的抵抗残差モデル（NRLMSIS）は、真の高楕円軌道においては**適用できない**——"
+        "遠地点段階の軌道変化は主に月／太陽などの第三体摂動に支配されており、大気抵抗ではない。"
+        "抵抗モデルを無理に当てはめると、まったく不合理な結果が得られる（詳細は事例十の"
+        "−120キロメートルのスケールハイトの事例を参照）。`is_reentry_decay()` 自身のプログラムコメントにも"
+        "「Cluster類のHEOは初期の近地点が高く、末期になって初めて急降下するため、全期間のmedianでは"
+        "見逃してしまう」と明記されている——現在の再突入ガードは末期の低近地点段階の安全網にすぎず、"
+        "**HEOのライフサイクル全体をカバーする解決策ではない**。",
+        "**HEO's non-terminal reentry phase (normal elliptical-orbit operation)**\n\n"
+        "The physical drag-residual model (NRLMSIS) is **inapplicable** on genuine highly elliptical "
+        "orbits — orbital changes during the apogee phase are dominated mainly by third-body perturbation "
+        "(lunar/solar), not atmospheric drag; forcing the drag model onto this produces completely "
+        "unreasonable results (see Case 10's −120 km scale-height case for details). "
+        "`is_reentry_decay()`'s own code comment states plainly: \"Cluster-type HEOs have a high perigee "
+        "early on and only dive in the terminal phase; a full-period median would miss it\" — the current "
+        "reentry gate is only a safety net for the terminal, low-perigee phase, **not a solution covering "
+        "HEO's entire life cycle**.",
+    ))
     heo_resid = load_case12_heo_drag_residual()
     if not heo_resid.empty:
-        st.caption(
+        st.caption(T3(
             "**2026-09-10 反思本案例後補上的量級佐證**：對真實 Cluster II（FM7、FM8）非末期俯衝段"
             "跑既有的 `drag_residual()`，與同一函式在 ISS（站台保持 LEO 圓軌，模型原始設計目標）"
-            "上的殘差量級比較："
-        )
+            "上的殘差量級比較：",
+            "**2026-09-10に本事例を見直した際に補足した量級の裏付け**：実際のCluster II（FM7、FM8）の"
+            "非末期急降下段階に対して既存の `drag_residual()` を実行し、同じ関数をISS"
+            "（ステーションキーピングによるLEO円軌道、モデルの本来の設計対象）に適用した場合の残差量級と"
+            "比較する：",
+            "**Magnitude corroboration added following a 2026-09-10 review of this case**: running the "
+            "existing `drag_residual()` on real Cluster II (FM7, FM8) non-terminal diving phases, and "
+            "comparing the residual magnitude against the same function applied to the ISS (a station-kept "
+            "LEO circular orbit, the model's original design target):",
+        ))
+        col_sat = T3("衛星", "衛星", "Satellite")
+        col_kind = T3("類型", "種類", "Type")
+        col_nep = T3("採用筆數", "採用件数", "Records used")
+        col_rmed = T3("殘差中位數(km)", "残差中央値(km)", "Median residual (km)")
+        col_rp95 = T3("殘差P95(km)", "残差P95(km)", "Residual P95 (km)")
+        col_rmax = T3("殘差最大值(km)", "残差最大値(km)", "Max residual (km)")
         st.dataframe(
             heo_resid.rename(columns={
-                "name": "衛星", "kind": "類型", "n_epochs_used": "採用筆數",
-                "resid_median_abs_km": "殘差中位數(km)", "resid_p95_abs_km": "殘差P95(km)",
-                "resid_max_abs_km": "殘差最大值(km)"})
-            [["衛星", "類型", "採用筆數", "殘差中位數(km)", "殘差P95(km)", "殘差最大值(km)"]],
+                "name": col_sat, "kind": col_kind, "n_epochs_used": col_nep,
+                "resid_median_abs_km": col_rmed, "resid_p95_abs_km": col_rp95,
+                "resid_max_abs_km": col_rmax})
+            [[col_sat, col_kind, col_nep, col_rmed, col_rp95, col_rmax]],
             use_container_width=True, hide_index=True)
-        st.markdown(
+        st.markdown(T3(
             "ISS 的殘差中位數僅 **0.0096 km**（約 10 公尺，符合模型設計時的乾淨雜訊地板）；"
             "**Cluster II-FM7 的殘差中位數飆到 1.64 km（約 ISS 的 170 倍）、尾端最大值達 570 km**，"
             "FM8 的中位數雖仍算小（0.027 km，約 ISS 的 3 倍），但尾端 P95 也衝到 12.6 km、"
@@ -3791,21 +5819,62 @@ def render_storymap_case12():
             "**老實補充**：Van Allen A／B（38752／38753）本可作為第三個對照案例，"
             "但兩者在本地封存的 TLE 歷史窗內，近地點高度全程已 <250 km——代表這兩份封存資料"
             "本身就落在末期俯衝階段，找不到「非末期正常運行段」可用，因此本表未納入，"
-            "而非刻意排除不利樣本。"
-        )
+            "而非刻意排除不利樣本。",
+            "ISSの残差中央値はわずか**0.0096 km**（約10メートル、モデル設計時のクリーンな雑音床と"
+            "一致）；**Cluster II-FM7の残差中央値は1.64 km（ISSの約170倍）まで急上昇し、末端の"
+            "最大値は570 kmに達する**。FM8の中央値は依然として小さいものの（0.027 km、ISSの約3倍）、"
+            "末端のP95も12.6 kmまで、最大値は131 kmまで達する——**両衛星に共通する特徴は「大半の時間は"
+            "まだ合理的だが、末端では物理的に説明のつかない巨大な跳躍が現れる」**ことであり、これはまさに"
+            "第三体摂動が時折支配的になり、抵抗モデルを無理に当てはめると歪みが生じる具体的な姿である。"
+            "元々は純粋な文章による「適用不可」を、目に見える数値の対比へと置き換えたものである。\n\n"
+            "**誠実に補足する**：Van Allen A／B（38752／38753）は本来3つ目の対照事例となりえたが、"
+            "両者ともローカルに保存されているTLE履歴の窓内では、近地点高度が全期間を通じてすでに"
+            "<250 kmであった——これはこの2つの保存データ自体がすでに末期急降下段階にあり、"
+            "「非末期の正常運用段階」を見つけられないことを意味するため、本表には含めていない。"
+            "都合の悪いサンプルを意図的に排除したわけではない。",
+            "The ISS's median residual is only **0.0096 km** (about 10 m, consistent with the clean noise "
+            "floor the model was designed around); **Cluster II-FM7's median residual spikes to 1.64 km "
+            "(about 170× the ISS), with a tail maximum reaching 570 km**; FM8's median is still relatively "
+            "small (0.027 km, about 3× the ISS), but its tail P95 also reaches 12.6 km, with a maximum of "
+            "131 km — **the shared feature of both satellites is \"mostly reasonable, but with physically "
+            "nonsensical huge jumps appearing in the tail\"**, exactly what it looks like when third-body "
+            "perturbation occasionally dominates and the drag model, forced onto it, becomes distorted — "
+            "turning the originally purely textual claim of \"inapplicable\" into a visible numerical "
+            "contrast.\n\n"
+            "**Honest addendum**: Van Allen A/B (38752/38753) could have served as a third comparison case, "
+            "but within the locally archived TLE history window, both already had a perigee altitude "
+            "<250 km throughout — meaning this archived data itself already falls within the terminal "
+            "diving phase, with no \"non-terminal, normal operation phase\" available, so this table "
+            "doesn't include them; this is not a deliberate exclusion of an inconvenient sample.",
+        ))
 
     st.markdown("---")
-    st.markdown("**尚待測試的缺口 → 2026-09-10 已補上嚴謹分類與初步數字**")
+    st.markdown(T3(
+        "**尚待測試的缺口 → 2026-09-10 已補上嚴謹分類與初步數字**",
+        "**まだテストされていないギャップ → 2026-09-10に厳密な分類と初歩的な数値を補足済み**",
+        "**A Not-Yet-Tested Gap → Rigorous Classification and Preliminary Numbers Added on 2026-09-10**",
+    ))
     sso = load_case12_sso_classification()
     if sso.empty:
-        st.markdown(
+        st.markdown(T3(
             "**太陽同步軌道**：目前系統從未把「太陽同步」單獨設為一條測試分層——"
             "FORMOSAT 系列（多為太陽同步軌道）的驗證數字（如 FORMOSAT-3A 純衰減殘差極小）"
             "可以算是間接佐證，但技術文件從未以「太陽同步 vs 非太陽同步」作為明確的分類軸去呈現結果，"
-            "這是一個誠實列出、但目前還沒有專門數字可以回答的缺口。"
-        )
+            "這是一個誠實列出、但目前還沒有專門數字可以回答的缺口。",
+            "**太陽同期軌道**：現在のシステムは「太陽同期」を単独のテスト階層として設定したことが"
+            "一度もない——FORMOSATシリーズ（多くは太陽同期軌道）の検証数値（FORMOSAT-3Aの純粋な"
+            "減衰残差が極めて小さいなど）は間接的な裏付けとはみなせるが、技術文書は「太陽同期 vs "
+            "非太陽同期」を明確な分類軸として結果を示したことは一度もない。これは誠実に列挙するが、"
+            "現時点では専用の数値で答えられないギャップである。",
+            "**Sun-synchronous orbit**: the current system has never set up \"sun-synchronous\" as its own "
+            "test tier — validation numbers from the FORMOSAT series (mostly sun-synchronous orbits, e.g., "
+            "FORMOSAT-3A's pure-decay residual being extremely small) can count as indirect corroboration, "
+            "but the technical documentation has never presented results along an explicit \"sun-"
+            "synchronous vs. non-sun-synchronous\" classification axis — this is a gap honestly listed but "
+            "not yet answerable with dedicated numbers.",
+        ))
     else:
-        st.markdown(
+        st.markdown(T3(
             "**太陽同步軌道（SSO）**：原本的缺口是「從未把太陽同步單獨設為一條測試分層」。"
             "改進思路不是重新收案例，而是先問一個更嚴謹的問題：**傾角接近 96–99° 不等於真的是"
             "太陽同步軌道**——太陽同步的嚴格定義是「節線進動速率跟太陽視運動同步」"
@@ -3813,8 +5882,32 @@ def render_storymap_case12():
             "**方法**：直接對案例四 23 顆外部真值衛星的真實 RAAN（升交點赤經）時序做線性回歸，"
             "算出每顆的**實際節線進動速率**，跟理論太陽同步值比對——這比只看傾角嚴謹得多。"
             "例如 **CryoSat-2 傾角 92°、外觀像 SSO，但實測進動速率只有 0.24°/day，明確不是**；"
-            "**SARAL 傾角 98.5°、實測進動速率 0.985°/day，幾乎完美吻合，是嚴格 SSO**。"
-        )
+            "**SARAL 傾角 98.5°、實測進動速率 0.985°/day，幾乎完美吻合，是嚴格 SSO**。",
+            "**太陽同期軌道（SSO）**：もともとのギャップは「太陽同期を単独のテスト階層として設定した"
+            "ことが一度もない」ことであった。改善の発想は事例を新たに集めることではなく、まず"
+            "より厳密な問いを立てることである：**傾斜角が96〜99°に近いことは、本当に太陽同期軌道で"
+            "あることを意味しない**——太陽同期の厳密な定義は「昇交点の歳差速度が太陽の見かけの運動と"
+            "同期している」こと（≈0.9856°/日）であり、高い傾斜角はこの条件を満たすための必要条件"
+            "ではあるが十分条件ではない。\n\n"
+            "**方法**：事例四の23機の外部真値衛星の実際のRAAN（昇交点赤経）時系列に直接線形回帰を行い、"
+            "各衛星の**実際の昇交点歳差速度**を算出し、理論上の太陽同期値と比較する——これは傾斜角だけを"
+            "見るよりもはるかに厳密である。例えば**CryoSat-2は傾斜角92°でSSOのように見えるが、実測の"
+            "歳差速度はわずか0.24°/日であり、明確にSSOではない**；**SARALは傾斜角98.5°、実測歳差速度"
+            "0.985°/日であり、ほぼ完璧に一致しており、厳密なSSOである**。",
+            "**Sun-synchronous orbit (SSO)**: the original gap was \"sun-synchronous has never been set up "
+            "as its own test tier.\" The improvement approach isn't to collect new cases, but to first ask "
+            "a more rigorous question: **an inclination near 96–99° does not mean an orbit is genuinely "
+            "sun-synchronous** — the strict definition of sun-synchronous is \"the nodal precession rate is "
+            "synchronized with the sun's apparent motion\" (≈0.9856°/day); a high inclination is only a "
+            "necessary, not sufficient, means of achieving that condition.\n\n"
+            "**Method**: running a direct linear regression on the real RAAN (right ascension of the "
+            "ascending node) time series for Case 4's 23 external-ground-truth satellites, computing each "
+            "one's **actual nodal precession rate** and comparing it against the theoretical sun-"
+            "synchronous value — far more rigorous than looking at inclination alone. For example, "
+            "**CryoSat-2 has a 92° inclination and looks like an SSO, but its measured precession rate is "
+            "only 0.24°/day — clearly not one**; **SARAL has a 98.5° inclination and a measured precession "
+            "rate of 0.985°/day, an almost perfect match — a strict SSO**.",
+        ))
         n_sso = int(sso["is_sso"].sum())
         n_non = int((~sso["is_sso"]).sum())
         sso_g = sso[sso["is_sso"]]
@@ -3822,18 +5915,33 @@ def render_storymap_case12():
         sso_recall = sso_g["tp"].sum() / sso_g["n_ev"].sum()
         non_recall = non_g["tp"].sum() / non_g["n_ev"].sum()
         c1, c2, c3 = st.columns(3)
-        c1.metric("確認嚴格太陽同步", f"{n_sso} 顆", f"加權召回率 {sso_recall:.1%}")
-        c2.metric("確認非太陽同步", f"{n_non} 顆", f"加權召回率 {non_recall:.1%}")
-        c3.metric("樣本來源", "既有23星外部標竿", "無需新收資料")
-        with st.expander("看逐衛星的真實節線進動速率與分類結果", expanded=False):
+        c1.metric(T3("確認嚴格太陽同步", "厳密な太陽同期を確認", "Confirmed strict sun-synchronous"),
+                 T3(f"{n_sso} 顆", f"{n_sso}機", f"{n_sso}"), T3(f"加權召回率 {sso_recall:.1%}", f"加重再現率 {sso_recall:.1%}", f"Weighted recall {sso_recall:.1%}"))
+        c2.metric(T3("確認非太陽同步", "非太陽同期を確認", "Confirmed non-sun-synchronous"),
+                 T3(f"{n_non} 顆", f"{n_non}機", f"{n_non}"), T3(f"加權召回率 {non_recall:.1%}", f"加重再現率 {non_recall:.1%}", f"Weighted recall {non_recall:.1%}"))
+        c3.metric(T3("樣本來源", "サンプルの出所", "Sample source"),
+                 T3("既有23星外部標竿", "既存の23機外部ベンチマーク", "Existing 23-satellite external benchmark"),
+                 T3("無需新收資料", "新規データ収集不要", "No new data collection needed"))
+        with st.expander(T3(
+            "看逐衛星的真實節線進動速率與分類結果",
+            "衛星ごとの実際の昇交点歳差速度と分類結果を見る",
+            "View Per-Satellite Real Nodal Precession Rates and Classification Results",
+        ), expanded=False):
+            col_sat2 = T3("衛星", "衛星", "Satellite")
+            col_inc = T3("平均傾角(°)", "平均傾斜角(°)", "Mean inclination (°)")
+            col_raanr = T3("實測進動速率(°/day)", "実測歳差速度(°/day)", "Measured precession rate (°/day)")
+            col_diff = T3("與太陽同步值之差", "太陽同期値との差", "Difference from sun-sync value")
+            col_issso = T3("判定為SSO", "SSOと判定", "Determined as SSO")
+            col_nev = T3("真值事件數", "真値イベント数", "Ground-truth event count")
+            col_rec = T3("個別召回率", "個別再現率", "Individual recall")
             disp = sso.rename(columns={
-                "name": "衛星", "inc_mean_deg": "平均傾角(°)", "raan_rate_deg_day": "實測進動速率(°/day)",
-                "diff_from_solar_rate": "與太陽同步值之差", "is_sso": "判定為SSO",
-                "n_ev": "真值事件數", "recall": "個別召回率"})[
-                ["衛星", "平均傾角(°)", "實測進動速率(°/day)", "與太陽同步值之差", "判定為SSO",
-                 "真值事件數", "個別召回率"]].sort_values("實測進動速率(°/day)", ascending=False)
-            st.dataframe(disp.style.format({"個別召回率": "{:.1%}"}), use_container_width=True, hide_index=True)
-        st.success(
+                "name": col_sat2, "inc_mean_deg": col_inc, "raan_rate_deg_day": col_raanr,
+                "diff_from_solar_rate": col_diff, "is_sso": col_issso,
+                "n_ev": col_nev, "recall": col_rec})[
+                [col_sat2, col_inc, col_raanr, col_diff, col_issso,
+                 col_nev, col_rec]].sort_values(col_raanr, ascending=False)
+            st.dataframe(disp.style.format({col_rec: "{:.1%}"}), use_container_width=True, hide_index=True)
+        st.success(T3(
             f"**結果**：嚴格 SSO（**{n_sso} 顆**：SPOT-2/3/4/5、Sentinel-3A/3B、SARAL、"
             f"HY-2A、Envisat）加權召回率 **{sso_recall:.1%}**，非 SSO（**{n_non} 顆**）"
             f"加權召回率 **{non_recall:.1%}**——**兩者只差不到 2 個百分點，沒有看到"
@@ -3843,22 +5951,80 @@ def render_storymap_case12():
             "（SSO 組合計 988 個事件），子分組後樣本更小，波動仍偏大（例如 Envisat 單顆召回率"
             "僅 17.5%、Sentinel-3A 高達 91.2%，同屬 SSO 組內差異就很大）——這足以**填補"
             "「完全沒有數字」的缺口**，但還稱不上「太陽同步軌道已被嚴謹分層驗證過」，"
-            "仍建議標示為初步佐證而非最終結論。"
-        )
-        st.caption("可重跑腳本：`analyze_sso_classification.py`（節線進動速率回歸＋既有23星L3召回率切片，"
-                  "資料源 `docs/report_tasa_ilrs_benchmark.md` 之23星逐星總表）。")
+            "仍建議標示為初步佐證而非最終結論。",
+            f"**結果**：厳密なSSO（**{n_sso}機**：SPOT-2/3/4/5、Sentinel-3A/3B、SARAL、HY-2A、Envisat）の"
+            f"加重再現率は**{sso_recall:.1%}**、非SSO（**{n_non}機**）の加重再現率は**{non_recall:.1%}**"
+            "——**両者の差はわずか2ポイント未満であり、太陽同期軌道に特有の系統的な弱点は見られ"
+            "なかった**。両方の数値ともStarlink領域内で検証された97%以上を大きく下回っているが、"
+            "それはすでに既知のドメイン間汎化の落差であり（事例四、事例九を参照）、太陽同期という軌道"
+            "タイプ自体による追加の減点ではない。**誠実に補足する**：この数値群は、既存の23機の外部"
+            "ベンチマークがもともと少ないイベント数（SSOグループ合計988イベント）を用いており、"
+            "サブグループに分けるとサンプルはさらに小さくなり、依然としてばらつきが大きい"
+            "（例えばEnvisat単体の再現率はわずか17.5%、Sentinel-3Aは91.2%にも達し、同じSSOグループ内"
+            "でも差が大きい）——これは**「まったく数値がない」というギャップを埋めるには十分**だが、"
+            "「太陽同期軌道はすでに厳密に階層化検証された」とはまだ言えず、最終結論ではなく初歩的な"
+            "裏付けとして示すことを推奨する。",
+            f"**Result**: strict SSO (**{n_sso} satellites**: SPOT-2/3/4/5, Sentinel-3A/3B, SARAL, HY-2A, "
+            f"Envisat) has a weighted recall of **{sso_recall:.1%}**, and non-SSO (**{n_non} satellites**) "
+            f"has a weighted recall of **{non_recall:.1%}** — **the two differ by less than 2 percentage "
+            "points, showing no systematic weakness specific to sun-synchronous orbits**. Both numbers are "
+            "far below the 97%+ validated within the Starlink domain, but that's the already-known cross-"
+            "domain generalization gap (see Cases 4 and 9), not an extra penalty caused by the sun-"
+            "synchronous orbit type itself. **Honest addendum**: this set of numbers reuses the already-"
+            "small event count from the existing 23-satellite external benchmark (988 events total for the "
+            "SSO group), and the sample gets even smaller after sub-grouping, with variance still fairly "
+            "large (e.g., Envisat alone has only 17.5% recall while Sentinel-3A reaches 91.2%, a large "
+            "spread even within the same SSO group) — this is enough to **fill the gap of \"having no "
+            "numbers at all,\"** but doesn't yet amount to \"sun-synchronous orbit having been rigorously "
+            "tiered and validated\"; it's still recommended to label this as preliminary corroboration "
+            "rather than a final conclusion.",
+        ))
+        st.caption(T3(
+            "可重跑腳本：`analyze_sso_classification.py`（節線進動速率回歸＋既有23星L3召回率切片，"
+            "資料源 `docs/report_tasa_ilrs_benchmark.md` 之23星逐星總表）。",
+            "再実行可能なスクリプト：`analyze_sso_classification.py`（昇交点歳差速度回帰＋既存23機の"
+            "L3再現率切片、データ元は `docs/report_tasa_ilrs_benchmark.md` の23機衛星ごとの総表）。",
+            "Rerunnable script: `analyze_sso_classification.py` (nodal-precession-rate regression plus a "
+            "recall slice of the existing 23-satellite L3 benchmark; data sourced from the per-satellite "
+            "summary table in `docs/report_tasa_ilrs_benchmark.md`).",
+        ))
 
     st.markdown("---")
-    st.success(
+    st.success(T3(
         "**判讀**：這套系統目前唯一有嚴謹量化驗證（獨立真值＋泛化測試）的範圍，"
         "是 **Starlink 這一類 LEO 星座級站台保持衛星**。往外延伸一圈——LEO 再入判定、GEO/MEO 路由——"
         "有清楚的處理邏輯，但驗證強度遞減；再往外——非 Starlink 星系的零異常、HEO 全生命週期——"
         "則是誠實標示為「還不知道」或「已知不適用」，而不是含糊地宣稱「通用於所有軌道」。"
-        "**這種分級揭露，本身就是本專案方法論嚴謹度的一部分**（呼應案例十一：既有文獻少見系統性報告驗證邊界）。"
-    )
-    st.caption("完整量化驗收數字見 `docs/期末報告_技術附錄_20260909.md`；"
-              "再入守門邏輯見 `atmospheric_drag.py::is_reentry_decay()`；"
-              "星系級掃描見 `constellation_anomaly.py`；Galileo MEO 比對見 `mgex_galileo/`。")
+        "**這種分級揭露，本身就是本專案方法論嚴謹度的一部分**（呼應案例十一：既有文獻少見系統性報告驗證邊界）。",
+        "**判読**：このシステムが現時点で唯一厳密な定量的検証（独立真値＋汎化テスト）を経ている範囲は、"
+        "**Starlinkのようなタイプの、LEOコンステレーション級のステーションキーピング衛星**である。"
+        "そこから一段外へ広げると——LEO再突入判定、GEO/MEOルーティング——明確な処理ロジックはあるが、"
+        "検証の強度は逓減する；さらにその外側——Starlink以外のコンステレーションの異常ゼロ、HEOの"
+        "ライフサイクル全体——は、誠実に「まだ分からない」あるいは「適用外であることが判明している」と"
+        "表示すべきであり、「すべての軌道に汎用的である」と曖昧に主張すべきではない。"
+        "**このような階層的な開示そのものが、本プロジェクトの方法論的厳密さの一部である**"
+        "（事例十一と呼応する：既存文献では検証の境界が体系的に報告されることは少ない）。",
+        "**Verdict**: the only range this system currently has rigorous quantitative validation for "
+        "(independent ground truth plus generalization testing) is **LEO constellation-scale station-"
+        "keeping satellites of the Starlink type**. One ring further out — LEO reentry determination, "
+        "GEO/MEO routing — there is clear processing logic, but validation strength diminishes; further "
+        "out still — zero anomalies on non-Starlink constellations, HEO's full life cycle — these are "
+        "honestly labeled \"not yet known\" or \"known to be inapplicable,\" rather than vaguely claimed to "
+        "\"generalize to all orbits.\" **This kind of tiered disclosure is itself part of this project's "
+        "methodological rigor** (echoing Case 11: existing literature rarely reports validation boundaries "
+        "systematically).",
+    ))
+    st.caption(T3(
+        "完整量化驗收數字見 `docs/期末報告_技術附錄_20260909.md`；"
+        "再入守門邏輯見 `atmospheric_drag.py::is_reentry_decay()`；"
+        "星系級掃描見 `constellation_anomaly.py`；Galileo MEO 比對見 `mgex_galileo/`。",
+        "完全な定量的検収の数値は `docs/期末報告_技術附錄_20260909.md` を参照。再突入ガードロジックは "
+        "`atmospheric_drag.py::is_reentry_decay()` を参照。コンステレーション級スキャンは "
+        "`constellation_anomaly.py` を参照。Galileo MEO比較は `mgex_galileo/` を参照。",
+        "The complete quantitative acceptance numbers are in `docs/期末報告_技術附錄_20260909.md`; the "
+        "reentry-gate logic is in `atmospheric_drag.py::is_reentry_decay()`; constellation-scale scanning "
+        "is in `constellation_anomaly.py`; the Galileo MEO comparison is in `mgex_galileo/`.",
+    ))
 
 
 # ══ StoryMap 案例十三（2026-09-10 新增）══════════════════════════════════════════
@@ -3876,64 +6042,150 @@ def load_case13_real_data() -> dict:
     return out
 
 
+# --- render_storymap_case13 ---
 def render_storymap_case13():
     if st.button(t("storymap_back"), key="back_from_case13"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例十三：對幾十顆到上百顆 Starlink 跑 MEME 軌道外推，算出了什麼？")
-    st.subheader("大規模計算的結果與意外發現")
-    st.caption("本頁數字讀取自離線批次分析輸出（`data/study1/`、`data/study2/`、`data/study3/`），"
-              "皆為對真實 Starlink MEME 精密星曆逐顆計算之結果，非模擬數字。")
+    st.title(T3(
+        "案例十三：對幾十顆到上百顆 Starlink 跑 MEME 軌道外推，算出了什麼？",
+        "事例十三：数十機から百機規模のStarlink衛星に対してMEME軌道外挿を実行し、何が分かったのか？",
+        "Case 13: What Did Running MEME Orbit Extrapolation Across Dozens to Hundreds of Starlink Satellites Reveal?",
+    ))
+    st.subheader(T3(
+        "大規模計算的結果與意外發現",
+        "大規模計算の結果と意外な発見",
+        "Results of a Large-Scale Computation and Its Unexpected Discoveries",
+    ))
+    st.caption(T3(
+        "本頁數字讀取自離線批次分析輸出（`data/study1/`、`data/study2/`、`data/study3/`），"
+        "皆為對真實 Starlink MEME 精密星曆逐顆計算之結果，非模擬數字。",
+        "本頁の数値はオフラインのバッチ分析出力（`data/study1/`、`data/study2/`、`data/study3/`）から読み込んだものであり、"
+        "いずれも実際のStarlink MEME精密暦を衛星ごとに計算した結果であって、シミュレーション上の数値ではない。",
+        "The numbers on this page are read from offline batch-analysis output (`data/study1/`, `data/study2/`, `data/study3/`), "
+        "all computed satellite-by-satellite against real Starlink MEME precise ephemerides — not simulated figures.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：軌道預報的誤差，理論上應該隨著「預測多久以後」單調變大——但實際數字長什麼樣子？"
         "多久之後誤差會大到不能用？大規模跑過幾十到上百顆真實衛星之後，除了驗證這個直覺，"
-        "還意外挖到兩個一開始沒想到的方法論陷阱。"
-    )
+        "還意外挖到兩個一開始沒想到的方法論陷阱。",
+        "**問題の背景**：軌道予報の誤差は、理論上「どれだけ先を予測するか」に応じて単調に増大するはずである——"
+        "しかし実際の数値はどのような形をしているのか？どのくらい先になると誤差が使い物にならないほど大きくなるのか？"
+        "数十機から百機規模の実衛星に対して大規模に計算を実行した結果、この直感を検証できただけでなく、"
+        "当初は想定していなかった2つの方法論的な落とし穴を偶然発見した。",
+        "**Problem background**: orbit-prediction error should, in theory, grow monotonically with \"how far ahead\" "
+        "the prediction reaches — but what do the actual numbers look like? How long before the error becomes too "
+        "large to be usable? Running this at scale across dozens to hundreds of real satellites not only confirmed "
+        "this intuition, but also unexpectedly uncovered two methodological traps that were not anticipated at the outset.",
+    ))
 
     data = load_case13_real_data()
 
-    st.header("① 最乾淨的量尺：MEME 對 MEME 自我預測")
-    st.markdown(
+    st.header(T3(
+        "① 最乾淨的量尺：MEME 對 MEME 自我預測",
+        "①最もクリーンな物差し：MEME対MEMEの自己予測",
+        "① The cleanest yardstick: MEME predicting MEME",
+    ))
+    st.markdown(T3(
         "SpaceX 的 MEME 精密星曆每份涵蓋 72 小時、每分鐘一筆，且每 ~8 小時重新發布一次、彼此重疊 ~88%。"
         "這代表對同一個未來時刻，會同時存在「較新、外推齡幾乎為 0」的檔案（當作真值）"
         "和「較舊、外推齡 8～72 小時」的檔案（當作預測）——兩者相減就是精密星曆自己的外推誤差，"
-        "**完全不需要外部傳播器，不會混進 SGP4 的誤差**，是樣本量最大、最乾淨的量測方式。"
-    )
+        "**完全不需要外部傳播器，不會混進 SGP4 的誤差**，是樣本量最大、最乾淨的量測方式。",
+        "SpaceXのMEME精密暦は1件あたり72時間をカバーし、1分ごとに1点、約8時間ごとに再発行され、互いに約88%重複している。"
+        "これは、同じ未来の時刻について、「より新しく、外挿齢がほぼゼロ」のファイル（真値として扱う）と"
+        "「より古く、外挿齢8〜72時間」のファイル（予測として扱う）が同時に存在することを意味する——"
+        "両者の差がそのまま精密暦自体の外挿誤差となり、**外部の伝播器を一切必要とせず、SGP4の誤差も混入しない**、"
+        "サンプル数が最大で最もクリーンな測定方法である。",
+        "Each of SpaceX's MEME precise ephemerides spans 72 hours at one-minute resolution, and is republished "
+        "roughly every ~8 hours with ~88% overlap between consecutive files. This means that for the same future "
+        "instant, there simultaneously exists a \"newer file with near-zero extrapolation age\" (treated as ground "
+        "truth) and an \"older file with 8–72 hours of extrapolation age\" (treated as the prediction) — subtracting "
+        "the two yields the precise ephemeris's own extrapolation error, **requiring no external propagator at all "
+        "and free of any SGP4 error contamination** — the largest-sample, cleanest measurement approach available.",
+    ))
     hz = data.get("horizon", pd.DataFrame())
     if not hz.empty:
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=hz["horizon_bin_h"], y=hz["pos_med_km"], mode="lines+markers",
-                                 name="位置誤差中位數", line=dict(color="#64B5F6", width=2)))
+                                 name=T3("位置誤差中位數", "位置誤差中央値", "Median position error"),
+                                 line=dict(color="#64B5F6", width=2)))
         fig.add_trace(go.Scatter(x=hz["horizon_bin_h"], y=hz["pos_p95_km"], mode="lines+markers",
-                                 name="位置誤差 P95", line=dict(color="#FFB74D", width=2, dash="dot")))
+                                 name=T3("位置誤差 P95", "位置誤差 P95", "Position error P95"),
+                                 line=dict(color="#FFB74D", width=2, dash="dot")))
         fig.add_trace(go.Scatter(x=hz["horizon_bin_h"], y=hz["rms_t_km"], mode="lines",
-                                 name="沿軌方向 RMS", line=dict(color="#EF5350", width=1.5)))
+                                 name=T3("沿軌方向 RMS", "沿軌方向RMS", "Along-track RMS"),
+                                 line=dict(color="#EF5350", width=1.5)))
         fig.update_layout(height=340, margin=dict(l=10, r=10, t=10, b=10),
-                          xaxis_title="外推時程 (小時)", yaxis_title="誤差 (km)",
+                          xaxis_title=T3("外推時程 (小時)", "外挿時間 (時間)", "Extrapolation horizon (hours)"),
+                          yaxis_title=T3("誤差 (km)", "誤差 (km)", "Error (km)"),
                           plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=1.1))
         st.plotly_chart(fig, use_container_width=True, key="case13_horizon")
-        st.caption(
-            f"50 顆安靜（無機動）衛星、共 {int(hz['n'].sum()):,} 筆樣本："
-            f"位置誤差中位數從 8 小時的 **{hz.loc[hz.horizon_bin_h==8,'pos_med_km'].iloc[0]:.2f} km** "
-            f"成長到 72 小時的 **{hz.loc[hz.horizon_bin_h==72,'pos_med_km'].iloc[0]:.2f} km**，"
+        n_samples_str = f"{int(hz['n'].sum()):,}"
+        pm8_str = f"{hz.loc[hz.horizon_bin_h==8,'pos_med_km'].iloc[0]:.2f}"
+        pm72_str = f"{hz.loc[hz.horizon_bin_h==72,'pos_med_km'].iloc[0]:.2f}"
+        st.caption(T3(
+            f"50 顆安靜（無機動）衛星、共 {n_samples_str} 筆樣本："
+            f"位置誤差中位數從 8 小時的 **{pm8_str} km** "
+            f"成長到 72 小時的 **{pm72_str} km**，"
             "且在 48 小時左右就開始飽和，不再持續倍增——**幾乎全部誤差來自沿軌方向**（紅線遠高於徑向/法向），"
-            "符合軌道力學上「沿軌相位誤差是主導項」的預期。"
-        )
+            "符合軌道力學上「沿軌相位誤差是主導項」的預期。",
+            f"静穏（機動なし）な衛星50機、合計{n_samples_str}件のサンプル："
+            f"位置誤差中央値は8時間時点の **{pm8_str} km**から72時間時点の **{pm72_str} km**まで増大し、"
+            "48時間前後で飽和し始め、それ以降は倍増を続けない——**誤差のほぼすべてが沿軌方向に由来する**"
+            "（赤線が動径方向／法線方向を大きく上回る）ことは、軌道力学における"
+            "「沿軌方向の位相誤差が支配項である」という予想と一致する。",
+            f"Across 50 quiet (non-maneuvering) satellites, {n_samples_str} samples in total: "
+            f"median position error grows from **{pm8_str} km** at 8 hours to **{pm72_str} km** at 72 hours, "
+            "beginning to saturate around 48 hours and no longer continuing to double — "
+            "**almost all of the error comes from the along-track direction** (the red line far exceeds "
+            "radial/normal), consistent with the orbital-mechanics expectation that "
+            "\"along-track phase error is the dominant term.\"",
+        ))
 
-    st.header("② 意外發現一：用「瞬時半長軸」抓機動，99.5% 都抓錯")
-    st.error(
+    st.header(T3(
+        "② 意外發現一：用「瞬時半長軸」抓機動，99.5% 都抓錯",
+        "②意外な発見その1：「瞬時軌道長半径」で機動を検知すると、99.5%が誤りだった",
+        "② Unexpected finding one: using \"osculating semi-major axis\" to catch maneuvers got it wrong "
+        "99.5% of the time",
+    ))
+    st.error(T3(
         "MEME 檔案裡的瞬時（osculating）半長軸，其實會因為地球扁率造成的 J2 短週期攝動而上下振盪"
         "（振幅可達數公里），跟真正的機動訊號長得很像。第一版方法直接比較相鄰快照的瞬時半長軸差異，"
         "**結果把 99.5% 的正常樣本都誤判成機動**——這不是資料問題，是方法本身的系統性錯誤。\n\n"
         "**修正方式**：不比較單一時刻的瞬時值，而是把整份 72 小時星曆檔（約 10 個軌道週期）的半長軸取平均，"
         "讓 J2 短週期振盪自然抵消，只留下真正的長期趨勢——修正後，已知靜止衛星的雜訊地板才降到合理範圍"
-        "（低於 0.2 km 的判定門檻）。**這個教訓後來變成 `study3` 機動過濾邏輯的核心方法**。"
-    )
+        "（低於 0.2 km 的判定門檻）。**這個教訓後來變成 `study3` 機動過濾邏輯的核心方法**。",
+        "MEMEファイル中の瞬時（osculating）軌道長半径は、実は地球の扁平率によるJ2短周期摂動のために上下に"
+        "振動しており（振幅は数キロメートルに達することもある）、本物の機動信号と非常によく似ている。"
+        "最初のバージョンの手法では隣接するスナップショット間の瞬時軌道長半径の差を直接比較したところ、"
+        "**正常サンプルの99.5%を誤って機動と判定してしまった**——これはデータの問題ではなく、"
+        "手法そのものの系統的な誤りである。\n\n"
+        "**修正方法**：単一時刻の瞬時値を比較するのではなく、72時間分の暦ファイル全体（約10軌道周期分）の"
+        "軌道長半径を平均化し、J2短周期振動を自然に打ち消し、本当の長期的傾向のみを残す——修正後、"
+        "既知の静止衛星の雑音床がようやく合理的な範囲（判定閾値0.2km未満）まで低下した。"
+        "**この教訓は後に `study3` の機動フィルタリングロジックの中核的な手法となった**。",
+        "The osculating (instantaneous) semi-major axis in MEME files actually oscillates up and down "
+        "(with amplitude reaching several kilometers) due to J2 short-period perturbation caused by Earth's "
+        "oblateness, and looks very similar to a genuine maneuver signal. The first version of the method "
+        "directly compared the osculating semi-major axis between adjacent snapshots, and **as a result "
+        "misclassified 99.5% of normal samples as maneuvers** — this was not a data problem, but a systematic "
+        "error in the method itself.\n\n"
+        "**The fix**: rather than comparing instantaneous values at a single moment, the semi-major axis is "
+        "averaged across the entire 72-hour ephemeris file (roughly 10 orbital periods), letting the J2 "
+        "short-period oscillation cancel out naturally and leaving only the genuine long-term trend — after "
+        "this fix, the noise floor for known stationary satellites finally dropped into a reasonable range "
+        "(below the 0.2 km detection threshold). **This lesson later became the core method behind "
+        "`study3`'s maneuver-filtering logic.**",
+    ))
 
-    st.header("③ 意外發現二：SpaceX 把計畫機動「預先寫好」進星曆檔")
-    st.warning(
+    st.header(T3(
+        "③ 意外發現二：SpaceX 把計畫機動「預先寫好」進星曆檔",
+        "③意外な発見その2：SpaceXは計画済みの機動を暦ファイルに「あらかじめ書き込んで」いた",
+        "③ Unexpected finding two: SpaceX \"pre-writes\" planned maneuvers into the ephemeris file",
+    ))
+    st.warning(T3(
         "對 STARLINK-5846 做逐檔比對時發現：點火前發布的檔案，跟點火後發布的檔案，"
         "在重疊時間範圍內的軌跡幾乎完全一致（差距僅 100～250 公尺，屬於定軌更新雜訊等級）——"
         "**兩份檔案裡都已經包含完全相同的未來半長軸變化曲線**。這代表：**跨檔案比較法根本定位不到點火時刻**，"
@@ -3941,10 +6193,38 @@ def render_storymap_case13():
         "真正能定位點火的方法是**檔案內部**逐點用 vis-viva 方程式"
         "（依軌道能量守恆推導、從瞬時位置與速度直接反算瞬時半長軸的公式）算瞬時半長軸——"
         "推力弧會在單一檔案內直接顯現。"
-        "本案例最後抓到一次 30 分鐘內半長軸階躍 6.59 公里的真實推力弧，時間點與兩份不同檔案的讀值完全一致。"
-    )
+        "本案例最後抓到一次 30 分鐘內半長軸階躍 6.59 公里的真實推力弧，時間點與兩份不同檔案的讀值完全一致。",
+        "STARLINK-5846についてファイルごとの比較を行ったところ、点火前に発行されたファイルと点火後に発行された"
+        "ファイルとで、重複する時間範囲内の軌跡がほぼ完全に一致していた（差はわずか100〜250メートルで、"
+        "軌道決定更新の雑音レベルに相当する）——**両方のファイルにはすでに完全に同一の将来の軌道長半径変化曲線が"
+        "含まれていた**。これが意味するのは：**ファイル間比較法では点火時刻をそもそも特定できない**ということである。"
+        "なぜならSpaceXは「実行予定の機動」をあらかじめ計算し、まだ実行されていない暦ファイルに書き込んでいる"
+        "からである。\n\n"
+        "点火を本当に特定できる方法は、**ファイル内部**で逐点的にvis-viva方程式（軌道エネルギー保存則から導かれ、"
+        "瞬時の位置と速度から瞬時の軌道長半径を直接逆算する式）を用いて瞬時軌道長半径を計算することである——"
+        "推力弧は単一ファイル内で直接現れる。本事例では最終的に、30分間で軌道長半径が6.59km階段状に変化する"
+        "実際の推力弧を1件捉え、その時刻は2つの異なるファイルの読み取り値と完全に一致した。",
+        "A file-by-file comparison of STARLINK-5846 found that the trajectory in the file published before "
+        "ignition and the file published after ignition were almost perfectly identical over their overlapping "
+        "time range (a difference of only 100–250 meters, at the level of orbit-determination update noise) — "
+        "**both files already contained exactly the same future semi-major-axis change curve**. This means: "
+        "**the cross-file comparison method cannot locate the ignition moment at all**, because SpaceX "
+        "pre-computes \"the maneuver it plans to perform\" and writes it into an ephemeris file that has not "
+        "yet been executed.\n\n"
+        "The method that can genuinely pinpoint ignition is computing the instantaneous semi-major axis "
+        "point-by-point **within a single file** using the vis-viva equation (derived from conservation of "
+        "orbital energy, directly back-computing the instantaneous semi-major axis from instantaneous position "
+        "and velocity) — a thrust arc reveals itself directly within a single file. This case eventually caught "
+        "one real thrust arc — a 6.59 km semi-major-axis step within 30 minutes — with timing that exactly "
+        "matched the readings from two different files.",
+    ))
 
-    st.header("④ 機動污染的量級反差：純外推 vs 含機動，差了 14 倍")
+    st.header(T3(
+        "④ 機動污染的量級反差：純外推 vs 含機動，差了 14 倍",
+        "④機動汚染による量級の対比：純外挿 vs 機動を含む場合、14倍の差",
+        "④ The magnitude contrast of maneuver contamination: pure extrapolation vs. maneuver-affected, "
+        "a 14-fold difference",
+    ))
     frozen = data.get("frozen", pd.DataFrame())
     gap = data.get("gap", pd.DataFrame())
     if not frozen.empty:
@@ -3952,10 +6232,12 @@ def render_storymap_case13():
         for subset, color in [("all", "#EF5350"), ("clean", "#66BB6A")]:
             sub = frozen[frozen["subset"] == subset]
             fig2.add_trace(go.Scatter(x=sub["horizon_days"], y=sub["pos_med_km"], mode="lines+markers",
-                                      name="全部樣本" if subset == "all" else "已濾除機動",
+                                      name=T3("全部樣本", "全サンプル", "All samples") if subset == "all"
+                                      else T3("已濾除機動", "機動除去済み", "Maneuvers filtered out"),
                                       line=dict(color=color, width=2)))
         fig2.update_layout(height=320, margin=dict(l=10, r=10, t=10, b=10),
-                           xaxis_title="凍結 TLE 外推天數", yaxis_title="位置誤差中位數 (km)",
+                           xaxis_title=T3("凍結 TLE 外推天數", "凍結TLE外挿日数", "Frozen-TLE extrapolation days"),
+                           yaxis_title=T3("位置誤差中位數 (km)", "位置誤差中央値 (km)", "Median position error (km)"),
                            plot_bgcolor="rgba(0,0,0,0)", legend=dict(orientation="h", y=1.1))
         st.plotly_chart(fig2, use_container_width=True, key="case13_frozen")
     if not gap.empty:
@@ -3963,115 +6245,316 @@ def render_storymap_case13():
         n_quiet = int((~gap["maneuvered"]).sum())
         med_man = gap.loc[gap["maneuvered"], "pos_err_km"].median()
         med_quiet = gap.loc[~gap["maneuvered"], "pos_err_km"].median()
-        st.info(
+        med_quiet_str = f"{med_quiet:.1f}"
+        med_man_str = f"{med_man:.0f}"
+        ratio_str = f"{med_man/med_quiet:.0f}"
+        st.info(T3(
             f"對 50 顆衛星做「凍結一筆 TLE、放著讓它自然老化 7 天」的實測（跨越一次真實 ~6.7 天的資料下載斷點）：\n\n"
-            f"- **{n_quiet} 顆純外推（無機動）**：7 天後位置誤差中位數 **{med_quiet:.1f} km**\n"
-            f"- **{n_man} 顆期間曾機動**：7 天後位置誤差中位數飆升到 **{med_man:.0f} km**"
-            f"（約 **{med_man/med_quiet:.0f} 倍**）\n\n"
+            f"- **{n_quiet} 顆純外推（無機動）**：7 天後位置誤差中位數 **{med_quiet_str} km**\n"
+            f"- **{n_man} 顆期間曾機動**：7 天後位置誤差中位數飆升到 **{med_man_str} km**"
+            f"（約 **{ratio_str} 倍**）\n\n"
             "最乾淨的幾顆純外推衛星，7 天後誤差甚至可以低到個位數公里——"
-            "**這代表 TLE 老化本身不是主要問題，「有沒有在外推期間機動」才是決定 TLE 還能不能用的關鍵**。"
-        )
+            "**這代表 TLE 老化本身不是主要問題，「有沒有在外推期間機動」才是決定 TLE 還能不能用的關鍵**。",
+            f"50機の衛星に対して「1件のTLEを凍結し、そのまま7日間自然に劣化させる」という実測を行った"
+            f"（実際の約6.7日間のデータダウンロード断絶をまたぐ）：\n\n"
+            f"- **純外挿（機動なし）{n_quiet}機**：7日後の位置誤差中央値は **{med_quiet_str} km**\n"
+            f"- **期間中に機動があった{n_man}機**：7日後の位置誤差中央値は **{med_man_str} km**まで急上昇"
+            f"（約**{ratio_str}倍**）\n\n"
+            "最もクリーンな純外挿衛星の場合、7日後の誤差は一桁キロメートル台まで低くなることさえある——"
+            "**これはTLEの経年劣化自体が主要な問題なのではなく、「外挿期間中に機動があったかどうか」こそが"
+            "TLEがまだ使えるかどうかを決定する鍵であることを示している**。",
+            f"A test was run on 50 satellites: \"freeze one TLE and let it naturally age for 7 days\" "
+            f"(spanning one real ~6.7-day data-download gap):\n\n"
+            f"- **{n_quiet} pure-extrapolation satellites (no maneuvers)**: median position error after 7 days "
+            f"of **{med_quiet_str} km**\n"
+            f"- **{n_man} satellites that maneuvered during the period**: median position error after 7 days "
+            f"spiking to **{med_man_str} km** (about **{ratio_str}×**)\n\n"
+            "For the cleanest pure-extrapolation satellites, error after 7 days can even be as low as "
+            "single-digit kilometers — **this shows that TLE aging itself is not the main problem; whether a "
+            "maneuver occurred during the extrapolation period is the key factor determining whether the TLE "
+            "is still usable.**",
+        ))
 
-    st.header("⑤ 放大到全星系的意義：TLE vs MEME，差了三個數量級")
-    st.success(
+    st.header(T3(
+        "⑤ 放大到全星系的意義：TLE vs MEME，差了三個數量級",
+        "⑤全コンステレーションへの拡大が持つ意味：TLE vs MEME、3桁の差",
+        "⑤ The significance of scaling up to the whole constellation: TLE vs. MEME differ by three orders "
+        "of magnitude",
+    ))
+    st.success(T3(
         "把同樣的比對邏輯放大到全部 **284 顆 Starlink、約 2,600 萬個資料點**："
         "新鮮 TLE（epoch 未滿 3 小時）的位置誤差中位數約 **1.5 km**（沿軌方向 1,524 m 主導，"
         "徑向僅 143 m、法向 181 m）；6～12 小時後成長到約 3 km，24～48 小時到 13 km，48～72 小時到 32 km——"
         "對照 MEME 精密星曆全程維持在**公尺級（約 5 m）**，兩者差了**三個數量級**。\n\n"
         "這個落差對實務有具體意義：機動偵測可以反過來當作「星曆可信度即時把關」機制——"
         "剛做完機動的衛星，其 TLE 在數十公里等級內完全失準，若能即時標記出來，"
-        "就能在需要高精度定位（例如評估 Starlink 訊號能否替代 GPS 做 LEO-PNT 定位）的應用中先行剔除。"
-    )
+        "就能在需要高精度定位（例如評估 Starlink 訊號能否替代 GPS 做 LEO-PNT 定位）的應用中先行剔除。",
+        "同じ比較ロジックを全 **284機のStarlink、約2,600万個のデータ点**に拡大した：新しいTLE"
+        "（エポックから3時間未満）の位置誤差中央値は約 **1.5km**（沿軌方向1,524mが支配的で、"
+        "動径方向はわずか143m、法線方向181m）；6〜12時間後には約3km、24〜48時間で13km、48〜72時間で32kmまで"
+        "増大する——これに対しMEME精密暦は全期間を通じて**メートル級（約5m）**を維持しており、両者には"
+        "**3桁の差**がある。\n\n"
+        "この落差は実務上、具体的な意味を持つ：機動検知は逆に「暦の信頼性をリアルタイムに管理するゲート機構」"
+        "として使うことができる——機動を終えたばかりの衛星は、そのTLEが数十キロメートル級で完全に不正確に"
+        "なるため、これをリアルタイムで検知・マークできれば、高精度な測位が必要な用途（例えばStarlink信号が"
+        "GPSに代わってLEO-PNT測位に使えるかを評価する場合など）において、あらかじめ除外することができる。",
+        "Scaling the same comparison logic up to all **284 Starlink satellites, about 26 million data points**: "
+        "fresh TLEs (epoch age under 3 hours) have a median position error of about **1.5 km** (dominated by "
+        "1,524 m along-track, with only 143 m radial and 181 m normal); this grows to about 3 km after 6–12 "
+        "hours, 13 km at 24–48 hours, and 32 km at 48–72 hours — compared with the MEME precise ephemeris, "
+        "which stays at the **meter level (about 5 m)** throughout — a **three-order-of-magnitude** gap "
+        "between the two.\n\n"
+        "This gap has a concrete practical implication: maneuver detection can be flipped around and used as "
+        "a real-time \"ephemeris-trustworthiness gatekeeping\" mechanism — a satellite that has just maneuvered "
+        "has a TLE that is completely inaccurate at the tens-of-kilometers scale, and if this can be flagged in "
+        "real time, such satellites can be screened out in advance for applications requiring high-precision "
+        "positioning (for example, evaluating whether Starlink signals could substitute for GPS in LEO-PNT "
+        "positioning).",
+    ))
 
     st.markdown("---")
-    st.markdown(
+    st.markdown(T3(
         "**判讀**：這次大規模計算最重要的不是「證實了誤差會隨時間變大」（這是預期中的結果），"
         "而是兩個計算前沒想到的方法論陷阱——**瞬時半長軸的短週期振盪陷阱**與**星曆檔已預先編入計畫機動**——"
         "如果沒有先跑過幾十顆衛星的真實資料去對照檢查，這兩個陷阱很容易被忽略，"
-        "後續所有基於「相鄰快照差分找機動」的分析都會建立在錯誤的地基上。"
-    )
-    st.caption("完整方法與程式見 `study1_tle_error_distribution.py`、`study2_meme_self_prediction.py`、"
-              "`study3_tle_frozen_and_gap.py`；期中報告圖文見 `docs/meme_tle_report/`。")
+        "後續所有基於「相鄰快照差分找機動」的分析都會建立在錯誤的地基上。",
+        "**判読**：今回の大規模計算で最も重要だったのは「誤差が時間とともに増大することを実証した」こと"
+        "（これは予想通りの結果である）ではなく、計算前には想定していなかった2つの方法論的な落とし穴——"
+        "**瞬時軌道長半径の短周期振動の罠**と**暦ファイルにあらかじめ組み込まれた計画済み機動**——である。"
+        "数十機の実データで事前に照合確認を行っていなければ、この2つの落とし穴は見落とされやすく、"
+        "その後の「隣接スナップショットの差分で機動を探す」というアプローチに基づくすべての分析は、"
+        "誤った土台の上に構築されてしまうことになる。",
+        "**Verdict**: the most important outcome of this large-scale computation was not \"confirming that "
+        "error grows over time\" (an expected result), but the two methodological traps that were not "
+        "anticipated beforehand — **the short-period-oscillation trap in the osculating semi-major axis**, "
+        "and **planned maneuvers pre-written into the ephemeris file** — without first running real data "
+        "across dozens of satellites to cross-check, these two traps are easy to overlook, and every "
+        "subsequent analysis built on \"finding maneuvers by differencing adjacent snapshots\" would rest on "
+        "a flawed foundation.",
+    ))
+    st.caption(T3(
+        "完整方法與程式見 `study1_tle_error_distribution.py`、`study2_meme_self_prediction.py`、"
+        "`study3_tle_frozen_and_gap.py`；期中報告圖文見 `docs/meme_tle_report/`。",
+        "完全な手法とプログラムは `study1_tle_error_distribution.py`、`study2_meme_self_prediction.py`、"
+        "`study3_tle_frozen_and_gap.py` を参照。期中報告の図表は `docs/meme_tle_report/` を参照。",
+        "Full methods and code are in `study1_tle_error_distribution.py`, `study2_meme_self_prediction.py`, "
+        "`study3_tle_frozen_and_gap.py`; interim-report figures and text are in `docs/meme_tle_report/`.",
+    ))
 
 
 # ══ StoryMap 案例十四（2026-09-10 新增）══════════════════════════════════════════
 
+# --- render_storymap_case14 ---
 def render_storymap_case14():
     if st.button(t("storymap_back"), key="back_from_case14"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例十四：本專案 vs 研究單位既有方法，同一擂台PK")
-    st.subheader("14星戰平、23星顯著勝出——樣本規模如何改變結論")
-    st.caption("本頁數字全部取自技術報告 `docs/report_tasa_ilrs_benchmark.md` 已完成之同待遇比較，"
-              "非本頁重新計算；統計檢定（Wilcoxon符號檢定）已由該報告完成並經審閱。")
+    st.title(T3(
+        "案例十四：本專案 vs 研究單位既有方法，同一擂台PK",
+        "事例十四：本プロジェクト vs 研究機関の既存手法、同一アリーナでのガチンコ対決",
+        "Case 14: This Project vs. an Existing Method from a Research Institution — a Head-to-Head Contest "
+        "in the Same Arena",
+    ))
+    st.subheader(T3(
+        "14星戰平、23星顯著勝出——樣本規模如何改變結論",
+        "14機では引き分け、23機では有意な勝利——サンプル規模が結論をどう変えるか",
+        "A Tie at 14 Satellites, a Significant Win at 23 — How Sample Scale Changes the Conclusion",
+    ))
+    st.caption(T3(
+        "本頁數字全部取自技術報告 `docs/report_tasa_ilrs_benchmark.md` 已完成之同待遇比較，"
+        "非本頁重新計算；統計檢定（Wilcoxon符號檢定）已由該報告完成並經審閱。",
+        "本頁の数値はすべて、技術レポート `docs/report_tasa_ilrs_benchmark.md` においてすでに完了している"
+        "同待遇比較から取得したものであり、本頁で新たに計算したものではない。統計検定"
+        "（Wilcoxon符号検定）は同レポートによってすでに実施・査読済みである。",
+        "Every number on this page is taken from a same-treatment comparison already completed in the "
+        "technical report `docs/report_tasa_ilrs_benchmark.md`, not recomputed on this page; the statistical "
+        "test (the Wilcoxon signed-rank test) was already performed and reviewed in that report.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：光是「我的方法在自己的測試集上表現很好」不能說明什麼——"
         "真正有意義的比較是「跟既有的方法，在完全相同的資料、相同的真值、相同的待遇下」正面對決。"
         "本案例把本專案的融合偵測方法，拿去跟一套忠實重現既有研究方法論的「曲線法」"
-        "（滑動窗多項式前向預測誤差）正面比較。"
-    )
-    st.warning(
+        "（滑動窗多項式前向預測誤差）正面比較。",
+        "**問題の背景**：「自分の手法が自分のテストセット上で良い成績を出した」というだけでは何も証明"
+        "できない——本当に意味のある比較は、「既存の手法と、完全に同じデータ、同じ真値、同じ待遇の下で」"
+        "正面から対決させることである。本事例では、本プロジェクトの融合検知手法を、既存の研究手法を"
+        "忠実に再現した「曲線法」（スライディングウィンドウ多項式前向き予測誤差）と正面から比較する。",
+        "**Problem background**: \"my method performs well on its own test set\" proves nothing by itself — "
+        "a truly meaningful comparison is a head-to-head contest against an existing method, \"under exactly "
+        "the same data, the same ground truth, and the same treatment.\" This case pits this project's fusion "
+        "detection method directly against a \"curve method\" (sliding-window polynomial forward-prediction "
+        "error) that faithfully reproduces an existing research methodology.",
+    ))
+    st.warning(T3(
         "**外部方法歸屬聲明**：「曲線法」的方法論設計參考自李泽越、杨震、李海阳、罗亚中，"
         "《航天器轨道机动自适应逆向移动滑窗检测方法》，國防科技大學學報，2024, 46(4): 45–53"
         "（**中國大陸文獻，屬外部獨立文獻，與本案執行單位無關，不構成同儕或合作關係**；"
         "詳見案例十一文獻列表）。本專案僅忠實重現其方法論用於同一擂台比較，非直接使用原始程式碼，"
-        "並經注入健全性檢查（`tasa14_pdf_sanity.py`）確認重現忠實度。"
-    )
+        "並經注入健全性檢查（`tasa14_pdf_sanity.py`）確認重現忠實度。",
+        "**外部手法の帰属に関する声明**：「曲線法」の方法論的設計は、李泽越、杨震、李海阳、罗亚中"
+        "『航天器轨道机动自适应逆向移动滑窗检测方法』（国防科技大学学報、2024年、46(4): 45–53）を"
+        "参考にしている（**中国大陸の文献であり、外部の独立した文献に属する。本プロジェクトの実施主体とは"
+        "無関係であり、同僚関係や協力関係を構成しない**；詳細は事例十一の文献リストを参照）。"
+        "本プロジェクトはその方法論を同一アリーナでの比較のために忠実に再現したのみであり、"
+        "原著のプログラムコードを直接使用したものではなく、注入健全性チェック（`tasa14_pdf_sanity.py`）"
+        "によって再現の忠実性を確認済みである。",
+        "**External-method attribution statement**: the methodological design of the \"curve method\" is "
+        "based on Li Zeyue, Yang Zhen, Li Haiyang, and Luo Yazhong, \"Adaptive Reverse Sliding-Window "
+        "Detection Method for Spacecraft Orbital Maneuvers,\" *Journal of National University of Defense "
+        "Technology*, 2024, 46(4): 45–53 (**a piece of mainland-Chinese literature, an external and "
+        "independent work with no relationship to the entity carrying out this project, and it does not "
+        "constitute a peer or collaborative relationship**; see the literature list in Case 11 for details). "
+        "This project only faithfully reproduced its methodology for a same-arena comparison, rather than "
+        "directly using the original code, and confirmed the fidelity of this reproduction via an injection "
+        "sanity check (`tasa14_pdf_sanity.py`).",
+    ))
 
-    st.header("① 14 星原始標竿：統計上打成平手")
+    st.header(T3(
+        "① 14 星原始標竿：統計上打成平手",
+        "①14機の原初ベンチマーク：統計的には引き分け",
+        "① The original 14-satellite benchmark: a statistical tie",
+    ))
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("本法（迭代+位準位移，全域k=6）", "F1 = 0.458")
-    c2.metric("L2 · BOCPD（單通道最佳）", "F1 = 0.456")
-    c3.metric("曲線法（全域最佳）", "F1 = 0.444")
-    c4.metric("曲線法（逐星oracle上界）", "F1 = 0.490")
-    st.markdown(
+    m1_label = T3("本法（迭代+位準位移，全域k=6）", "本手法（反復+レベルシフト、全域k=6）",
+                  "This method (iterative + level-shift, global k=6)")
+    m2_label = T3("L2 · BOCPD（單通道最佳）", "L2・BOCPD（単一チャネル最良）", "L2 · BOCPD (best single channel)")
+    m3_label = T3("曲線法（全域最佳）", "曲線法（全域最良）", "Curve method (global best)")
+    m4_label = T3("曲線法（逐星oracle上界）", "曲線法（衛星ごとoracle上限）",
+                  "Curve method (per-satellite oracle upper bound)")
+    c1.metric(m1_label, "F1 = 0.458")
+    c2.metric(m2_label, "F1 = 0.456")
+    c3.metric(m3_label, "F1 = 0.444")
+    c4.metric(m4_label, "F1 = 0.490")
+    st.markdown(T3(
         "配對 Wilcoxon 符號檢定：本法 vs 曲線法全域，14 星中 **9 勝 5 負，p=0.81**；"
         "本法 vs 曲線法逐星 oracle（上界，每顆衛星都各自調到最好的參數），p=0.27——"
         "**兩者統計上完全無法區分**。子集切分（發射年≥2010，n=10：0.559 vs 0.558/0.529；"
-        "≥2015，n=7：0.596 vs 0.645/0.618）依然不顯著。"
-    )
-    st.info(
+        "≥2015，n=7：0.596 vs 0.645/0.618）依然不顯著。",
+        "対応のあるWilcoxon符号検定：本法 vs 曲線法全域版、14機中 **9勝5敗、p=0.81**；"
+        "本法 vs 曲線法の衛星ごとoracle（上限、各衛星ごとに最良のパラメータに調整）、p=0.27——"
+        "**両者は統計的にまったく区別がつかない**。サブセット分割（打ち上げ年≥2010、n=10：0.559 vs "
+        "0.558/0.529；≥2015、n=7：0.596 vs 0.645/0.618）でも依然として有意差はない。",
+        "Paired Wilcoxon signed-rank test: this method vs. the curve method's global version, **9 wins, 5 "
+        "losses out of 14 satellites, p=0.81**; this method vs. the curve method's per-satellite oracle (the "
+        "upper bound, with each satellite individually tuned to its best parameters), p=0.27 — **statistically, "
+        "the two are completely indistinguishable**. Subset splits (launch year ≥2010, n=10: 0.559 vs. "
+        "0.558/0.529; ≥2015, n=7: 0.596 vs. 0.645/0.618) remain non-significant as well.",
+    ))
+    st.info(T3(
         "**這個「打平」本身就是誠實研究的一部分**：不刻意挑選讓自己贏的比較方式，"
         "在樣本數只有 14 顆、且對方也給了「逐星量身調校」的最佳待遇時，"
-        "老實承認兩者難分軒輊，比宣稱「大勝」更可信。"
-    )
+        "老實承認兩者難分軒輊，比宣稱「大勝」更可信。",
+        "**この「引き分け」自体が誠実な研究の一部である**：自分が勝つような比較方法をわざと選ばず、"
+        "サンプル数がわずか14機で、しかも相手側にも「衛星ごとの個別調整」という最良の待遇を与えた上で、"
+        "両者に優劣がつけがたいことを正直に認めることは、「大勝利」を主張するよりも信頼できる。",
+        "**This \"tie\" is itself part of honest research**: rather than deliberately picking a comparison "
+        "that makes itself win, honestly acknowledging that the two are hard to distinguish — with a sample "
+        "of only 14 satellites, and the other side given the best possible treatment of \"individually tuned "
+        "per satellite\" — is more credible than claiming a \"decisive win.\"",
+    ))
 
-    st.header("② 擴大到 23 星、9 顆真正 hold-out：優勢才顯現")
+    st.header(T3(
+        "② 擴大到 23 星、9 顆真正 hold-out：優勢才顯現",
+        "②23機、9機の真のhold-outへ拡大：優位性がようやく現れる",
+        "② Expanding to 23 satellites, with 9 genuine hold-outs: the advantage finally emerges",
+    ))
     c1, c2, c3 = st.columns(3)
-    c1.metric("L3融合 vs 曲線法全域（23星）", "17 勝 6 負", "p = 0.006（顯著）")
-    c2.metric("9 顆凍結參數 hold-out 星", "9 勝 0 敗")
-    c3.metric("平均F1（n=23）", "L3=0.457", "曲線全域=0.375")
-    st.success(
+    n1_label = T3("L3融合 vs 曲線法全域（23星）", "L3融合 vs 曲線法全域版（23機）",
+                  "L3 fusion vs. curve method global (23 satellites)")
+    n1_value = T3("17 勝 6 負", "17勝6敗", "17 wins, 6 losses")
+    n1_delta = T3("p = 0.006（顯著）", "p = 0.006（有意）", "p = 0.006 (significant)")
+    n2_label = T3("9 顆凍結參數 hold-out 星", "凍結パラメータhold-out衛星9機", "9 frozen-parameter hold-out satellites")
+    n2_value = T3("9 勝 0 敗", "9勝0敗", "9 wins, 0 losses")
+    n3_label = T3("平均F1（n=23）", "平均F1（n=23）", "Mean F1 (n=23)")
+    n3_delta = T3("曲線全域=0.375", "曲線全域=0.375", "Curve global=0.375")
+    c1.metric(n1_label, n1_value, n1_delta)
+    c2.metric(n2_label, n2_value)
+    c3.metric(n3_label, "L3=0.457", n3_delta)
+    st.success(T3(
         "**當測試集擴大到 23 顆、且新增 9 顆從未參與任何調參的真正 hold-out 衛星"
         "（SPOT-2/3/4/5、Sentinel-6B、GRACE系列）後，本專案的 L3 融合評分器對曲線法"
         "（同樣不逐星調參的全域版本）轉為穩定顯著勝出**——17 勝 6 負，p=0.006；"
         "9 顆 hold-out 星更是 9 戰 9 勝。核心差異在於：**本專案的方法零逐星調參**"
         "（同一組參數套用到全部衛星），曲線法「全域版」也是同待遇，但本專案在跨軌道域"
-        "（460–1,340 km、傾角 66–99°）的泛化能力更穩定。"
-    )
+        "（460–1,340 km、傾角 66–99°）的泛化能力更穩定。",
+        "**テストセットを23機に拡大し、パラメータ調整に一切関与していない真のhold-out衛星9機"
+        "（SPOT-2/3/4/5、Sentinel-6B、GRACEシリーズ）を新たに加えたところ、本プロジェクトのL3融合"
+        "スコアラーは曲線法（同様に衛星ごとの調整を行わない全域版）に対して安定的かつ有意な勝利に"
+        "転じた**——17勝6敗、p=0.006；hold-out衛星9機に限れば9戦9勝である。核心的な違いは："
+        "**本プロジェクトの手法は衛星ごとの調整を一切行わない**（同一のパラメータセットを全衛星に適用する）"
+        "点にあり、曲線法の「全域版」も同じ待遇であるが、本プロジェクトは軌道域を横断した"
+        "（460〜1,340km、傾斜角66〜99°）汎化能力がより安定している。",
+        "**Once the test set was expanded to 23 satellites, adding 9 genuine hold-out satellites that never "
+        "participated in any parameter tuning at all (SPOT-2/3/4/5, Sentinel-6B, the GRACE series), this "
+        "project's L3 fusion scoring model turned into a stable, statistically significant winner over the "
+        "curve method (likewise its non-per-satellite-tuned global version)** — 17 wins, 6 losses, p=0.006; "
+        "among the 9 hold-out satellites alone, it won all 9. The core difference is: **this project's method "
+        "uses zero per-satellite tuning** (the same set of parameters applied to every satellite), and the "
+        "curve method's \"global version\" received the same treatment — but this project's generalization "
+        "ability proved more stable across orbital regimes (460–1,340 km, inclinations 66–99°).",
+    ))
 
-    st.header("③ 老實的但書：Oracle 上界沒有隨樣本增加而變好")
-    st.warning(
+    st.header(T3(
+        "③ 老實的但書：Oracle 上界沒有隨樣本增加而變好",
+        "③誠実な但し書き：Oracle上限はサンプル数が増えても向上しなかった",
+        "③ An honest caveat: the oracle upper bound did not improve as the sample grew",
+    ))
+    st.warning(T3(
         "**曲線法逐星 oracle 上界**：14 星時 F1=0.490，**擴大到 23 星（含更難的 GRACE 家族）"
         "後反而降到 0.462**——這代表「每顆衛星都手動調到最好」這條路線，"
         "並不會隨著衛星種類變多而跟著進步，遇到訊噪比更差的軌道域一樣會受限。"
         "這個現象反過來凸顯本專案「零調參仍保有泛化力」的價值——"
-        "**手動調參的天花板沒有變高，但零調參的方法卻站穩了顯著優勢**。"
-    )
+        "**手動調參的天花板沒有變高，但零調參的方法卻站穩了顯著優勢**。",
+        "**曲線法の衛星ごとoracle上限**：14機の時点ではF1=0.490であったが、**23機（より難しいGRACE"
+        "ファミリーを含む）に拡大するとむしろ0.462まで低下した**——これは「各衛星を手動で最良に調整する」"
+        "という路線が、衛星の種類が増えても向上するわけではなく、信号対雑音比がより悪い軌道域に遭遇すれば"
+        "同様に制約を受けることを示している。この現象は逆に、本プロジェクトの「パラメータ調整なしでも"
+        "汎化力を保持する」ことの価値を際立たせている——**手動調整の天井は高くならなかったが、"
+        "無調整の手法は着実に有意な優位性を確立した**。",
+        "**The curve method's per-satellite oracle upper bound**: F1=0.490 at 14 satellites, but **it "
+        "actually dropped to 0.462 once expanded to 23 satellites (including the harder GRACE family)** — "
+        "showing that the route of \"manually tuning each satellite to its best\" does not keep improving as "
+        "more satellite types are added, and runs into the same limits when it encounters orbital regimes "
+        "with a worse signal-to-noise ratio. This, in turn, highlights the value of this project's "
+        "\"generalization ability retained without any tuning\" — **the ceiling for manual tuning did not "
+        "rise, while the zero-tuning method secured a firm, significant advantage.**",
+    ))
 
     st.markdown("---")
-    st.markdown(
+    st.markdown(T3(
         "**判讀**：14 星規模的比較給出一個誠實的「打平」結論，這本身沒有問題——"
         "小樣本標竿本來就容易讓兩種合理方法看起來難分軒輊。**但真正的證據力，"
         "要在樣本擴大、且新增真正未參與開發的 hold-out 衛星後才會顯現**："
         "本案例的教訓是，任何「與既有方法打平」或「小贏」的早期結論，"
-        "都應該視為暫時的，值得用更大、更嚴格的 hold-out 測試集重新檢驗。"
-    )
-    st.caption("完整推導、逐星原始數據與 Wilcoxon 檢定見 `docs/report_tasa_ilrs_benchmark.md` §4.1、§4.3、§9；"
-              "原始資料 `data/benchmark/tasa14_pdf_baseline_20260803.csv`、`tasa14_pdf_oracle_20260803.csv`、"
-              "`tasa14_compare_iter_20260801.csv`、`tasa23_l3_stack_q23_20260804.csv`。")
+        "都應該視為暫時的，值得用更大、更嚴格的 hold-out 測試集重新檢驗。",
+        "**判読**：14機規模の比較が誠実な「引き分け」という結論を出したこと自体には何の問題もない——"
+        "小規模なベンチマークでは、2つの合理的な手法が優劣つけがたく見えるのはむしろ自然である。"
+        "**しかし本当の証拠力は、サンプルを拡大し、開発に本当に関与していないhold-out衛星を新たに加えた"
+        "ときに初めて現れる**：本事例の教訓は、「既存手法と引き分け」あるいは「小幅な勝利」という"
+        "初期段階の結論はいずれも暫定的なものとみなすべきであり、より大規模で厳格なhold-outテストセットで"
+        "再検証する価値があるということである。",
+        "**Verdict**: there is nothing wrong, in itself, with the 14-satellite-scale comparison yielding an "
+        "honest \"tie\" — a small-sample benchmark naturally makes two reasonable methods look hard to "
+        "distinguish. **But the real evidentiary weight only emerges once the sample is expanded and genuine "
+        "hold-out satellites that never participated in development are added**: the lesson of this case is "
+        "that any early conclusion of \"tied with\" or \"a small win over\" an existing method should be "
+        "treated as provisional, and is worth re-examining with a larger, stricter hold-out test set.",
+    ))
+    st.caption(T3(
+        "完整推導、逐星原始數據與 Wilcoxon 檢定見 `docs/report_tasa_ilrs_benchmark.md` §4.1、§4.3、§9；"
+        "原始資料 `data/benchmark/tasa14_pdf_baseline_20260803.csv`、`tasa14_pdf_oracle_20260803.csv`、"
+        "`tasa14_compare_iter_20260801.csv`、`tasa23_l3_stack_q23_20260804.csv`。",
+        "完全な導出、衛星ごとの元データ、Wilcoxon検定は `docs/report_tasa_ilrs_benchmark.md` §4.1、"
+        "§4.3、§9を参照。元データは `data/benchmark/tasa14_pdf_baseline_20260803.csv`、"
+        "`tasa14_pdf_oracle_20260803.csv`、`tasa14_compare_iter_20260801.csv`、"
+        "`tasa23_l3_stack_q23_20260804.csv` を参照。",
+        "Full derivation, per-satellite raw data, and the Wilcoxon test are in "
+        "`docs/report_tasa_ilrs_benchmark.md` §4.1, §4.3, §9; raw data in "
+        "`data/benchmark/tasa14_pdf_baseline_20260803.csv`, `tasa14_pdf_oracle_20260803.csv`, "
+        "`tasa14_compare_iter_20260801.csv`, `tasa23_l3_stack_q23_20260804.csv`.",
+    ))
 
 
 # ══ StoryMap 案例十五（2026-09-10 新增）══════════════════════════════════════════
@@ -4083,46 +6566,95 @@ def load_case15_real_data() -> pd.DataFrame:
     return pd.read_csv(p) if p.exists() else pd.DataFrame()
 
 
+# --- render_storymap_case15 ---
 def render_storymap_case15():
     if st.button(t("storymap_back"), key="back_from_case15"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例十五：從 TLE 反解機動的推力向量，能做到多準？")
-    st.subheader("一個方法適用邊界被完整量化的誠實案例")
-    st.caption("本頁數字讀取自 `ids_truth_set/ids_dv_vector_validate.py` 之離線分析輸出，"
-              "真值來自 IDS/DORIS operator 認證機動日誌，非本專案自算。")
+    st.title(T3(
+        "案例十五：從 TLE 反解機動的推力向量，能做到多準？",
+        "事例十五：TLEから機動の推力ベクトルを逆算する場合、どの程度の精度が得られるのか？",
+        "Case 15: How Accurately Can a Maneuver's Thrust Vector Be Inverted from TLEs?",
+    ))
+    st.subheader(T3(
+        "一個方法適用邊界被完整量化的誠實案例",
+        "ある手法の適用限界が完全に定量化された誠実な事例",
+        "An Honest Case Where a Method's Boundaries of Applicability Have Been Fully Quantified",
+    ))
+    st.caption(T3(
+        "本頁數字讀取自 `ids_truth_set/ids_dv_vector_validate.py` 之離線分析輸出，"
+        "真值來自 IDS/DORIS operator 認證機動日誌，非本專案自算。",
+        "本頁の数値は `ids_truth_set/ids_dv_vector_validate.py` のオフライン分析出力から読み込んだものであり、"
+        "真値はIDS/DORISオペレータ認証済みの機動ログに由来する。本プロジェクトの自己算出ではない。",
+        "The numbers on this page are read from the offline analysis output of "
+        "`ids_truth_set/ids_dv_vector_validate.py`; the ground truth comes from IDS/DORIS operator-certified "
+        "maneuver logs, not self-computed by this project.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：知道「有沒有機動」是一回事，知道「這次機動的推力方向與大小」是更進一步的問題——"
         "沿軌道方向（along-track，加速或減速）跟垂直軌道面方向（cross-track，改變軌道面）"
         "在 TLE 精度下，反解的難度完全不同。本案例用 IDS/DORIS 的官方認證機動日誌"
-        "（含逐次真實 ΔV 向量）逐一核對，誠實劃出這個方法能做到哪裡、做不到哪裡。"
-    )
+        "（含逐次真實 ΔV 向量）逐一核對，誠實劃出這個方法能做到哪裡、做不到哪裡。",
+        "**問題の背景**：「機動があったかどうか」を知ることと、「その機動の推力の方向と大きさ」を知ることは"
+        "別次元の問題である——沿軌道方向（along-track、加速または減速）と軌道面に垂直な方向"
+        "（cross-track、軌道面を変える）とでは、TLEの精度の下での逆算の難易度がまったく異なる。"
+        "本事例ではIDS/DORISの公式認証済み機動ログ（逐次の実際のΔVベクトルを含む）を用いて一件ずつ照合し、"
+        "この手法がどこまでできて、どこからできないのかを誠実に描き出す。",
+        "**Problem background**: knowing \"whether a maneuver happened\" is one thing; knowing \"the "
+        "direction and magnitude of this maneuver's thrust\" is a further question — inverting the "
+        "along-track component (accelerating or decelerating) versus the cross-track component (changing "
+        "the orbital plane) is a completely different level of difficulty at TLE precision. This case checks "
+        "against IDS/DORIS's officially certified maneuver logs (including real, per-burn ΔV vectors) one by "
+        "one, honestly mapping out where this method works and where it doesn't.",
+    ))
 
     df = load_case15_real_data()
-    st.header("① 沿軌方向：脈衝式化學推進，幾乎完美")
-    st.success(
+    st.header(T3(
+        "① 沿軌方向：脈衝式化學推進，幾乎完美",
+        "①沿軌道方向：パルス式化学推進では、ほぼ完璧",
+        "① Along-track: near-perfect for impulsive chemical propulsion",
+    ))
+    st.success(T3(
         "對乾淨、不受鄰近機動污染的樣本子集（n=207）：沿軌 ΔV 反解值與真值相關係數 "
         "**r=0.942**，中位誤差僅 **2.4 mm/s**。**CryoSat-2（化學推進、脈衝式點火，n=166）"
         "單獨拿出來看，r 高達 0.975**——對這種「單一時刻瞬間點火」的機動型態，"
-        "TLE 反解的推力向量已經逼近真值。"
-    )
+        "TLE 反解的推力向量已經逼近真值。",
+        "鄰接する機動による汚染を受けていないクリーンなサンプルサブセット（n=207）について："
+        "沿軌道方向のΔV逆算値と真値の相関係数は **r=0.942**、中央値誤差はわずか **2.4 mm/s**である。"
+        "**CryoSat-2（化学推進、パルス式点火、n=166）だけを取り出すと、rは0.975にも達する**——"
+        "このような「単一時刻での瞬間点火」という機動の型については、TLEから逆算した推力ベクトルは"
+        "すでに真値に近づいている。",
+        "For a clean subsample uncontaminated by nearby maneuvers (n=207): the correlation between the "
+        "inverted along-track ΔV and ground truth is **r=0.942**, with a median error of only **2.4 mm/s**. "
+        "**Taken alone, CryoSat-2 (chemical propulsion, impulsive ignition, n=166) reaches r=0.975** — for "
+        "this \"single-instant impulsive burn\" maneuver type, the thrust vector inverted from TLEs already "
+        "approaches the ground truth.",
+    ))
     if not df.empty:
         clean = df[df["clean"] == 1]
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=clean["dv_along_truth"], y=clean["dv_along_rec"], mode="markers",
-                                 marker=dict(size=5, color="#66BB6A", opacity=0.6), name="乾淨樣本"))
+                                 marker=dict(size=5, color="#66BB6A", opacity=0.6),
+                                 name=T3("乾淨樣本", "クリーンなサンプル", "Clean samples")))
         lims = [clean["dv_along_truth"].min(), clean["dv_along_truth"].max()]
         fig.add_trace(go.Scatter(x=lims, y=lims, mode="lines", line=dict(color="#90A4AE", dash="dot"),
-                                 name="完美吻合線", showlegend=False))
+                                 name=T3("完美吻合線", "完全一致線", "Perfect-match line"), showlegend=False))
         fig.update_layout(height=320, margin=dict(l=10, r=10, t=10, b=10),
-                          xaxis_title="真值 ΔV 沿軌分量 (m/s)", yaxis_title="TLE反解 ΔV 沿軌分量 (m/s)",
+                          xaxis_title=T3("真值 ΔV 沿軌分量 (m/s)", "真値 ΔV 沿軌成分 (m/s)",
+                                         "Ground-truth along-track ΔV (m/s)"),
+                          yaxis_title=T3("TLE反解 ΔV 沿軌分量 (m/s)", "TLE逆算 ΔV 沿軌成分 (m/s)",
+                                         "TLE-inverted along-track ΔV (m/s)"),
                           plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig, use_container_width=True, key="case15_along")
 
-    st.header("② 但有三個誠實的失效邊界")
-    st.error(
+    st.header(T3(
+        "② 但有三個誠實的失效邊界",
+        "②しかし3つの誠実な失敗の境界がある",
+        "② But there are three honest failure boundaries",
+    ))
+    st.error(T3(
         "**(a) 鄰近機動污染**：SWOT（n=41，同為乾淨子集）相關係數只有 **r=0.512**——"
         "因為 41% 的事件間隔小於 7 天，前後兩次點火的訊號在 TLE 解析度下互相污染，"
         "無法乾淨分離。\n\n"
@@ -4133,61 +6665,174 @@ def render_storymap_case15():
         "**(c) 電推連續推力，單步反解系統性失效**：這套方法假設機動是「單一瞬間脈衝」"
         "（化學推進的典型樣貌），但 Starlink 這類電推衛星的推力是**攤開在數十圈軌道上"
         "連續施加**，沒有單一階躍可以反解，套用單步假設會系統性低估——這正是為什麼"
-        "案例十三要改用「檔案內逐點 vis-viva」而非「單步反解」來抓 Starlink 電推弧段。"
-    )
+        "案例十三要改用「檔案內逐點 vis-viva」而非「單步反解」來抓 Starlink 電推弧段。",
+        "**(a)近接機動による汚染**：SWOT（n=41、同じくクリーンなサブセット）の相関係数はわずか "
+        "**r=0.512**である——これはイベント間隔の41%が7日未満であり、前後2回の点火の信号がTLEの解像度の"
+        "下で互いに汚染し合い、きれいに分離できないためである。\n\n"
+        "**(b)軌道面に垂直な成分（cross-track）はほぼまったく逆算できない**：全サンプルn=246、"
+        "相関係数は **r≈0.00**、中央値誤差は **39.1 mm/s**にも達する——これは本事例が扱う凍結太陽同期"
+        "軌道において、実際の傾斜角変化の中央値がわずか **0.2 mm/s**であり、**TLE自体の傾斜角雑音床を"
+        "はるかに下回っている**ためであり、物理的にこれほど小さな信号をTLEから逆算することは不可能であって、"
+        "アルゴリズムの性能が足りないわけではない。\n\n"
+        "**(c)電気推進の連続推力では、単発逆算が系統的に失敗する**：この手法は機動を「単一の瞬間パルス」"
+        "（化学推進に典型的な形態）と仮定しているが、Starlinkのようなイオン推進衛星の推力は"
+        "**数十周回にわたって連続的に加えられる**ものであり、逆算できる単一のステップが存在しない。"
+        "単発仮定を適用すると系統的に過小評価してしまう——これこそが、事例十三でStarlinkの電気推進弧を"
+        "捉えるために「単発逆算」ではなく「ファイル内逐点vis-viva」に切り替えた理由である。",
+        "**(a) Contamination from nearby maneuvers**: SWOT (n=41, also a clean subset) has a correlation of "
+        "only **r=0.512** — because 41% of its events are less than 7 days apart, the signals from two "
+        "consecutive burns contaminate each other at TLE resolution and cannot be cleanly separated.\n\n"
+        "**(b) The cross-track component is almost entirely un-invertible**: across the full sample (n=246), "
+        "the correlation is **r≈0.00**, with a median error as high as **39.1 mm/s** — because for the "
+        "frozen sun-synchronous orbits involved in this case, the true median inclination change is only "
+        "**0.2 mm/s**, **far below the TLE's own inclination noise floor**; it is physically impossible to "
+        "invert a signal this small from a TLE — this is not a matter of the algorithm not being good "
+        "enough.\n\n"
+        "**(c) Continuous electric-propulsion thrust causes systematic failure of single-shot inversion**: "
+        "this method assumes a maneuver is \"a single instantaneous impulse\" (the typical form of chemical "
+        "propulsion), but the thrust from electric-propulsion satellites like Starlink's is **applied "
+        "continuously, spread across dozens of orbits**, with no single step to invert; applying the "
+        "single-impulse assumption systematically underestimates it — this is exactly why Case 13 switched "
+        "to \"point-by-point vis-viva within a file\" rather than \"single-shot inversion\" to catch "
+        "Starlink's electric-propulsion thrust arcs.",
+    ))
 
     st.markdown("---")
-    st.markdown(
+    st.markdown(T3(
         "**判讀**：這不是一個「這個方法有多好」的案例，而是一個「這個方法的適用邊界"
         "被完整量化」的案例——對脈衝式化學推進、乾淨無鄰近污染的沿軌機動，"
         "TLE 反解可以逼近真值（r=0.975）；但垂直軌道面分量、鄰近事件污染、"
         "連續電推三種情境下，方法會誠實地失效，而且失效的原因都能具體指出"
         "（物理雜訊底、事件間隔、推力型態假設）。**知道一個方法在哪裡會失效，"
-        "跟知道它在哪裡有效一樣重要**。"
-    )
-    st.caption("完整推導見 `docs/期末_IDS三應用_20260805.md` §7.x.3；"
-              "程式與原始資料 `ids_truth_set/ids_dv_vector_validate.py`。")
+        "跟知道它在哪裡有效一樣重要**。",
+        "**判読**：これは「この手法がどれほど優れているか」を示す事例ではなく、「この手法の適用限界が"
+        "完全に定量化された」事例である——パルス式化学推進で、近接汚染のないクリーンな沿軌道機動については、"
+        "TLEからの逆算は真値に近づく（r=0.975）。しかし軌道面垂直成分、近接イベントの汚染、連続的な"
+        "電気推進という3つの状況では、この手法は誠実に失敗し、しかもその失敗の理由は具体的に指摘できる"
+        "（物理的な雑音床、イベント間隔、推力型の仮定）。**ある手法がどこで失敗するかを知ることは、"
+        "それがどこで有効かを知ることと同じくらい重要である**。",
+        "**Verdict**: this is not a case about \"how good this method is,\" but a case where **the method's "
+        "boundaries of applicability have been fully quantified** — for impulsive chemical-propulsion "
+        "maneuvers along-track, clean and free of nearby contamination, TLE inversion can approach the "
+        "ground truth (r=0.975); but under three conditions — the cross-track component, contamination "
+        "from nearby events, and continuous electric propulsion — the method honestly fails, and the "
+        "reasons for each failure can be pinpointed specifically (the physical noise floor, event spacing, "
+        "the assumed thrust profile). **Knowing where a method fails matters just as much as knowing where "
+        "it works.**",
+    ))
+    st.caption(T3(
+        "完整推導見 `docs/期末_IDS三應用_20260805.md` §7.x.3；"
+        "程式與原始資料 `ids_truth_set/ids_dv_vector_validate.py`。",
+        "完全な導出は `docs/期末_IDS三應用_20260805.md` §7.x.3を参照。プログラムと元データは "
+        "`ids_truth_set/ids_dv_vector_validate.py` を参照。",
+        "Full derivation is in `docs/期末_IDS三應用_20260805.md` §7.x.3; code and raw data are in "
+        "`ids_truth_set/ids_dv_vector_validate.py`.",
+    ))
 
 
 # ══ StoryMap 案例十六（2026-09-10 新增）══════════════════════════════════════════
 
+# --- render_storymap_case16 ---
 def render_storymap_case16():
     if st.button(t("storymap_back"), key="back_from_case16"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例十六：為什麼深度學習序列模型在這個任務上會輸？")
-    st.subheader("bi-GRU（Model 3）完整負面結果剖析——問題不在模型，在真值解析度")
-    st.caption("本案例展開案例二一句話帶過的負面結果，完整說明失敗機制與根因。")
+    st.title(T3(
+        "案例十六：為什麼深度學習序列模型在這個任務上會輸？",
+        "事例十六：なぜ深層学習の系列モデルはこのタスクで敗れるのか？",
+        "Case 16: Why Does a Deep-Learning Sequence Model Lose at This Task?",
+    ))
+    st.subheader(T3(
+        "bi-GRU（Model 3）完整負面結果剖析——問題不在模型，在真值解析度",
+        "bi-GRU（Model 3）の完全な負の結果の分析——問題はモデルではなく、真値の解像度にある",
+        "A Full Post-Mortem of bi-GRU (Model 3)'s Negative Result — the Problem Isn't the Model, It's the Ground-Truth Resolution",
+    ))
+    st.caption(T3(
+        "本案例展開案例二一句話帶過的負面結果，完整說明失敗機制與根因。",
+        "本事例は事例二で一言だけ触れられていた負の結果を展開し、失敗のメカニズムと根本原因を完全に説明する。",
+        "This case expands on the negative result mentioned only in passing in Case 2, fully explaining the failure mechanism and root cause.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：直覺上，機動偵測是一個時序問題，用雙向 GRU"
         "（Bidirectional GRU，一種能同時看過去與未來時間點的遞迴神經網路）"
         "對整段軌道時序逐時步做序列標註，聽起來是很自然的做法。"
-        "本專案確實這樣做過（稱為 Model 3），但最後沒有採用——這裡誠實交代完整過程。"
-    )
+        "本專案確實這樣做過（稱為 Model 3），但最後沒有採用——這裡誠實交代完整過程。",
+        "**問題の背景**：直感的には、機動検知は時系列の問題であり、双方向GRU"
+        "（Bidirectional GRU、過去と未来の両方の時点を同時に見ることができる再帰型ニューラルネットワーク）"
+        "を用いて軌道時系列全体を時刻ごとに系列ラベリングすることは、自然な発想に思える。"
+        "本プロジェクトは実際にこれを試みた（Model 3と呼ぶ）が、最終的には採用しなかった——"
+        "ここではその過程全体を誠実に説明する。",
+        "**Problem background**: intuitively, maneuver detection is a time-series problem, and using a "
+        "Bidirectional GRU (a recurrent neural network that can look at both past and future time steps "
+        "simultaneously) to perform step-by-step sequence labeling across an entire orbital time series "
+        "sounds like a natural approach. This project genuinely tried it (called Model 3), but ultimately "
+        "did not adopt it — here is the full, honest account of the process.",
+    ))
 
-    st.header("① 架構：不是隨便做做")
-    st.markdown(
+    st.header(T3(
+        "① 架構：不是隨便做做",
+        "①アーキテクチャ：いい加減に作ったわけではない",
+        "① Architecture: not a slapdash attempt",
+    ))
+    st.markdown(T3(
         "`ml_bigru_labeler.py`：2 層雙向 GRU（hidden=64、dropout=0.2）＋線性頭，"
         "輸入跟 Model 2（Isolation Forest）完全相同的 4 條物理殘差通道"
         "（z_drag/z_di/z_de/z_draan），固定長度滑動窗（長度48、步幅8）逐時步訓練"
         "（BCE損失＋pos_weight處理正樣本極稀疏的問題）。內建完整自測："
         "門檻掃描找最佳episode F1、對照「全部標記為機動」的平凡基準、對照Model 2、"
-        "以及**FORMOSAT-3A（純大氣衰減，永遠排除於訓練外）的OOD檢查**。"
-    )
+        "以及**FORMOSAT-3A（純大氣衰減，永遠排除於訓練外）的OOD檢查**。",
+        "`ml_bigru_labeler.py`：2層双方向GRU（hidden=64、dropout=0.2）＋線形ヘッド。"
+        "入力はModel 2（Isolation Forest）とまったく同じ4つの物理残差チャネル"
+        "（z_drag/z_di/z_de/z_draan）であり、固定長のスライディングウィンドウ"
+        "（長さ48、ステップ幅8）で時刻ごとに学習する（BCE損失＋pos_weightで"
+        "正例が極端に少ない問題に対処）。完全な自己検証を内蔵している："
+        "最適なepisode F1を探す閾値スイープ、「すべてを機動としてラベル付けする」"
+        "単純なベースラインとの比較、Model 2との比較、そして"
+        "**FORMOSAT-3A（純粋な大気減衰、常に訓練から除外）によるOOD検査**。",
+        "`ml_bigru_labeler.py`: a 2-layer bidirectional GRU (hidden=64, dropout=0.2) plus a linear head, "
+        "taking exactly the same 4 physical-residual channels as Model 2 (Isolation Forest) as input "
+        "(z_drag/z_di/z_de/z_draan), trained step-by-step over fixed-length sliding windows (length 48, "
+        "stride 8) (BCE loss plus pos_weight to handle extreme positive-sample scarcity). It has a full "
+        "built-in self-test suite: a threshold sweep to find the best episode F1, comparison against a "
+        "trivial \"label everything as a maneuver\" baseline, comparison against Model 2, and an **OOD check "
+        "against FORMOSAT-3A (pure atmospheric decay, always excluded from training)**.",
+    ))
 
-    st.header("② 真實失效樣貌：學到的是「星系的長相」，不是「機動的長相」")
-    st.error(
+    st.header(T3(
+        "② 真實失效樣貌：學到的是「星系的長相」，不是「機動的長相」",
+        "②実際の失敗の姿：学習したのは「コンステレーションの見た目」であり、「機動の見た目」ではない",
+        "② What the failure actually looks like: it learned \"what the constellation looks like,\" not \"what a maneuver looks like\"",
+    ))
+    st.error(T3(
         "**對 FORMOSAT-3A 做 OOD（未參與訓練的分布外）測試時，bi-GRU 大量誤報**——"
         "在 Starlink 資料上訓練出來的模型，換到另一種完全不同的衛星型號就大量失靈。"
         "根本原因：**模型學到的其實是「Starlink 殘差訊號的統計長相」，而不是"
         "「機動事件的物理特徵」**——這是深度序列模型在小樣本、單一星系資料上"
-        "很容易掉入的陷阱：表面上學會了分類，實際上只是記住了訓練資料的分布。"
-    )
+        "很容易掉入的陷阱：表面上學會了分類，實際上只是記住了訓練資料的分布。",
+        "**FORMOSAT-3AでOOD（訓練に参加していない分布外）テストを行うと、bi-GRUは大量の誤検知を出す**——"
+        "Starlinkのデータで訓練されたモデルは、まったく異なる衛星タイプに切り替えると"
+        "大量に機能しなくなる。根本原因：**モデルが実際に学習したのは"
+        "「Starlink残差信号の統計的な見た目」であり、「機動イベントの物理的特徴」ではない**——"
+        "これは小規模サンプル、単一コンステレーションのデータで深層系列モデルが"
+        "陥りやすい罠である：表面上は分類を学習したように見えるが、実際には"
+        "訓練データの分布を記憶しただけである。",
+        "**When tested for OOD (out-of-distribution, not part of training) on FORMOSAT-3A, bi-GRU produces "
+        "massive false positives** — a model trained on Starlink data fails on a massive scale the moment "
+        "it's switched to a completely different satellite type. Root cause: **what the model actually "
+        "learned was \"the statistical look of Starlink's residual signal,\" not \"the physical signature of "
+        "a maneuver event\"** — this is a trap deep sequence models easily fall into with small-sample, "
+        "single-constellation data: on the surface it appears to have learned classification, but in "
+        "reality it has merely memorized the distribution of the training data.",
+    ))
 
-    st.header("③ 根因：不是模型不夠強，是真值解析度本身的天花板")
-    st.warning(
+    st.header(T3(
+        "③ 根因：不是模型不夠強，是真值解析度本身的天花板",
+        "③根本原因：モデルが十分に強力でないのではなく、真値の解像度自体に天井がある",
+        "③ Root cause: not that the model isn't strong enough, but a ceiling set by the ground-truth resolution itself",
+    ))
+    st.warning(T3(
         "**最關鍵的診斷數字**：逐點（point-wise）監督式評估的**理論天花板 AUC 僅 0.572**"
         "（幾乎等同亂猜，且與國際文獻報告的~0.62相近）；但同一批資料改用**episode級"
         "融合評分器**（HistGradientBoosting，非序列模型）評估，AUC 可達 **0.982**。\n\n"
@@ -4195,28 +6840,91 @@ def render_storymap_case16():
         "TLE 曆元本身跟真值格點對不齊——**任何要求「逐時間點」精確標註的監督式模型"
         "（包括 bi-GRU），天生就會撞上這個真值粒度的天花板**，這不是換更大的模型、"
         "更深的網路能解決的問題。改成「這段時間窗內有沒有事件」的 episode 級判定"
-        "（而非「這一個時間點是不是機動」），才是真值解析度容許的正確評估粒度。"
-    )
+        "（而非「這一個時間點是不是機動」），才是真值解析度容許的正確評估粒度。",
+        "**最も重要な診断数値**：逐点（point-wise）教師あり評価の**理論上の天井AUCはわずか0.572**"
+        "（ほぼ当てずっぽうに等しく、国際文献が報告する~0.62と近い値である）；しかし同じデータを用いて"
+        "**episodeレベルの融合スコアリングモデル**（HistGradientBoosting、系列モデルではない）で評価すると、"
+        "AUCは**0.982**に達する。\n\n"
+        "**この対比が真の根本原因を明らかにしている**：本プロジェクトのMEME精密暦の真値解像度は"
+        "**8時間ごとに1格子点**であり、TLEのエポック自体が真値の格子点とずれている——"
+        "**「時刻ごとに」精密なラベル付けを要求する教師ありモデル（bi-GRUを含む）は、"
+        "本質的にこの真値の粒度による天井にぶつかる**。これはより大きなモデル、"
+        "より深いネットワークに変えれば解決できる問題ではない。「この時間窓内に"
+        "イベントがあったかどうか」というepisodeレベルの判定に切り替えること"
+        "（「この一時点が機動かどうか」ではなく）こそが、真値の解像度が許す"
+        "正しい評価の粒度である。",
+        "**The most critical diagnostic number**: the theoretical ceiling for point-wise supervised "
+        "evaluation is an **AUC of only 0.572** (nearly equivalent to random guessing, and close to the "
+        "~0.62 reported in the international literature); but evaluating the same data with an **episode-"
+        "level fusion scoring model** (HistGradientBoosting, not a sequence model) reaches an AUC of "
+        "**0.982**.\n\n"
+        "**This comparison exposes the real root cause**: this project's MEME precise-orbit-ephemeris "
+        "ground truth has a resolution of **one grid point every 8 hours**, and TLE epochs themselves don't "
+        "align with the ground-truth grid — **any supervised model that demands precise \"per-time-step\" "
+        "labeling (bi-GRU included) inherently runs into this ceiling set by the ground-truth's granularity**, "
+        "and this is not a problem that a bigger model or a deeper network can solve. Switching to an "
+        "episode-level judgment of \"was there an event within this time window\" (rather than \"is this one "
+        "time point a maneuver\") is the evaluation granularity the ground-truth resolution actually permits.",
+    ))
 
-    st.header("④ 一個具體的、誠實除役的技術債：z_draan 通道")
-    st.info(
+    st.header(T3(
+        "④ 一個具體的、誠實除役的技術債：z_draan 通道",
+        "④具体的で誠実に退役させた技術的負債：z_draanチャネル",
+        "④ A concrete, honestly retired piece of technical debt: the z_draan channel",
+    ))
+    st.info(T3(
         "bi-GRU 與 Model 2 共用的 4 個通道之一 z_draan（RAAN變化率殘差）**後來已從正式特徵中除役**——"
         "根因是它主要反映**未建模的長期／日月攝動**，而不是機動訊號，曾被列為候選第六通道評估後"
         "確認不值得納入。**具體指出一個通道為什麼是壞的、並且真的把它拿掉**，"
-        "比含糊地說「有做特徵篩選」更能取信於人。"
-    )
+        "比含糊地說「有做特徵篩選」更能取信於人。",
+        "bi-GRUとModel 2が共有する4つのチャネルのうちの1つ、z_draan（RAAN変化率残差）は"
+        "**後に正式な特徴量から退役させられた**——根本原因は、それが主に"
+        "**モデル化されていない長期／日月摂動**を反映しており、機動信号ではないためであり、"
+        "候補となる6番目のチャネルとして評価されたが、採用に値しないことが確認された。"
+        "**あるチャネルがなぜ悪いのかを具体的に指摘し、実際にそれを取り除くこと**は、"
+        "「特徴量選択を行った」と曖昧に述べるよりも、はるかに信頼を得られる。",
+        "z_draan (RAAN rate-of-change residual), one of the 4 channels shared between bi-GRU and Model 2, "
+        "**was later retired from the official feature set** — the root cause is that it mainly reflects "
+        "**unmodeled long-term/lunisolar perturbation**, not a maneuver signal; it was evaluated as a "
+        "candidate sixth channel and confirmed not worth including. **Concretely pointing out why a "
+        "channel is bad, and actually removing it**, earns far more trust than vaguely saying \"feature "
+        "selection was performed.\"",
+    ))
 
     st.markdown("---")
-    st.success(
+    st.success(T3(
         "**判讀**：三個深度模型（bi-GRU序列標註器、LSTM自編碼器、PatchTST）"
         "最後都被列為「負面結果對照組」，結論一致：**受限於資料量與真值解析度，"
         "不是模型能力不夠**。真正能打贏的是善用領域知識的傳統方法（物理殘差＋"
         "統計變點）配合 episode 級融合評分器，而不是丟一個更大的深度模型上去。"
         "深度學習不是被放棄，而是誠實驗證後，暫時擱置、留下明確的解鎖條件——"
-        "自監督預訓練與真值資料擴增。"
-    )
-    st.caption("完整推導見 `docs/期末報告_技術附錄_20260909.md`（負面結果對照組章節、消融鏈分析）；"
-              "程式 `ml_bigru_labeler.py`、`lstm_autoencoder.py`、`patch_transformer.py`。")
+        "自監督預訓練與真值資料擴增。",
+        "**判読**：3つの深層モデル（bi-GRU系列ラベリング器、LSTMオートエンコーダ、PatchTST）は"
+        "最終的にすべて「負の結果の対照群」として位置づけられ、結論は一致している："
+        "**データ量と真値の解像度に制約されているのであって、モデルの能力が不足しているのではない**。"
+        "実際に勝てるのは、領域知識を活かした伝統的手法（物理残差＋統計的変化点検知）に"
+        "episodeレベルの融合スコアリングモデルを組み合わせたものであり、より大きな深層モデルを"
+        "投入することではない。深層学習は放棄されたのではなく、誠実な検証を経て、"
+        "明確な解除条件——自己教師あり事前学習と真値データの拡充——を残したまま、"
+        "一時的に保留されているのである。",
+        "**Verdict**: all three deep models (the bi-GRU sequence labeler, the LSTM autoencoder, and "
+        "PatchTST) ultimately ended up classified as a \"negative-result control group,\" with a consistent "
+        "conclusion: **the constraint is data volume and ground-truth resolution, not model capacity**. "
+        "What actually wins is a classical method that makes good use of domain knowledge (physical "
+        "residuals plus statistical change-points) paired with an episode-level fusion scoring model, not "
+        "throwing a bigger deep model at the problem. Deep learning was not abandoned but, after honest "
+        "validation, set aside for now with clear unlock conditions left in place — self-supervised "
+        "pretraining and expanded ground-truth data.",
+    ))
+    st.caption(T3(
+        "完整推導見 `docs/期末報告_技術附錄_20260909.md`（負面結果對照組章節、消融鏈分析）；"
+        "程式 `ml_bigru_labeler.py`、`lstm_autoencoder.py`、`patch_transformer.py`。",
+        "完全な導出は `docs/期末報告_技術附錄_20260909.md`（負の結果対照群の章、アブレーション連鎖分析）を参照。"
+        "プログラムは `ml_bigru_labeler.py`、`lstm_autoencoder.py`、`patch_transformer.py` を参照。",
+        "Full derivation is in `docs/期末報告_技術附錄_20260909.md` (the negative-result control-group "
+        "section, ablation-chain analysis); code is in `ml_bigru_labeler.py`, `lstm_autoencoder.py`, and "
+        "`patch_transformer.py`.",
+    ))
 
 
 # ══ StoryMap 案例十七（2026-09-10 新增）══════════════════════════════════════════
@@ -4239,97 +6947,200 @@ def load_case17_real_data() -> dict:
     return out
 
 
+# --- render_storymap_case17 ---
 def render_storymap_case17():
     if st.button(t("storymap_back"), key="back_from_case17"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例十七：機動小到什麼程度，系統還抓得到？")
-    st.subheader("FORMOSAT-7 合成注入實驗：把「最小可偵測量級」變成一條有信賴區間的法則")
-    st.caption("本頁數字讀取自 `fs7_injection_sweep_v4.py` 系列之離線分析輸出，"
-              "皆為對真實 FORMOSAT-7（COSMIC-2）TLE 資料注入已知量級後之實測結果。")
+    st.title(T3(
+        "案例十七：機動小到什麼程度，系統還抓得到？",
+        "事例十七：機動がどれだけ小さくなると、システムはもう検知できなくなるのか？",
+        "Case 17: How Small Can a Maneuver Be and Still Be Caught?",
+    ))
+    st.subheader(T3(
+        "FORMOSAT-7 合成注入實驗：把「最小可偵測量級」變成一條有信賴區間的法則",
+        "FORMOSAT-7合成注入実験：「最小検知可能量級」を信頼区間付きの法則へと変える",
+        "The FORMOSAT-7 Synthetic Injection Experiment: Turning \"Minimum Detectable Magnitude\" into a Law with a Confidence Interval",
+    ))
+    st.caption(T3(
+        "本頁數字讀取自 `fs7_injection_sweep_v4.py` 系列之離線分析輸出，"
+        "皆為對真實 FORMOSAT-7（COSMIC-2）TLE 資料注入已知量級後之實測結果。",
+        "本頁の数値は `fs7_injection_sweep_v4.py` シリーズのオフライン分析出力から読み込んだものであり、"
+        "いずれも実際のFORMOSAT-7（COSMIC-2）のTLEデータに既知の量級を注入した上での実測結果である。",
+        "The numbers on this page are read from the offline analysis output of the `fs7_injection_sweep_v4.py` "
+        "series, all measured results from injecting known magnitudes into real FORMOSAT-7 (COSMIC-2) TLE data.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：與其講一個單一的「最小可偵測 X 公里」的門檻數字，"
         "不如問一個更誠實的問題——**這個門檻本身會隨著什麼條件變化**？"
         "本案例把已知大小的半長軸階躍，注入到真實 FORMOSAT-7 的 TLE 雜訊與大氣阻力背景中"
         "（**15,775 次個別試驗、478 個衛星×時間窗組合**），量測偵測率如何隨機動量級、"
-        "取樣頻率、大氣阻力強度三個維度變化。"
-    )
+        "取樣頻率、大氣阻力強度三個維度變化。",
+        "**問題の背景**：単一の「最小検知可能X km」という閾値の数字を述べるよりも、より誠実な問いを"
+        "立てる方がよい——**この閾値自体はどのような条件によって変化するのか**？本事例では、既知の"
+        "大きさの軌道長半径ステップを、実際のFORMOSAT-7のTLE雑音と大気抵抗の背景に注入し"
+        "（**15,775回の個別試行、478の衛星×時間窓の組み合わせ**）、検知率が機動量級、サンプリング頻度、"
+        "大気抵抗強度という3つの次元に対してどう変化するかを測定した。",
+        "**Problem background**: rather than stating a single \"minimum detectable X km\" threshold, it is "
+        "more honest to ask: **what conditions does this threshold itself vary with?** This case injects "
+        "semi-major-axis steps of known size into real FORMOSAT-7 TLE noise and atmospheric-drag backgrounds "
+        "(**15,775 individual trials across 478 satellite × time-window combinations**), measuring how "
+        "detection rate varies across three dimensions: maneuver magnitude, sampling cadence, and "
+        "atmospheric-drag intensity.",
+    ))
 
     data = load_case17_real_data()
     sweep = data.get("sweep", pd.DataFrame())
     if not sweep.empty:
-        st.header("① 大氣阻力強度主宰了偵測門檻，不是機動量級本身")
+        st.header(T3(
+            "① 大氣阻力強度主宰了偵測門檻，不是機動量級本身",
+            "①大気抵抗強度が検知閾値を支配しており、機動量級そのものではない",
+            "① Atmospheric-drag intensity dominates the detection threshold, not the maneuver magnitude itself",
+        ))
         fig = go.Figure()
         colors = {"low": "#66BB6A", "mid": "#FFB74D", "high": "#EF5350"}
         for band in ["low", "mid", "high"]:
             sub = sweep[(sweep["drag_band"] == band) & (sweep["decim"] == 1)].sort_values("da_km")
             if not sub.empty:
                 fig.add_trace(go.Scatter(x=sub["da_km"], y=sub["detect_rate"] * 100, mode="lines+markers",
-                                         name=f"大氣阻力={band}", line=dict(color=colors[band], width=2)))
+                                         name=T3(f"大氣阻力={band}", f"大気抵抗={band}", f"Atmospheric drag={band}"),
+                                         line=dict(color=colors[band], width=2)))
         fig.update_layout(height=320, margin=dict(l=10, r=10, t=10, b=10),
-                          xaxis_title="注入的半長軸階躍量級 (km)", yaxis_title="偵測率 (%)",
+                          xaxis_title=T3("注入的半長軸階躍量級 (km)", "注入した軌道長半径ステップ量級 (km)", "Injected semi-major-axis step magnitude (km)"),
+                          yaxis_title=T3("偵測率 (%)", "検知率 (%)", "Detection rate (%)"),
                           xaxis_type="log", plot_bgcolor="rgba(0,0,0,0)",
                           legend=dict(orientation="h", y=1.12))
         st.plotly_chart(fig, use_container_width=True, key="case17_sweep")
-        st.caption(
+        st.caption(T3(
             "低阻力環境下，注入 **20 公尺**已有約 50～58% 偵測率、**100～150 公尺**即可逼近 100%；"
             "高阻力環境下，同樣的偵測率要到 **1～1.5 公里**量級才達得到——"
-            "**同一套系統的「最小可偵測門檻」可以相差 10～70 倍，完全取決於當下的大氣阻力狀態**。"
-        )
+            "**同一套系統的「最小可偵測門檻」可以相差 10～70 倍，完全取決於當下的大氣阻力狀態**。",
+            "低抵抗環境では、**20メートル**の注入ですでに約50〜58%の検知率があり、**100〜150メートル**で"
+            "ほぼ100%に達する；高抵抗環境では、同じ検知率に達するには **1〜1.5キロメートル**級が必要である"
+            "——**同一システムの「最小検知可能閾値」は、その時々の大気抵抗の状態によって10〜70倍もの差が"
+            "生じうる**。",
+            "Under low-drag conditions, injecting **20 meters** already yields about 50–58% detection, and "
+            "**100–150 meters** is enough to approach 100%; under high-drag conditions, the same detection "
+            "rate isn't reached until magnitudes of **1–1.5 km** — **the same system's \"minimum detectable "
+            "threshold\" can differ by a factor of 10–70×, entirely depending on the atmospheric-drag "
+            "conditions at the time.**",
+        ))
 
     smear = data.get("smear", pd.DataFrame())
     if not smear.empty:
-        st.header("② 機動拖得越久，越難抓——瞬時 vs 攤開執行")
+        st.header(T3(
+            "② 機動拖得越久，越難抓——瞬時 vs 攤開執行",
+            "②機動が長く引き延ばされるほど、検知は難しくなる——瞬時実行 vs 分散実行",
+            "② The longer a maneuver is drawn out, the harder it is to catch — instantaneous vs. spread-out execution",
+        ))
         sub = smear[smear["da_km"] == 0.05].sort_values("smear_day")
         if not sub.empty:
+            day_suffix = T3(" 天", "日", " days")
             fig2 = go.Figure()
-            fig2.add_trace(go.Bar(x=sub["smear_day"].astype(str) + " 天", y=sub["detect_rate"] * 100,
+            fig2.add_trace(go.Bar(x=sub["smear_day"].astype(str) + day_suffix, y=sub["detect_rate"] * 100,
                                   marker_color="#4FC3F7"))
             fig2.update_layout(height=260, margin=dict(l=10, r=10, t=10, b=10),
-                               xaxis_title="機動拖開執行的天數（0=瞬時）", yaxis_title="偵測率 (%)",
+                               xaxis_title=T3("機動拖開執行的天數（0=瞬時）", "機動を引き延ばして実行した日数（0＝瞬時）", "Number of days the maneuver is spread over (0 = instantaneous)"),
+                               yaxis_title=T3("偵測率 (%)", "検知率 (%)", "Detection rate (%)"),
                                plot_bgcolor="rgba(0,0,0,0)")
             st.plotly_chart(fig2, use_container_width=True, key="case17_smear")
-        st.caption(
+        st.caption(T3(
             "同樣 50 公尺的淨位移，瞬時完成的偵測率 55.4%；**拖開半天執行，掉到 43.3%**——"
             "呼應案例三「站位保持階段真正的技術瓶頸」的結論：不是機動太小看不到，"
-            "而是拖得越久、被拆得越細，偵測率就越低。"
-        )
+            "而是拖得越久、被拆得越細，偵測率就越低。",
+            "同じ50メートルの正味変位でも、瞬時に完了した場合の検知率は55.4%であるのに対し、**半日かけて"
+            "実行すると43.3%まで低下する**——これは事例三の「ステーションキーピング段階こそが本当の"
+            "技術的ボトルネックである」という結論と呼応するものである：機動が小さすぎて見えないのではなく、"
+            "引き延ばされ、細かく分割されるほど検知率が低下するのである。",
+            "For the same 50-meter net displacement, the detection rate is 55.4% when completed "
+            "instantaneously; **spreading it over half a day drops this to 43.3%** — echoing Case 3's "
+            "conclusion that \"station-keeping is where the real technical bottleneck lies\": it isn't that "
+            "the maneuver is too small to see, but that the more it's drawn out and broken into smaller "
+            "pieces, the lower the detection rate becomes.",
+        ))
 
     law = data.get("law", {})
     if law:
-        st.header("③ 把偵測門檻寫成一條可驗證的法則")
+        st.header(T3(
+            "③ 把偵測門檻寫成一條可驗證的法則",
+            "③検知閾値を検証可能な法則として書き表す",
+            "③ Writing the detection threshold as a verifiable law",
+        ))
         lf = law.get("law_fit_v4", {})
         cd = law.get("c_drag", {})
         c1, c2, c3 = st.columns(3)
-        c1.metric("SNR50（50%偵測率門檻）", f"{lf.get('snr50', 'NA')}",
+        c1.metric(T3("SNR50（50%偵測率門檻）", "SNR50（50%検知率閾値）", "SNR50 (50%-detection-rate threshold)"),
+                 f"{lf.get('snr50', 'NA')}",
                  f"95% CI [{lf.get('snr50_ci95', ['?', '?'])[0]}, {lf.get('snr50_ci95', ['?','?'])[1]}]")
-        c2.metric("SNR90（90%偵測率門檻）", f"{lf.get('snr90', 'NA')}")
-        c3.metric("阻力耦合常數 c_hat", f"{cd.get('c_hat', 'NA')}",
+        c2.metric(T3("SNR90（90%偵測率門檻）", "SNR90（90%検知率閾値）", "SNR90 (90%-detection-rate threshold)"),
+                 f"{lf.get('snr90', 'NA')}")
+        c3.metric(T3("阻力耦合常數 c_hat", "抵抗結合定数 c_hat", "Drag-coupling constant c_hat"),
+                 f"{cd.get('c_hat', 'NA')}",
                  f"95% CI [{cd.get('profile_ci95', ['?','?'])[0]}, {cd.get('profile_ci95', ['?','?'])[1]}]")
-        st.markdown(
+        auc_str = f"{law.get('time_split', {}).get('eff', {}).get('auc', 'NA')}"
+        st.markdown(T3(
             f"用**有效訊噪比**（同時考慮量級與阻力雜訊耦合，非單純的 |Δa|）去擬合一條邏輯斯迴歸曲線"
-            f"（cluster-aware bootstrap、2,000次重抽樣、time-split held-out驗證 **AUC={law.get('time_split',{}).get('eff',{}).get('auc','NA')}**）——"
+            f"（cluster-aware bootstrap、2,000次重抽樣、time-split held-out驗證 **AUC={auc_str}**）——"
             "這比宣稱一個單一的「最小可偵測 X 公里」更誠實，也更可驗證："
-            "任何人都可以拿新資料重新檢驗這條曲線準不準，而不是只能相信一個孤立的數字。"
-        )
-        st.caption(
+            "任何人都可以拿新資料重新檢驗這條曲線準不準，而不是只能相信一個孤立的數字。",
+            f"**有効信号対雑音比**（量級と抵抗雑音の結合の両方を考慮したもので、単純な|Δa|ではない）を"
+            f"用いてロジスティック回帰曲線をフィッティングした（クラスタ考慮型ブートストラップ、2,000回の"
+            f"再抽出、time-split held-out検証 **AUC={auc_str}**）——これは単一の「最小検知可能X km」を"
+            "主張するよりも誠実であり、かつ検証可能でもある：誰でも新しいデータを使ってこの曲線が正しいか"
+            "どうかを再検証できるのであり、孤立した一つの数字を信じるしかないわけではない。",
+            f"Using an **effective signal-to-noise ratio** (accounting for both magnitude and its coupling "
+            f"with drag noise, not simply |Δa|), a logistic-regression curve was fit (cluster-aware "
+            f"bootstrap, 2,000 resamples, time-split held-out validation with **AUC={auc_str}**) — more "
+            "honest, and more verifiable, than claiming a single \"minimum detectable X km\": anyone can "
+            "take new data and re-check whether this curve is accurate, rather than being asked to simply "
+            "trust an isolated number.",
+        ))
+        st.caption(T3(
             "老實補充：早期版本（v1）曾把這條法則換算成具體公尺數（平靜期約61公尺、"
             "2024年5月Gannon磁暴主相期間約217公尺），量級可信，但該換算用的是較早期"
             "未經cluster-aware bootstrap修正的參數，尚未用本頁v4版本的嚴謹參數重新換算，"
-            "此處僅呈現v4版本本身驗證過的SNR門檻與held-out AUC，不重複引用v1的公尺數字。"
-        )
+            "此處僅呈現v4版本本身驗證過的SNR門檻與held-out AUC，不重複引用v1的公尺數字。",
+            "誠実な補足：初期バージョン（v1）では、この法則を具体的なメートル数に換算したことがある"
+            "（平穏期には約61メートル、2024年5月のGannon磁気嵐の主相期間には約217メートル）。量級としては"
+            "信頼できるが、この換算はクラスタ考慮型ブートストラップによる補正を経ていないより初期の"
+            "パラメータを用いたものであり、本頁のv4版の厳密なパラメータでまだ再換算されていない。"
+            "ここではv4版自体が検証済みのSNR閾値とheld-out AUCのみを示し、v1のメートル数を重複して"
+            "引用することはしない。",
+            "Honest caveat: an earlier version (v1) once translated this law into concrete meter figures "
+            "(about 61 m in calm conditions, about 217 m during the main phase of the May 2024 Gannon "
+            "geomagnetic storm) — trustworthy in magnitude, but that conversion used earlier parameters "
+            "that had not been corrected via the cluster-aware bootstrap, and has not yet been recomputed "
+            "with this page's rigorous v4 parameters. Only the SNR thresholds and held-out AUC validated by "
+            "the v4 version itself are presented here; the v1 meter figures are not repeated.",
+        ))
 
     st.markdown("---")
-    st.info(
+    st.info(T3(
         "**判讀**：「這套系統能抓到多小的機動」沒有單一答案，誠實的答案是一條隨大氣阻力狀態"
         "與執行時間拉長而變動的曲線，且這條曲線本身經過 held-out 驗證（AUC≈0.98）。"
         "把「最小可偵測量級」講成一個固定數字，是常見但不誠實的簡化；"
-        "講成一條可驗證的法則，才經得起別人拿新資料來踢館。"
-    )
-    st.caption("完整方法與程式見 `fs7_injection_sweep_v4.py`；"
-              "原始資料 `data/benchmark/fs7_injection_{sweep,trials,smear}.csv`、`fs7_law_fit_v4.json`。")
+        "講成一條可驗證的法則，才經得起別人拿新資料來踢館。",
+        "**判読**：「このシステムがどれだけ小さな機動まで検知できるか」に単一の答えはなく、誠実な答えは、"
+        "大気抵抗の状態と実行時間の長さに応じて変動する一本の曲線であり、しかもこの曲線自体がheld-out"
+        "検証（AUC≈0.98）を経ている。「最小検知可能量級」を固定された一つの数字として語ることは、"
+        "よくあるが誠実さを欠く単純化であり、検証可能な法則として語ることこそが、他者が新しいデータを"
+        "持ってきて反証を試みても耐えうるものである。",
+        "**Verdict**: there is no single answer to \"how small a maneuver can this system catch\" — the "
+        "honest answer is a curve that varies with atmospheric-drag conditions and how long execution is "
+        "spread out, and this curve has itself been held-out validated (AUC≈0.98). Stating a \"minimum "
+        "detectable magnitude\" as a single fixed number is a common but dishonest simplification; stating "
+        "it as a verifiable law is what can withstand someone else showing up with new data to challenge it.",
+    ))
+    st.caption(T3(
+        "完整方法與程式見 `fs7_injection_sweep_v4.py`；"
+        "原始資料 `data/benchmark/fs7_injection_{sweep,trials,smear}.csv`、`fs7_law_fit_v4.json`。",
+        "完全な手法とプログラムは `fs7_injection_sweep_v4.py` を参照。元データは "
+        "`data/benchmark/fs7_injection_{sweep,trials,smear}.csv`、`fs7_law_fit_v4.json` を参照。",
+        "Full methods and code are in `fs7_injection_sweep_v4.py`; raw data is in "
+        "`data/benchmark/fs7_injection_{sweep,trials,smear}.csv` and `fs7_law_fit_v4.json`.",
+    ))
 
 
 # ══ StoryMap 案例十八（2026-09-10 新增）══════════════════════════════════════════
@@ -4341,22 +7152,51 @@ def load_case18_real_data() -> pd.DataFrame:
     return pd.read_csv(p) if p.exists() else pd.DataFrame()
 
 
+# --- render_storymap_case18 ---
 def render_storymap_case18():
     if st.button(t("storymap_back"), key="back_from_case18"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例十八：TLE 的雜訊地板，在不同高度長什麼樣？")
-    st.subheader("8顆從不機動的被動測地球體，加上一次差點被誤讀的月球攝動假訊號")
-    st.caption("本頁數字讀取自 `passive_sphere_noise_floor.py` 之離線分析輸出，"
-              "與 `docs/進度月報_202608_TASA比較_詳版.md` §3.6、§3.7 之敘述一致。")
+    st.title(T3(
+        "案例十八：TLE 的雜訊地板，在不同高度長什麼樣？",
+        "事例十八：TLEの雑音床は、高度によってどのように異なるのか？",
+        "Case 18: What Does the TLE Noise Floor Look Like at Different Altitudes?",
+    ))
+    st.subheader(T3(
+        "8顆從不機動的被動測地球體，加上一次差點被誤讀的月球攝動假訊號",
+        "一度も機動したことのない8つの受動測地球体、そして誤読されかけた月の摂動による偽信号",
+        "Eight Passive Geodetic Spheres That Never Maneuver, Plus a Lunar-Perturbation False Signal That Was Almost Misread",
+    ))
+    st.caption(T3(
+        "本頁數字讀取自 `passive_sphere_noise_floor.py` 之離線分析輸出，"
+        "與 `docs/進度月報_202608_TASA比較_詳版.md` §3.6、§3.7 之敘述一致。",
+        "本頁の数値は `passive_sphere_noise_floor.py` のオフライン分析出力から読み込んだものであり、"
+        "`docs/進度月報_202608_TASA比較_詳版.md` §3.6、§3.7の記述と一致する。",
+        "The numbers on this page are read from the offline analysis output of "
+        "`passive_sphere_noise_floor.py`, consistent with the account in `docs/進度月報_202608_TASA比較_"
+        "詳版.md` §3.6 and §3.7.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：要知道「這個訊號是不是機動」，得先知道「什麼都沒發生時，雜訊本身有多大」。"
         "被動測地球體（表面覆滿雷射反射鏡、完全沒有推進器、永遠不會主動機動的衛星）"
         "是天生最乾淨的對照組——不需要像案例四那樣排除已知機動窗，本身就是「保證安靜」的樣本。"
-        "本案例用 8 顆這樣的衛星，橫跨 800～19,126 公里，畫出 TLE 雜訊地板隨高度變化的全景圖。"
-    )
+        "本案例用 8 顆這樣的衛星，橫跨 800～19,126 公里，畫出 TLE 雜訊地板隨高度變化的全景圖。",
+        "**問題の背景**：「この信号が機動かどうか」を知るには、まず「何も起きていないとき、雑音自体が"
+        "どれほどの大きさか」を知る必要がある。受動測地球体（表面をレーザー反射鏡で覆われ、推進器を"
+        "一切持たず、決して能動的に機動することのない衛星）は、生まれつき最もクリーンな対照群である——"
+        "事例四のように既知の機動ウィンドウを除外する必要すらなく、それ自体が「静穏が保証された」"
+        "サンプルである。本事例ではこのような8機の衛星を用い、800〜19,126kmにわたってTLE雑音床が"
+        "高度によってどう変化するかの全体像を描く。",
+        "**Problem background**: to know \"whether this signal is a maneuver,\" one first has to know "
+        "\"how large the noise itself is when nothing is happening at all.\" Passive geodetic spheres "
+        "(satellites covered in laser retroreflectors, with no thrusters at all, that never actively "
+        "maneuver) are a naturally ideal control group — unlike Case 4, there's no need to exclude known "
+        "maneuver windows; they are, by construction, a \"guaranteed quiet\" sample. This case uses 8 such "
+        "satellites, spanning 800–19,126 km, to map out the full panorama of how the TLE noise floor "
+        "varies with altitude.",
+    ))
 
     df = load_case18_real_data()
     if not df.empty:
@@ -4367,44 +7207,110 @@ def render_storymap_case18():
                                  text=d["name"], textposition="top center",
                                  marker=dict(size=10, color="#64B5F6")))
         fig.update_layout(height=380, margin=dict(l=10, r=10, t=10, b=10),
-                          xaxis_title="軌道高度 (km)", yaxis_title="TLE雜訊地板 σ (m)",
+                          xaxis_title=T3("軌道高度 (km)", "軌道高度 (km)", "Orbital altitude (km)"),
+                          yaxis_title=T3("TLE雜訊地板 σ (m)", "TLE雑音床 σ (m)", "TLE noise floor σ (m)"),
                           xaxis_type="log", yaxis_type="log", plot_bgcolor="rgba(0,0,0,0)")
         st.plotly_chart(fig, use_container_width=True, key="case18_spheres")
-        st.caption(
+        st.caption(T3(
             "LEO帶（Stella、Starlette、Ajisai、LARES，800～1,488km）：σ = **0.17～0.46公尺**，"
             "與 DORIS 認證安靜期實測（中位≈0.2公尺）高度吻合——用完全不同的衛星類別，"
             "獨立驗證了同一個雜訊地板數字。LAGEOS-1/2（~5,800km）：σ = 0.34～0.40公尺。"
-            "Etalon-1/2（~19,100km）：σ 一度看起來高達 **6.2～7.7公尺**——比 LEO 帶高了 30～40 倍。"
-        )
+            "Etalon-1/2（~19,100km）：σ 一度看起來高達 **6.2～7.7公尺**——比 LEO 帶高了 30～40 倍。",
+            "LEO帯（Stella、Starlette、Ajisai、LARES、800〜1,488km）：σ＝**0.17〜0.46メートル**であり、"
+            "DORIS認証済みの静穏期実測値（中央値≈0.2メートル）と高い一致を示す——まったく異なる衛星"
+            "クラスを用いて、同じ雑音床の数値を独立に検証したことになる。LAGEOS-1/2（~5,800km）："
+            "σ＝0.34〜0.40メートル。Etalon-1/2（~19,100km）：σは一見すると**6.2〜7.7メートル**という"
+            "高い値に達し——LEO帯の30〜40倍にもなる。",
+            "LEO band (Stella, Starlette, Ajisai, LARES, 800–1,488 km): σ = **0.17–0.46 m**, closely "
+            "matching the DORIS-certified quiet-period measurement (median ≈0.2 m) — an independent "
+            "confirmation of the same noise-floor figure using a completely different satellite class. "
+            "LAGEOS-1/2 (~5,800 km): σ = 0.34–0.40 m. Etalon-1/2 (~19,100 km): σ initially appears as high "
+            "as **6.2–7.7 m** — 30–40 times higher than the LEO band.",
+        ))
 
-    st.header("差點被誤讀的發現：那 30～40 倍的落差，其實大半是月球假訊號")
-    st.error(
+    st.header(T3(
+        "差點被誤讀的發現：那 30～40 倍的落差，其實大半是月球假訊號",
+        "誤読されかけた発見：その30〜40倍の差は、実は大半が月による偽信号だった",
+        "A discovery that was almost misread: that 30–40× gap turns out to be mostly a lunar false signal",
+    ))
+    st.error(T3(
         "跨 800～19,126 公里，原始 σ_resid 隨高度上升（Spearman ρ=+0.79，p=0.02）——"
         "**方向跟 LEO 帶內部「高度越高、大氣阻力越小、雜訊越乾淨」（ρ=−0.79）正好相反**，"
         "第一眼看很像是「MEO/高軌本質上就是比較雜」。但把 Etalon 的殘差拿去對月球第三體攝動建模"
         "（主週期 27.49～27.59 天，**精準對上恆星月週期 27.32 天**）之後——"
         "**Etalon-1 的 σ 從 7.42 公尺，扣除主週期後降到 1.16 公尺，再扣除次諧波週期後降到 0.89 公尺；"
         "Etalon-2 從 8.80 公尺降到 0.50 公尺、再到 0.35 公尺**——大部分原本以為的「MEO雜訊」，"
-        "其實是**可預測、可建模的月球攝動訊號，不是隨機雜訊**。"
-    )
-    st.success(
+        "其實是**可預測、可建模的月球攝動訊號，不是隨機雜訊**。",
+        "800〜19,126kmにわたって、生の σ_resid は高度とともに上昇する（Spearman ρ=+0.79、p=0.02）——"
+        "**この方向は、LEO帯内部の「高度が高いほど大気抵抗が小さくなり、雑音がよりクリーンになる」"
+        "（ρ=−0.79）とはちょうど逆であり**、一見すると「MEO／高軌道は本質的により雑音が多い」ように"
+        "見える。しかしEtalonの残差を月の第三体摂動としてモデル化したところ（主周期27.49〜27.59日、"
+        "**恒星月の周期27.32日と正確に一致**）——**Etalon-1のσは7.42メートルから、主周期を除去した後"
+        "1.16メートルに、さらに副次的な調和周期を除去した後0.89メートルまで低下した；Etalon-2は"
+        "8.80メートルから0.50メートル、さらに0.35メートルまで低下した**——もともと「MEOの雑音」だと"
+        "思われていたものの大半は、実は**予測可能でモデル化可能な月の摂動信号であり、ランダムな雑音"
+        "ではなかった**のである。",
+        "Across 800–19,126 km, the raw σ_resid rises with altitude (Spearman ρ=+0.79, p=0.02) — **the "
+        "opposite direction from within the LEO band, where \"higher altitude means less atmospheric drag "
+        "and cleaner noise\" (ρ=−0.79)** — at first glance this looks like \"MEO/high orbits are "
+        "inherently noisier.\" But after modeling Etalon's residual against lunar third-body perturbation "
+        "(a primary period of 27.49–27.59 days, **precisely matching the sidereal month of 27.32 days**) — "
+        "**Etalon-1's σ dropped from 7.42 m to 1.16 m after removing the primary period, and further to "
+        "0.89 m after removing a secondary harmonic; Etalon-2 dropped from 8.80 m to 0.50 m, then to "
+        "0.35 m** — most of what was originally thought to be \"MEO noise\" turned out to be **a "
+        "predictable, modelable lunar-perturbation signal, not random noise**.",
+    ))
+    st.success(T3(
         "**修正後的真實結論**：TLE 雜訊地板從 LEO（~0.2公尺）到 MEO（~0.5～1公尺）"
         "**只是溫和上升，不是原始數字暗示的30～40倍暴增**——那個看似戲劇性的落差，"
         "大半是處理方式（沒扣除已知的月球攝動）造成的假象。這跟案例十的「微分假影」"
         "是同一種教訓的不同版本：**看起來異常大的訊號，第一步永遠該先問「這是不是"
-        "已知物理效應沒被扣除，而不是急著宣稱發現了新的雜訊源」**。"
-    )
+        "已知物理效應沒被扣除，而不是急著宣稱發現了新的雜訊源」**。",
+        "**修正後の真の結論**：TLE雑音床はLEO（~0.2メートル）からMEO（~0.5〜1メートル）にかけて、"
+        "**緩やかに上昇するだけであり、生の数値が示唆するような30〜40倍もの急増ではない**——あの一見"
+        "劇的に見えた差は、その大半が処理方法（既知の月の摂動を差し引いていなかったこと）によって"
+        "生じた見かけ上のものである。これは事例十の「微分アーティファクト」と同じ種類の教訓の別"
+        "バージョンである：**異常に大きく見える信号については、まず最初に「これは既知の物理効果が"
+        "差し引かれていないだけではないか」と問うべきであり、新しい雑音源を発見したと急いで主張すべき"
+        "ではない**。",
+        "**The corrected, true conclusion**: the TLE noise floor rises only **mildly** from LEO (~0.2 m) "
+        "to MEO (~0.5–1 m) — **not the 30–40-fold jump the raw numbers seemed to suggest** — that "
+        "seemingly dramatic gap is mostly an illusion created by processing choices (failing to subtract a "
+        "known lunar perturbation). This is a different version of the same lesson as Case 10's "
+        "\"differentiation artifact\": **whenever a signal looks abnormally large, the first question "
+        "should always be \"has a known physical effect simply not been subtracted yet,\" rather than "
+        "rushing to claim discovery of a new noise source**.",
+    ))
 
     st.markdown("---")
-    st.markdown(
+    st.markdown(T3(
         "**判讀**：被動測地球體給了一個獨立於 DORIS 之外、完全不同衛星類別的雜訊地板驗證，"
         "本身就有價值；但更重要的教訓在於 Etalon 那段——**同一份資料，扣不扣除已知的"
         "物理攝動效應，結論可以天差地遠**。跨軌道域比較雜訊地板時，永遠要先確認"
         "有沒有把可預測的物理效應（月球/太陽第三體攝動、大氣阻力）處理乾淨，"
-        "才能誠實地談「剩下的雜訊有多大」。"
-    )
-    st.caption("完整推導見 `docs/進度月報_202608_TASA比較_詳版.md` §3.6～3.7；"
-              "程式 `passive_sphere_noise_floor.py`、`etalon_lunisolar_model.py`。")
+        "才能誠實地談「剩下的雜訊有多大」。",
+        "**判読**：受動測地球体は、DORISとは独立した、まったく異なる衛星クラスによる雑音床の検証を"
+        "提供しており、それ自体に価値がある。しかしより重要な教訓はEtalonの部分にある——**同じデータ"
+        "であっても、既知の物理的摂動効果を差し引くかどうかで、結論はまったく異なりうる**。異なる"
+        "軌道領域間で雑音床を比較する際には、常にまず予測可能な物理効果（月／太陽の第三体摂動、"
+        "大気抵抗）がきちんと処理されているかを確認して初めて、「残った雑音がどれほどか」を誠実に"
+        "語ることができる。",
+        "**Verdict**: passive geodetic spheres provide, by themselves, a valuable noise-floor validation "
+        "independent of DORIS and using a completely different class of satellite; but the more important "
+        "lesson lies in the Etalon episode — **the same data can lead to wildly different conclusions "
+        "depending on whether a known physical perturbation effect is subtracted or not**. When comparing "
+        "noise floors across orbital regimes, one must always first confirm that predictable physical "
+        "effects (lunar/solar third-body perturbation, atmospheric drag) have been cleanly accounted for, "
+        "before honestly discussing \"how much noise remains.\"",
+    ))
+    st.caption(T3(
+        "完整推導見 `docs/進度月報_202608_TASA比較_詳版.md` §3.6～3.7；"
+        "程式 `passive_sphere_noise_floor.py`、`etalon_lunisolar_model.py`。",
+        "完全な導出は `docs/進度月報_202608_TASA比較_詳版.md` §3.6〜3.7を参照。プログラムは "
+        "`passive_sphere_noise_floor.py`、`etalon_lunisolar_model.py` を参照。",
+        "Full derivation is in `docs/進度月報_202608_TASA比較_詳版.md` §3.6–3.7; code is in "
+        "`passive_sphere_noise_floor.py` and `etalon_lunisolar_model.py`.",
+    ))
 
 
 # ══ StoryMap 案例十九（2026-09-10 新增）══════════════════════════════════════════
@@ -4425,50 +7331,135 @@ def load_case19_real_data() -> dict:
     return {"total": total, "official": official, "placeholder": placeholder, "beyond_alpha5": beyond_alpha5}
 
 
+# --- render_storymap_case19 ---
 def render_storymap_case19():
     if st.button(t("storymap_back"), key="back_from_case19"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例十九：編目突破 10 萬顆那天，程式碼準備好了嗎？")
-    st.subheader("6位數NORAD／Alpha-5遷移——務實止血、留白治本的工程故事")
-    st.caption("本頁「目前受影響顆數」由下方快取函式對資料庫即時查驗計算。")
+    st.title(T3(
+        "案例十九：編目突破 10 萬顆那天，程式碼準備好了嗎？",
+        "事例十九：カタログが10万機を突破するその日、コードは準備できているか？",
+        "Case 19: The Day the Catalog Passes 100,000 Objects — Will the Code Be Ready?",
+    ))
+    st.subheader(T3(
+        "6位數NORAD／Alpha-5遷移——務實止血、留白治本的工程故事",
+        "6桁NORAD／Alpha-5移行——実務的な応急処置と、誠実に残された根本対応の工学的物語",
+        "The 6-Digit NORAD/Alpha-5 Migration — an Engineering Story of a Pragmatic Fix and an Honestly Left-Open Root Solution",
+    ))
+    st.caption(T3(
+        "本頁「目前受影響顆數」由下方快取函式對資料庫即時查驗計算。",
+        "本頁の「現在影響を受けている機数」は、下記のキャッシュ関数がデータベースをリアルタイムに"
+        "照会して算出したものである。",
+        "The \"number of objects currently affected\" on this page is computed live by the cached function "
+        "below querying the database.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：NORAD 編目 ID 傳統上是 5 位數字（上限 99999）。太空垃圾與新衛星增速太快，"
         "編目即將（或已經）突破這個上限，業界過渡方案是「Alpha-5」——用一個英文字母取代最高位數字"
         "（例如 A0147 代表 100147），把上限延伸到 339999。任何直接假設「NORAD ID 是5位數字」的"
-        "程式碼，遇到這個轉換都會壞掉——這是一個典型的、藏在資料格式假設裡的技術債案例。"
-    )
+        "程式碼，遇到這個轉換都會壞掉——這是一個典型的、藏在資料格式假設裡的技術債案例。",
+        "**問題の背景**：NORADカタログIDは伝統的に5桁の数字（上限99999）である。スペースデブリと"
+        "新規衛星の増加速度が速すぎるため、カタログはこの上限を突破しつつある（あるいはすでに突破"
+        "した）。業界の過渡的な解決策は「Alpha-5」であり、最上位の桁を英字に置き換えることで（例："
+        "A0147は100147を表す）、上限を339999まで拡張する。「NORAD IDは5桁の数字である」と直接仮定"
+        "しているコードは、この変換に遭遇するとすべて壊れる——これはデータ形式の仮定の中に潜む技術的"
+        "負債の典型的な事例である。",
+        "**Problem background**: NORAD catalog IDs have traditionally been 5-digit numbers (capped at "
+        "99999). The catalog is about to (or already has) exceed this cap due to the sheer speed at which "
+        "space debris and new satellites are accumulating; the industry's transitional solution is "
+        "\"Alpha-5\" — replacing the leading digit with a letter (e.g., A0147 represents 100147), "
+        "extending the cap to 339999. Any code that directly assumes \"a NORAD ID is a 5-digit number\" "
+        "breaks the moment it encounters this transition — a textbook case of technical debt hiding inside "
+        "a data-format assumption.",
+    ))
 
     data = load_case19_real_data()
+    total_str = f"{data['total']:,}"
+    official_str = f"{data['official']:,}"
+    placeholder_str = f"{data['placeholder']:,}"
     c1, c2, c3 = st.columns(3)
-    c1.metric("目前資料庫中6位數ID總數", f"{data['total']:,} 顆")
-    c2.metric("官方編目（10-27萬區間）", f"{data['official']:,} 顆")
-    c3.metric("分析員暫用編號（27-34萬區間）", f"{data['placeholder']:,} 顆")
+    c1.metric(
+        T3("目前資料庫中6位數ID總數", "現在データベース内の6桁ID総数", "Total 6-digit IDs currently in the database"),
+        T3(f"{total_str} 顆", f"{total_str}機", total_str),
+    )
+    c2.metric(
+        T3("官方編目（10-27萬區間）", "公式カタログ（10万〜27万の区間）", "Official catalog entries (100,000–269,999 range)"),
+        T3(f"{official_str} 顆", f"{official_str}機", official_str),
+    )
+    c3.metric(
+        T3("分析員暫用編號（27-34萬區間）", "アナリスト暫定番号（27万〜34万の区間）", "Analyst placeholder numbers (270,000–339,999 range)"),
+        T3(f"{placeholder_str} 顆", f"{placeholder_str}機", placeholder_str),
+    )
     if data["beyond_alpha5"] > 0:
-        st.warning(f"⚠️ 另有 **{data['beyond_alpha5']} 顆**編號已超過 Alpha-5 上限 339999，"
-                  "屬於還沒有本專案对應解析邏輯的更新一代編目格式（GP/OMM）。")
+        beyond_str = f"{data['beyond_alpha5']}"
+        st.warning(T3(
+            f"⚠️ 另有 **{beyond_str} 顆**編號已超過 Alpha-5 上限 339999，"
+            "屬於還沒有本專案对應解析邏輯的更新一代編目格式（GP/OMM）。",
+            f"⚠️ さらに **{beyond_str}機** の番号がすでにAlpha-5の上限339999を超えており、本プロジェクト"
+            "がまだ対応する解析ロジックを持たない次世代カタログ形式（GP/OMM）に属している。",
+            f"⚠️ An additional **{beyond_str}** object(s) already have catalog numbers beyond the Alpha-5 "
+            "cap of 339999, belonging to a next-generation catalog format (GP/OMM) that this project does "
+            "not yet have parsing logic for.",
+        ))
 
-    st.header("① 真正的 bug 藏在哪裡：不是顯眼的解析行，是資料入口的守門正則")
-    st.error(
+    st.header(T3(
+        "① 真正的 bug 藏在哪裡：不是顯眼的解析行，是資料入口的守門正則",
+        "①本当のバグはどこに潜んでいたか：目立つ解析行ではなく、データ入口の守門正規表現",
+        "① Where the real bug was actually hiding: not the obvious parsing line, but the data-entry gatekeeping regex",
+    ))
+    st.error(T3(
         "第一層問題很好抓：`int(line1[2:7])` 遇到字母開頭的 Alpha-5（如 `A0147`）直接丟 "
         "`ValueError`。**但真正隱蔽的殺手是更上游的行過濾正則**——`download_TLE_unified.py` "
         "原本的 `LINE1_RE`／`LINE2_RE` 寫成 `^1\\s+(\\d{5})`，字母開頭的 Alpha-5 行"
         "**在走到任何解析邏輯之前，就已經被整行過濾掉、悄悄消失**，不會報錯，"
         "只是資料量少了一點，不容易被發現。修正後的正則改為 `[0-9A-HJ-NP-Z][0-9]{4}` "
         "（排除易混淆字母I/O）。**教訓：格式假設常常藏在資料入口的守門邏輯裡，"
-        "不是最顯眼的那一行解析程式碼。**"
-    )
+        "不是最顯眼的那一行解析程式碼。**",
+        "第一層の問題は見つけやすい：`int(line1[2:7])` は文字で始まるAlpha-5（`A0147`など）に遭遇すると"
+        "直ちに `ValueError` を投げる。**しかし本当に隠れた元凶は、さらに上流にある行フィルタリング用の"
+        "正規表現である**——`download_TLE_unified.py` の元の `LINE1_RE`／`LINE2_RE` は "
+        "`^1\\s+(\\d{5})` と書かれており、文字で始まるAlpha-5の行は**あらゆる解析ロジックに到達する前に、"
+        "行ごとフィルタリングされて静かに消えてしまい**、エラーも出ず、単にデータ量が少し減るだけで、"
+        "気づかれにくい。修正後の正規表現は `[0-9A-HJ-NP-Z][0-9]{4}`（混同しやすい文字I／Oを除外）に"
+        "変更された。**教訓：形式に関する仮定は、しばしば最も目立つ解析行ではなく、データ入口の守門"
+        "ロジックの中に潜んでいる。**",
+        "The first-layer problem is easy to catch: `int(line1[2:7])` throws a `ValueError` outright when "
+        "it hits a letter-prefixed Alpha-5 code (like `A0147`). **But the truly hidden killer was further "
+        "upstream, in the line-filtering regex** — `download_TLE_unified.py`'s original `LINE1_RE`/"
+        "`LINE2_RE` was written as `^1\\s+(\\d{5})`, so letter-prefixed Alpha-5 lines were **being "
+        "filtered out and silently discarded, entire lines at a time, before ever reaching any parsing "
+        "logic at all** — no error was thrown; the data volume was simply a little smaller, making it hard "
+        "to notice. The fixed regex was changed to `[0-9A-HJ-NP-Z][0-9]{4}` (excluding the easily confused "
+        "letters I/O). **Lesson: format assumptions are often hidden in the gatekeeping logic at a data's "
+        "point of entry, not in the most conspicuous line of parsing code.**",
+    ))
 
-    st.header("② 止血範圍：3個呼叫點，原本實作不統一——2026-09-10已收斂")
-    st.markdown(
+    st.header(T3(
+        "② 止血範圍：3個呼叫點，原本實作不統一——2026-09-10已收斂",
+        "②応急処置の範囲：3つの呼び出し箇所、当初は実装が統一されていなかった——2026年9月10日に収束済み",
+        "② Scope of the fix: 3 call sites, originally implemented inconsistently — converged on 2026-09-10",
+    ))
+    st.markdown(T3(
         "已修正的 3 個呼叫點：`download_TLE_unified.py`、`prc_maneuver/detect_maneuvers.py`"
         "（兩者共用 `tle_catnr.decode_catnr()`），以及 `scenario-advanced01/scenario04/ingestion/"
         "user_defined.py`——**這一版審視本案例時發現，第三處原本是一份獨立重寫的相容函式，"
-        "沒有呼叫共用模組**，屬於「三個呼叫點都能正確解析，但實作方式不統一」的技術債。"
-    )
-    st.success(
+        "沒有呼叫共用模組**，屬於「三個呼叫點都能正確解析，但實作方式不統一」的技術債。",
+        "すでに修正済みの3つの呼び出し箇所：`download_TLE_unified.py`、"
+        "`prc_maneuver/detect_maneuvers.py`（両者は `tle_catnr.decode_catnr()` を共有）、そして "
+        "`scenario-advanced01/scenario04/ingestion/user_defined.py`——**今回この事例を見直した際に、"
+        "3つ目の箇所はもともと独自に書き直した互換関数であり、共有モジュールを呼び出していなかった**"
+        "ことが判明した。これは「3つの呼び出し箇所すべてが正しく解析できるが、実装方法が統一されて"
+        "いない」という技術的負債であった。",
+        "The 3 call sites already fixed: `download_TLE_unified.py` and "
+        "`prc_maneuver/detect_maneuvers.py` (both sharing `tle_catnr.decode_catnr()`), and "
+        "`scenario-advanced01/scenario04/ingestion/user_defined.py` — **while reviewing this case this "
+        "time, it was discovered that the third site was originally an independently rewritten "
+        "compatibility function that did not call the shared module at all** — technical debt of the form "
+        "\"all three call sites parse correctly, but their implementations are inconsistent.\"",
+    ))
+    st.success(T3(
         "**已收斂**：`user_defined.py` 改為優先呼叫共用的 `tle_catnr.decode_catnr()`，"
         "但**保留原本的本地實作作為 ImportError 時的備援**——因為 `scenario-advanced01` "
         "這個應用設計上可以獨立部署（見其 `update_slim_publish_hf.bat`，獨立部署時只打包"
@@ -4476,102 +7467,299 @@ def render_storymap_case19():
         "反而會在獨立部署場景下整個壞掉。**這不是單純的「刪掉重複程式碼」，"
         "而是在「單一事實來源」與「獨立部署韌性」兩個目標間找一個都不犧牲的解法**"
         "（仿照同目錄 `spacetrack.py` 既有的 try/except 降級寫法）。修改後原有 19 個"
-        "`test_user_defined.py` 測試全數通過。"
-    )
-    st.markdown(
+        "`test_user_defined.py` 測試全數通過。",
+        "**収束済み**：`user_defined.py` は共有の `tle_catnr.decode_catnr()` を優先的に呼び出すように"
+        "変更されたが、**元のローカル実装はImportError時のフォールバックとして残されている**——なぜ"
+        "なら `scenario-advanced01` というアプリケーションは設計上独立してデプロイ可能であり（その "
+        "`update_slim_publish_hf.bat` を参照。独立デプロイ時にはデータベースファイルのみがパッケージ"
+        "され、主プロジェクトのルートディレクトリの `.py` モジュールは含まれない）、共有モジュールが"
+        "必ずインポートできると単純に仮定してしまうと、独立デプロイのシナリオでかえって完全に壊れて"
+        "しまうためである。**これは単なる「重複コードの削除」ではなく、「単一の真実の源」と「独立"
+        "デプロイの回復力」という2つの目標のどちらも犠牲にしない解決策を見出したものである**（同一"
+        "ディレクトリの `spacetrack.py` が既に持つtry/exceptによる縮退動作を踏襲している）。修正後、"
+        "既存の `test_user_defined.py` の19個のテストはすべて成功した。",
+        "**Now converged**: `user_defined.py` was changed to preferentially call the shared "
+        "`tle_catnr.decode_catnr()`, while **retaining its original local implementation as a fallback "
+        "for when the import fails** — because the `scenario-advanced01` application is designed to be "
+        "deployable independently (see its `update_slim_publish_hf.bat`, which, for standalone "
+        "deployment, packages only the database file and does not include the `.py` modules from the main "
+        "project's root directory); simply assuming the shared module could always be imported would "
+        "instead break the application entirely in a standalone deployment scenario. **This is not simply "
+        "\"deleting duplicate code,\" but finding a solution that sacrifices neither of two goals — a "
+        "single source of truth, and resilience under standalone deployment** (following the same "
+        "try/except degradation pattern already used by `spacetrack.py` in the same directory). After the "
+        "change, all 19 existing `test_user_defined.py` tests passed.",
+    ))
+    st.markdown(T3(
         "驗證覆蓋：`tests/test_tle_catnr.py`（**29 個參數化測試案例**：7組編碼/解碼往返測試×3個函式、"
         "6個異常輸入案例、1個舊格式回歸測試、1個超出範圍測試）＋ `tests/test_sixdigit_ingest.py`"
-        "（正則門檻與OMM整數欄位各1個測試）。"
-    )
+        "（正則門檻與OMM整數欄位各1個測試）。",
+        "検証カバレッジ：`tests/test_tle_catnr.py`（**29個のパラメータ化テストケース**：3つの関数×"
+        "7組の符号化／復号化往復テスト、6個の異常入力ケース、1個の旧形式回帰テスト、1個の範囲外"
+        "テスト）＋ `tests/test_sixdigit_ingest.py`（正規表現の閾値とOMM整数フィールドについて各1個の"
+        "テスト）。",
+        "Test coverage: `tests/test_tle_catnr.py` (**29 parameterized test cases**: 7 encode/decode "
+        "round-trip tests × 3 functions, 6 invalid-input cases, 1 legacy-format regression test, 1 "
+        "out-of-range test) plus `tests/test_sixdigit_ingest.py` (one test each for the regex threshold "
+        "and the OMM integer field).",
+    ))
 
-    st.header("③ 誠實的待辦：還沒治本的部分")
-    st.info(
+    st.header(T3(
+        "③ 誠實的待辦：還沒治本的部分",
+        "③誠実な残課題：まだ根本対応していない部分",
+        "③ Honest remaining work: what has not yet been fixed at the root",
+    ))
+    st.info(T3(
         "**B級（格式化輸出）已完成**：`synthetic_tle/formatter.py` 已用 `encode_catnr()` 正確輸出。\n\n"
         "**C級（GP/OMM資料源遷移）仍是半成品**：`download_TLE_unified.py`／`backfill_tle_history.py` "
         "已新增 `--source-format {3le,omm}` 參數，但 OMM（新一代軌道資料格式，原生支援任意位數"
         "編目ID，不受Alpha-5 339999上限限制）尚未成為主要資料源——**這代表如果編目在"
-        "本專案完成OMM遷移之前就衝破339999，需要再一次應急止血**。"
-    )
+        "本專案完成OMM遷移之前就衝破339999，需要再一次應急止血**。",
+        "**Bレベル（出力の書式化）は完了済み**：`synthetic_tle/formatter.py` はすでに "
+        "`encode_catnr()` を用いて正しく出力している。\n\n"
+        "**Cレベル（GP/OMMデータソースへの移行）は依然として半完成品である**："
+        "`download_TLE_unified.py`／`backfill_tle_history.py` にはすでに `--source-format {3le,omm}` "
+        "パラメータが追加されているが、OMM（新世代の軌道データ形式であり、任意桁数のカタログIDを"
+        "ネイティブにサポートし、Alpha-5の339999という上限に縛られない）はまだ主要なデータソースには"
+        "なっていない——**これは、もし本プロジェクトがOMM移行を完了する前にカタログが339999を突破して"
+        "しまえば、再度応急処置が必要になることを意味する**。",
+        "**Tier B (formatted output) is complete**: `synthetic_tle/formatter.py` already uses "
+        "`encode_catnr()` to output correctly.\n\n"
+        "**Tier C (migrating the data source to GP/OMM) remains a half-finished piece of work**: "
+        "`download_TLE_unified.py`/`backfill_tle_history.py` already have a `--source-format {3le,omm}` "
+        "parameter added, but OMM (the next-generation orbital-data format, which natively supports "
+        "catalog IDs of any number of digits and is not bound by Alpha-5's 339999 cap) has not yet become "
+        "the primary data source — **meaning that if the catalog breaks past 339999 before this project "
+        "completes its OMM migration, another round of emergency patching will be needed**.",
+    ))
 
     st.markdown("---")
-    st.success(
+    st.success(T3(
         "**判讀**：這是一個「在編目號進位臨界點前完成相容」的韌性工程案例，"
         "但誠實地說它一開始是「務實止血、留白治本」——A級（解析止血）做得紮實（29個測試案例"
         "涵蓋完整）、B級（輸出）已完成，**3個呼叫點實作不統一這一項已在本次反思後收斂**，"
         "但C級（資料源根本性遷移到GP/OMM）仍未完成，仍是誠實的待辦。"
         "**列出真實還沒做完的部分、並在發現當下就實際修正能修的部分，"
         "比宣稱「已完全解決」更值得信任**——尤其當資料庫裡已經有 945 顆真實的6位數編目衛星，"
-        "這不是假設性的未來問題。"
-    )
-    st.caption("完整推導見 `docs/r8_addendum_TASA_alpha5_20260802.md` §G.2、§G.3；"
-              "程式 `tle_catnr.py`、測試 `tests/test_tle_catnr.py`、`tests/test_sixdigit_ingest.py`、"
-              "`scenario-advanced01/tests/test_user_defined.py`。")
+        "這不是假設性的未來問題。",
+        "**判読**：これは「カタログ番号の桁上がりの臨界点を前に互換性を完成させた」という回復力のある"
+        "工学的事例であるが、誠実に言えば、当初は「実務的な応急処置であり、根本対応は誠実に残された"
+        "もの」であった——Aレベル（解析の応急処置）はしっかりと行われており（29個のテストケースで"
+        "完全にカバー）、Bレベル（出力）は完了している。**3つの呼び出し箇所の実装が統一されていなかった"
+        "点は、今回の見直しによって収束した**が、Cレベル（データソースのGP/OMMへの根本的な移行）は"
+        "依然として未完了であり、これは誠実な残課題である。**実際にまだ終わっていない部分を列挙し、"
+        "発見した時点で修正できる部分は実際に修正すること**は、「完全に解決した」と主張するよりも"
+        "はるかに信頼に値する——特にデータベース内にすでに945機の実在する6桁カタログ衛星が存在する"
+        "以上、これは仮定上の将来の問題ではない。",
+        "**Verdict**: this is a resilience-engineering case of \"achieving compatibility ahead of the "
+        "catalog's numbering cliff,\" but honestly speaking it started out as \"a pragmatic fix, with the "
+        "root solution honestly left open\" — Tier A (the parsing fix) was done solidly (fully covered by "
+        "29 test cases), Tier B (output) is complete, **the inconsistency across the 3 call sites' "
+        "implementations has now been converged following this reflection**, but Tier C (fundamentally "
+        "migrating the data source to GP/OMM) remains incomplete — an honest item of remaining work. "
+        "**Listing what genuinely hasn't been finished yet, and actually fixing whatever can be fixed the "
+        "moment it's discovered, is far more trustworthy than claiming everything has been \"completely "
+        "solved\"** — especially since the database already contains 945 real satellites with 6-digit "
+        "catalog numbers; this is not a hypothetical future problem.",
+    ))
+    st.caption(T3(
+        "完整推導見 `docs/r8_addendum_TASA_alpha5_20260802.md` §G.2、§G.3；"
+        "程式 `tle_catnr.py`、測試 `tests/test_tle_catnr.py`、`tests/test_sixdigit_ingest.py`、"
+        "`scenario-advanced01/tests/test_user_defined.py`。",
+        "完全な導出は `docs/r8_addendum_TASA_alpha5_20260802.md` §G.2〜G.3を参照。プログラムは "
+        "`tle_catnr.py`、テストは `tests/test_tle_catnr.py`、`tests/test_sixdigit_ingest.py`、"
+        "`scenario-advanced01/tests/test_user_defined.py` を参照。",
+        "Full derivation is in `docs/r8_addendum_TASA_alpha5_20260802.md` §G.2, §G.3; code is in "
+        "`tle_catnr.py`; tests are in `tests/test_tle_catnr.py`, `tests/test_sixdigit_ingest.py`, and "
+        "`scenario-advanced01/tests/test_user_defined.py`.",
+    ))
 
 
 # ══ StoryMap 案例二十（2026-09-10 新增）══════════════════════════════════════════
 
+# --- render_storymap_case20 ---
 def render_storymap_case20():
     if st.button(t("storymap_back"), key="back_from_case20"):
         st.session_state["storymap_case"] = None
         st.rerun()
 
-    st.title("案例二十：機動偵測能不能反過來，幫 Starlink 定位把關？")
-    st.subheader("LEO-PNT 的一個具體應用延伸——把案例十三的落差數字用起來")
-    st.caption("本頁數字沿用案例十三已計算之真實結果（284顆Starlink、約2,600萬個資料點），"
-              "本頁只做應用面的延伸論證，未新增計算。")
+    st.title(T3(
+        "案例二十：機動偵測能不能反過來，幫 Starlink 定位把關？",
+        "事例二十：機動検知を逆に使って、Starlinkの測位の信頼性を守れないか？",
+        "Case 20: Can Maneuver Detection Be Turned Around to Safeguard Starlink Positioning?",
+    ))
+    st.subheader(T3(
+        "LEO-PNT 的一個具體應用延伸——把案例十三的落差數字用起來",
+        "LEO-PNTへの具体的な応用展開——事例十三で明らかになったギャップの数値を活用する",
+        "A Concrete Application Extension for LEO-PNT — Putting Case 13's Gap Numbers to Use",
+    ))
+    st.caption(T3(
+        "本頁數字沿用案例十三已計算之真實結果（284顆Starlink、約2,600萬個資料點），"
+        "本頁只做應用面的延伸論證，未新增計算。",
+        "本頁の数値は事例十三ですでに計算された実際の結果（284機のStarlink、約2,600万個のデータ点）を"
+        "そのまま用いており、本頁では応用面での展開論証のみを行い、新たな計算は加えていない。",
+        "The numbers on this page reuse the real results already computed in Case 13 (284 Starlink "
+        "satellites, about 26 million data points); this page only extends the application-side argument, "
+        "adding no new computation.",
+    ))
 
-    st.markdown(
+    st.markdown(T3(
         "**問題背景**：低軌衛星星系（尤其 Starlink）因為顆數多、訊號強，"
         "近年被討論作為 GPS 之外的低軌定位（LEO-PNT，Low Earth Orbit Positioning, "
         "Navigation and Timing）備援或補充手段（見案例十一文獻列表之 *Inside GNSS* 產業評述"
         "與低成本硬體實測案例）。但定位精度的前提，是**要先知道衛星自己的位置有多準**——"
-        "這正是本專案已經算過的東西。"
-    )
+        "這正是本專案已經算過的東西。",
+        "**問題の背景**：低軌道衛星コンステレーション（特にStarlink）は機数が多く信号が強いため、"
+        "近年GPS以外の低軌道測位（LEO-PNT、Low Earth Orbit Positioning, Navigation and Timing）の"
+        "バックアップまたは補完手段として議論されている（事例十一の文献リストにある *Inside GNSS* の"
+        "産業評論および低コストハードウェアによる実測事例を参照）。しかし測位精度の前提は、"
+        "**まず衛星自身の位置がどれだけ正確かを知ること**である——これはまさに本プロジェクトがすでに"
+        "計算済みのものである。",
+        "**Problem background**: because of their large satellite counts and strong signals, LEO "
+        "constellations (Starlink in particular) have recently been discussed as a backup or supplementary "
+        "means of positioning beyond GPS — LEO-PNT (Low Earth Orbit Positioning, Navigation and Timing) "
+        "(see the *Inside GNSS* industry commentary and low-cost-hardware field tests in Case 11's "
+        "literature list). But the precondition for positioning accuracy is **first knowing how accurate "
+        "the satellite's own position is** — which is exactly what this project has already computed.",
+    ))
 
-    st.header("① 案例十三已經算出的數字，換一個角度看")
+    st.header(T3(
+        "① 案例十三已經算出的數字，換一個角度看",
+        "①事例十三ですでに算出された数値を、別の角度から見る",
+        "① Looking at Case 13's already-computed numbers from a different angle",
+    ))
     c1, c2, c3 = st.columns(3)
-    c1.metric("新鮮TLE（epoch<3小時）", "~1.5 km", "衛星自身位置誤差")
-    c2.metric("24～48小時後", "~13 km")
-    c3.metric("MEME精密星曆全程", "~5 m", "公尺級、穩定")
-    st.warning(
+    c1.metric(
+        T3("新鮮TLE（epoch<3小時）", "新しいTLE（epoch<3時間）", "Fresh TLE (epoch < 3 hours)"),
+        "~1.5 km",
+        T3("衛星自身位置誤差", "衛星自身の位置誤差", "Satellite's own position error"),
+    )
+    c2.metric(T3("24～48小時後", "24〜48時間後", "After 24–48 hours"), "~13 km")
+    c3.metric(
+        T3("MEME精密星曆全程", "MEME精密暦は全期間を通じて", "MEME precise ephemeris throughout"),
+        "~5 m",
+        T3("公尺級、穩定", "メートル級、安定", "Meter-level, stable"),
+    )
+    st.warning(T3(
         "**衛星自身的位置誤差，是定位精度的下限**——用一顆自己位置都有1.5公里不確定性的衛星"
         "做測距定位，接收端算出來的位置不可能比這個更準。GPS 等傳統導航衛星系統要求"
         "衛星星曆精度在**公尺級**，MEME 精密星曆勉強打到這個量級（~5m），"
         "但**公開、免費、每天更新的 TLE，中位數 1.5 公里起跳——差了近三個數量級，"
-        "完全不夠格直接拿來做公尺級定位**。"
-    )
+        "完全不夠格直接拿來做公尺級定位**。",
+        "**衛星自身の位置誤差は、測位精度の下限を規定する**——自身の位置に1.5キロメートルの不確かさを"
+        "持つ衛星を用いて測距測位を行った場合、受信端で算出される位置がこれより正確になることはあり"
+        "得ない。GPSなどの従来型航法衛星システムは衛星暦の精度に**メートル級**を要求しており、MEME"
+        "精密暦はかろうじてこの水準（~5m）に達しているが、**公開・無料で毎日更新されるTLEは、中央値で"
+        "1.5キロメートルから始まる——3桁近く劣っており、メートル級測位に直接使うにはまったく不十分で"
+        "ある**。",
+        "**A satellite's own position error sets the floor on positioning accuracy** — using a satellite "
+        "whose own position carries 1.5 km of uncertainty for ranging-based positioning, the position "
+        "computed at the receiver can never be more accurate than that. Traditional navigation satellite "
+        "systems like GPS require satellite-ephemeris accuracy at the **meter level**; MEME precise "
+        "ephemerides just barely reach that scale (~5 m), but **public, free, daily-updated TLEs start at "
+        "a median of 1.5 km — nearly three orders of magnitude worse, and nowhere near good enough to use "
+        "directly for meter-level positioning.**",
+    ))
 
-    st.header("② 但機動偵測可以做的事：不是提升精度，是即時剔除「已知不可信」的衛星")
-    st.success(
+    st.header(T3(
+        "② 但機動偵測可以做的事：不是提升精度，是即時剔除「已知不可信」的衛星",
+        "②しかし機動検知にできること：精度を上げることではなく、「既知の信頼できない」衛星をリアル"
+        "タイムで排除すること",
+        "② But what maneuver detection can do: not improving accuracy, but real-time screening out satellites \"known to be untrustworthy\"",
+    ))
+    st.success(T3(
         "案例十三另一個已算出的數字：**曾機動的衛星，7 天後外推誤差中位數飆升到幾十公里"
         "（約純外推衛星的十幾倍）**——這代表「剛做完機動」是一個可以被偵測系統即時標記出來的"
         "強烈訊號。**如果一套 LEO-PNT 定位系統要用 Starlink 訊號做測距，機動偵測可以扮演"
         "『星曆可信度即時守門』的角色**：不是讓 TLE 突然變準，而是**在使用前先篩掉"
         "『這顆衛星最近機動過，TLE 暫時不可信』的目標**，避免把一顆位置誤差幾十公里的"
-        "衛星錯當成可用的測距源。"
-    )
+        "衛星錯當成可用的測距源。",
+        "事例十三でもう一つ算出された数値：**機動を行ったことのある衛星は、7日後の外挿誤差中央値が"
+        "数十キロメートルまで急上昇する（純粋な外挿のみの衛星の十数倍程度）**——これは「機動を終えた"
+        "ばかりである」ことが、検知システムによってリアルタイムでマークできる強力な信号であることを"
+        "意味する。**もしLEO-PNT測位システムがStarlinkの信号を測距に用いようとするなら、機動検知は"
+        "『暦の信頼性をリアルタイムに監視するゲート』の役割を果たすことができる**：TLEを突然正確に"
+        "するのではなく、**使用前にあらかじめ「この衛星は最近機動したため、TLEが一時的に信頼できない」"
+        "対象をふるい落とす**ことで、位置誤差が数十キロメートルに達する衛星を誤って利用可能な測距源として"
+        "扱ってしまうことを防ぐ。",
+        "Another number already computed in Case 13: **for satellites that have maneuvered, the median "
+        "extrapolation error after 7 days spikes to tens of kilometers (roughly ten-odd times that of "
+        "purely extrapolated satellites)** — meaning \"having just maneuvered\" is a strong signal that a "
+        "detection system can flag in real time. **If a LEO-PNT positioning system wanted to use Starlink "
+        "signals for ranging, maneuver detection could serve as a real-time \"ephemeris-trustworthiness "
+        "gatekeeper\"**: not by suddenly making a TLE accurate, but by **screening out, before use, "
+        "targets whose \"TLE is temporarily untrustworthy because this satellite recently maneuvered,\"** "
+        "preventing a satellite with tens of kilometers of position error from being mistakenly treated as "
+        "a usable ranging source.",
+    ))
 
-    st.header("③ 誠實的應用邊界")
-    st.info(
+    st.header(T3(
+        "③ 誠實的應用邊界",
+        "③誠実な応用上の限界",
+        "③ Honest limits of this application",
+    ))
+    st.info(T3(
         "**這是一個應用面的延伸論證，不是本專案已經驗證過的定位系統**。三件事需要說清楚：\n\n"
         "1. 就算篩掉了剛機動的衛星，**剩下「安靜」的衛星本身 TLE 精度仍是公里級**，"
         "距離公尺級定位還很遠——機動偵測解決的是「排除最壞的那批」，不是「讓剩下的變準」；\n"
         "2. 真正要做到公尺級 LEO-PNT，需要的是 MEME 等級的精密星曆，"
         "而這類星曆目前並非公開即時可得的資料；\n"
         "3. 本專案的機動偵測系統本身只在 Starlink LEO 域完整驗證過（見案例十二①），"
-        "把它接進一套實際定位管線的可行性與延遲需求，仍是未來工作，不是現有成果。"
-    )
+        "把它接進一套實際定位管線的可行性與延遲需求，仍是未來工作，不是現有成果。",
+        "**これは応用面での展開論証であり、本プロジェクトがすでに検証済みの測位システムではない**。"
+        "3点を明確にしておく必要がある：\n\n"
+        "1. 機動したばかりの衛星をふるい落としたとしても、**残った「静穏な」衛星自体のTLE精度は依然として"
+        "キロメートル級**であり、メートル級測位にはまだ遠い——機動検知が解決するのは「最悪の一群を排除"
+        "すること」であって、「残りを正確にすること」ではない；\n"
+        "2. 本当にメートル級のLEO-PNTを実現するには、MEME級の精密暦が必要であるが、この種の暦は現時点"
+        "で公開されリアルタイムに入手可能なデータではない；\n"
+        "3. 本プロジェクトの機動検知システム自体は、StarlinkのLEO領域でのみ完全に検証されており"
+        "（事例十二①を参照）、これを実際の測位パイプラインに組み込む際の実現可能性や遅延要件は、"
+        "依然として今後の課題であり、既存の成果ではない。",
+        "**This is an application-side extension of the argument, not a positioning system this project "
+        "has already validated.** Three things need to be made clear:\n\n"
+        "1. even after screening out satellites that just maneuvered, **the remaining \"quiet\" "
+        "satellites still have TLE accuracy at the kilometer level** — a long way from meter-level "
+        "positioning; maneuver detection solves \"excluding the worst offenders,\" not \"making the rest "
+        "more accurate\";\n"
+        "2. genuinely achieving meter-level LEO-PNT requires MEME-grade precise ephemerides, and this kind "
+        "of ephemeris is not currently publicly available in real time;\n"
+        "3. this project's own maneuver-detection system has only been fully validated within the "
+        "Starlink LEO domain (see Case 12①) — the feasibility and latency requirements of wiring it into "
+        "an actual positioning pipeline remain future work, not an existing achievement.",
+    ))
 
     st.markdown("---")
-    st.markdown(
+    st.markdown(T3(
         "**判讀**：這個案例的重點不是宣稱本專案已經做出 LEO-PNT 系統，"
         "而是誠實指出**機動偵測技術有一條具體、合理、但尚未驗證的應用路徑**——"
         "把「這套系統擅長什麼」（判斷一顆衛星最近是否機動過）跟「這個領域需要什麼」"
         "（排除星曆暫時不可信的衛星）對上號，是把研究成果轉譯成應用價值的第一步，"
-        "但下一步的系統整合與延遲驗證，仍待完成。"
-    )
-    st.caption("延伸自案例十三之真實計算結果；LEO-PNT應用背景見案例十一文獻列表"
-              "（*Inside GNSS*《Inside LEO: LEO-PNT — Why Now?》、低成本硬體接收Starlink定位實測）。")
+        "但下一步的系統整合與延遲驗證，仍待完成。",
+        "**判読**：本事例の要点は、本プロジェクトがすでにLEO-PNTシステムを作り上げたと主張することでは"
+        "なく、**機動検知技術には具体的で合理的、しかしまだ検証されていない応用経路が存在する**ことを"
+        "誠実に指摘することにある——「このシステムが得意なこと」（ある衛星が最近機動したかどうかを"
+        "判断すること）と「この分野が必要としていること」（暦が一時的に信頼できない衛星を除外すること）"
+        "を結びつけることは、研究成果を応用価値へと翻訳する第一歩であるが、次のステップであるシステム"
+        "統合と遅延の検証は、まだ完了していない。",
+        "**Verdict**: the point of this case is not to claim this project has already built a LEO-PNT "
+        "system, but to honestly point out that **maneuver-detection technology has a concrete, "
+        "reasonable, but not-yet-validated application path** — matching \"what this system is good at\" "
+        "(judging whether a satellite has recently maneuvered) to \"what this field needs\" (excluding "
+        "satellites whose ephemeris is temporarily untrustworthy) is the first step in translating "
+        "research results into application value, but the next steps — system integration and latency "
+        "validation — remain to be completed.",
+    ))
+    st.caption(T3(
+        "延伸自案例十三之真實計算結果；LEO-PNT應用背景見案例十一文獻列表"
+        "（*Inside GNSS*《Inside LEO: LEO-PNT — Why Now?》、低成本硬體接收Starlink定位實測）。",
+        "事例十三の実際の計算結果からの展開である。LEO-PNT応用の背景は事例十一の文献リスト"
+        "（*Inside GNSS*「Inside LEO: LEO-PNT — Why Now?」、低コストハードウェアによるStarlink受信"
+        "測位の実測）を参照。",
+        "Extended from Case 13's real computed results; background on LEO-PNT applications is in Case "
+        "11's literature list (*Inside GNSS*, \"Inside LEO: LEO-PNT — Why Now?\"; the low-cost-hardware "
+        "Starlink-reception positioning field test).",
+    ))
 
 
 # ── main ──────────────────────────────────────────────────────────────────────
