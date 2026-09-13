@@ -4721,6 +4721,735 @@ _LIT_EXTERNAL_NOTE = (
 )
 _LIT_EXTERNAL_DOI = "[DOI](https://doi.org/10.11887/j.cn.202404005)"
 
+# 文獻延伸比較（2026-09-13 新增）：軌道力學與TLE機動偵測(9)+統計變化點方法(5)+
+# 機器學習(6)三大類共20篇，逐篇研究重點與本專案方法比較。完整版見
+# `docs/案例十一文獻延伸比較_20篇逐篇重點與本專案方法比較_20260913.md`。
+_LIT_COMPARE: list[tuple[str, str, str, str, str]] = [
+    # (category, short_name, zh, ja, en)
+    ("軌道力學與 TLE 機動偵測",
+     "Kelecy & Jah, 2010",
+     "**研究重點**：用批次最小平方（BLSQ）與擴展卡爾曼濾波（EKF）偵測並重建單次低推力機動，"
+     "驗證資料為 AFRL 實際追蹤之低推力 LEO 衛星。\n\n"
+     "**與本專案比較**：他們需要特權級追蹤資料（雷達/光學觀測，非公開），本專案只用公開 TLE，"
+     "不做狀態一致性檢驗，改以元素差分+統計/AI融合——適用範圍互補，本專案犧牲部分精度換取"
+     "任何人都能重現的可及性。（僅摘要層級，原文遭付費牆阻擋）",
+     "**研究焦点**：バッチ最小二乗法（BLSQ）と拡張カルマンフィルタ（EKF）を用いて単一の低推力機動を"
+     "検知・再構成する。検証データはAFRLが実際に追跡した低推力LEO衛星。\n\n"
+     "**本プロジェクトとの比較**：彼らは特権的な追跡データ（レーダー/光学観測、非公開）を必要とするが、"
+     "本プロジェクトは公開TLEのみを使用し、状態一貫性検証は行わず、要素差分+統計/AI融合で代替する——"
+     "適用範囲は相補的であり、本プロジェクトは精度の一部を犠牲にして誰でも再現可能なアクセス性を得ている。"
+     "（原文は購読制のため摘要レベルのみ）",
+     "**Research focus**: Detects and reconstructs a single low-thrust maneuver using batch least-squares "
+     "(BLSQ) and an extended Kalman filter (EKF), validated on real AFRL-tracked low-thrust LEO satellite "
+     "data.\n\n"
+     "**Vs. this project**: They require privileged tracking data (radar/optical, not public); this "
+     "project uses only public TLEs, with no state-consistency checks, relying instead on element "
+     "differencing plus statistical/AI fusion — the two are complementary in scope, this project trading "
+     "some precision for reproducibility by anyone. (Abstract-level only; full text paywalled.)"),
+    ("軌道力學與 TLE 機動偵測",
+     "Kelecy et al., 2007 (AMOS)",
+     "**研究重點**：滑動視窗多項式擬合能量/傾角，n-σ 門檻判定機動；Envisat 最佳案例 95% 偵測、"
+     "誤報率約6%，偵測延遲約2-3天。\n\n"
+     "**與本專案比較**：本專案 Block1 規則式方法在方法論上最直接的前身（滑窗差分+n-σ門檻），"
+     "差異在本專案用相鄰步階σ正規化差分；驗證規模差異極大——他們2顆衛星，本專案23顆外部標竿+"
+     "284顆Starlink；±1.5天配對容差與其2-3天延遲量級相近，可視為TLE每日解析度下的共同天花板。"
+     "（全文已讀）",
+     "**研究焦点**：スライディングウィンドウ多項式フィッティングでエネルギー/傾斜角を算出し、n-σ閾値で"
+     "機動を判定。Envisatの最良例で95%検知、誤検知率約6%、検知遅延約2〜3日。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトのBlock1ルールベース手法の方法論上最も直接的な前身"
+     "（スライディング差分+n-σ閾値）だが、本プロジェクトは隣接ステップのσ正規化差分を用いる点が異なる。"
+     "検証規模の差は極めて大きい——彼らは2機、本プロジェクトは外部ベンチマーク23機+Starlink284機。"
+     "±1.5日のペアリング許容誤差は彼らの2〜3日の遅延と同程度で、TLE日次分解能に共通する天井と"
+     "見なせる。（全文読了）",
+     "**Research focus**: Sliding-window polynomial fits to energy/inclination, n-σ thresholding; best "
+     "case on Envisat reached 95% detection with ~6% false-positive rate, ~2-3 day detection lag.\n\n"
+     "**Vs. this project**: The most direct methodological precursor to this project's Block 1 rule-based "
+     "method (sliding differencing + n-σ threshold), differing in that this project uses σ-normalized "
+     "adjacent-step differencing; validation scale differs enormously — 2 satellites vs. this project's "
+     "23 external benchmark + 284 Starlink; the ±1.5-day matching tolerance is comparable in order of "
+     "magnitude to their 2-3 day lag, a shared ceiling from TLE's daily resolution. (Full text read.)"),
+    ("軌道力學與 TLE 機動偵測",
+     "Flohrer, Krag & Klinkrad, 2008 (AMOS)",
+     "**研究重點**：量化整個 US SSN 目錄（11,470顆物體）之TLE/SGP4軌道預測不確定性，"
+     "LEO平均沿軌向不確定性σ_V≈0.47km，GTO/HEO最差可達≈3.9km。\n\n"
+     "**與本專案比較**：雜訊地板量化的奠基性文獻，與本專案案例十八（8顆被動測地球體雜訊地板）"
+     "精神一致但對象不同——都指向「機動偵測門檻必須高於軌域相依的雜訊地板」，本專案的σ正規化"
+     "（而非固定絕對門檻）正是對此的直接回應。（全文已讀）",
+     "**研究焦点**：US SSNカタログ全体（11,470物体）のTLE/SGP4軌道予測不確実性を定量化。"
+     "LEOの平均沿軌道方向不確実性はσ_V≈0.47km、GTO/HEOは最悪で約3.9kmに達する。\n\n"
+     "**本プロジェクトとの比較**：雑音床定量化の基礎的文献であり、本プロジェクトの事例十八"
+     "（受動測地球8機の雑音床）と精神は一致するが対象が異なる——いずれも「機動検知閾値は"
+     "軌道域依存の雑音床を上回る必要がある」ことを示しており、本プロジェクトのσ正規化"
+     "（固定絶対閾値ではなく）はこれへの直接的な応答である。（全文読了）",
+     "**Research focus**: Quantifies TLE/SGP4 orbit-prediction uncertainty across the entire US SSN "
+     "catalog (11,470 objects); LEO average along-track uncertainty σ_V≈0.47km, worst case in GTO/HEO "
+     "reaching ≈3.9km.\n\n"
+     "**Vs. this project**: A foundational noise-floor quantification paper, in the same spirit as this "
+     "project's Case 18 (noise floor from 8 passive geodetic spheres) but a different target population — "
+     "both point to \"maneuver-detection thresholds must exceed the orbit-regime-dependent noise floor,\" "
+     "which this project's σ-normalization (rather than a fixed absolute threshold) directly addresses. "
+     "(Full text read.)"),
+    ("軌道力學與 TLE 機動偵測",
+     "Picone et al., 2002 (NRLMSISE-00)",
+     "**研究重點**：半經驗大氣密度模型，整合衛星加速度計/軌道衰減資料，新增「異常氧」項"
+     "改善500km以上密度估計。\n\n"
+     "**與本專案比較**：非競爭方法，是本專案直接採用的工具——案例五之物理阻力殘差通道直接使用"
+     "此模型；本專案繼承了其固有限制（太陽活動劇烈期誤差放大），為案例五已誠實揭露的已知邊界。"
+     "（全文已讀）",
+     "**研究焦点**：半経験的大気密度モデル。衛星加速度計/軌道減衰データを統合し、「異常酸素」項を"
+     "新たに追加して500km以上での密度推定を改善。\n\n"
+     "**本プロジェクトとの比較**：競合手法ではなく、本プロジェクトが直接採用しているツール——"
+     "事例五の物理的抵抗残差チャネルはこのモデルを直接使用する。本プロジェクトはその固有の限界"
+     "（太陽活動が激しい時期の誤差拡大）を引き継いでおり、これは事例五で既に誠実に開示されている"
+     "既知の境界である。（全文読了）",
+     "**Research focus**: A semi-empirical atmospheric-density model incorporating satellite-accelerometer "
+     "and orbital-decay data, adding an \"anomalous oxygen\" term to improve density estimates above "
+     "500km.\n\n"
+     "**Vs. this project**: Not a competing method — a tool this project directly uses. Case 5's physical "
+     "drag-residual channel uses this model directly; this project inherits its known limitation (errors "
+     "amplified during intense solar activity), already honestly disclosed as a boundary in Case 5. "
+     "(Full text read.)"),
+    ("軌道力學與 TLE 機動偵測",
+     "Vallado, *Fundamentals of Astrodynamics*, 2013",
+     "**研究重點**：標準研究所級軌道力學教科書，涵蓋軌道決定、SGP4/SDP4理論（第9章）、"
+     "大氣模型（附錄B）。\n\n"
+     "**與本專案比較**：基礎依賴，非比較對象——本專案與清單中幾乎所有其他文獻一樣，直接建立在"
+     "此書對TLE/SGP4誤差特性與軌道決定演算法的標準論述之上。（章節結構已交叉查證）",
+     "**研究焦点**：標準的な大学院レベルの軌道力学教科書。軌道決定、SGP4/SDP4理論（第9章）、"
+     "大気モデル（付録B）を網羅する。\n\n"
+     "**本プロジェクトとの比較**：基礎的な依拠先であり、比較対象ではない——本プロジェクトは"
+     "リスト中のほぼ全ての他の文献と同様、この書籍のTLE/SGP4誤差特性と軌道決定アルゴリズムに"
+     "関する標準的な論述の上に直接構築されている。（章構成は照合済み）",
+     "**Research focus**: A standard graduate-level astrodynamics textbook covering orbit determination, "
+     "SGP4/SDP4 theory (Ch.9), and atmospheric models (Appendix B).\n\n"
+     "**Vs. this project**: A foundational dependency, not a comparison target — like almost every other "
+     "reference in this list, this project builds directly on this book's standard treatment of TLE/SGP4 "
+     "error characteristics and orbit-determination algorithms. (Chapter structure cross-verified.)"),
+    ("軌道力學與 TLE 機動偵測",
+     "Hoots & Roehrich, Spacetrack Report No. 3, 1980",
+     "**研究重點**：官方定義SGP4/SDP4/SGP8/SDP8五套相容傳播模型，提供完整FORTRAN原始碼；"
+     "確立NORAD元素集是「平均元素」，必須用相容模型重新傳播。\n\n"
+     "**與本專案比較**：本專案不修改傳播器本身，把公開TLE當作輸入資料源，把機動偵測為"
+     "「推導平均元素之偏離」——這篇論文是本專案方法論正當性的根本依據，前提是資料確實已用"
+     "相容的SGP4/SDP4正確傳播。（全文已讀，94頁含原始碼）",
+     "**研究焦点**：SGP4/SDP4/SGP8/SDP8という5つの互換伝播モデルを公式に定義し、完全なFORTRAN"
+     "ソースコードを提供。NORAD要素集合が「平均要素」であり、互換モデルで再伝播する必要が"
+     "あることを確立。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトは伝播器自体を改変せず、公開TLEを入力データ源とし、"
+     "機動を「導出された平均要素からの逸脱」として検知する——この論文は本プロジェクトの方法論的"
+     "正当性の根本的根拠であり、前提はデータが確かに互換性のあるSGP4/SDP4で正しく伝播されている"
+     "ことである。（全文読了、原始コードを含む94ページ）",
+     "**Research focus**: Officially defines five compatible propagation models (SGP/SGP4/SDP4/SGP8/"
+     "SDP8) with full FORTRAN source, establishing that NORAD element sets are \"mean elements\" that "
+     "must be re-propagated with a compatible model.\n\n"
+     "**Vs. this project**: This project does not modify the propagator itself, treating public TLEs as "
+     "input and maneuvers as deviations in the derived mean elements — this paper is the fundamental basis "
+     "for this project's methodological validity, provided the data was indeed correctly propagated with "
+     "a compatible SGP4/SDP4. (Full text read, 94 pages including source code.)"),
+    ("軌道力學與 TLE 機動偵測",
+     "Vallado et al., \"Revisiting Spacetrack Report #3,\" 2006",
+     "**研究重點**：整合25年來各方對SGP4/SDP4程式碼的分歧修改，記錄多項具體臭蟲"
+     "（Kepler方程收斂失敗、\"Lyddane bug\"等），發布重構後的標準參考碼。\n\n"
+     "**與本專案比較**：直接的風險提醒——未修正的舊版SGP4可自行產生數百至數千公尺量級的假殘差，"
+     "與真實機動無關。建議本專案報告補充說明所用資料/函式庫的SGP4版本溯源，排除「假機動其實是"
+     "舊版傳播器臭蟲」的可能性。（全文已讀，94頁含完整原始碼）",
+     "**研究焦点**：25年間に各方面が加えたSGP4/SDP4コードへの分岐した修正を統合し、複数の具体的な"
+     "バグ（Kepler方程式の収束失敗、\"Lyddaneバグ\"等）を記録、再構築された標準参照コードを"
+     "発表。\n\n"
+     "**本プロジェクトとの比較**：直接的なリスク警告——未修正の旧版SGP4は真の機動とは無関係に"
+     "数百〜数千メートル規模の偽の残差を自ら生成しうる。本プロジェクトの報告書で使用データ/"
+     "ライブラリのSGP4バージョンの由来を補足説明し、「偽の機動が実は旧版伝播器のバグである」"
+     "可能性を排除することを推奨する。（全文読了、完全なソースコードを含む94ページ）",
+     "**Research focus**: Reconciles 25 years of divergent modifications to SGP4/SDP4 code across "
+     "different parties, documenting specific bugs (Kepler's-equation convergence failure, the \"Lyddane "
+     "bug,\" etc.), releasing a reconstructed standard reference implementation.\n\n"
+     "**Vs. this project**: A direct risk warning — uncorrected legacy SGP4 code can itself produce "
+     "spurious residuals of hundreds to thousands of meters unrelated to real maneuvers. This project's "
+     "report should disclose the SGP4 version provenance of its data/libraries, to rule out \"apparent "
+     "maneuvers that are actually legacy-propagator bugs.\" (Full text read, 94 pages with full source.)"),
+    ("軌道力學與 TLE 機動偵測",
+     "Holzinger, Scheeres & Alfriend, 2012",
+     "**研究重點**：定義「控制距離」（將標稱軌跡導向觀測軌跡所需的最優控制代價）作為統一度量，"
+     "用於未關聯軌跡相關、機動偵測、機動特徵化，搭配不確定性量化做假設檢定。\n\n"
+     "**與本專案比較**：根本不同的典範——本專案的多通道統計+ML融合是經驗驅動、資料量取勝，"
+     "此文是理論嚴謹、不確定性量化取勝的路線，兩者互補；若未來要為本專案偵測結果加上機率化"
+     "信賴區間，此文框架值得參考。（僅摘要層級，原文遭付費牆阻擋）",
+     "**研究焦点**：「制御距離」（公称軌道を観測軌道へ導くために必要な最適制御コスト）を統一的な"
+     "距離尺度として定義し、未相関軌道の相関付け、機動検知、機動特性評価に用い、不確実性定量化を"
+     "伴う仮説検定と組み合わせる。\n\n"
+     "**本プロジェクトとの比較**：根本的に異なるパラダイム——本プロジェクトの多チャネル統計+ML"
+     "融合は経験駆動・データ量で勝負する路線であり、この論文は理論的厳密さ・不確実性定量化で"
+     "勝負する路線である。両者は相補的であり、将来本プロジェクトの検知結果に確率的信頼区間を"
+     "付加する際には、この論文の枠組みが参考になる。（購読制のため摘要レベルのみ）",
+     "**Research focus**: Defines \"control distance\" (the optimal-control cost to steer a nominal "
+     "trajectory onto an observed one) as a unified metric for correlating uncorrelated tracks, detecting "
+     "maneuvers, and characterizing them, paired with uncertainty-quantified hypothesis testing.\n\n"
+     "**Vs. this project**: A fundamentally different paradigm — this project's multi-channel statistical "
+     "+ ML fusion is empirically driven and wins on data volume, while this paper wins on theoretical rigor "
+     "and uncertainty quantification; the two are complementary, and this paper's framework would be worth "
+     "consulting if this project later adds probabilistic confidence intervals to its detections. "
+     "(Abstract-level only; paywalled.)"),
+    ("軌道力學與 TLE 機動偵測",
+     "Mukundan & Wang, 2021 (Applied Sciences)",
+     "**研究重點**：TLE觀測值vs SGP4傳播值之軌道要素差分，TOPEX與Envisat皆達100%偵測，"
+     "TDRS-3（GEO）偵測18/19（94.7%）。\n\n"
+     "**與本專案比較**：需要特別誠實對照——其100%數字看似遠高於本專案headline方法的召回率"
+     "（約45-60%），但其測試集僅3顆衛星且「妥善校準參數」隱含逐星調參，這與本專案技術報告已"
+     "明確標記的「曲線法逐星oracle上界虛高但不代表真實泛化能力」現象完全同構——本專案14→23星"
+     "擴充實驗已證明oracle上界隨樣本擴大不進反退（0.490→0.462），零調參方法卻維持顯著優勢。"
+     "（全文已讀）",
+     "**研究焦点**：TLE観測値とSGP4伝播値の軌道要素差分。TOPEXとEnvisatはいずれも100%検知、"
+     "TDRS-3（GEO）は18/19検知（94.7%）。\n\n"
+     "**本プロジェクトとの比較**：特に誠実な対照が必要——その100%という数字は本プロジェクトの"
+     "headline手法の再現率（約45〜60%）よりはるかに高く見えるが、そのテストセットはわずか3機で"
+     "あり「適切にパラメータを較正した」ことは衛星ごとの調整を暗示する。これは本プロジェクトの"
+     "技術報告で既に明記されている「曲線法の衛星ごとoracle上限は虚高だが真の汎化能力を代表しない」"
+     "現象と完全に同型である——本プロジェクトの14→23機拡張実験は、oracle上限がサンプル拡大に"
+     "伴い向上せずむしろ低下する（0.490→0.462）ことを既に証明しており、無調整の手法の方が"
+     "有意な優位性を維持している。（全文読了）",
+     "**Research focus**: Differences TLE-observed vs. SGP4-propagated orbital elements; both TOPEX and "
+     "Envisat reached 100% detection, TDRS-3 (GEO) detected 18/19 (94.7%).\n\n"
+     "**Vs. this project**: Requires special honesty in comparison — their 100% figure looks far higher "
+     "than this project's headline recall (~45-60%), but their test set is only 3 satellites, and "
+     "\"properly calibrated parameters\" implies per-satellite tuning — exactly isomorphic to a phenomenon "
+     "this project's own technical report already flags: the curve method's per-satellite oracle upper "
+     "bound is inflated and doesn't represent true generalization. This project's 14→23-satellite expansion "
+     "already proved the oracle bound doesn't improve with more samples (0.490→0.462), while the "
+     "zero-tuning method maintains a significant edge. (Full text read.)"),
+
+    ("統計變化點方法",
+     "Page, 1954 (CUSUM 原始文獻)",
+     "**研究重點**：累積和（CUSUM）序貫檢驗方案，偵測製程均值偏移，較Shewhart管制圖對小幅偏移"
+     "更靈敏。\n\n"
+     "**與本專案比較**：非競爭文獻，是本專案L2統計層直接採用的四通道之一。比較意義在於："
+     "CUSUM是四通道中表現較弱的一個（平均F1約0.31-0.33，低於BOCPD的0.46），這與CUSUM原始設計"
+     "針對「持續性均值偏移」而非「瞬時脈衝式機動」有關。（原文遭付費牆阻擋，以引用文獻轉述整理）",
+     "**研究焦点**：累積和（CUSUM）逐次検定方式。プロセス平均のシフトを検知し、Shewhart管理図"
+     "より小さなシフトに敏感。\n\n"
+     "**本プロジェクトとの比較**：競合文献ではなく、本プロジェクトのL2統計層が直接採用する4"
+     "チャネルの1つ。比較上の意味は：CUSUMは4チャネル中比較的弱い（平均F1は約0.31〜0.33で、"
+     "BOCPDの0.46より低い）——これはCUSUMが元々「持続的な平均シフト」を対象に設計され、"
+     "「瞬時的な衝撃的機動」を対象としていないことに関係する。（原文は購読制のため引用文献の"
+     "転述で整理）",
+     "**Research focus**: The cumulative-sum (CUSUM) sequential test for detecting a shift in process "
+     "mean, more sensitive to small shifts than Shewhart control charts.\n\n"
+     "**Vs. this project**: Not a competing paper — one of the four channels this project's L2 "
+     "statistical layer directly adopts. Comparison note: CUSUM is the weaker of the four channels (mean "
+     "F1 ≈ 0.31-0.33, below BOCPD's 0.46), related to CUSUM's original design targeting sustained mean "
+     "shifts rather than instantaneous impulsive maneuvers. (Paywalled; compiled from citing literature.)"),
+    ("統計變化點方法",
+     "Adams & MacKay, 2007 (BOCPD)",
+     "**研究重點**：貝氏線上變點偵測，以「run length」後驗分布之遞迴訊息傳遞演算法逐點精確更新，"
+     "跨金融/生物計量/機器人三個真實資料集示範模組化。\n\n"
+     "**與本專案比較**：本專案L2四通道中表現最佳的一個——多次彙總結果顯示BOCPD平均F1落在"
+     "0.456-0.458，與本專案headline規則式方法（0.458）幾乎打平。未來優化空間可能更集中在如何讓"
+     "融合層更好地利用BOCPD通道的訊號，而非再開發新的單通道方法。（摘要已讀）",
+     "**研究焦点**：ベイズ的オンライン変化点検知。「run length」の事後分布に対する再帰的メッセージ"
+     "パッシングアルゴリズムで逐点正確に更新し、金融/生体計測/ロボティクスの3つの実世界データ"
+     "セットでモジュール性を実証。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトのL2の4チャネル中最も優れた性能を示す——複数回の"
+     "集計結果はBOCPDの平均F1が0.456〜0.458であることを示し、本プロジェクトのheadlineルール"
+     "ベース手法（0.458）とほぼ互角である。今後の最適化の余地は、新たな単一チャネル手法の開発"
+     "よりも、融合層がBOCPDチャネルの信号をいかに活用するかに集中すべきかもしれない。"
+     "（摘要読了）",
+     "**Research focus**: Bayesian online change-point detection, exactly updating the posterior of "
+     "\"run length\" point-by-point via a recursive message-passing algorithm, demonstrated across "
+     "finance/biometric/robotics datasets.\n\n"
+     "**Vs. this project**: The best-performing of this project's four L2 channels — repeated aggregate "
+     "results show BOCPD at a mean F1 of 0.456-0.458, nearly matching this project's headline rule-based "
+     "method (0.458). Future optimization may focus more on how the fusion layer exploits the BOCPD "
+     "channel's signal rather than developing new single-channel methods. (Abstract read.)"),
+    ("統計變化點方法",
+     "Golyandina, Nekrutkin & Zhigljavsky, 2001 (SSA 專書)",
+     "**研究重點**：奇異譜分析方法論專書——嵌入、SVD、分組、對角平均四步驟，將序列分解為"
+     "趨勢/週期/雜訊，並延伸至變點偵測演算法。\n\n"
+     "**與本專案比較**：本專案L2四通道之一（SSA），彙總結果顯示SSA召回率高但精確率低"
+     "（高召回、多誤報），這與SSA對「結構性改變」的寬鬆定義有關。本專案的vote≥2融合機制正是"
+     "為了用其他通道的一致性把SSA的高召回優點保留、高誤報缺點過濾掉。（原書無公開全文，"
+     "以出版社簡介整理）",
+     "**研究焦点**：特異スペクトル解析（SSA）の方法論専門書——埋め込み、SVD、グルーピング、"
+     "対角平均化の4ステップで系列をトレンド/周期/雑音に分解し、変化点検知アルゴリズムへ"
+     "拡張。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトのL2の4チャネルの1つ（SSA）。集計結果はSSAが"
+     "高再現率だが低適合率（高再現率・多誤検知）であることを示し、これはSSAの「構造的変化」に"
+     "対する緩やかな定義に関係する。本プロジェクトのvote≥2融合機構は、他のチャネルとの一致性で"
+     "SSAの高再現率という利点を保持しつつ、高誤検知という欠点をフィルタリングするために"
+     "設計されている。（原書に公開全文なし、出版社概要から整理）",
+     "**Research focus**: A methodological monograph on Singular Spectrum Analysis — four steps "
+     "(embedding, SVD, grouping, diagonal averaging) decomposing a series into trend/periodic/noise "
+     "components, extended to change-point detection algorithms.\n\n"
+     "**Vs. this project**: One of this project's four L2 channels (SSA); aggregate results show SSA has "
+     "high recall but low precision (catches a lot, but with many false alarms), related to SSA's loose "
+     "definition of \"structural change.\" This project's vote≥2 fusion mechanism is designed precisely to "
+     "keep SSA's high-recall strength while filtering its high-false-alarm weakness using agreement from "
+     "other channels. (No public full text; compiled from publisher description.)"),
+    ("統計變化點方法",
+     "「RSO Proper Elements」，Adv. Space Res., 2023",
+     "**研究重點**：提出「固有軌道要素」取代傳統平均要素，在「平均要素空間」與「固有要素空間」"
+     "分別套用BOCPD比較機動偵測表現。\n\n"
+     "**與本專案比較**：本專案尚未實作的具體、可行改進方向——本專案所有偵測通道目前皆作用於"
+     "半長軸此一「平均要素」，而非固有要素。這與本專案「零調參仍要提升泛化力」的目標方向一致，"
+     "值得列為技術報告未來工作項目。（期刊原文摘要頁遭403/405阻擋，量化結果未查得）",
+     "**研究焦点**：伝統的な平均要素に代わる「固有軌道要素」を提案し、「平均要素空間」と"
+     "「固有要素空間」でそれぞれBOCPDを適用して機動検知性能を比較。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトが未実装の具体的かつ実行可能な改善方向——"
+     "本プロジェクトの全検知チャネルは現在、固有要素ではなく半長軸という「平均要素」に作用して"
+     "いる。これは本プロジェクトの「無調整でも汎化能力を高める」という目標方向と一致し、"
+     "技術報告の今後の課題として挙げる価値がある。（学術誌原文の摘要ページは403/405で"
+     "アクセス不可、定量的結果は未確認）",
+     "**Research focus**: Proposes \"proper orbital elements\" to replace conventional mean elements, "
+     "comparing BOCPD's maneuver-detection performance in \"mean-element space\" vs. \"proper-element "
+     "space.\"\n\n"
+     "**Vs. this project**: A concrete, actionable improvement this project hasn't implemented — all of "
+     "this project's detection channels currently operate on semi-major axis, a \"mean element,\" not a "
+     "proper element. This aligns with this project's goal of improving generalization without tuning, and "
+     "is worth listing as future work. (Journal abstract page blocked by 403/405; quantitative results not "
+     "verified.)"),
+    ("統計變化點方法",
+     "Adaptive CuSum for Earth/Cislunar Maneuver Detection",
+     "**研究重點**：自適應多重CuSum（滑動視窗動態估計均值/變異數），作用於固有軌道要素；"
+     "6顆LEO衛星偵測率>96%，2個cislunar任務偵測率>98%。\n\n"
+     "**與本專案比較**：需誠實對照的一篇——其偵測率遠高於本專案CUSUM通道實測F1（約0.31-0.33）。"
+     "差異可能來自：(1)自適應門檻vs本專案固定門檻；(2)固有要素vs平均要素（與前一篇同一改進"
+     "方向）；(3)只報告偵測率（類召回率），未報告精確率/F1，也未說明是否逐星調參——本專案採信"
+     "前應先確認其口徑是否一致。（僅預印本頁面，非期刊正式版全文）",
+     "**研究焦点**：適応的多重CuSum（スライディングウィンドウで平均/分散を動的推定）を固有軌道"
+     "要素に適用；LEO衛星6機で検知率>96%、cislunarミッション2件で検知率>98%。\n\n"
+     "**本プロジェクトとの比較**：誠実な対照が必要な1篇——その検知率は本プロジェクトのCUSUM"
+     "チャネルの実測F1（約0.31〜0.33）よりはるかに高い。差異の原因は：(1)適応閾値 vs 本"
+     "プロジェクトの固定閾値；(2)固有要素 vs 平均要素（前項と同じ改善方向）；(3)検知率"
+     "（再現率に類似）のみ報告し、適合率/F1は未報告、衛星ごとの調整の有無も不明——本プロジェクトが"
+     "採用する前にその基準が一致しているか確認すべきである。（プレプリントページのみ、"
+     "学術誌正式版の全文ではない）",
+     "**Research focus**: An adaptive multi-CuSum method (dynamically estimating mean/variance in a "
+     "sliding window) applied to proper orbital elements; >96% detection on 6 LEO satellites, >98% on 2 "
+     "cislunar missions.\n\n"
+     "**Vs. this project**: Requires honest comparison — their detection rate far exceeds this project's "
+     "measured CUSUM-channel F1 (~0.31-0.33). The gap may stem from: (1) adaptive vs. this project's fixed "
+     "threshold; (2) proper vs. mean elements (same improvement direction as the previous item); (3) they "
+     "report only a recall-like \"detection rate,\" not precision/F1, nor whether tuning was per-satellite "
+     "— this project should verify comparable definitions before adopting the comparison. (Preprint page "
+     "only, not the formal journal full text.)"),
+
+    ("機器學習",
+     "Ke et al., 2017 (LightGBM)",
+     "**研究重點**：GOSS（梯度單邊採樣）+ EFB（互斥特徵捆綁）兩項技術，維持GBDT準確度前提下"
+     "訓練速度提升可達20倍以上。\n\n"
+     "**與本專案比較**：本專案直接採用的工具——L3融合分類器使用HistGradientBoosting"
+     "（scikit-learn內建、與LightGBM同源之梯度提升樹實作）與LightGBM本身，非比較對象。"
+     "（多來源交叉確認，未直接讀取PDF全文）",
+     "**研究焦点**：GOSS（勾配ベース片側サンプリング）+EFB（排他的特徴束ね）の2技術により、"
+     "GBDTの精度を維持しつつ訓練速度を最大20倍以上向上。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトが直接採用するツール——L3融合分類器は"
+     "HistGradientBoosting（scikit-learn内蔵、LightGBMと同系統の勾配ブースティング木実装）と"
+     "LightGBM自体を使用しており、比較対象ではない。（複数ソースで相互確認、PDF全文は"
+     "未読了）",
+     "**Research focus**: Two techniques — GOSS (gradient-based one-side sampling) and EFB (exclusive "
+     "feature bundling) — boosting GBDT training speed by 20x+ while maintaining accuracy.\n\n"
+     "**Vs. this project**: A tool this project directly adopts — the L3 fusion classifier uses "
+     "HistGradientBoosting (scikit-learn's built-in gradient-boosted-tree implementation, same lineage as "
+     "LightGBM) and LightGBM itself; not a comparison target. (Cross-confirmed across sources; PDF full "
+     "text not directly read.)"),
+    ("機器學習",
+     "Liu, Ting & Zhou, 2008 (Isolation Forest)",
+     "**研究重點**：以隨機切分樹的「平均路徑長度」隔離異常點，不需為正常樣本建模，"
+     "線性時間複雜度，適合大樣本高維資料。\n\n"
+     "**與本專案比較**：本專案已採用的無監督異常偵測工具，與L3監督式LightGBM形成互補——"
+     "Isolation Forest不需要標註的機動真值即可運作，適合本專案真值稀少或未經驗證的軌道類型"
+     "（案例十二④/⑤所述之驗證缺口場景）。（原文與延伸期刊版皆無法解析，方法描述以維基百科"
+     "條目+多篇引用文獻轉述交叉確認）",
+     "**研究焦点**：ランダム分割木の「平均パス長」により異常点を隔離し、正常サンプルの"
+     "モデル化を必要とせず、線形時間計算量で大規模高次元データに適する。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトが既に採用している教師なし異常検知ツールであり、"
+     "L3の教師ありLightGBMと相補的である——Isolation Forestはラベル付き機動真値を必要とせず、"
+     "本プロジェクトの真値が少ない、または未検証の軌道タイプ（事例十二④/⑤で述べた検証ギャップ"
+     "の場面）に適する。（原文と拡張学術誌版はいずれも解析不可、手法説明はWikipedia項目+複数の"
+     "引用文献の転述で相互確認）",
+     "**Research focus**: Isolates anomalies via the \"average path length\" in randomly-split trees, "
+     "requiring no model of normal samples, with linear time complexity suited to large, high-dimensional "
+     "data.\n\n"
+     "**Vs. this project**: An unsupervised anomaly-detection tool this project already uses, "
+     "complementing L3's supervised LightGBM — Isolation Forest needs no labeled maneuver ground truth, "
+     "fitting scenarios where this project's ground truth is sparse or unvalidated (the validation gaps "
+     "described in Case 12 ④/⑤). (Original and extended journal versions unparseable; method description "
+     "cross-confirmed via Wikipedia and citing literature.)"),
+    ("機器學習",
+     "Lundberg & Lee, 2017 (SHAP)",
+     "**研究重點**：以賽局理論Shapley值為基礎，提出唯一滿足局部準確性/一致性等公理的加性"
+     "特徵歸因框架，統一LIME、DeepLIFT等既有解釋方法。\n\n"
+     "**與本專案比較**：本專案已採用的可解釋性工具，用於解釋L3分類器判斷依據，協助排除偽特徵"
+     "（如已知的z_draan壞通道）。這是本專案回應「高準確度模型是否可信」質疑的具體工具，而非"
+     "單純宣稱模型準確。（多來源交叉確認，未直接讀取PDF全文）",
+     "**研究焦点**：ゲーム理論のShapley値に基づき、局所精度・一貫性などの公理を満たす唯一の"
+     "加法的特徴帰属フレームワークを提案し、LIME、DeepLIFTなど既存の説明手法を統一。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトが既に採用している解釈可能性ツールであり、L3"
+     "分類器の判断根拠を説明し、偽の特徴（既知のz_draan不良チャネルなど）の排除を助ける。"
+     "これは「高精度モデルは信頼できるか」という疑問に対する本プロジェクトの具体的な対応"
+     "ツールであり、単にモデルの精度を主張するものではない。（複数ソースで相互確認、PDF全文は"
+     "未読了）",
+     "**Research focus**: Based on game-theoretic Shapley values, proposes a unique additive "
+     "feature-attribution framework satisfying axioms like local accuracy and consistency, unifying prior "
+     "explanation methods like LIME and DeepLIFT.\n\n"
+     "**Vs. this project**: An interpretability tool this project already uses, explaining the L3 "
+     "classifier's decisions and helping rule out spurious features (like the known bad z_draan channel) "
+     "— a concrete tool addressing \"is a high-accuracy model trustworthy,\" not a bare claim of accuracy. "
+     "(Cross-confirmed across sources; PDF full text not directly read.)"),
+    ("機器學習",
+     "Hochreiter & Schmidhuber, 1997 (LSTM)",
+     "**研究重點**：常數誤差傳送帶（CEC）+乘法性閘門單元，解決RNN梯度消失/爆炸問題，"
+     "可學習橋接超過1000個時間步的依賴關係。\n\n"
+     "**與本專案比較**：本專案已嘗試並得到誠實負面結果的路線——案例十六bi-GRU（LSTM同族之"
+     "雙向閘控RNN）序列標註器實驗顯示逐點AUC天花板僅0.572，遠低於episode級融合的0.982，"
+     "且OOD測試慘敗；根因是真值標籤解析度限制（MEME真值每8小時一格），非模型能力不足。"
+     "（多來源交叉確認CEC機制描述，未直接讀取PDF全文）",
+     "**研究焦点**：定数誤差カルーセル（CEC）+乗法的ゲートユニットにより、RNNの勾配消失/"
+     "爆発問題を解決し、1000タイムステップを超える依存関係の橋渡しを学習可能にする。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトが既に試みて誠実な否定的結果を得た路線——"
+     "事例十六のbi-GRU（LSTMと同系統の双方向ゲート付きRNN）系列ラベリング実験では、逐点AUCの"
+     "天井がわずか0.572で、エピソードレベル融合の0.982を大きく下回り、OODテストでも惨敗した；"
+     "根本原因は真値ラベルの解像度制限（MEME真値は8時間ごとに1点）であり、モデル能力不足では"
+     "ない。（CECメカニズムの説明は複数ソースで相互確認、PDF全文は未読了）",
+     "**Research focus**: The Constant Error Carousel (CEC) plus multiplicative gate units, solving RNNs' "
+     "vanishing/exploding-gradient problem, able to learn dependencies bridging 1000+ time steps.\n\n"
+     "**Vs. this project**: A route this project already tried, with an honest negative result — Case 16's "
+     "bi-GRU (a bidirectional gated RNN in the LSTM family) sequence-labeling experiment showed a "
+     "point-wise AUC ceiling of only 0.572, far below episode-level fusion's 0.982, and failed badly "
+     "out-of-distribution; the root cause is ground-truth label resolution (MEME truth at one point per 8 "
+     "hours), not insufficient model capacity. (CEC mechanism cross-confirmed across sources; PDF full "
+     "text not directly read.)"),
+    ("機器學習",
+     "Nie et al., 2023 (PatchTST)",
+     "**研究重點**：以「分塊」（patch，子序列級token）取代逐時間點輸入，搭配通道獨立性設計，"
+     "降低長序列Transformer注意力機制計算量並提升長期預測準確度。\n\n"
+     "**與本專案比較**：本專案已嘗試並得到負面結果的三個深度模型之一（案例十六），同樣受限於"
+     "真值解析度天花板。若未來重新嘗試，更適合的用法可能是「預測—殘差」路線（用PatchTST做"
+     "軌道要素多步預測，把偏離預測值的殘差當機動訊號），而非直接拿它做逐點機動標註——"
+     "這是本專案目前尚未嘗試的用法變體。（已讀摘要，量化結果未查得）",
+     "**研究焦点**：「パッチ化」（サブシーケンスレベルのトークン）で逐点入力を置き換え、"
+     "チャネル独立性設計と組み合わせることで、長系列Transformerの注意機構の計算量を削減し"
+     "長期予測精度を向上。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトが既に試みて否定的結果を得た3つの深層モデルの"
+     "1つ（事例十六）であり、同様に真値解像度の天井に制限される。今後再挑戦する場合、より"
+     "適した使い方は「予測—残差」路線（PatchTSTで軌道要素の複数ステップ予測を行い、予測値からの"
+     "逸脱残差を機動信号とする）である可能性があり、直接逐点機動ラベリングに使うのではない——"
+     "これは本プロジェクトが現時点で未試行の使用法のバリエーションである。（摘要読了、定量的"
+     "結果は未確認）",
+     "**Research focus**: Replaces point-wise input with \"patching\" (subsequence-level tokens) paired "
+     "with channel-independence, reducing long-sequence Transformer attention cost and improving "
+     "long-term forecasting accuracy.\n\n"
+     "**Vs. this project**: One of three deep models this project already tried with a negative result "
+     "(Case 16), similarly limited by the ground-truth resolution ceiling. If retried, a better-suited use "
+     "might be a \"predict-then-residual\" route (using PatchTST for multi-step orbital-element "
+     "forecasting, treating deviation from the forecast as a maneuver signal) rather than direct point-wise "
+     "labeling — a variant this project hasn't yet tried. (Abstract read; quantitative results not found.)"),
+    ("機器學習",
+     "Peng & Bai, 2018 (Adv. Space Res.)",
+     "**研究重點**：物理軌道預測+監督式ML殘差修正（比較ANN/SVM/GP），測試同物體不同時段、"
+     "外推未來、跨衛星遷移三種泛化情境；ANN擬合能力最佳但最易過擬合，SVM最穩健但效能較弱。\n\n"
+     "**與本專案比較**：目標互補而非重疊——此文用ML縮小物理模型殘差本身，本專案Line4阻力"
+     "殘差通道則把殘差當作偵測特徵；若先用此文方法把「正常阻力衰減」殘差壓到更小，本專案偵測"
+     "通道的訊噪比理論上會更好。此文已測試跨衛星遷移泛化，與本專案案例九unseen-satellite "
+     "hold-out精神一致，可佐證泛化驗證是本領域漸受重視的共同趨勢。（摘要已讀，量化數字未查得）",
+     "**研究焦点**：物理軌道予測+教師あり機械学習残差修正（ANN/SVM/GPを比較）。同一天体の"
+     "異なる期間、将来への外挿、類似衛星への転移という3つの汎化シナリオでテスト；ANNは"
+     "適合能力最良だが過学習しやすく、SVMは最も頑健だが性能はやや弱い。\n\n"
+     "**本プロジェクトとの比較**：目標は重複ではなく相補的——この論文はMLで物理モデルの残差"
+     "自体を縮小するが、本プロジェクトのLine4抵抗残差チャネルは残差を検知特徴として利用する；"
+     "先にこの論文の手法で「通常の大気抵抗減衰」残差をより小さく抑えれば、本プロジェクトの検知"
+     "チャネルの信号対雑音比は理論上向上するはずである。この論文は既に衛星間転移汎化を"
+     "テストしており、本プロジェクトの事例九のunseen-satellite hold-outの精神と一致し、汎化"
+     "検証がこの分野で徐々に重視されつつある共通の傾向であることを裏付ける。（摘要読了、定量的"
+     "数字は未確認）",
+     "**Research focus**: Physical orbit prediction plus supervised-ML residual correction (comparing "
+     "ANN/SVM/GP) across three generalization scenarios — same object, different time period; "
+     "extrapolation into the future; transfer to similar satellites. ANN fits best but overfits easiest; "
+     "SVM is most robust but generally weaker.\n\n"
+     "**Vs. this project**: Complementary rather than overlapping goals — this paper uses ML to shrink the "
+     "physical model's residual itself, while this project's Line-4 drag-residual channel treats the "
+     "residual as a detection feature; applying this paper's method first to shrink \"normal drag decay\" "
+     "residuals should, in theory, improve this project's detection channels' signal-to-noise ratio. It "
+     "already tested cross-satellite transfer generalization, aligned in spirit with this project's Case 9 "
+     "unseen-satellite hold-out, corroborating that generalization validation is a growing common trend in "
+     "this field. (Abstract read; quantitative figures not found.)"),
+
+    ("SSA 領域與評估方法學",
+     "Oltrogge & Alfano, 2019",
+     "**研究重點**：探討太空情報監視（SSA）與太空交通管理面臨的技術挑戰——碰撞風險估計方法、"
+     "碰撞/爆炸事件連鎖影響，以及取得即時準確完整太空態勢資訊的障礙；結論指出碰撞風險持續上升，"
+     "現行因應措施雖有益但仍不足。\n\n"
+     "**與本專案比較**：奠基性文獻，說明機動偵測技術在更廣泛太空安全治理架構中的必要性——"
+     "本專案的偵測結果最終要服務的正是這類「碰撞風險估計」下游應用。**查證提醒**：查得正式"
+     "卷期為 6(2), pp.72–79，完整標題含「...and Space Traffic Management」，與清單原文"
+     "6(3), pp.164–172 不符，建議日後核對。（摘要層級，ScienceDirect遭403阻擋）",
+     "**研究焦点**：宇宙状況監視（SSA）と宇宙交通管理が直面する技術的課題——衝突リスク推定手法、"
+     "衝突/爆発事象の連鎖影響、リアルタイムで正確・完全な宇宙態勢情報を得る際の障壁を検討；"
+     "結論として衝突リスクは上昇し続けており、現行の対応策は有益だが依然として不十分。\n\n"
+     "**本プロジェクトとの比較**：基礎的文献であり、機動検知技術がより広範な宇宙安全ガバナンス"
+     "枠組みにおいて必要であることを示す——本プロジェクトの検知結果が最終的に貢献すべきは"
+     "まさにこの種の「衝突リスク推定」下流アプリケーションである。**査証上の注記**：正式な"
+     "巻号は6(2), pp.72–79で、完全なタイトルには「...and Space Traffic Management」が含まれ、"
+     "リスト原文の6(3), pp.164–172とは一致しない。今後の照合を推奨。（摘要レベル、"
+     "ScienceDirectは403でブロック）",
+     "**Research focus**: Examines the technical challenges facing space situational awareness (SSA) and "
+     "space traffic management — collision-risk estimation methods, cascading effects of collision/"
+     "breakup events, and barriers to timely, accurate, complete space-situational data; concludes "
+     "collision risk keeps rising and current mitigations, while beneficial, remain insufficient.\n\n"
+     "**Vs. this project**: A foundational paper establishing why maneuver-detection technology matters "
+     "within the broader space-safety governance framework — this project's detections ultimately feed "
+     "exactly this kind of downstream collision-risk-estimation use. **Verification note**: the formal "
+     "citation found is 6(2), pp.72–79 with a title including \"...and Space Traffic Management,\" not "
+     "matching the list's 6(3), pp.164–172 — worth reconciling later. (Abstract-level; ScienceDirect "
+     "blocked with 403.)"),
+    ("SSA 領域與評估方法學",
+     "Geometric Distance Difference, Aerospace 2025",
+     "**研究重點**：不依賴TLE，直接用星上GNSS觀測+即時精密星曆，定義「簡化動力學」與「運動學」"
+     "兩種軌道解之間的幾何RMS距離作為即時機動指標，搭配滑動視窗自適應門檻。GRACE-FO 8次機動"
+     "偵測7次，Sentinel-3A 2次機動皆偵測成功。\n\n"
+     "**與本專案比較**：**替代技術路線的效能上限參照**——用精密星曆/GNSS觀測取代TLE作輸入，"
+     "本質上跳過了TLE解析度限制，可視為「若本專案能取得精密星曆會有多好」的上界對照組"
+     "（呼應本專案自身MEME vs TLE誤差研究）；差異在於此法需要衛星本體配合廣播GNSS觀測，"
+     "適用對象受限，本專案的公開TLE路線適用對象遠廣（任何有編目的物體皆可）。"
+     "（摘要與搜尋引擎交叉確認，原文遭403阻擋）",
+     "**研究焦点**：TLEに依存せず、衛星搭載GNSS観測+即時精密暦を直接使用し、「簡略化動力学」と"
+     "「運動学」の2種類の軌道解の間の幾何学的RMS距離をリアルタイム機動指標として定義し、"
+     "スライディングウィンドウ適応閾値と組み合わせる。GRACE-FOで8回中7回検知、Sentinel-3Aで"
+     "2回とも検知成功。\n\n"
+     "**本プロジェクトとの比較**：**代替技術路線の性能上限の参照**——精密暦/GNSS観測でTLEを"
+     "置き換えることは、本質的にTLEの解像度制限を回避しており、「本プロジェクトが精密暦を"
+     "取得できればどれほど良くなるか」の上限対照群と見なせる（本プロジェクト自身のMEME vs TLE"
+     "誤差研究と呼応）；差異は、この手法は衛星本体がGNSS観測をブロードキャストする協力が"
+     "必要で適用対象が限定される点にあり、本プロジェクトの公開TLE路線は適用対象がはるかに"
+     "広い（カタログ化されたあらゆる物体に適用可）。（摘要と検索エンジンで相互確認、原文は"
+     "403でブロック）",
+     "**Research focus**: Bypasses TLEs entirely, using onboard GNSS observations plus real-time precise "
+     "ephemerides, defining the geometric RMS distance between \"reduced-dynamic\" and \"kinematic\" "
+     "orbit solutions as a real-time maneuver metric, with a sliding-window adaptive threshold. Detected 7 "
+     "of 8 GRACE-FO maneuvers and both of Sentinel-3A's.\n\n"
+     "**Vs. this project**: **A ceiling reference for an alternative technology route** — replacing TLEs "
+     "with precise ephemerides/GNSS observations essentially bypasses TLE's resolution limit, serving as "
+     "an upper-bound comparison for \"how much better this project could do with precise ephemerides\" "
+     "(echoing this project's own MEME-vs-TLE error research); the difference is this method requires the "
+     "satellite to cooperatively broadcast GNSS observations, limiting applicability, while this project's "
+     "public-TLE route applies far more broadly (to any cataloged object). (Abstract cross-confirmed via "
+     "search; original blocked with 403.)"),
+    ("SSA 領域與評估方法學",
+     "ROC Curves for Anomaly Detection, IEEE 2022",
+     "**研究重點**：**重要澄清**——正式標題其實是「...for Hyperspectral Anomaly Detection」，"
+     "領域為高光譜影像異常偵測（遙測影像處理），非軌道/太空領域論文；探討2D ROC曲線"
+     "在缺乏機率分布下如何繪製、如何評估背景抑制效果，並以隨機Neyman-Pearson偵測器重新"
+     "推導其數學理論。\n\n"
+     "**與本專案比較**：價值在於**評估方法論的通用性**，而非機動偵測領域知識——ROC/PD-PF"
+     "分析框架可直接遷移至衛星機動偵測（視為二元異常偵測問題）的效能評估；本專案案例十已"
+     "使用ROC-AUC作核心驗收指標，此文可作為該指標選用之方法論嚴謹性佐證，但**引用時應註明"
+     "其原始應用領域為高光譜影像而非軌道力學**，避免讀者誤以為是太空領域文獻。（摘要層級，"
+     "IEEE Xplore遭403阻擋）",
+     "**研究焦点**：**重要な明確化**——正式なタイトルは実際には「...for Hyperspectral Anomaly "
+     "Detection」であり、分野はハイパースペクトル画像異常検知（リモートセンシング画像処理）"
+     "であって、軌道/宇宙分野の論文ではない；確率分布がない場合の2D ROC曲線の描き方、背景"
+     "抑制効果の評価方法を検討し、ランダムNeyman-Pearson検出器でその数学理論を再導出。\n\n"
+     "**本プロジェクトとの比較**：価値は**評価方法論の汎用性**にあり、機動検知分野の知識では"
+     "ない——ROC/PD-PF分析フレームワークは衛星機動検知（二値異常検知問題と見なす）の性能"
+     "評価に直接転用可能；本プロジェクトの事例十は既にROC-AUCを中核的な検収指標として使用"
+     "しており、この論文はその指標選択の方法論的厳密性を裏付けるが、**引用時にはその原分野が"
+     "軌道力学ではなくハイパースペクトル画像であることを明記すべき**であり、読者が宇宙分野の"
+     "文献と誤解しないようにする。（摘要レベル、IEEE Xplореは403でブロック）",
+     "**Research focus**: **Important clarification** — the formal title is actually \"...for "
+     "Hyperspectral Anomaly Detection\"; the field is hyperspectral-image anomaly detection (remote-"
+     "sensing image processing), not an orbital/space paper. Examines how to draw 2D ROC curves without a "
+     "probability distribution, how to evaluate background suppression, and re-derives the underlying "
+     "theory via a randomized Neyman-Pearson detector.\n\n"
+     "**Vs. this project**: Its value is in **evaluation-methodology generality**, not maneuver-detection "
+     "domain knowledge — the ROC/PD-PF analysis framework transfers directly to evaluating satellite "
+     "maneuver detection (as a binary anomaly-detection problem); this project's Case 10 already uses "
+     "ROC-AUC as a core acceptance metric, and this paper supports the methodological rigor of that "
+     "choice, but **should be cited noting its original field is hyperspectral imaging, not orbital "
+     "mechanics**, to avoid readers mistaking it for space-domain literature. (Abstract-level; IEEE Xplore "
+     "blocked with 403.)"),
+    ("SSA 領域與評估方法學",
+     "Space-Track.org（資料來源）",
+     "**性質**：資料來源，非研究論文。18th Space Defense Squadron（美國太空軍）官方公開之"
+     "TLE、衛星目錄（SATCAT）、衰變/再入預測資料，官方公開追蹤逾16,000顆在軌衛星，"
+     "美國太空監視網另追蹤約240,000個物件；免費註冊存取，API有流量限制。\n\n"
+     "**與本專案比較**：本專案（及絕大多數TLE-based機動偵測研究）最核心、最主要的公開資料"
+     "來源——本專案的全部23顆外部標竿衛星與284顆Starlink衛星之TLE皆來自此處，是整個研究"
+     "得以「任何人都能重現」的基礎建設。（官方文件頁面直接讀取確認）",
+     "**性質**：データソースであり、研究論文ではない。18th Space Defense Squadron（米宇宙軍）が"
+     "公式に公開するTLE、衛星カタログ（SATCAT）、減衰/再突入予測データ。公式には16,000機を"
+     "超える周回衛星を追跡し、米国宇宙監視ネットワークはさらに約240,000個の物体を追跡；"
+     "無料登録でアクセス可能、APIにはレート制限あり。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクト（および大多数のTLEベース機動検知研究）の"
+     "最も中核的・主要な公開データソース——本プロジェクトの外部ベンチマーク衛星23機と"
+     "Starlink衛星284機のTLEはすべてここから取得されており、研究全体が「誰でも再現可能」で"
+     "あることの基盤インフラである。（公式文書ページを直接確認）",
+     "**Nature**: A data source, not a research paper. The 18th Space Defense Squadron (US Space Force)'s "
+     "official public TLEs, satellite catalog (SATCAT), and decay/reentry predictions; officially tracks "
+     "16,000+ objects on orbit, with the US Space Surveillance Network tracking ~240,000 objects overall; "
+     "free with registration, API rate-limited.\n\n"
+     "**Vs. this project**: The single most central public data source for this project (and nearly all "
+     "TLE-based maneuver-detection research) — the TLEs for all 23 external benchmark satellites and 284 "
+     "Starlink satellites in this project come from here, the infrastructure making the whole research "
+     "program reproducible by anyone. (Official documentation page directly confirmed.)"),
+    ("SSA 領域與評估方法學",
+     "Starlink Public Ephemerides（資料來源）",
+     "**性質**：資料來源，非研究論文。SpaceX公開發布之Starlink精密星曆（含位置/速度/協方差），"
+     "MEME座標系（J2000.0），每次預報涵蓋未來72小時、每8小時更新；截至2026年Starlink在軌"
+     "約11,000餘顆。相較TLE僅為平均軌道根數，MEME為業者內部精密軌道決定（POD）結果，"
+     "精度顯著更高，可作地面真值。\n\n"
+     "**與本專案比較**：本專案機動偵測真值資料的核心來源——與本專案既有MEME vs TLE誤差研究"
+     "直接呼應，284顆Starlink衛星之L3訓練與驗證真值即來自此處；**注意**：Space-Track已於"
+     "2025年7月28日起不再代管此資料，須改至SpaceX官方網站下載，本專案下游腳本之資料源"
+     "設定應確認已對應此變更。（官方文件直接確認）",
+     "**性質**：データソースであり、研究論文ではない。SpaceXが公開するStarlink精密暦（位置/"
+     "速度/共分散を含む）、MEME座標系（J2000.0）、各予報は今後72時間をカバーし8時間ごとに"
+     "更新；2026年時点でStarlinkは周回中約11,000機超。TLEが平均軌道要素にすぎないのに対し、"
+     "MEMEは事業者内部の精密軌道決定（POD）結果であり、精度が著しく高く、地上真値として"
+     "利用可能。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトの機動検知真値データの中核的な出所——本"
+     "プロジェクト既存のMEME vs TLE誤差研究と直接呼応し、Starlink衛星284機のL3訓練・検証"
+     "真値はここから得られている；**注意**：Space-Trackは2025年7月28日よりこのデータの"
+     "代理提供を終了しており、SpaceX公式サイトからダウンロードする必要がある。本プロジェクト"
+     "下流スクリプトのデータソース設定がこの変更に対応済みか確認すべきである。（公式文書で"
+     "直接確認）",
+     "**Nature**: A data source, not a research paper. SpaceX's publicly released precise Starlink "
+     "ephemerides (position/velocity/covariance), in MEME (J2000.0) coordinates, each forecast covering "
+     "the next 72 hours and updated every 8 hours; as of 2026, Starlink has ~11,000+ satellites on orbit. "
+     "Unlike TLEs (mean elements only), MEME is the operator's internal precise-orbit-determination (POD) "
+     "output, substantially more accurate, usable as ground truth.\n\n"
+     "**Vs. this project**: The core source of maneuver-detection ground truth for this project — "
+     "directly echoing this project's own MEME-vs-TLE error research, and the source of L3 training/"
+     "validation truth for the 284 Starlink satellites. **Note**: Space-Track stopped mirroring this data "
+     "as of 2025-07-28, requiring direct download from SpaceX's own site — this project's downstream data-"
+     "source configuration should be checked against this change. (Official documentation directly "
+     "confirmed.)"),
+
+    ("LEO-PNT 與應用",
+     "\"Inside LEO: LEO-PNT — Why Now?,\" 2024",
+     "**研究重點**：產業媒體文章（非學術論文）。主張LEO-PNT受重視源於兩股驅動力：GNSS"
+     "脆弱性（干擾與詐欺日益普遍）與自駕/無人系統需求；強調「韌性與去單一系統依賴」，"
+     "LEO可在GNSS被降級/拒止時提供太空層級替代方案，國防應用與無人系統為早期採用領域。\n\n"
+     "**與本專案比較**：說明LEO星系（如Starlink）除本專案既有的通訊/機動偵測研究價值外，"
+     "亦具備PNT應用戰略意義——呼應本專案對Starlink資料生態系的多面向運用，也提示：本專案"
+     "累積的Starlink TLE/MEME機動偵測經驗，未來若延伸至「機動對PNT服務精度影響」的評估，"
+     "有明確的產業與國防應用需求支撐。（原文全文已讀）",
+     "**研究焦点**：業界メディア記事（学術論文ではない）。LEO-PNTが注目される理由は2つの"
+     "駆動力に由来すると主張：GNSSの脆弱性（妨害と詐称の増加）と自動運転/無人システムの"
+     "需要；「レジリエンスと単一システム依存からの脱却」を強調し、LEOはGNSSが劣化/拒否"
+     "された際に宇宙レベルの代替手段を提供でき、国防応用と無人システムが早期採用分野。\n\n"
+     "**本プロジェクトとの比較**：LEOコンステレーション（Starlinkなど）が本プロジェクト既存の"
+     "通信/機動検知研究価値に加え、PNT応用の戦略的意義も持つことを示す——本プロジェクトの"
+     "Starlinkデータエコシステムの多面的活用と呼応し、また示唆する点として：本プロジェクトが"
+     "蓄積したStarlink TLE/MEME機動検知の経験は、将来「機動がPNTサービス精度に与える影響」"
+     "評価へ拡張すれば、明確な産業・国防応用ニーズに支えられる。（原文全文読了）",
+     "**Research focus**: An industry-media article (not academic). Argues LEO-PNT's current momentum "
+     "stems from two forces: GNSS vulnerability (jamming/spoofing becoming widespread) and autonomous/"
+     "uncrewed-systems demand; emphasizes \"resilience and moving away from single-system dependence,\" "
+     "with LEO offering a space-tier alternative when GNSS is degraded or denied, defense applications and "
+     "autonomous systems being early adopters.\n\n"
+     "**Vs. this project**: Shows LEO constellations (e.g. Starlink) have strategic PNT-application value "
+     "beyond this project's existing communications/maneuver-detection research use — echoing this "
+     "project's multi-faceted use of the Starlink data ecosystem, and suggesting a clear industry/defense "
+     "demand should this project's accumulated Starlink TLE/MEME maneuver-detection experience later "
+     "extend into evaluating \"how maneuvers affect PNT service accuracy.\" (Full text read.)"),
+    ("LEO-PNT 與應用",
+     "低成本硬體接收 Starlink 訊號定位實測, KOC 2025",
+     "**研究重點**：中文科技媒體報導（原始研究為美國俄亥俄州立大學ASPIN實驗室）。用"
+     "RTL-SDR+Ku頻段LNB+拋物面天線+樹莓派5，總成本低於200美元，「認知型軟體定義接收機」"
+     "即時學習Starlink OFDM信標結構並追蹤都卜勒頻移；僅3顆衛星、20秒觀測即達約2公尺三維"
+     "定位精度，測試涵蓋地面車輛/無人機/高空氣球/北極海域船隻四種環境。\n\n"
+     "**與本專案比較**：展示Starlink星系除機動偵測研究價值外，訊號本身亦可作低成本PNT"
+     "替代方案的具體實證——本專案目前的Starlink研究聚焦於TLE/MEME軌道層級的機動偵測，"
+     "與此文的訊號層級定位應用是同一星系資料生態系的兩個不同應用面，可作為本專案未來"
+     "「延伸應用」章節（比照案例二十LEO-PNT應用延伸的誠實標示方式）的具體案例佐證。"
+     "（原文全文已讀）",
+     "**研究焦点**：中国語のテクノロジーメディア報道（原研究は米オハイオ州立大学ASPIN"
+     "研究室）。RTL-SDR+Ku帯LNB+パラボラアンテナ+Raspberry Pi 5を使用し、総コストは"
+     "200ドル未満、「認知型ソフトウェア無線受信機」がStarlink OFDMビーコン構造をリアルタイム"
+     "学習しドップラーシフトを追跡；わずか3機の衛星、20秒の観測で約2メートルの3次元測位"
+     "精度を達成、テストは地上車両/ドローン/高高度気球/北極海域船舶の4つの環境をカバー。\n\n"
+     "**本プロジェクトとの比較**：Starlinkコンステレーションが機動検知研究価値に加え、信号"
+     "自体も低コストPNT代替案として具体的に実証可能であることを示す——本プロジェクトの"
+     "現在のStarlink研究はTLE/MEME軌道レベルの機動検知に焦点を当てており、この論文の信号"
+     "レベル測位応用は同一コンステレーションデータエコシステムの異なる応用面であり、本"
+     "プロジェクトの将来「応用拡張」章（事例二十のLEO-PNT応用拡張の誠実な表示方法に倣う）の"
+     "具体的事例として活用できる。（原文全文読了）",
+     "**Research focus**: A Chinese-language tech-media report (original research from Ohio State "
+     "University's ASPIN Lab). Using an RTL-SDR + Ku-band LNB + parabolic antenna + Raspberry Pi 5 (total "
+     "cost under $200), a \"cognitive software-defined receiver\" learns the Starlink OFDM beacon "
+     "structure in real time and tracks Doppler shift; achieved ~2-meter 3D positioning accuracy from just "
+     "3 satellites and 20 seconds of observation, tested across ground vehicles/drones/high-altitude "
+     "balloons/Arctic-water vessels.\n\n"
+     "**Vs. this project**: A concrete demonstration that the Starlink constellation's signal itself, "
+     "beyond maneuver-detection research value, can serve as a low-cost PNT alternative — this project's "
+     "current Starlink work focuses on TLE/MEME orbit-level maneuver detection, while this paper's "
+     "signal-level positioning application is a different facet of the same constellation data ecosystem, "
+     "usable as a concrete case for a future \"extended applications\" section (in the same honestly-"
+     "labeled style as Case 20's LEO-PNT extension). (Full text read.)"),
+
+    ("機動偵測方法與外部真值",
+     "San-Juan et al., \"Hybrid SGP4 Orbit Propagator,\" 2017",
+     "**研究重點**：解決SGP4傳播精度隨傳播時間拉長急遽下降、使TLE難以滿足現代SSA需求的問題；"
+     "提出「混合TLE」（HTLE）概念——除標準TLE外，額外封裝一組傳播誤差模型，搭配「混合SGP4"
+     "傳播器」（標準SGP4+誤差修正器），在最小改動現行TLE-SGP4系統前提下延長TLE有效期。\n\n"
+     "**與本專案比較**：與本專案核心方法論直接相關——說明TLE/SGP4固有誤差隨時間成長的特性，"
+     "是機動偵測（尤其以半長軸/平均運動殘差為基礎的方法）必須處理的系統性雜訊來源；本專案"
+     "目前用「TLE稀釋+3小時最小間隔」與σ正規化因應此問題，此文的「誤差模型封裝」路線"
+     "是另一個可能的改進方向，但**具體量化改善數字未能查證，不宜引用其效果幅度**。"
+     "（摘要層級，全文遭付費牆阻擋）",
+     "**研究焦点**：SGP4伝播精度が伝播時間の延長に伴い急速に低下し、TLEが現代のSSA需要を"
+     "満たすことが困難になる問題を解決；「ハイブリッドTLE」（HTLE）概念を提案——標準TLEに"
+     "加え、伝播誤差モデル一式を追加でパッケージ化し、「ハイブリッドSGP4伝播器」（標準SGP4+"
+     "誤差補正器）と組み合わせ、現行のTLE-SGP4システムへの変更を最小限に抑えつつTLEの"
+     "有効期間を延長。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトの中核的方法論と直接関連——TLE/SGP4固有の"
+     "誤差が時間とともに成長する特性が、機動検知（特に半長軸/平均運動残差に基づく手法）が"
+     "対処すべき系統的雑音源であることを示す；本プロジェクトは現在「TLE間引き+3時間最小"
+     "間隔」とσ正規化でこの問題に対応しているが、この論文の「誤差モデルパッケージ化」路線は"
+     "別の改善方向となりうる。ただし**具体的な定量的改善数値は確認できず、その効果の大きさを"
+     "引用すべきではない**。（摘要レベル、全文は購読制でブロック）",
+     "**Research focus**: Addresses SGP4 propagation accuracy degrading sharply as propagation time "
+     "extends, making TLEs inadequate for modern SSA needs; proposes \"Hybrid TLE\" (HTLE) — packaging a "
+     "propagation-error model alongside the standard TLE, paired with a \"Hybrid SGP4\" propagator "
+     "(standard SGP4 + error corrector) to extend TLE validity with minimal change to the existing "
+     "TLE-SGP4 system.\n\n"
+     "**Vs. this project**: Directly relevant to this project's core methodology — showing that TLE/SGP4's "
+     "inherent, time-growing error is a systematic noise source that maneuver-detection methods (especially "
+     "those based on semi-major-axis/mean-motion residuals) must contend with; this project currently "
+     "handles this via TLE thinning (3-hour minimum spacing) and σ-normalization, and this paper's "
+     "\"error-model packaging\" route is another possible improvement direction — but **specific "
+     "quantitative improvement figures could not be verified and their magnitude should not be cited**. "
+     "(Abstract-level; full text paywalled.)"),
+    ("機動偵測方法與外部真值",
+     "ILRS/IDS, Satellite Maneuver Histories（資料來源）",
+     "**性質**：資料來源，非研究論文。DORIS追蹤衛星之操作者發布機動歷史紀錄目錄，每顆衛星"
+     "對應數個機動檔案（含2025年更新之新式含燃燒記錄格式），涵蓋Jason系列、HY-2系列、"
+     "Sentinel系列、SWOT、SARAL、SPOT、CryoSat-2、Envisat等多任務衛星，時間跨度自2003年"
+     "至2026年、持續更新中。\n\n"
+     "**與本專案比較**：本專案14+9星外部標竿之**核心真值來源**——由衛星操作單位第一手發布、"
+     "獨立於TLE體系之外，是本專案「外部獨立真值」（非自我循環驗證）主張的直接依據；本文件"
+     "第一部分（軌道力學9篇）已詳述本專案基於此資料源之逐星驗證結果與與TASA之數字核對過程。"
+     "（目錄頁面直接讀取確認）",
+     "**性質**：データソースであり、研究論文ではない。DORIS追跡衛星の運用者が発表する機動"
+     "履歴記録目録。各衛星に複数の機動ファイルが対応し（2025年更新の新形式・燃焼記録付き"
+     "フォーマットを含む）、Jasonシリーズ、HY-2シリーズ、Sentinelシリーズ、SWOT、SARAL、"
+     "SPOT、CryoSat-2、Envisatなど複数のミッション衛星をカバーし、期間は2003年から2026年"
+     "まで、継続的に更新中。\n\n"
+     "**本プロジェクトとの比較**：本プロジェクトの14+9機外部ベンチマークの**中核的真値源**——"
+     "衛星運用機関が第一手で発表し、TLE体系とは独立しており、本プロジェクトの「外部独立真値」"
+     "（自己循環検証ではない）という主張の直接的根拠である；本文書の第一部（軌道力学9篇）で"
+     "既に、本プロジェクトがこのデータ源に基づく衛星ごとの検証結果とTASAとの数値照合"
+     "プロセスを詳述している。（目録ページを直接確認）",
+     "**Nature**: Operator-published maneuver-history catalogs for "
+     "DORIS-tracked satellites — each satellite has several maneuver files (including a 2025-updated "
+     "format with burn records), covering the Jason series, HY-2 series, Sentinel series, SWOT, SARAL, "
+     "SPOT, CryoSat-2, Envisat and more, spanning 2003-2026 and actively maintained.\n\n"
+     "**Vs. this project**: The **core ground-truth source** for this project's 14+9-satellite external "
+     "benchmark — first-hand published by satellite operators, independent of the TLE ecosystem, and the "
+     "direct basis for this project's claim of \"external, independent ground truth\" (not self-circular "
+     "validation); Part One of this document (the 9 orbital-mechanics papers) already details this "
+     "project's per-satellite validation and TASA number-reconciliation process built on this source. "
+     "(Catalog page directly confirmed.)"),
+]
+
 
 # --- render_storymap_case11 ---
 def render_storymap_case11():
@@ -4988,6 +5717,35 @@ def render_storymap_case11():
             "\"event-level manual-count evaluation,\" and as external corroboration for the order of "
             "magnitude of SGP4 semi-major-axis error.",
         ))
+
+    st.header(T3(
+        "④ 逐篇研究重點與本專案方法比較（三大類 29 篇）",
+        "④逐篇研究要点と本プロジェクトの手法との比較（3大分類29篇）",
+        "④ Per-Paper Research Focus and Comparison with This Project's Method (29 Items, 3 Categories)",
+    ))
+    st.caption(T3(
+        "逐篇查證每一份文獻的實際研究重點（優先讀取原文全文，查不到全文者誠實標註信心等級，"
+        "不臆測未經證實的具體數字），再對照本專案方法。完整版另存 "
+        "`docs/案例十一文獻延伸比較_20篇逐篇重點與本專案方法比較_20260913.md`。",
+        "各文献の実際の研究要点を1件ずつ査証し（原文全文の読了を優先し、全文が入手できない"
+        "場合は信頼度を誠実に明記、未検証の具体的数値は推測しない）、本プロジェクトの手法と"
+        "対照する。完全版は別途 "
+        "`docs/案例十一文獻延伸比較_20篇逐篇重點與本專案方法比較_20260913.md` に保存。",
+        "Each item's actual research focus was individually verified (prioritizing full-text reading; "
+        "where full text was unavailable, confidence level is honestly noted and unverified specific "
+        "numbers are not guessed), then compared against this project's method. The full version is "
+        "saved separately at "
+        "`docs/案例十一文獻延伸比較_20篇逐篇重點與本專案方法比較_20260913.md`.",
+    ))
+    df_cmp = pd.DataFrame(_LIT_COMPARE, columns=["cat", "name", "zh", "ja", "en"])
+    for cat in df_cmp["cat"].unique():
+        sub = df_cmp[df_cmp["cat"] == cat]
+        with st.expander(f"🔍 {cat}（{len(sub)} " + T3("篇", "篇", "items") + "）", expanded=False):
+            for i, (_, row) in enumerate(sub.iterrows(), start=1):
+                st.markdown(f"**{i}. {row['name']}**")
+                st.markdown(T3(row["zh"], row["ja"], row["en"]))
+                if i < len(sub):
+                    st.markdown("---")
 
     st.markdown("---")
     st.info(T3(
@@ -6557,6 +7315,36 @@ def load_case14_tasa20260730_snapshot() -> dict:
         return {}
 
 
+@st.cache_data(ttl=1800, show_spinner=False)
+def run_case14_curve_reproduction_live() -> pd.DataFrame:
+    """動態說明：即時重現本專案自己的「曲線法」兩個家族——
+    前向預測誤差（≈Polynomial Fit精神，deg=1，全域凍結 k=50，n_iter=1，
+    與 tasa19/23_ext_arena.py 的 GLOBAL_CFG 完全相同）與 LOWESS平滑殘差
+    （≈LOWESS精神，k=20，n_iter=1；本專案既有健全性檢查§4.5已發現此家族會被
+    小視窗平滑吸收步階，本質弱於前向預測誤差族，此處如實秀出而非隱藏）。
+    對全 23 星（14 原始標竿+9 延伸衛星）現場重跑，供與 TASA 簡報之
+    Polynomial Fit / LOWESS 數字做「同法家族」對照，並展示 9 顆延伸衛星上
+    本專案曲線法重現版的實際表現（TASA 從未在這 9 顆衛星上測試過）。
+    """
+    from tasa14_compare import evaluate
+    from tasa14_pdf_baseline import detect_pred, detect_pdf
+    from tasa23_ext_arena import ALL_SATS23, load_events_ext2
+    import tasa14_compare as tc
+
+    events = load_events_ext2()
+    orig_ids = {n for n, _ in tc.SATS}
+    rows = []
+    for nid, nm in ALL_SATS23:
+        r_pred = evaluate(nid, events, lambda t, a: detect_pred(t, a, 50, 1, 1))
+        r_lowess = evaluate(nid, events, lambda t, a: detect_pdf(t, a, 20, "resid", 1))
+        scope = "14原始" if nid in orig_ids else "9延伸"
+        for fam, r in [("predict_error", r_pred), ("lowess_resid", r_lowess)]:
+            if r:
+                rows.append(dict(norad=nid, name=nm, scope=scope, family=fam,
+                                  precision=r["precision"], recall=r["recall"], f1=r["f1"]))
+    return pd.DataFrame(rows)
+
+
 # --- render_storymap_case14 ---
 def render_storymap_case14():
     if st.button(t("storymap_back"), key="back_from_case14"):
@@ -7164,6 +7952,149 @@ def render_storymap_case14():
             "`data/benchmark/tasa14_asof20250501_persat_20260914.csv` — not a hardcoded string; "
             "reproducibility script: `_tasa14_asof20250501_persat.py`. See sections ①–⑤ of this page "
             "(`?mode=storymap&case=case14`) for the latest-data comparison.",
+        ))
+
+    st.markdown("---")
+    st.header(T3(
+        "⑦ 動態說明：曲線法（Polynomial／LOWESS）逐項對照，14＋9 星",
+        "⑦動的な説明：曲線法（Polynomial／LOWESS）の項目別対照、14＋9機",
+        "⑦ Dynamic walkthrough: curve-method (Polynomial/LOWESS) comparison, 14+9 satellites",
+    ))
+    st.caption(T3(
+        "本區針對 TASA 簡報 p3/p4 的 Polynomial Fit 與 LOWESS 數據（平均成功率＝Recall、"
+        "平均F1-score），現場重跑本專案對這兩種方法的重現版，做「同法家族」對照；"
+        "接著把同一組曲線法重現版擴大套用到 9 顆延伸衛星（TASA 從未在這 9 顆衛星上測試過），"
+        "看本專案自己的規則式方法在這裡表現如何。",
+        "本区はTASA発表資料p3/p4のPolynomial FitとLOWESSデータ（平均成功率＝Recall、平均"
+        "F1-score）に対し、本プロジェクトによるこの2手法の再現版をその場で再実行し、「同一"
+        "手法系統」での対照を行う；続いて同じ曲線法再現版を延伸衛星9機（TASAが一度も"
+        "テストしたことのない衛星）に拡大適用し、本プロジェクト自身のルールベース手法が"
+        "ここでどう機能するかを見る。",
+        "This section live-reruns this project's own reproduction of the Polynomial Fit and LOWESS "
+        "methods reported in TASA's briefing p.3/p.4 (mean success rate = recall, mean F1-score), for a "
+        "same-method-family comparison; it then extends the same curve-method reproduction to the 9 "
+        "extension satellites (which TASA never tested), to see how this project's own rule-based method "
+        "performs there.",
+    ))
+
+    if not case14_live_backend_ok():
+        st.info(T3(
+            "此功能與⑤即時重算共用同一個「需本機全庫模式」限制，說明見上方⑤區塊。",
+            "この機能は⑤の即時再計算と同じ「ローカル全庫モードが必要」という制限を共有する。"
+            "説明は上記の⑤区画を参照。",
+            "This feature shares the same \"requires local full-database mode\" limitation as the live "
+            "recompute in section ⑤ above — see that section for details.",
+        ))
+    else:
+        if st.button(T3("▶ 即時重跑曲線法重現版（14＋9 星，約 20-30 秒）",
+                         "▶曲線法再現版をその場で再実行（14＋9機、約20-30秒）",
+                         "▶ Live-rerun the curve-method reproduction (14+9 satellites, ~20-30 seconds)"),
+                      key="case14_run_curve_repro"):
+            with st.spinner(T3("正在對 23 星重跑前向預測誤差法與LOWESS平滑殘差法……",
+                                "23機に対して前向き予測誤差法とLOWESS平滑残差法を再実行中……",
+                                "Re-running the forward-prediction-error and LOWESS-smoothed-residual "
+                                "methods on 23 satellites……")):
+                st.session_state["case14_curve_repro"] = run_case14_curve_reproduction_live()
+
+    _cr = st.session_state.get("case14_curve_repro")
+    if _cr is not None and len(_cr):
+        st.subheader(T3("14 顆原始標竿：TASA 原文數字 vs 本專案重現版", "14機の原初ベンチマーク：TASA原文数値 vs 本プロジェクト再現版",
+                        "14 original benchmark satellites: TASA's published figures vs. this project's reproduction"))
+        _cr14 = _cr[_cr["scope"] == "14原始"]
+        _pred14 = _cr14[_cr14["family"] == "predict_error"]
+        _low14 = _cr14[_cr14["family"] == "lowess_resid"]
+
+        c1, c2 = st.columns(2)
+        c1.metric(T3("TASA · Polynomial Fit（迭代最佳）F1", "TASA・Polynomial Fit（反復最良）F1", "TASA · Polynomial Fit (best iterative) F1"), "0.46")
+        c1.metric(T3("本專案重現版 · 前向預測誤差法 F1", "本プロジェクト再現版・前向き予測誤差法 F1", "This project's reproduction · predict-error F1"),
+                  f"{_pred14['f1'].mean():.3f}", f"{_pred14['f1'].mean()-0.46:+.3f}")
+        c2.metric(T3("TASA · LOWESS（迭代最佳）F1", "TASA・LOWESS（反復最良）F1", "TASA · LOWESS (best iterative) F1"), "0.52")
+        c2.metric(T3("本專案重現版 · LOWESS平滑殘差法 F1", "本プロジェクト再現版・LOWESS平滑残差法 F1", "This project's reproduction · LOWESS-resid F1"),
+                  f"{_low14['f1'].mean():.3f}", f"{_low14['f1'].mean()-0.52:+.3f}")
+
+        _bar14 = pd.DataFrame({
+            "F1": [0.46, float(_pred14["f1"].mean()), 0.52, float(_low14["f1"].mean())],
+        }, index=[
+            T3("TASA·Polynomial", "TASA・Polynomial", "TASA·Polynomial"),
+            T3("本專案·預測誤差法", "本プロジェクト・予測誤差法", "This project·predict-error"),
+            T3("TASA·LOWESS", "TASA・LOWESS", "TASA·LOWESS"),
+            T3("本專案·LOWESS法", "本プロジェクト・LOWESS法", "This project·LOWESS"),
+        ])
+        st.bar_chart(_bar14)
+        st.caption(T3(
+            "本專案重現版之「LOWESS平滑殘差法」表現明顯弱於「前向預測誤差法」，這不是這次才發現的"
+            "問題——本專案既有健全性檢查（技術報告§4.5）已證實小視窗對稱平滑會把機動步階本身"
+            "「平滑掉」，此為該家族的已知弱點，如實呈現而非隱藏。",
+            "本プロジェクト再現版の「LOWESS平滑残差法」は「前向き予測誤差法」より明らかに劣る——"
+            "これは今回初めて発見された問題ではなく、本プロジェクト既存の健全性チェック（技術"
+            "報告§4.5）で小さいウィンドウの対称平滑化が機動ステップ自体を「平滑化して消して"
+            "しまう」ことが既に実証されている、この手法系統の既知の弱点であり、隠さずそのまま"
+            "示している。",
+            "This project's reproduction of the \"LOWESS-smoothed-residual\" method clearly underperforms "
+            "the \"forward-prediction-error\" method — this isn't a new discovery: this project's own "
+            "sanity check (technical report §4.5) already showed small-window symmetric smoothing "
+            "\"smooths away\" the maneuver step itself, a known weakness of this family, shown honestly "
+            "rather than hidden.",
+        ))
+
+        st.subheader(T3("9 顆延伸衛星：本專案曲線法重現版 vs 本專案規則式headline（TASA從未測試過這9星）",
+                        "延伸衛星9機：本プロジェクト曲線法再現版 vs 本プロジェクトルールベースheadline（TASAはこの9機を一度もテストしていない）",
+                        "9 extension satellites: this project's curve-method reproduction vs. its rule-based headline (TASA never tested these 9)"))
+        _cr9 = _cr[_cr["scope"] == "9延伸"]
+        _pred9 = _cr9[_cr9["family"] == "predict_error"]
+        _low9 = _cr9[_cr9["family"] == "lowess_resid"]
+        _iter2_9 = _d14["b1_9"] if _d14 and "b1_9" in _d14 else pd.DataFrame()
+
+        c1, c2, c3 = st.columns(3)
+        c1.metric(T3("本專案規則式headline(iter2 k=8) F1", "本プロジェクトルールベースheadline(iter2 k=8) F1", "This project's rule-based headline (iter2 k=8) F1"),
+                  f"{_iter2_9['f1'].mean():.3f}" if len(_iter2_9) else "—")
+        c2.metric(T3("本專案重現版·前向預測誤差法 F1", "本プロジェクト再現版・前向き予測誤差法 F1", "This project's reproduction · predict-error F1"),
+                  f"{_pred9['f1'].mean():.3f}")
+        c3.metric(T3("本專案重現版·LOWESS平滑殘差法 F1", "本プロジェクト再現版・LOWESS平滑残差法 F1", "This project's reproduction · LOWESS-resid F1"),
+                  f"{_low9['f1'].mean():.3f}")
+
+        _bar9_data = {"F1": [float(_pred9["f1"].mean()), float(_low9["f1"].mean())]}
+        _bar9_idx = [T3("本專案·預測誤差法", "本プロジェクト・予測誤差法", "This project·predict-error"),
+                     T3("本專案·LOWESS法", "本プロジェクト・LOWESS法", "This project·LOWESS")]
+        if len(_iter2_9):
+            _bar9_data["F1"].insert(0, float(_iter2_9["f1"].mean()))
+            _bar9_idx.insert(0, T3("本專案·規則式headline", "本プロジェクト・ルールベースheadline", "This project·rule-based headline"))
+        st.bar_chart(pd.DataFrame(_bar9_data, index=_bar9_idx))
+        st.info(T3(
+            "**判讀**：9 顆延伸衛星（SPOT-2/3/4/5、Sentinel-6B、GRACE系列）從未出現在 TASA 的"
+            "簡報中，這裡展示的是「本專案自己的規則式方法 vs 本專案自己重現的曲線法」，兩者用的"
+            "都是零逐星調參的全域參數。若規則式headline的F1高於曲線法重現版，代表本專案方法在"
+            "這批全新、更困難的衛星上泛化能力更好——這正是①～⑥已用嚴謹統計檢定證明的結論"
+            "（23星 p=0.006 顯著勝出），此處用更直觀的長條圖再次呈現同一個結論。",
+            "**判読**：延伸衛星9機（SPOT-2/3/4/5、Sentinel-6B、GRACEシリーズ）はTASAの発表資料に"
+            "一度も登場したことがなく、ここで示しているのは「本プロジェクト自身のルールベース"
+            "手法 vs 本プロジェクトが自ら再現した曲線法」であり、両者とも衛星ごとの調整を行わない"
+            "全域パラメータを使用している。ルールベースheadlineのF1が曲線法再現版より高ければ、"
+            "本プロジェクトの手法がこの新しくより困難な衛星群において汎化能力がより優れている"
+            "ことを意味する——これはまさに①～⑥で既に厳密な統計検定によって証明された結論"
+            "（23機でp=0.006の有意な勝利）であり、ここではより直感的な棒グラフで同じ結論を"
+            "改めて示している。",
+            "**Interpretation**: the 9 extension satellites (SPOT-2/3/4/5, Sentinel-6B, the GRACE series) "
+            "never appeared in TASA's briefing at all — what's shown here is \"this project's own "
+            "rule-based method vs. this project's own reproduction of the curve method,\" both using "
+            "zero-per-satellite-tuning global parameters. If the rule-based headline's F1 exceeds the "
+            "curve-method reproduction, it means this project's method generalizes better on this new, "
+            "harder batch of satellites — exactly the conclusion sections ①–⑥ already proved with a "
+            "rigorous statistical test (a significant win at 23 satellites, p=0.006); this just shows the "
+            "same conclusion again, more intuitively, as a bar chart.",
+        ))
+        st.caption(T3(
+            "曲線法重現版採用本專案凍結、非逐星調參之全域參數（前向預測誤差法：deg=1,k=50,"
+            "n_iter=1；LOWESS平滑殘差法：k=20,n_iter=1，與 `tasa19/23_ext_arena.py` 的 "
+            "GLOBAL_CFG 一致），現場對 `space_db.duckdb` 重新查詢並計算，非讀取凍結檔。",
+            "曲線法再現版は本プロジェクトの凍結済み、衛星ごとの調整を行わない全域パラメータを"
+            "採用（前向き予測誤差法：deg=1,k=50,n_iter=1；LOWESS平滑残差法：k=20,n_iter=1、"
+            "`tasa19/23_ext_arena.py` のGLOBAL_CFGと一致）。`space_db.duckdb` にその場で再照会・"
+            "計算しており、凍結ファイルの読み込みではない。",
+            "The curve-method reproduction uses this project's frozen, non-per-satellite-tuned global "
+            "parameters (predict-error: deg=1, k=50, n_iter=1; LOWESS-resid: k=20, n_iter=1, matching "
+            "`tasa19/23_ext_arena.py`'s GLOBAL_CFG), querying `space_db.duckdb` fresh and computing on "
+            "the spot — not reading a frozen file.",
         ))
 
 
