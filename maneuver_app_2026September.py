@@ -5747,6 +5747,112 @@ def render_storymap_case11():
                 if i < len(sub):
                     st.markdown("---")
 
+    st.header(T3(
+        "⑤ 更進一步：挑 10 篇文獻實際重現，與本專案方法正面對決",
+        "⑤さらに一歩：10篇の文献を実際に再現し、本プロジェクトの手法と正面対決",
+        "⑤ Going further: 10 papers actually reimplemented, head-to-head against this project's method",
+    ))
+    st.caption(T3(
+        "上方④僅整理文獻重點與定性比較。本區更進一步：從 29 篇中挑出 10 篇"
+        "「方法明確、資料本專案已有」者，實際重現其演算法，用與本專案完全相同的"
+        "驗證基準（同真值、同 ±1.5 天配對容差，23 星標竿）跑一次真正的頭對頭比較，"
+        "而非只憑論文自報數字。完整報告：`docs/案例十一Tier1文獻實作比較_20260913.md`、"
+        "`docs/案例十一Tier2文獻實作比較_20260913.md`。",
+        "上記④は文献の要点と定性的比較の整理に留まる。本区はさらに一歩進め：29篇の"
+        "中から「手法が明確でデータが既にある」10篇を選び、そのアルゴリズムを実際に"
+        "再現し、本プロジェクトと完全に同一の検証基準（同一真値、同一±1.5日ペアリング"
+        "許容誤差、23機ベンチマーク）で真の正面対決を行う——論文が自己申告する数値を"
+        "鵜呑みにしない。完全なレポート：`docs/案例十一Tier1文獻實作比較_20260913.md`、"
+        "`docs/案例十一Tier2文獻實作比較_20260913.md`。",
+        "Section ④ above only organizes each paper's key points and a qualitative "
+        "comparison. This section goes further: 10 of the 29 papers — those with a clear "
+        "method and data this project already has — were actually reimplemented and run "
+        "head-to-head against this project's own method under the exact same validation "
+        "protocol (same ground truth, same ±1.5-day matching tolerance, 23-satellite "
+        "benchmark), rather than trusting each paper's self-reported numbers. Full reports: "
+        "`docs/案例十一Tier1文獻實作比較_20260913.md`, "
+        "`docs/案例十一Tier2文獻實作比較_20260913.md`.",
+    ))
+
+    _lit10 = pd.DataFrame([
+        ("本專案 LOSO L3 融合", 0.457, T3("（本專案）", "（本プロジェクト）", "(this project)")),
+        ("本專案 iter2(k=8)", 0.418, T3("（本專案）", "（本プロジェクト）", "(this project)")),
+        ("本專案 headline", 0.394, T3("（本專案）", "（本プロジェクト）", "(this project)")),
+        ("Holzinger et al. 2012（控制距離代理）", 0.314, "Tier2"),
+        ("Mukundan & Wang 2021", 0.300, "Tier1"),
+        ("Adaptive CuSum", 0.284, "Tier1"),
+        ("PatchTST 預測—殘差簡化代理", 0.276, "Tier2"),
+        ("Kelecy et al. 2007", 0.264, "Tier1"),
+        ("San-Juan et al. 2017", 0.259, "Tier2"),
+        ("Isolation Forest 獨立標竿", 0.251, "Tier2"),
+        ("RSO Proper Elements＋BOCPD", 0.223, "Tier1"),
+        ("Peng & Bai 2018", 0.073, "Tier1"),
+    ], columns=["method", "f1", "group"])
+    st.dataframe(
+        _lit10.style.format({"f1": "{:.3f}"}),
+        width="stretch", hide_index=True,
+    )
+    st.bar_chart(_lit10.set_index("method")["f1"])
+
+    st.success(T3(
+        "**結論**：本專案 headline（F1=0.394）與 LOSO L3 融合（0.457）**優於全部"
+        "10 篇文獻重現版**，最接近的是 Holzinger 2012 之簡化重現版（0.314）。\n\n"
+        "**兩個值得記錄的意外發現**：\n\n"
+        "1. **Holzinger 2012（控制距離代理）表現最好的關鍵設計**——把偵測門檻"
+        "「除以距上次觀測的時間間隔平方根」做動態正規化，而非像本專案與其餘"
+        "9 篇一樣，只用固定或經驗統計（MAD/標準差）門檻。這是本專案目前**沒有**"
+        "採用的設計元素，值得列入未來改進方向。\n\n"
+        "2. **第 6 篇（Geometric Distance Difference）意外發現一種本專案與其餘"
+        "9 篇方法在設計上絕對看不到的機動類型**——「相位調整」機動（衛星前後"
+        "位置改變但半長軸幾乎不變）。本專案現有全部偵測通道都作用於半長軸，"
+        "對此類機動是結構性盲區，此發現已列入技術報告待改進項目。",
+        "**結論**：本プロジェクトのheadline（F1=0.394）とLOSO L3融合（0.457）は"
+        "**全10篇の文献再現版を上回る**。最も近いのはHolzinger 2012の簡略再現版"
+        "（0.314）である。\n\n"
+        "**記録に値する2つの意外な発見**：\n\n"
+        "1. **Holzinger 2012（制御距離代理）が最良の成績を収めた鍵となる設計**——"
+        "検知閾値を「前回観測からの時間間隔の平方根で割る」ことで動的に正規化して"
+        "おり、本プロジェクトや他の9篇のように固定または経験的統計（MAD/標準偏差）"
+        "の閾値のみに頼っていない。これは本プロジェクトが**現在採用していない**"
+        "設計要素であり、今後の改善方向として記録する価値がある。\n\n"
+        "2. **第6篇（Geometric Distance Difference）が、本プロジェクトと他の9篇の"
+        "手法では構造的に見えない機動タイプを偶然発見した**——「位相調整"
+        "（phasing）」機動（衛星の前後位置が変化するが半長軸はほぼ変化しない）。"
+        "本プロジェクトの既存の全検知チャネルは半長軸に作用しており、この種の"
+        "機動に対しては構造的な盲点となる。この発見は技術報告書の今後の改善項目"
+        "に既に記載済みである。",
+        "**Conclusion**: This project's headline (F1=0.394) and LOSO L3 fusion (0.457) "
+        "**outperform all 10 reimplemented literature methods**; the closest is the "
+        "simplified Holzinger 2012 reproduction (0.314).\n\n"
+        "**Two findings worth recording**:\n\n"
+        "1. **The key design behind Holzinger 2012's best-in-class performance**: it "
+        "dynamically normalizes its detection threshold by dividing by the square root of "
+        "the time elapsed since the last observation, rather than relying only on a fixed "
+        "or empirical (MAD/std-dev) threshold like this project and the other 9 papers do. "
+        "This is a design element this project does **not** currently use, worth listing as "
+        "a future improvement direction.\n\n"
+        "2. **Paper 6 (Geometric Distance Difference) led to the accidental discovery of a "
+        "maneuver type this project and the other 9 methods structurally cannot see at "
+        "all** — a \"phasing\" maneuver (the satellite's along-track position shifts while "
+        "its semi-major axis barely changes). Every one of this project's existing "
+        "detection channels operates on semi-major axis, making this a structural blind "
+        "spot — already logged as a future-work item in the technical report.",
+    ))
+    st.caption(T3(
+        "可重現腳本：`lit_tier1_reproductions.py`、`lit_tier2_reproductions.py`、"
+        "`lit_geometric_distance_demo.py`、`lit_geometric_distance_sept910_case.py`；"
+        "原始逐星結果：`data/benchmark/lit_tier1_persat_20260913.csv`、"
+        "`lit_tier2_persat_20260913.csv`。",
+        "再現スクリプト：`lit_tier1_reproductions.py`、`lit_tier2_reproductions.py`、"
+        "`lit_geometric_distance_demo.py`、`lit_geometric_distance_sept910_case.py`；"
+        "衛星ごとの元データ：`data/benchmark/lit_tier1_persat_20260913.csv`、"
+        "`lit_tier2_persat_20260913.csv`。",
+        "Reproducibility scripts: `lit_tier1_reproductions.py`, "
+        "`lit_tier2_reproductions.py`, `lit_geometric_distance_demo.py`, "
+        "`lit_geometric_distance_sept910_case.py`; per-satellite raw results: "
+        "`data/benchmark/lit_tier1_persat_20260913.csv`, `lit_tier2_persat_20260913.csv`.",
+    ))
+
     st.markdown("---")
     st.info(T3(
         "**本案例的啟示**：這份文獻回顧告訴我們三件事——\n\n"
