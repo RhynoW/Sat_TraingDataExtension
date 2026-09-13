@@ -5853,6 +5853,132 @@ def render_storymap_case11():
         "`data/benchmark/lit_tier1_persat_20260913.csv`, `lit_tier2_persat_20260913.csv`.",
     ))
 
+    st.header(T3(
+        "⑥ 再加 5 篇 Tier A 文獻，並回應「相位調整機動」盲區——新增偵測通道",
+        "⑥さらに5篇のTier A文献を追加、「位相調整機動」の盲点に対応——新規検知チャネル",
+        "⑥ 5 More Tier-A Papers, Plus a New Channel Addressing the \"Phasing Maneuver\" Blind Spot",
+    ))
+    st.caption(T3(
+        "延續上方⑤，再挑出 5 篇「有完整文本可查證」的候選文獻（Decoto 2015、"
+        "Roberts & Linares 2021、Qin et al. 2019、MDPI Aerospace 2026、"
+        "Shorten et al. 2023）以同一驗證基準重現比較；並針對⑤發現之「相位調整"
+        "機動結構性盲區」，新增一條不依賴半長軸的 TLE 相位殘差偵測通道。"
+        "完整報告：`docs/案例十一TierA2文獻實作比較_20260913.md`、"
+        "`docs/相位殘差通道_新增偵測管道實作與驗證_20260913.md`。",
+        "上記⑤に続き、「完全な本文が査証可能」な候補文献をさらに5篇"
+        "（Decoto 2015、Roberts & Linares 2021、Qin et al. 2019、"
+        "MDPI Aerospace 2026、Shorten et al. 2023）選び、同一の検証基準で"
+        "再現比較を行った。さらに⑤で発見した「位相調整機動の構造的盲点」に"
+        "対応するため、半長軸に依存しないTLE位相残差検知チャネルを新設した。"
+        "完全なレポート：`docs/案例十一TierA2文獻實作比較_20260913.md`、"
+        "`docs/相位殘差通道_新增偵測管道實作與驗證_20260913.md`。",
+        "Continuing from ⑤ above, 5 more candidate papers with full text available "
+        "(Decoto 2015, Roberts & Linares 2021, Qin et al. 2019, MDPI Aerospace 2026, "
+        "Shorten et al. 2023) were reimplemented and compared under the same "
+        "validation protocol. Responding to the \"phasing-maneuver structural blind "
+        "spot\" found in ⑤, a new TLE phase-residual detection channel that does not "
+        "rely on semi-major axis was also added. Full reports: "
+        "`docs/案例十一TierA2文獻實作比較_20260913.md`, "
+        "`docs/相位殘差通道_新增偵測管道實作與驗證_20260913.md`.",
+    ))
+
+    _litA2 = pd.DataFrame([
+        ("本專案 LOSO L3 融合", 0.457, T3("（本專案）", "（本プロジェクト）", "(this project)")),
+        ("本專案 iter2(k=8)", 0.418, T3("（本專案）", "（本プロジェクト）", "(this project)")),
+        ("MDPI Aerospace 2026（同源對照組）", 0.400, "Tier A2"),
+        ("本專案 headline", 0.394, T3("（本專案）", "（本プロジェクト）", "(this project)")),
+        ("Roberts & Linares 2021", 0.376, "Tier A2"),
+        ("Qin et al. 2019", 0.368, "Tier A2"),
+        ("Shorten et al. 2023（粒子濾波）", 0.345, "Tier A2"),
+        ("Holzinger et al. 2012（控制距離代理）", 0.314, "Tier2"),
+        ("Decoto 2015", 0.300, "Tier A2"),
+        ("Mukundan & Wang 2021", 0.300, "Tier1"),
+        ("Adaptive CuSum", 0.284, "Tier1"),
+        ("PatchTST 預測—殘差簡化代理", 0.276, "Tier2"),
+        ("Kelecy et al. 2007", 0.264, "Tier1"),
+        ("San-Juan et al. 2017", 0.259, "Tier2"),
+        ("Isolation Forest 獨立標竿", 0.251, "Tier2"),
+        ("RSO Proper Elements＋BOCPD", 0.223, "Tier1"),
+        ("Peng & Bai 2018", 0.073, "Tier1"),
+        (T3("相位殘差新通道（獨立指標，非同基準比較）", "位相残差新チャネル（独立指標、同一基準比較ではない）",
+            "New phase-residual channel (standalone metric, not an apples-to-apples comparison)"),
+         0.174, T3("新通道", "新チャネル", "New channel")),
+    ], columns=["method", "f1", "group"])
+    st.dataframe(
+        _litA2.style.format({"f1": "{:.3f}"}),
+        width="stretch", hide_index=True,
+    )
+    st.bar_chart(_litA2.set_index("method")["f1"])
+
+    st.success(T3(
+        "**結論**：本批（Tier A2）是三批文獻中平均表現最強的一批——**MDPI "
+        "Aerospace 2026（同源對照組）F1=0.400，首次超越本專案 headline "
+        "（0.394）**。惟此篇方法設計（多特徵穩健統計＋疊代精煉）與本專案"
+        "高度同源，**較合理的解讀是「一篇獨立於本專案的 2026 年文獻，用相近"
+        "設計理念也拿到接近分數，等於外部交叉驗證了本專案方向站得住腳」，而非"
+        "「被超越」**——本專案進階方法（iter2 0.418、LOSO 融合 0.457）仍全面"
+        "領先全部 15 篇文獻重現版。\n\n"
+        "**相位調整機動盲區的初步回應**：新增之相位殘差通道（不依賴半長軸，"
+        "直接從 TLE 之平均近點角＋平均運動外推）於 23 星標竿平均 F1=0.174，"
+        "**明顯低於 sma 方法，但這不代表通道失敗**——既有真值集合本身以「同時"
+        "改變 sma 之機動」為主，此通道鎖定的「相位調整但 sma 不變」場景（即"
+        "STARLINK-5367 案例）並不在此標竿內、無對應真值可配對評分，此處 F1 "
+        "僅能驗證機制可於全標竿穩定運作，尚無法量化其對設計目標場景的實際"
+        "命中率。定位為既有融合管線之候選新通道，而非獨立取代方案。",
+        "**結論**：本バッチ（Tier A2）は3バッチの文献の中で平均成績が最も"
+        "良い——**MDPI Aerospace 2026（同源対照群）F1=0.400、本プロジェクトの"
+        "headline（0.394）を初めて上回った**。ただしこの論文の手法設計"
+        "（多特徴量の頑健統計＋反復精緻化）は本プロジェクトと高度に同源であり、"
+        "**より妥当な解釈は「本プロジェクトから独立した2026年の文献が、近い"
+        "設計思想で近いスコアを得た＝本プロジェクトの方向性が外部的に交差検証"
+        "された」であり、「上回られた」ではない**——本プロジェクトの上位手法"
+        "（iter2 0.418、LOSO融合 0.457）は依然として全15篇の文献再現版を"
+        "上回っている。\n\n"
+        "**位相調整機動の盲点への初期対応**：半長軸に依存しない新設の位相残差"
+        "チャネル（TLEの平均近点角＋平均運動から外挿）は23機ベンチマークで"
+        "平均F1=0.174——**sma手法より明らかに低いが、これは失敗を意味しない**"
+        "——既存の真値集合自体が「sma も同時に変化する機動」を主とするため、"
+        "このチャネルが狙う「位相調整するがsmaは不変」の場面（STARLINK-5367の"
+        "事例）はこのベンチマークに含まれず対応する真値もない。ここでのF1は"
+        "全ベンチマークで安定動作することの確認に留まり、狙った場面での実際の"
+        "命中率はまだ定量化できていない。既存の融合パイプラインの新候補チャネル"
+        "として位置づけ、独立した代替案とはしない。",
+        "**Conclusion**: this batch (Tier A2) has the strongest average performance "
+        "of the three literature batches — **MDPI Aerospace 2026 (a homologous "
+        "counterpart) reaches F1=0.400, the first to exceed this project's headline "
+        "(0.394)**. However, since that paper's design (multi-feature robust "
+        "statistics + iterative refinement) is highly homologous to this project's "
+        "own approach, **the more reasonable reading is \"an independent 2026 paper "
+        "using a similar design reached a similar score — an external cross-"
+        "validation that this project's direction holds up\" rather than \"being "
+        "surpassed\"** — this project's more advanced methods (iter2 0.418, LOSO "
+        "fusion 0.457) still lead all 15 reimplemented literature methods.\n\n"
+        "**An initial response to the phasing-maneuver blind spot**: the new phase-"
+        "residual channel (independent of semi-major axis, extrapolated from TLE "
+        "mean anomaly + mean motion) reaches an average F1=0.174 on the 23-"
+        "satellite benchmark — **clearly lower than sma-based methods, but this "
+        "does not mean the channel failed**. The existing ground-truth set is "
+        "dominated by maneuvers that also change sma, so the scenario this channel "
+        "targets (phasing with sma essentially unchanged, as in the STARLINK-5367 "
+        "case) is not represented in this benchmark with matching ground truth; the "
+        "F1 here only confirms the mechanism runs stably across the full benchmark, "
+        "not its actual hit rate on the target scenario. It is positioned as a "
+        "candidate addition to the existing fusion pipeline, not a standalone "
+        "replacement.",
+    ))
+    st.caption(T3(
+        "可重現腳本：`lit_tierA2_reproductions.py`、`phase_residual_detector.py`；"
+        "原始逐星結果：`data/benchmark/lit_tierA2_persat_20260913.csv`、"
+        "`phase_residual_persat_20260913.csv`。",
+        "再現スクリプト：`lit_tierA2_reproductions.py`、`phase_residual_detector.py`；"
+        "衛星ごとの元データ：`data/benchmark/lit_tierA2_persat_20260913.csv`、"
+        "`phase_residual_persat_20260913.csv`。",
+        "Reproducibility scripts: `lit_tierA2_reproductions.py`, "
+        "`phase_residual_detector.py`; per-satellite raw results: "
+        "`data/benchmark/lit_tierA2_persat_20260913.csv`, "
+        "`phase_residual_persat_20260913.csv`.",
+    ))
+
     st.markdown("---")
     st.info(T3(
         "**本案例的啟示**：這份文獻回顧告訴我們三件事——\n\n"
