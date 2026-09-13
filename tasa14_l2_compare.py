@@ -42,6 +42,30 @@ def windowed_l2(t, a):
     return out
 
 
+def windowed_l2_iter(t, a):
+    """④ 迭代化 L2:每通道先跑一趟,將自身事件 ±1 天之點自序列剔除後重跑
+    (統計量不再被事件污染;事件本身在接縫處仍可被偵測)。回傳第二趟事件。"""
+    ch1 = windowed_l2(t, a)
+    tsec = t.astype("int64").to_numpy() / 1e9
+    out = {}
+    for c in CHANS:
+        ev1 = merge_epochs(ch1[c])
+        if not len(ev1):
+            out[c] = []
+            continue
+        esec = ev1.astype("int64").to_numpy() / 1e9
+        mask = np.zeros(len(a), bool)
+        for e in esec:
+            mask |= np.abs(tsec - e) <= 1.0 * 86400
+        keep = ~mask
+        if keep.sum() < 60:
+            out[c] = list(ev1)
+            continue
+        ch2 = windowed_l2(t[keep], a[keep])
+        out[c] = ch2[c]
+    return out
+
+
 def merge_epochs(epochs, merge_d=MERGE_D):
     if not len(epochs): return pd.to_datetime([])
     e = pd.to_datetime(sorted(pd.to_datetime(epochs)))
@@ -115,21 +139,27 @@ def main():
         row = {"norad": nid, "name": nm}
         for v in variants:
             m = metrics(dets[v], ev, lo, hi)
-            agg[v].append(m["f1"])
+            agg[v].append(m)
             if v == "vote>=2":
                 row.update(m)
         per_sat.append(row)
 
     print("\n" + "=" * 72)
-    print("L2 統計層 + 無監督融合，NASA/ILRS 14 星（平均 F1 / 最高 F1）")
+    print("L2 統計層 + 無監督融合，NASA/ILRS 14 星（平均 F1/P/R、最高 F1）")
     print("=" * 72)
-    print(f"{'方法':12}{'平均F1':>9}{'最高F1':>9}")
+    print(f"{'方法':12}{'平均F1':>9}{'平均P':>8}{'平均R':>8}{'最高F1':>9}")
+    summary = []
     for v in variants:
-        arr = np.array(agg[v])
-        print(f"{v:12}{arr.mean():>9.3f}{arr.max():>9.3f}")
+        f1 = np.array([m["f1"] for m in agg[v]])
+        p_ = np.array([m["precision"] for m in agg[v]])
+        r_ = np.array([m["recall"] for m in agg[v]])
+        print(f"{v:12}{f1.mean():>9.3f}{p_.mean():>8.3f}{r_.mean():>8.3f}{f1.max():>9.3f}")
+        summary.append(dict(method=v, mean_f1=f1.mean(), mean_p=p_.mean(),
+                            mean_r=r_.mean(), max_f1=f1.max()))
+    pd.DataFrame(summary).to_csv("data/benchmark/tasa14_l2_summary_20260803.csv",
+                                 index=False, encoding="utf-8-sig")
     print("-" * 72)
     print(f"{'(對照) 迭代+位準位移':22}{0.458:>9.3f}{0.767:>9.3f}")
-    print(f"{'(對照) PDF LOWESS 迭代':22}{0.52:>9.3f}{0.92:>9.3f}")
 
     df = pd.DataFrame(per_sat).sort_values("f1", ascending=False)
     print("\n【最佳融合 vote>=2 逐星】")

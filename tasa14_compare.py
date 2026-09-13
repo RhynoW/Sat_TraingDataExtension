@@ -49,7 +49,14 @@ def load_events():
 
 
 def load_a(nid):
-    con = duckdb.connect(DB, read_only=True)
+    import time
+    con = None
+    for i in range(6):                      # Windows 檔案鎖競爭時重試
+        try:
+            con = duckdb.connect(DB, read_only=True); break
+        except duckdb.IOException:
+            if i == 5: raise
+            time.sleep(2.0 * (i + 1))
     r = con.execute("SELECT epoch_utc, sma_km FROM raw_tle_archive "
                     "WHERE norad_id=? AND sma_km IS NOT NULL ORDER BY epoch_utc", [nid]).fetchall()
     con.close()
@@ -146,6 +153,69 @@ def detect_iter(t, a, k, n_iter=3):
             continue
         used[max(0, j - LW):min(n, j + LW)] = True
         dets.append(t[j])
+    return pd.to_datetime(sorted(dets))
+
+
+SPAN_TARGET_D = 2.5   # detect_iter2:位準位移窗之目標時間跨度(天)
+LW_MIN, LW_MAX = 4, 12
+
+
+def adaptive_lw(tsec):
+    """cadence 自適應位準位移窗:點數 = 目標跨度/中位更新間隔,夾於 [4,12]。"""
+    gaps = np.diff(tsec) / 86400.0
+    med = float(np.median(gaps[gaps > 0])) if len(gaps) else 0.35
+    return int(np.clip(round(SPAN_TARGET_D / max(med, 1e-3)), LW_MIN, LW_MAX))
+
+
+def _shift_signal_w(a, tsec, mask, w):
+    """同 _shift_signal 但窗寬 w 可調。"""
+    da = np.diff(a); dt = np.diff(tsec)
+    good = (~mask[1:]) & (~mask[:-1]) & (dt > 0)
+    sl = float(np.median(da[good] / dt[good])) if good.sum() > 10 else \
+         float(np.median(da / np.where(dt > 0, dt, 1)))
+    s = pd.Series(a)
+    mb = s.rolling(w, min_periods=3).median().shift(1).to_numpy()
+    ma = s[::-1].rolling(w, min_periods=3).median().to_numpy()[::-1]
+    tb = pd.Series(tsec).rolling(w, min_periods=3).median().shift(1).to_numpy()
+    ta = pd.Series(tsec[::-1]).rolling(w, min_periods=3).median().to_numpy()[::-1]
+    return (ma - mb) - sl * (ta - tb)
+
+
+def detect_iter2(t, a, k, n_iter=3):
+    """③ 改良版:cadence 自適應窗(時間跨度恆定 ~2.5 天)+ 邊緣定時
+    (偵測時刻改報位移窗內 |Δa| 最大步階之後一點,對齊真實跳點)。
+    其餘(迭代遮罩、非極大抑制)與 detect_iter 相同。"""
+    n = len(a)
+    tsec = t.astype("int64").to_numpy() / 1e9
+    w = adaptive_lw(tsec)
+    mask = np.zeros(n, bool)
+    sig = _shift_signal_w(a, tsec, mask, w)
+    for _ in range(n_iter):
+        s = sig[np.isfinite(sig) & ~mask]
+        sd = 1.4826 * np.median(np.abs(s - np.median(s))) if len(s) else np.nan
+        if not np.isfinite(sd) or sd == 0:
+            break
+        newmask = np.zeros(n, bool)
+        for j in np.where(np.abs(sig) > k * sd)[0]:
+            newmask[max(0, j - w):min(n, j + w)] = True
+        if newmask.sum() == mask.sum():
+            mask = newmask; break
+        mask = newmask
+        sig = _shift_signal_w(a, tsec, mask, w)
+    s = sig[np.isfinite(sig)]
+    sd = 1.4826 * np.median(np.abs(s - np.median(s))) if len(s) else np.nan
+    if not np.isfinite(sd) or sd == 0:
+        return pd.to_datetime([])
+    cand = np.where(np.abs(sig) > k * sd)[0]
+    used = np.zeros(n, bool); dets = []
+    da = np.abs(np.diff(a))
+    for j in sorted(cand, key=lambda x: -abs(sig[x])):
+        if used[max(0, j - w):min(n, j + w)].any():
+            continue
+        used[max(0, j - w):min(n, j + w)] = True
+        lo_i, hi_i = max(0, j - w), min(n - 1, j + w - 1)
+        j2 = lo_i + int(np.argmax(da[lo_i:hi_i])) if hi_i > lo_i else j
+        dets.append(t[min(j2 + 1, n - 1)])          # 跳點後第一筆(邊緣定時)
     return pd.to_datetime(sorted(dets))
 
 
