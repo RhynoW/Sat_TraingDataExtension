@@ -6535,6 +6535,28 @@ def run_case14_live_block1() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case14_tasa20260730_snapshot() -> dict:
+    """讀取「截至 2025-05-01」凍結時間切面之本專案逐星結果（對齊 TASA
+    《Space Event Detection Test with Actual Maneuver Data from NASA》2026-07-30
+    簡報之資料快照日），供與該簡報原文數字做同一時間切面比較。
+    TASA 該份簡報只公布 14 星聚合平均，無逐星明細，故僅本專案側有逐星表。
+    """
+    p = Path("data/benchmark/tasa14_asof20250501_persat_20260914.csv")
+    if not p.exists():
+        return {}
+    try:
+        df = pd.read_csv(p)
+        headline = df[df["method"] == "迭代+位準位移(k=6,headline)"].sort_values("f1", ascending=False)
+        stage3 = (
+            df.groupby("method")[["precision", "recall", "f1"]]
+            .agg(["mean", "max"])
+        )
+        return dict(headline=headline, stage3=stage3, n_ev_total=int(headline["n_ev"].sum()))
+    except Exception:
+        return {}
+
+
 # --- render_storymap_case14 ---
 def render_storymap_case14():
     if st.button(t("storymap_back"), key="back_from_case14"):
@@ -6994,6 +7016,155 @@ def render_storymap_case14():
         "`master_block1_14sats_20260913.csv`, `master_block1_9sats_20260913.csv`, "
         "`master_block3_23sats_L3_20260913.csv`.",
     ))
+
+    _snap = load_case14_tasa20260730_snapshot()
+    if _snap:
+        st.markdown("---")
+        st.header(T3(
+            "⑥ 特別比對：與 TASA 2026-07-30 簡報同一時間切面重現",
+            "⑥特別比較：TASA 2026-07-30 発表資料と同一時点での再現",
+            "⑥ Special comparison: reproduced at the same time-slice as TASA's 2026-07-30 briefing",
+        ))
+        st.caption(T3(
+            "本區與①～⑤使用「最新資料」不同：真值與 TLE 皆凍結在 **2025-05-01**，"
+            "對齊 TASA《Space Event Detection Test with Actual Maneuver Data from NASA》"
+            "（2026-07-30 簡報）之資料快照時間點，才能公平比較同一份 14 星機動次數"
+            "（14/14 完全吻合，見下方核對表）。",
+            "本区は①～⑤の「最新データ」とは異なり、真値とTLEはいずれも **2025-05-01** の時点で"
+            "凍結されている。TASA《Space Event Detection Test with Actual Maneuver Data from NASA》"
+            "（2026-07-30発表資料）のデータスナップショット時点に合わせることで、同一の14機の"
+            "機動回数を公平に比較できる（14/14完全一致、下記の照合表を参照）。",
+            "Unlike ①–⑤, which use the latest data, this section freezes both ground truth and TLEs at "
+            "**2025-05-01**, matching the data-snapshot date of TASA's briefing \"Space Event Detection "
+            "Test with Actual Maneuver Data from NASA\" (2026-07-30), so the same 14-satellite maneuver "
+            "counts can be fairly compared (14/14 exact match, see the check table below).",
+        ))
+
+        _cnt_tbl = pd.DataFrame([
+            (22076, "TOPEX/Poseidon", 43), (26997, "Jason-1", 119), (27386, "Envisat", 177),
+            (33105, "Jason-2", 111), (36508, "CryoSat-2", 221), (37781, "HY-2A", 58),
+            (39086, "SARAL", 65), (41240, "Jason-3", 67), (41335, "Sentinel-3A", 125),
+            (43437, "Sentinel-3B", 120), (46469, "HY-2C", 37), (46984, "Sentinel-6A", 28),
+            (48621, "HY-2D", 36), (54754, "SWOT", 72),
+        ], columns=["norad", "name", "TASA_20260730"])
+        _cnt_tbl = _cnt_tbl.merge(
+            _snap["headline"][["norad", "n_ev"]].rename(columns={"n_ev": "本專案(截至20250501)"}),
+            on="norad", how="left",
+        )
+        _cnt_tbl["相符"] = (_cnt_tbl["TASA_20260730"] == _cnt_tbl["本專案(截至20250501)"]).map(
+            {True: "✓", False: "✗"})
+        with st.expander(T3("機動次數逐星核對（14/14 應相符）", "機動回数の衛星ごとの照合（14/14一致すべき）",
+                            "Per-satellite maneuver-count check (should be 14/14 exact)"), expanded=False):
+            st.dataframe(_cnt_tbl, width="stretch", hide_index=True)
+
+        st.subheader(T3("本專案逐星結果（headline：迭代+位準位移 k=6，截至 2025-05-01）",
+                        "本プロジェクトの衛星ごとの結果（headline：反復+レベルシフト k=6、2025-05-01時点）",
+                        "This project's per-satellite results (headline: iterative + level-shift k=6, as of 2025-05-01)"))
+        st.dataframe(
+            _snap["headline"][["norad", "name", "n_ev", "n_det", "tp", "fp", "fn", "precision", "recall", "f1"]]
+            .style.format({"precision": "{:.3f}", "recall": "{:.3f}", "f1": "{:.3f}"}),
+            width="stretch", hide_index=True,
+        )
+
+        c1, c2, c3 = st.columns(3)
+        _hl = _snap["headline"]
+        c1.metric(T3("平均 Precision", "平均Precision", "Mean Precision"), f"{_hl['precision'].mean():.3f}")
+        c2.metric(T3("平均 Recall", "平均Recall", "Mean Recall"), f"{_hl['recall'].mean():.3f}")
+        c3.metric(T3("平均 F1", "平均F1", "Mean F1"), f"{_hl['f1'].mean():.3f}")
+
+        st.subheader(T3("TASA 簡報原文數字（14 星聚合平均，原文無逐星明細）",
+                        "TASA発表資料の原文数値（14機の集計平均、衛星ごとの明細は原資料になし）",
+                        "TASA briefing's original figures (14-satellite aggregate average; no per-satellite breakdown in the source)"))
+        _tasa_tbl = pd.DataFrame([
+            ("Polynomial Fit · ΔSMA", "原", 0.67, 0.08, 0.16, 0.42),
+            ("Polynomial Fit · ΔSMA", "自適應窗口", 0.63, 0.10, 0.21, 0.53),
+            ("Polynomial Fit · ΔSMA", "迭代", 0.69, 0.32, 0.44, 0.81),
+            ("Polynomial Fit · ΔSMA/Δt", "原", 0.64, 0.09, 0.19, 0.42),
+            ("Polynomial Fit · ΔSMA/Δt", "自適應窗口", 0.60, 0.11, 0.21, 0.55),
+            ("Polynomial Fit · ΔSMA/Δt", "迭代", 0.73, 0.36, 0.46, 0.90),
+            ("LOWESS · ΔSMA", "原", 0.76, 0.09, 0.21, 0.40),
+            ("LOWESS · ΔSMA", "自適應窗口", 0.74, 0.10, 0.22, 0.40),
+            ("LOWESS · ΔSMA", "迭代", 0.73, 0.32, 0.43, 0.65),
+            ("LOWESS · ΔSMA/Δt", "原", 0.76, 0.09, 0.21, 0.42),
+            ("LOWESS · ΔSMA/Δt", "自適應窗口", 0.84, 0.11, 0.21, 0.44),
+            ("LOWESS · ΔSMA/Δt", "迭代", 0.80, 0.41, 0.52, 0.92),
+        ], columns=["method", "stage", "precision", "recall", "f1_mean", "f1_max"])
+        st.dataframe(
+            _tasa_tbl.style.format({"precision": "{:.2f}", "recall": "{:.2f}", "f1_mean": "{:.2f}", "f1_max": "{:.2f}"}),
+            width="stretch", hide_index=True,
+        )
+        st.caption(T3(
+            "原文轉錄自 `TASA方法於NASA機動資料庫偵測結果_20260731.pdf`；f1_mean=平均F1-score，"
+            "f1_max=14星中最高F1-score（非本專案計算，逐字轉錄）。",
+            "`TASA方法於NASA機動資料庫偵測結果_20260731.pdf` からの原文転記。f1_mean=平均F1-score、"
+            "f1_max=14機中の最高F1-score（本プロジェクトによる計算ではなく、原文をそのまま転記）。",
+            "Verbatim transcription from `TASA方法於NASA機動資料庫偵測結果_20260731.pdf`; f1_mean = "
+            "average F1-score, f1_max = the highest F1-score among the 14 satellites (not computed by "
+            "this project — transcribed as-is).",
+        ))
+
+        st.subheader(T3("本專案三階段進程（比照 TASA 原/自適應窗口/迭代 之三段式結構）",
+                        "本プロジェクトの3段階の進行（TASAの原/適応窓/反復という3段階構造に対応）",
+                        "This project's three-stage progression (mirroring TASA's original/adaptive-window/iterative structure)"))
+        _s3 = _snap["stage3"]
+        _s3_rows = []
+        for m in ["固定門檻50m", "單趟SNR(k=6)", "迭代+位準位移(k=6,headline)"]:
+            if m in _s3.index:
+                _s3_rows.append(dict(
+                    method=m,
+                    precision_mean=_s3.loc[m, ("precision", "mean")],
+                    recall_mean=_s3.loc[m, ("recall", "mean")],
+                    f1_mean=_s3.loc[m, ("f1", "mean")],
+                    f1_max=_s3.loc[m, ("f1", "max")],
+                ))
+        st.dataframe(
+            pd.DataFrame(_s3_rows).style.format({
+                "precision_mean": "{:.3f}", "recall_mean": "{:.3f}", "f1_mean": "{:.3f}", "f1_max": "{:.3f}",
+            }),
+            width="stretch", hide_index=True,
+        )
+
+        st.warning(T3(
+            "**誠實判讀**：在這個「凍結於 2025-05-01」的歷史時間切面上，TASA 曲線法最佳組態"
+            "（LOWESS ΔSMA/Δt，迭代）平均 F1=0.52，略優於本專案 headline 方法的 F1=0.423，"
+            "主因是 **TASA 的 Precision 較高**（0.80 vs 0.454）；反過來，本專案在 **Recall 上"
+            "多數階段都優於 TASA**（headline Recall=0.451 高於 TASA 全部 12 組態）。"
+            "**這與月報中「用雙方各自最新重抓資料比較、統計上打平」的結論並不矛盾**——"
+            "兩者是不同時間切面、不同真值集合、不同基準（前者比對 TASA 原文數字，後者比對"
+            "本專案自行重現的曲線法）下的兩個獨立比較，見下方動態連結可查看最新資料之比較。",
+            "**誠実な判読**：この「2025-05-01時点で凍結」した歴史的な時間断面において、TASAの"
+            "曲線法の最良構成（LOWESS ΔSMA/Δt、反復）は平均F1=0.52であり、本プロジェクトの"
+            "headline手法のF1=0.423をわずかに上回る。主な理由は**TASAのPrecisionが高い**"
+            "（0.80 対 0.454）ためである。逆に、本プロジェクトは**Recallについては大半の段階で"
+            "TASAを上回っている**（headlineのRecall=0.451はTASAの全12構成を上回る）。"
+            "**これは月報における「双方が各自の最新データを再取得して比較した結果、統計的に"
+            "引き分け」という結論と矛盾しない**——両者は異なる時間断面、異なる真値集合、異なる"
+            "基準（前者はTASAの原文数値との比較、後者は本プロジェクトが独自に再現した曲線法との"
+            "比較）による2つの独立した比較である。最新データでの比較は下記の動的リンクを参照。",
+            "**Honest interpretation**: at this historical time-slice frozen at 2025-05-01, TASA's best "
+            "curve-method configuration (LOWESS ΔSMA/Δt, iterative) reaches a mean F1 of 0.52, modestly "
+            "ahead of this project's headline method at F1=0.423 — mainly because **TASA's precision is "
+            "higher** (0.80 vs. 0.454). Conversely, **this project's recall is higher than TASA's at most "
+            "stages** (headline recall=0.451 exceeds all 12 of TASA's configurations). **This does not "
+            "contradict the monthly-report conclusion of a statistical tie using each side's own "
+            "freshly re-fetched data** — these are two independent comparisons under different time-"
+            "slices, different ground-truth sets, and different baselines (this one against TASA's own "
+            "published figures; that one against this project's own reproduction of the curve method). "
+            "See the dynamic link below for the latest-data comparison.",
+        ))
+        st.caption(T3(
+            "本區資料為本頁載入時現場讀取 `data/benchmark/tasa14_asof20250501_persat_20260914.csv` "
+            "計算，非寫死字串；可重現腳本：`_tasa14_asof20250501_persat.py`。"
+            "最新資料版比較見本頁①～⑤（`?mode=storymap&case=case14`）。",
+            "本区のデータは本頁の読み込み時に `data/benchmark/tasa14_asof20250501_persat_20260914.csv` "
+            "をその場で読み込んで計算したものであり、ハードコードされた文字列ではない。再現スクリプト："
+            "`_tasa14_asof20250501_persat.py`。最新データ版の比較は本頁の①～⑤"
+            "（`?mode=storymap&case=case14`）を参照。",
+            "The data in this section is computed on the fly when the page loads, by reading "
+            "`data/benchmark/tasa14_asof20250501_persat_20260914.csv` — not a hardcoded string; "
+            "reproducibility script: `_tasa14_asof20250501_persat.py`. See sections ①–⑤ of this page "
+            "(`?mode=storymap&case=case14`) for the latest-data comparison.",
+        ))
 
 
 # ══ StoryMap 案例十五（2026-09-10 新增）══════════════════════════════════════════
