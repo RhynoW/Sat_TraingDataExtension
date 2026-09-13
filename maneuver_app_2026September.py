@@ -5902,7 +5902,7 @@ def render_storymap_case11():
         ("Peng & Bai 2018", 0.073, "Tier1"),
         (T3("相位殘差新通道（獨立指標，非同基準比較）", "位相残差新チャネル（独立指標、同一基準比較ではない）",
             "New phase-residual channel (standalone metric, not an apples-to-apples comparison)"),
-         0.174, T3("新通道", "新チャネル", "New channel")),
+         0.102, T3("新通道", "新チャネル", "New channel")),
     ], columns=["method", "f1", "group"])
     st.dataframe(
         _litA2.style.format({"f1": "{:.3f}"}),
@@ -5919,12 +5919,22 @@ def render_storymap_case11():
         "「被超越」**——本專案進階方法（iter2 0.418、LOSO 融合 0.457）仍全面"
         "領先全部 15 篇文獻重現版。\n\n"
         "**相位調整機動盲區的初步回應**：新增之相位殘差通道（不依賴半長軸，"
-        "直接從 TLE 之平均近點角＋平均運動外推）於 23 星標竿平均 F1=0.174，"
-        "**明顯低於 sma 方法，但這不代表通道失敗**——既有真值集合本身以「同時"
-        "改變 sma 之機動」為主，此通道鎖定的「相位調整但 sma 不變」場景（即"
-        "STARLINK-5367 案例）並不在此標竿內、無對應真值可配對評分，此處 F1 "
-        "僅能驗證機制可於全標竿穩定運作，尚無法量化其對設計目標場景的實際"
-        "命中率。定位為既有融合管線之候選新通道，而非獨立取代方案。",
+        "直接從 TLE 外推）於 23 星標竿平均 F1=0.102，**明顯低於 sma 方法，但"
+        "這不代表通道失敗**——既有真值集合本身以「同時改變 sma 之機動」為主，"
+        "此通道鎖定的「相位調整但 sma 不變」場景（即 STARLINK-5367 案例）並不"
+        "在此標竿內、無對應真值可配對評分，此處 F1 僅能驗證機制可於全標竿"
+        "穩定運作，尚無法量化其對設計目標場景的實際命中率。定位為既有融合"
+        "管線之候選新通道，而非獨立取代方案。\n\n"
+        "**過程中自我發現並修正一個方法學錯誤**：初版直接用 TLE 之原始平均"
+        "近點角 M，但對近圓軌道（e→0，絕大多數 Starlink/Kuiper/OneWeb 皆是）"
+        "而言，M 與近地點幅角個別皆數值退化、易因定軌雜訊劇烈跳動，唯有兩者"
+        "之和「緯度幅角」才穩定有物理意義——修正前對全 28,005 顆 LEO 編目"
+        "物體做 15 天廣泛掃描找到 3,321 筆候選（多數殘差達半軌周長量級、"
+        "物理上不合理），修正後降為 197 筆，其中約 15 筆為主動 Starlink 衛星"
+        "（殘差數百至約 2,600km、sma 同步幾乎不變，符合設計目標訊號），其餘"
+        "多為無法自主機動之太空碎片、更可能是碎片定軌雜訊而非機動——如實記錄"
+        "此修正過程，完整報告：`docs/相位殘差通道_新增偵測管道實作與驗證_"
+        "20260913.md`。",
         "**結論**：本バッチ（Tier A2）は3バッチの文献の中で平均成績が最も"
         "良い——**MDPI Aerospace 2026（同源対照群）F1=0.400、本プロジェクトの"
         "headline（0.394）を初めて上回った**。ただしこの論文の手法設計"
@@ -5935,14 +5945,25 @@ def render_storymap_case11():
         "（iter2 0.418、LOSO融合 0.457）は依然として全15篇の文献再現版を"
         "上回っている。\n\n"
         "**位相調整機動の盲点への初期対応**：半長軸に依存しない新設の位相残差"
-        "チャネル（TLEの平均近点角＋平均運動から外挿）は23機ベンチマークで"
-        "平均F1=0.174——**sma手法より明らかに低いが、これは失敗を意味しない**"
-        "——既存の真値集合自体が「sma も同時に変化する機動」を主とするため、"
-        "このチャネルが狙う「位相調整するがsmaは不変」の場面（STARLINK-5367の"
-        "事例）はこのベンチマークに含まれず対応する真値もない。ここでのF1は"
-        "全ベンチマークで安定動作することの確認に留まり、狙った場面での実際の"
-        "命中率はまだ定量化できていない。既存の融合パイプラインの新候補チャネル"
-        "として位置づけ、独立した代替案とはしない。",
+        "チャネル（TLEから外挿）は23機ベンチマークで平均F1=0.102——**sma手法"
+        "より明らかに低いが、これは失敗を意味しない**——既存の真値集合自体が"
+        "「smaも同時に変化する機動」を主とするため、このチャネルが狙う「位相"
+        "調整するがsmaは不変」の場面（STARLINK-5367の事例）はこのベンチマーク"
+        "に含まれず対応する真値もない。ここでのF1は全ベンチマークで安定動作"
+        "することの確認に留まり、狙った場面での実際の命中率はまだ定量化でき"
+        "ていない。既存の融合パイプラインの新候補チャネルとして位置づけ、"
+        "独立した代替案とはしない。\n\n"
+        "**過程で自ら発見し修正した方法論上の誤り**：初版はTLEの生の平均近点角"
+        "Mをそのまま使用したが、近円軌道（e→0、大多数のStarlink/Kuiper/OneWeb"
+        "が該当）ではMと近地点引数は個別に数値的に退化しており、定軌ノイズで"
+        "激しく変動しうる——両者の和である「緯度引数」のみが安定した物理的"
+        "意味を持つ。修正前は全28,005機のLEOカタログ物体に対する15日間の広域"
+        "スキャンで3,321件の候補（大半が半軌道周長規模の残差で物理的に不合理）"
+        "を検出したが、修正後は197件に減少し、そのうち約15件が能動的な"
+        "Starlink衛星（残差数百～約2,600km、smaはほぼ不変——設計目標の信号に"
+        "合致）、残りの大半は自ら機動できない宇宙デブリ——デブリの定軌ノイズ"
+        "である可能性が高く機動ではない——として誠実に記録する。完全なレポート："
+        "`docs/相位殘差通道_新增偵測管道實作與驗證_20260913.md`。",
         "**Conclusion**: this batch (Tier A2) has the strongest average performance "
         "of the three literature batches — **MDPI Aerospace 2026 (a homologous "
         "counterpart) reaches F1=0.400, the first to exceed this project's headline "
@@ -5954,29 +5975,50 @@ def render_storymap_case11():
         "surpassed\"** — this project's more advanced methods (iter2 0.418, LOSO "
         "fusion 0.457) still lead all 15 reimplemented literature methods.\n\n"
         "**An initial response to the phasing-maneuver blind spot**: the new phase-"
-        "residual channel (independent of semi-major axis, extrapolated from TLE "
-        "mean anomaly + mean motion) reaches an average F1=0.174 on the 23-"
-        "satellite benchmark — **clearly lower than sma-based methods, but this "
-        "does not mean the channel failed**. The existing ground-truth set is "
-        "dominated by maneuvers that also change sma, so the scenario this channel "
-        "targets (phasing with sma essentially unchanged, as in the STARLINK-5367 "
-        "case) is not represented in this benchmark with matching ground truth; the "
-        "F1 here only confirms the mechanism runs stably across the full benchmark, "
-        "not its actual hit rate on the target scenario. It is positioned as a "
-        "candidate addition to the existing fusion pipeline, not a standalone "
-        "replacement.",
+        "residual channel (independent of semi-major axis, extrapolated from TLE) "
+        "reaches an average F1=0.102 on the 23-satellite benchmark — **clearly "
+        "lower than sma-based methods, but this does not mean the channel failed**. "
+        "The existing ground-truth set is dominated by maneuvers that also change "
+        "sma, so the scenario this channel targets (phasing with sma essentially "
+        "unchanged, as in the STARLINK-5367 case) is not represented in this "
+        "benchmark with matching ground truth; the F1 here only confirms the "
+        "mechanism runs stably across the full benchmark, not its actual hit rate "
+        "on the target scenario. It is positioned as a candidate addition to the "
+        "existing fusion pipeline, not a standalone replacement.\n\n"
+        "**A methodological error self-discovered and fixed along the way**: the "
+        "first version used the TLE's raw mean anomaly M directly, but for "
+        "near-circular orbits (e→0, true of most Starlink/Kuiper/OneWeb "
+        "satellites), M and the argument of perigee are individually numerically "
+        "degenerate and can swing wildly from orbit-determination noise alone — "
+        "only their sum, the argument of latitude, remains a stable, physically "
+        "meaningful quantity. Before the fix, a 15-day broad scan across all "
+        "28,005 cataloged LEO objects found 3,321 candidates (most with residuals "
+        "at the half-orbit-circumference scale, physically implausible); after "
+        "the fix this dropped to 197, of which about 15 are active Starlink "
+        "satellites (residuals of hundreds to ~2,600 km, sma essentially "
+        "unchanged — matching the target signal), while most of the rest are "
+        "space debris that cannot self-maneuver at all — more likely orbit-"
+        "determination noise for poorly tracked debris than genuine maneuvers, "
+        "reported honestly as such. Full report: "
+        "`docs/相位殘差通道_新增偵測管道實作與驗證_20260913.md`.",
     ))
     st.caption(T3(
-        "可重現腳本：`lit_tierA2_reproductions.py`、`phase_residual_detector.py`；"
-        "原始逐星結果：`data/benchmark/lit_tierA2_persat_20260913.csv`、"
-        "`phase_residual_persat_20260913.csv`。",
-        "再現スクリプト：`lit_tierA2_reproductions.py`、`phase_residual_detector.py`；"
-        "衛星ごとの元データ：`data/benchmark/lit_tierA2_persat_20260913.csv`、"
-        "`phase_residual_persat_20260913.csv`。",
+        "可重現腳本：`lit_tierA2_reproductions.py`、`phase_residual_detector.py`、"
+        "`phase_residual_broad_scan.py`（全 LEO 廣泛掃描）；原始逐星結果："
+        "`data/benchmark/lit_tierA2_persat_20260913.csv`、"
+        "`phase_residual_persat_20260913.csv`、"
+        "`phase_residual_broad_scan_candidates_20260913.csv`（197 筆候選）。",
+        "再現スクリプト：`lit_tierA2_reproductions.py`、`phase_residual_detector.py`、"
+        "`phase_residual_broad_scan.py`（全LEO広域スキャン）；衛星ごとの元データ："
+        "`data/benchmark/lit_tierA2_persat_20260913.csv`、"
+        "`phase_residual_persat_20260913.csv`、"
+        "`phase_residual_broad_scan_candidates_20260913.csv`（197件の候補）。",
         "Reproducibility scripts: `lit_tierA2_reproductions.py`, "
-        "`phase_residual_detector.py`; per-satellite raw results: "
+        "`phase_residual_detector.py`, `phase_residual_broad_scan.py` (full-LEO "
+        "broad scan); per-satellite raw results: "
         "`data/benchmark/lit_tierA2_persat_20260913.csv`, "
-        "`phase_residual_persat_20260913.csv`.",
+        "`phase_residual_persat_20260913.csv`, "
+        "`phase_residual_broad_scan_candidates_20260913.csv` (197 candidates).",
     ))
 
     st.markdown("---")

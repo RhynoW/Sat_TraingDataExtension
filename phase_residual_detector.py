@@ -28,8 +28,16 @@ from tasa23_ext_arena import ALL_SATS23, load_events_ext2
 
 
 def load_a_m_n(nid: int):
-    """讀取 sma_km + mean_anomaly_deg + mean_motion(rev/day)，同 load_a() 之
-    3小時稀釋規則。"""
+    """讀取 sma_km + 緯度幅角 u=(argp+M) + mean_motion(rev/day)，同 load_a() 之
+    3小時稀釋規則。
+
+    **重要修正（2026-09-13 廣泛掃描時發現）**：原始版本直接用 TLE 之
+    `mean_anomaly_deg` 追蹤沿軌位置，但對近圓軌道（e→0，Starlink/Kuiper/
+    OneWeb 絕大多數皆屬此類）而言，近點角 M 與近地點幅角 argp 個別皆是
+    數值上退化（ill-defined）的量——近地點位置在圓軌道上無意義，微小定軌
+    雜訊即可讓 M 在數十度內劇烈跳動，但兩者之和「緯度幅角 u=argp+M」（衛星
+    相對於升交點的實際角位置）才是穩定、有物理意義的量。改用 u 取代原始 M，
+    避免對圓軌道衛星產生大量假警報。"""
     for i in range(6):
         try:
             con = duckdb.connect(DB, read_only=True); break
@@ -37,27 +45,28 @@ def load_a_m_n(nid: int):
             if i == 5: raise
             time.sleep(2.0 * (i + 1))
     r = con.execute(
-        "SELECT epoch_utc, sma_km, mean_anomaly_deg, mean_motion FROM raw_tle_archive "
+        "SELECT epoch_utc, sma_km, mean_anomaly_deg, argp_deg, mean_motion FROM raw_tle_archive "
         "WHERE norad_id=? AND sma_km IS NOT NULL ORDER BY epoch_utc", [nid]).fetchall()
     con.close()
     if not r:
         return None
     t = pd.to_datetime([x[0] for x in r], utc=True)
     a = np.array([float(x[1]) for x in r])
-    M = np.array([float(x[2]) for x in r])
-    n = np.array([float(x[3]) for x in r])
+    u = np.array([(float(x[2]) + float(x[3])) % 360.0 for x in r])
+    n = np.array([float(x[4]) for x in r])
     ts = t.astype("int64").to_numpy() / 1e9
     keep = [0]
     for i in range(1, len(ts)):
         if ts[i] - ts[keep[-1]] >= 3.0 * 3600:
             keep.append(i)
     keep = np.array(keep)
-    return dict(t=t[keep], a=a[keep], M=M[keep], n=n[keep])
+    return dict(t=t[keep], a=a[keep], M=u[keep], n=n[keep])
 
 
 def phase_residual_km(d: dict) -> np.ndarray:
-    """相位殘差訊號（km，沿軌弧長）。residual[i] = wrap180(M[i] - predicted M[i])
-    * (pi/180) * a[i]，predicted以第i-1筆之平均運動外推。"""
+    """相位殘差訊號（km，沿軌弧長）。residual[i] = wrap180(u[i] - predicted u[i])
+    * (pi/180) * a[i]，predicted以第i-1筆之平均運動外推。d["M"] 實際存放的是
+    緯度幅角 u=argp+M（見 load_a_m_n 說明），非原始平均近點角。"""
     t, a, M, n = d["t"], d["a"], d["M"], d["n"]
     tsec = t.astype("int64").to_numpy() / 1e9
     n_pts = len(a)
