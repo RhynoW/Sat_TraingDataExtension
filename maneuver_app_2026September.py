@@ -179,6 +179,10 @@ L: dict[str, dict[str, str]] = {
                                    "ja": "事例二十：機動検知を逆に使って、Starlinkの測位の信頼性を守れないか？", "en": "Case 20: Can Maneuver Detection Be Turned Around to Safeguard Starlink Positioning?"},
     "storymap_case20_card_desc": {"zh": "延伸案例十三「TLE vs MEME差三個數量級」的結論，論證機動偵測作為LEO-PNT星曆可信度即時守門機制的應用價值與邊界。",
                                   "ja": "事例十三の「TLE vs MEMEは3桁の差」という結論を延伸し、機動検知がLEO-PNTの暦の信頼性をリアルタイムに守るゲート機構としての応用価値と限界を論証する。", "en": "Extending Case 13's conclusion that \"TLE vs. MEME differ by three orders of magnitude,\" arguing for maneuver detection's application value and limits as a real-time ephemeris-trustworthiness gatekeeping mechanism for LEO-PNT."},
+    "storymap_case21_card_title": {"zh": "案例二十一：半長軸看不到的機動——相位殘差新通道",
+                                   "ja": "事例二十一：半長軸では見えない機動——位相残差の新チャネル", "en": "Case 21: The Maneuver Semi-Major Axis Can't See — the New Phase-Residual Channel"},
+    "storymap_case21_card_desc": {"zh": "從一次意外發現到新偵測通道：緯度幅角相位殘差法、一次自我修正的方法學錯誤、兩次全LEO廣泛掃描，以及「這是否為刻意規避偵測」的誠實評估。",
+                                  "ja": "偶然の発見から新しい検知チャネルへ：緯度引数の位相残差法、自ら修正した方法論上の誤り、2回の全LEO広域スキャン、そして「これは検知回避を意図したものか」という誠実な評価。", "en": "From an accidental discovery to a new detection channel: the argument-of-latitude phase-residual method, one self-corrected methodological error, two full-LEO broad scans, and an honest assessment of whether this is deliberate detection evasion."},
 
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
@@ -1983,7 +1987,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 21):
+    for _n in range(14, 22):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -9958,6 +9962,351 @@ def render_storymap_case20():
     ))
 
 
+# --- render_storymap_case21 ---
+def render_storymap_case21():
+    if st.button(t("storymap_back"), key="back_from_case21"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例二十一：半長軸看不到的機動——相位殘差新通道",
+        "事例二十一：半長軸では見えない機動——位相残差の新チャネル",
+        "Case 21: The Maneuver Semi-Major Axis Can't See — the New Phase-Residual Channel",
+    ))
+    st.subheader(T3(
+        "從一次意外發現，到一條新偵測通道，再到一次自我發現並修正的方法學錯誤",
+        "偶然の発見から新しい検知チャネルへ、そして自ら発見し修正した方法論上の誤りへ",
+        "From an accidental discovery, to a new detection channel, to a self-discovered and self-corrected methodological error",
+    ))
+    st.caption(T3(
+        "本案例延伸自案例十一⑤／⑥之發現，完整說明新通道之偵測原理、23 星驗證結果、"
+        "兩次全 LEO 編目廣泛掃描結果，以及「這是否為刻意規避偵測而設計」之評估。",
+        "本事例は事例十一⑤／⑥の発見を発展させたもので、新チャネルの検知原理、23機ベンチマーク"
+        "の結果、2回の全LEOカタログ広域スキャン結果、そして「これは検知回避を意図した設計か」"
+        "という評価を完全に説明する。",
+        "This case extends the finding from Case 11 ⑤/⑥, fully explaining the new channel's detection "
+        "principle, the 23-satellite benchmark results, two full-LEO-catalog broad-scan results, and an "
+        "assessment of whether this is deliberately designed to evade detection.",
+    ))
+
+    st.header(T3(
+        "① 意外的起點：一種本專案結構性看不到的機動",
+        "①偶然の出発点：本プロジェクトが構造的に見えない機動タイプ",
+        "① The accidental starting point: a maneuver type this project structurally cannot see",
+    ))
+    st.markdown(T3(
+        "案例十一⑤重現文獻第 6 篇（Geometric Distance Difference）時，用 Starlink 之"
+        "精密星曆（MEME）與 TLE 交叉比對，意外發現一顆衛星（STARLINK-5367）發生"
+        "「衛星前後位置改變，但半長軸幾乎不變」的機動——這是一種**相位調整"
+        "（phasing）機動**：短暫改變軌道週期以累積或消除沿軌位置偏移，事後又恢復"
+        "原週期。本專案（與另外重現過的全部 15 篇文獻方法）之偵測通道全部作用於"
+        "半長軸（sma）——對此類機動是**結構性盲區**，不是調參能解決的問題，而是"
+        "「這個訊號根本不在被監看的變數裡」。",
+        "事例十一⑤で文献6篇目（Geometric Distance Difference）を再現した際、Starlinkの精密暦"
+        "（MEME）とTLEを相互比較し、偶然にも1機の衛星（STARLINK-5367）で「衛星の前後位置が"
+        "変化するが、半長軸はほぼ変化しない」機動を発見した——これは**位相調整（phasing）機動**"
+        "である：軌道周期を一時的に変化させて沿軌道位置のズレを蓄積または解消し、その後元の周期に"
+        "戻る。本プロジェクト（および再現した他の全15篇の文献手法）の検知チャネルはすべて半長軸"
+        "（sma）に作用しており、この種の機動に対しては**構造的な盲点**である——これはパラメータ"
+        "調整で解決できる問題ではなく、「この信号がそもそも監視対象の変数に含まれていない」という"
+        "問題である。",
+        "While reproducing paper #6 (Geometric Distance Difference) in Case 11 ⑤, cross-checking "
+        "Starlink's precise ephemeris (MEME) against TLE accidentally revealed a satellite "
+        "(STARLINK-5367) undergoing a maneuver where \"the satellite's along-track position shifts, "
+        "but its semi-major axis barely changes\" — a **phasing maneuver**: temporarily altering the "
+        "orbital period to accumulate or remove an along-track offset, then reverting to the original "
+        "period. This project's detection channels (and all 15 reimplemented literature methods) all "
+        "operate on semi-major axis (sma) — a **structural blind spot** for this maneuver type. This "
+        "isn't something tuning can fix; the signal simply isn't among the monitored variables at all.",
+    ))
+
+    st.header(T3(
+        "② 偵測原理：緯度幅角相位殘差",
+        "②検知原理：緯度引数の位相残差",
+        "② Detection principle: argument-of-latitude phase residual",
+    ))
+    st.markdown(T3(
+        "**核心構想**：sma 由 TLE 之平均運動（軌道週期）反推；若機動只是「暫時改變"
+        "週期、事後恢復」，sma 前後幾乎相同，但過程中累積的沿軌相位偏移不會自動"
+        "消失——這個偏移是可以獨立追蹤的。做法：用前一筆 TLE 之平均運動外推「理應"
+        "在下一筆時刻之角位置」，與實際值相減（wrap 至 ±180°）、乘以半長軸換算成"
+        "沿軌弧長（km），即為「相位殘差」；對此殘差序列做疊代穩健 z 分數偵測，並"
+        "與同一時刻 sma 是否同步異常做交叉比對——**唯有「相位異常但 sma 正常」才"
+        "算候選**，這正是既有方法看不到、而此通道專門補位之處。",
+        "**核心構想**：smaはTLEの平均運動（軌道周期）から逆算される；機動が「一時的に周期を"
+        "変化させ、その後元に戻す」だけであれば、smaは前後でほぼ同じだが、その過程で蓄積された"
+        "沿軌道方向の位相ズレは自動的には消えない——このズレは独立して追跡可能である。手法："
+        "前回のTLEの平均運動から「次回時刻に本来あるべき角位置」を外挿し、実際の値との差"
+        "（±180°にラップ）を半長軸で沿軌道弧長（km）に換算したものを「位相残差」とする；この"
+        "残差系列に対して反復的な頑健zスコア検知を行い、同時刻のsmaが同期して異常かどうかと"
+        "突き合わせる——**「位相は異常だがsmaは正常」の場合のみを候補とする**。これこそが既存"
+        "手法には見えず、この新チャネルが専門的に補完する部分である。",
+        "**Core idea**: sma is back-derived from the TLE's mean motion (orbital period); if a maneuver "
+        "only \"temporarily changes the period, then reverts,\" sma is nearly identical before and after, "
+        "but the along-track phase offset accumulated in between does not automatically vanish — and "
+        "this offset can be tracked independently. Method: extrapolate the \"angular position expected "
+        "at the next epoch\" from the previous TLE's mean motion, subtract the actual value (wrapped to "
+        "±180°), and multiply by semi-major axis to convert to along-track arc length (km) — this is the "
+        "\"phase residual.\" This residual series is scanned with iterative robust z-score detection and "
+        "cross-checked against whether sma is simultaneously anomalous at the same epoch — **only "
+        "\"phase anomalous but sma normal\" counts as a candidate**, exactly the gap existing methods "
+        "cannot see and this channel specifically fills.",
+    ))
+
+    with st.expander(T3(
+        "🔧 一次自我發現並修正的方法學錯誤（近圓軌道的角位置退化問題）",
+        "🔧自ら発見し修正した方法論上の誤り（近円軌道における角位置の退化問題）",
+        "🔧 A self-discovered and self-corrected methodological error (angular-position degeneracy for near-circular orbits)",
+    ), expanded=True):
+        st.markdown(T3(
+            "初版直接用 TLE 之原始平均近點角 M 追蹤角位置。但對**近圓軌道**（離心率 "
+            "e→0，絕大多數 Starlink/Kuiper/OneWeb 皆屬此類）而言，近地點在幾何上"
+            "已無明確定義，因此「近地點幅角 argp」與「平均近點角 M」個別皆是**數值"
+            "退化**的量——同一個真實物理位置，可被任意分配成不同的 argp/M 組合，"
+            "微小定軌雜訊即可讓 M 在數十至上百度內劇烈跳動。唯有兩者之和"
+            "「**緯度幅角** u=argp+M」（衛星相對於升交點的實際角位置）才是穩定、有"
+            "物理意義的量。\n\n"
+            "**發現過程**：對全 LEO 編目做廣泛掃描時，發現大量候選之殘差量級逼近"
+            "「半軌周長」理論上限（約 21,556km，即 wrap 之上限），物理上完全不合理；"
+            "追查單顆衛星（STARLINK-3659）原始 TLE 後，證實其 M 在四筆相鄰 TLE 間"
+            "跳動 271°→277°→240°→103°，但同一組資料算出之 u=argp+M 穩定維持在"
+            "0.09-0.11°——確診為 M 之退化問題。修正後：\n\n"
+            "- 23 星標竿 F1 由虛高的 0.174 修正為誠實的 **0.102**（召回率大跌，證實"
+            "先前部分「命中」其實是退化雜訊造成的假陽性）；\n"
+            "- 15 天全 LEO 廣泛掃描候選數由 3,321 筆（多數殘差達物理不合理量級）"
+            "降為 **197 筆**。\n\n"
+            "如實記錄此修正過程，而非只呈現修正後的乾淨數字。",
+            "初版はTLEの生の平均近点角Mをそのまま角位置の追跡に使用していた。しかし**近円軌道**"
+            "（離心率e→0、大多数のStarlink/Kuiper/OneWebが該当）では、近地点は幾何学的にもはや"
+            "明確に定義されないため、「近地点引数argp」と「平均近点角M」は個別には**数値的に"
+            "退化**した量である——同一の実際の物理的位置が、異なるargp/Mの組み合わせに任意に"
+            "割り振られうるため、わずかな定軌ノイズだけでMが数十〜百数十度も激しく変動しうる。"
+            "両者の和である「**緯度引数**u=argp+M」（衛星の昇交点に対する実際の角位置）のみが"
+            "安定した、物理的に意味のある量である。\n\n"
+            "**発見の経緯**：全LEOカタログの広域スキャンを行った際、大量の候補の残差の大きさが"
+            "「半軌道周長」の理論上限（約21,556km、ラップの上限）に近づいていることが分かり、"
+            "物理的に全く不合理であった；1機の衛星（STARLINK-3659）の生のTLEを追跡した結果、"
+            "隣接する4つのTLE間でMが271°→277°→240°→103°と変動する一方、同じデータから"
+            "算出したu=argp+Mは0.09〜0.11°に安定していることが確認され——Mの退化問題と診断"
+            "された。修正後：\n\n"
+            "- 23機ベンチマークのF1は虚高だった0.174から誠実な**0.102**に修正された"
+            "（再現率が大きく低下し、以前の一部の「的中」が実は退化ノイズによる偽陽性であった"
+            "ことを裏付けた）；\n"
+            "- 15日間の全LEO広域スキャンの候補数は3,321件（大半が物理的に不合理な規模の残差）"
+            "から**197件**に減少した。\n\n"
+            "修正後のきれいな数字だけを提示するのではなく、この修正の過程を誠実に記録する。",
+            "The first version tracked angular position using the TLE's raw mean anomaly M directly. "
+            "But for **near-circular orbits** (eccentricity e→0, true of most Starlink/Kuiper/OneWeb "
+            "satellites), perigee is no longer geometrically well-defined, so the argument of perigee "
+            "(argp) and mean anomaly (M) are each individually **numerically degenerate** — the same "
+            "physical position can be arbitrarily split into different argp/M combinations, so tiny "
+            "orbit-determination noise alone can make M swing wildly by tens to over a hundred degrees. "
+            "Only their sum, the **argument of latitude** u=argp+M (the satellite's actual angular "
+            "position relative to the ascending node), remains a stable, physically meaningful quantity."
+            "\n\n**How it was found**: during a broad scan of the full LEO catalog, a large number of "
+            "candidates showed residuals approaching the theoretical \"half-orbit-circumference\" ceiling "
+            "(~21,556 km, the wrap limit) — physically implausible. Tracing one satellite's "
+            "(STARLINK-3659) raw TLEs confirmed M swinging 271°→277°→240°→103° across four "
+            "consecutive TLEs, while u=argp+M computed from the same data stayed stable at 0.09-0.11° "
+            "— confirming the M-degeneracy diagnosis. After the fix:\n\n"
+            "- The 23-satellite benchmark F1 was corrected from an inflated 0.174 to an honest "
+            "**0.102** (recall dropped sharply, confirming some of the earlier \"hits\" were false "
+            "positives from degeneracy noise, not real signal);\n"
+            "- The 15-day full-LEO broad-scan candidate count dropped from 3,321 (mostly at a "
+            "physically implausible magnitude) to **197**.\n\n"
+            "This correction process is recorded honestly rather than presenting only the cleaned-up "
+            "final numbers.",
+        ))
+
+    st.header(T3(
+        "③ 23 星標竿驗證：誠實的低分數，以及為何低分不代表失敗",
+        "③23機ベンチマーク検証：誠実な低スコア、そしてなぜ低スコアが失敗を意味しないのか",
+        "③ The 23-satellite benchmark: an honest low score, and why low doesn't mean failure",
+    ))
+    _c21_bench = pd.DataFrame([
+        ("本專案 LOSO L3 融合", 0.457, T3("（本專案既有方法）", "（本プロジェクト既存手法）", "(existing project method)")),
+        ("本專案 iter2(k=8)", 0.418, T3("（本專案既有方法）", "（本プロジェクト既存手法）", "(existing project method)")),
+        ("本專案 headline", 0.394, T3("（本專案既有方法）", "（本プロジェクト既存手法）", "(existing project method)")),
+        (T3("相位殘差新通道", "位相残差新チャネル", "New phase-residual channel"), 0.102,
+         T3("新通道（本案例主角）", "新チャネル（本事例の主役）", "New channel (this case's subject)")),
+    ], columns=["method", "f1", "group"])
+    st.dataframe(_c21_bench.style.format({"f1": "{:.3f}"}), width="stretch", hide_index=True)
+    st.bar_chart(_c21_bench.set_index("method")["f1"])
+    st.markdown(T3(
+        "平均 F1=0.102（P=0.171, R=0.105），明顯低於既有 sma 方法。**這不代表通道"
+        "無效**：既有 23 星真值本身以「沿軌位置也隨之改變的傳統軌道維持/碰撞迴避"
+        "機動」為主，本通道鎖定的「相位調整、sma 不變」場景（即 STARLINK-5367 "
+        "案例）根本不在此真值集合內、無對應真值可配對評分——此處 F1 衡量的是"
+        "「此通道對一般機動的敏感度」，而非其設計目標場景的偵測力。",
+        "平均F1=0.102（P=0.171、R=0.105）で、既存のsma手法より明らかに低い。**これは"
+        "チャネルが無効であることを意味しない**：既存の23機の真値自体が「沿軌道位置も"
+        "同時に変化する従来型の軌道維持/衝突回避機動」を主としており、本チャネルが狙う"
+        "「位相調整、smaは不変」の場面（すなわちSTARLINK-5367の事例）はそもそもこの真値"
+        "集合に含まれておらず、対応する真値でスコアリングできない——ここでのF1は「この"
+        "チャネルの一般的な機動に対する感度」を測るものであり、その設計目標の場面に対する"
+        "検知力を測るものではない。",
+        "Average F1=0.102 (P=0.171, R=0.105), clearly lower than existing sma-based methods. **This "
+        "does not mean the channel is ineffective**: the existing 23-satellite ground truth is "
+        "dominated by conventional station-keeping/collision-avoidance maneuvers that also change "
+        "along-track position, so the scenario this channel targets — phasing with sma unchanged, as "
+        "in the STARLINK-5367 case — simply isn't represented in this ground-truth set with matching "
+        "events to score against. The F1 here measures \"this channel's sensitivity to ordinary "
+        "maneuvers,\" not its detection power for its actual target scenario.",
+    ))
+
+    st.header(T3(
+        "④ 兩次全 LEO 廣泛掃描：15 天短窗 vs 20 個月長窗",
+        "④2回の全LEO広域スキャン：15日間の短期ウィンドウ vs 20ヶ月の長期ウィンドウ",
+        "④ Two full-LEO broad scans: a 15-day short window vs. a 20-month long window",
+    ))
+    _c21_scan = pd.DataFrame([
+        (T3("掃描範圍", "スキャン範囲", "Scan scope"), T3("最近15天", "直近15日間", "Last 15 days"), T3("2025-01-01迄今（約20個月）", "2025-01-01〜現在（約20ヶ月）", "2025-01-01 to present (~20 months)")),
+        (T3("衛星/TLE數", "衛星数/TLE数", "Satellites / TLE rows"), "28,005 / 722,209", "29,128 / 12,509,231"),
+        (T3("候選數", "候補数", "Candidates"), "197", "4,633"),
+        (T3("穩定殼層之合理候選", "安定した殻層の妥当な候補", "Plausible stable-shell candidates"), T3("約15顆（多為Starlink）", "約15機（多くはStarlink）", "~15 (mostly Starlink)"), T3("1,162顆（以CN/NASA/俄對地觀測衛星為主）", "1,162機（中国/NASA/ロシアの地球観測衛星が主）", "1,162 (dominated by CN/NASA/Russian Earth-observation satellites)")),
+    ], columns=["item", "short_window", "long_window"])
+    st.dataframe(_c21_scan, width="stretch", hide_index=True,
+                 column_config={
+                     "item": T3("項目", "項目", "Item"),
+                     "short_window": T3("15天短窗", "15日短期ウィンドウ", "15-day short window"),
+                     "long_window": T3("20個月長窗", "20ヶ月長期ウィンドウ", "20-month long window"),
+                 })
+    st.markdown(T3(
+        "**兩次掃描結果不矛盾，只是「異常」的基準不同**：短窗以該衛星最近幾週的"
+        "噪聲為基準，對「近期新發生的事件」敏感；長窗以該衛星 20 個月的全域噪聲"
+        "為基準，對「該衛星有史以來相對罕見的大幅事件」敏感。Starlink 式持續、"
+        "頻繁但單次幅度較小的例行相位調整，在長窗基準下已被納入其自身噪聲的一"
+        "部分，故長窗結果中 Starlink 候選僅剩 4 筆（且皆判定為仍在軌道轉移中）；"
+        "而長窗掃描找到的 1,162 顆穩定殼層候選，出乎意料地**以中國遙感衛星"
+        "（實踐系列、風雲三號、高分多模、資源一號等）、NASA/NOAA 極軌對地觀測"
+        "衛星（AQUA、NPP）、俄羅斯衛星（COSMOS、METEOR）為主**——這與太陽同步"
+        "軌道對地觀測任務之標準「相位保持」維護作業高度吻合。",
+        "**2回のスキャン結果は矛盾しておらず、「異常」の基準が異なるだけである**：短期ウィンドウ"
+        "は当該衛星の直近数週間のノイズを基準とし、「最近新たに発生したイベント」に敏感である；"
+        "長期ウィンドウは当該衛星の20ヶ月間の全域ノイズを基準とし、「当該衛星にとって史上まれな"
+        "大規模イベント」に敏感である。Starlink式の持続的・頻繁だが1回あたりの規模が小さい"
+        "定例的な位相調整は、長期ウィンドウの基準ではすでに自身のノイズの一部として取り込まれて"
+        "いるため、長期ウィンドウの結果ではStarlinkの候補はわずか4件（すべて軌道転移中と判定）"
+        "にとどまる；一方、長期スキャンで見つかった1,162機の安定した殻層の候補は、意外にも"
+        "**中国のリモートセンシング衛星（実践シリーズ、風雲三号、高分多模、資源一号など）、"
+        "NASA/NOAAの極軌道地球観測衛星（AQUA、NPP）、ロシアの衛星（COSMOS、METEOR）が"
+        "主**であった——これは太陽同期軌道の地球観測任務における標準的な「位相保持」維持"
+        "作業と高度に一致する。",
+        "**The two scans don't contradict each other — they simply use different baselines for "
+        "\"anomalous.\"** The short window uses that satellite's recent weeks of noise as the "
+        "baseline, sensitive to \"recently occurring events\"; the long window uses that satellite's "
+        "full 20-month noise as the baseline, sensitive to \"events rare over that satellite's entire "
+        "history.\" Starlink-style continuous, frequent, small-magnitude routine phasing adjustments "
+        "have already been absorbed into its own baseline noise under the long-window standard, so "
+        "the long-window results show only 4 Starlink candidates (all judged still in orbital "
+        "transfer). The 1,162 stable-shell candidates found by the long scan are, surprisingly, "
+        "**dominated by Chinese remote-sensing satellites (the Shijian series, Fengyun-3, "
+        "Gaofen-duomo, Ziyuan-1, etc.), NASA/NOAA polar-orbiting Earth-observation satellites (AQUA, "
+        "NPP), and Russian satellites (COSMOS, METEOR)** — closely matching the standard \"phase-"
+        "keeping\" maintenance practice for sun-synchronous Earth-observation missions.",
+    ))
+
+    st.header(T3(
+        "⑤ 評估：這是刻意規避半長軸式偵測而設計的嗎？",
+        "⑤評価：これは半長軸式検知を意図的に回避するために設計されたものか？",
+        "⑤ Assessment: is this deliberately designed to evade semi-major-axis-based detection?",
+    ))
+    st.success(T3(
+        "**結論：不是，但客觀上確實造成真實的偵測盲區。**\n\n"
+        "1. 從任務設計動機看，此類「相位保持」修正之目的是維持太陽同步軌道對地"
+        "觀測任務所需之降交點地方時精度（確保每次通過同一地點時光照角度一致，"
+        "攸關成像品質與科學資料可比性）——這是數十年來對地觀測衛星操作的標準"
+        "做法，遠早於任何以 TLE 為基礎的機動偵測系統存在，不太可能是刻意針對"
+        "偵測系統設計的規避手法。\n"
+        "2. sma 幾乎不變是此類修正之**物理必然結果**，而非刻意掩護：只調整沿軌"
+        "相位、不改變軌道高度的修正方式，本身就決定了 sma 前後幾乎相同。\n"
+        "3. **但無論操作意圖為何，對任何僅依賴半長軸變化的太空態勢感知（SSA）"
+        "監測系統而言，這確實構成一個真實、系統性的偵測盲區**——這對本專案與"
+        "同類 SSA 監測系統而言，是值得正式記錄的方法論限制，與是否為「規避"
+        "意圖」無關。",
+        "**結論：意図的ではないが、客観的には確かに実在する検知の盲点を生み出している。**\n\n"
+        "1. 任務設計の動機から見ると、この種の「位相保持」修正の目的は、太陽同期軌道の地球観測"
+        "任務に必要な降交点地方時の精度を維持すること（同じ地点を通過する際の照明角度の一貫性"
+        "を確保し、撮像品質と科学データの比較可能性に関わる）である——これは数十年来の地球観測"
+        "衛星運用の標準的な慣行であり、TLEベースの機動検知システムが存在するよりもはるか以前"
+        "からのものであるため、検知システムを狙って設計された回避手法である可能性は低い。\n"
+        "2. smaがほぼ不変であることは、この種の修正の**物理的必然の結果**であり、意図的な隠蔽で"
+        "はない：沿軌道位相のみを調整し軌道高度を変更しない修正方式そのものが、smaが前後で"
+        "ほぼ同じになることを決定づけている。\n"
+        "3. **しかし運用意図がどうであれ、半長軸の変化のみに依存する宇宙状況認識（SSA）監視"
+        "システムにとって、これは確かに実在する体系的な検知の盲点を構成する**——これは本"
+        "プロジェクトおよび同種のSSA監視システムにとって、「回避の意図」の有無とは無関係に、"
+        "正式に記録する価値のある方法論上の限界である。",
+        "**Conclusion: no, but it objectively does create a real detection blind spot.**\n\n"
+        "1. From a mission-design standpoint, this kind of \"phase-keeping\" correction exists to "
+        "maintain the descending-node local-time precision that sun-synchronous Earth-observation "
+        "missions require (ensuring consistent illumination angle on each pass over the same "
+        "location, which matters for imaging quality and scientific data comparability) — this has "
+        "been standard practice for Earth-observation satellite operations for decades, long "
+        "predating any TLE-based maneuver-detection system, making it unlikely to be a deliberate "
+        "evasion tactic aimed at detection systems.\n"
+        "2. sma staying nearly unchanged is a **physical necessity** of this correction style, not "
+        "deliberate concealment: a correction that only adjusts along-track phase without changing "
+        "orbital altitude inherently leaves sma nearly identical before and after.\n"
+        "3. **But regardless of operational intent, this does constitute a real, systematic "
+        "detection blind spot for any space situational awareness (SSA) monitoring system that "
+        "relies solely on semi-major-axis change** — worth formally documenting as a methodological "
+        "limitation for this project and similar SSA monitoring systems, independent of whether it "
+        "reflects any \"evasive intent.\"",
+    ))
+
+    st.markdown("---")
+    st.markdown(T3(
+        "**判讀**：這個案例串起了三件事——一次意外發現（案例十一）、一條新偵測"
+        "通道的誠實驗證（含自我修正一次方法學錯誤）、以及一次跨兩種時間尺度的"
+        "全編目普查。它沒有宣稱解決了問題（新通道獨立使用之 F1 仍遠低於既有"
+        "方法），而是誠實記錄了「既有系統看不到什麼」「為什麼看不到」「這在真實"
+        "編目中有多普遍」三個層次的答案，並明確區分了「客觀盲區」與「主觀規避"
+        "意圖」——這是本專案一貫的方法論：不誇大發現、不隱藏限制、不把相關性"
+        "當成因果。",
+        "**判読**：本事例は3つのことをつなぎ合わせている——1回の偶然の発見（事例十一）、新しい"
+        "検知チャネルの誠実な検証（方法論上の誤りを1回自己修正したことを含む）、そして2つの時間"
+        "スケールにまたがる全カタログ普査である。問題を解決したと主張するのではなく（新チャネル"
+        "単独使用時のF1は既存手法よりもはるかに低いままである）、「既存システムには何が見えない"
+        "のか」「なぜ見えないのか」「これは実際のカタログでどれほど普遍的か」という3つの層の答え"
+        "を誠実に記録し、「客観的な盲点」と「主観的な回避意図」を明確に区別した——これは本"
+        "プロジェクトの一貫した方法論である：発見を誇張せず、限界を隠さず、相関を因果と混同"
+        "しない。",
+        "**Verdict**: this case ties together three things — an accidental discovery (Case 11), the "
+        "honest validation of a new detection channel (including one self-corrected methodological "
+        "error), and a full-catalog census spanning two time scales. It does not claim to have solved "
+        "the problem (the new channel's standalone F1 remains far below existing methods); instead it "
+        "honestly records answers at three levels — what the existing system can't see, why it can't "
+        "see it, and how prevalent this is in the real catalog — while clearly separating \"objective "
+        "blind spot\" from \"subjective evasive intent.\" This is this project's consistent "
+        "methodology: don't oversell findings, don't hide limitations, don't mistake correlation for "
+        "causation.",
+    ))
+    st.caption(T3(
+        "完整報告：`docs/相位殘差通道_新增偵測管道實作與驗證_20260913.md`；"
+        "可重現腳本：`phase_residual_detector.py`（23星驗證）、"
+        "`phase_residual_broad_scan.py --since=YYYY-MM-DD`（全LEO廣泛掃描）；"
+        "原始資料：`data/benchmark/phase_residual_persat_20260913.csv`、"
+        "`phase_residual_broad_scan_candidates_20260913.csv`、"
+        "`phase_residual_broad_scan_candidates_2025-01-01_20260913.csv`、"
+        "`phase_residual_broad_scan_summary_2025-01-01_20260913.csv`。",
+        "完全なレポート：`docs/相位殘差通道_新增偵測管道實作與驗證_20260913.md`；"
+        "再現スクリプト：`phase_residual_detector.py`（23機検証）、"
+        "`phase_residual_broad_scan.py --since=YYYY-MM-DD`（全LEO広域スキャン）；"
+        "元データ：`data/benchmark/phase_residual_persat_20260913.csv`、"
+        "`phase_residual_broad_scan_candidates_20260913.csv`、"
+        "`phase_residual_broad_scan_candidates_2025-01-01_20260913.csv`、"
+        "`phase_residual_broad_scan_summary_2025-01-01_20260913.csv`。",
+        "Full report: `docs/相位殘差通道_新增偵測管道實作與驗證_20260913.md`; reproducibility "
+        "scripts: `phase_residual_detector.py` (23-satellite validation), "
+        "`phase_residual_broad_scan.py --since=YYYY-MM-DD` (full-LEO broad scan); raw data: "
+        "`data/benchmark/phase_residual_persat_20260913.csv`, "
+        "`phase_residual_broad_scan_candidates_20260913.csv`, "
+        "`phase_residual_broad_scan_candidates_2025-01-01_20260913.csv`, "
+        "`phase_residual_broad_scan_summary_2025-01-01_20260913.csv`.",
+    ))
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -9967,7 +10316,8 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
     st.session_state["app_mode"] = _qp.get("mode")
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
-        "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20"):
+        "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
+        "case21"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -10020,6 +10370,8 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case19()
     elif _case == "case20":
         render_storymap_case20()
+    elif _case == "case21":
+        render_storymap_case21()
     else:
         render_storymap_landing()
     st.stop()
