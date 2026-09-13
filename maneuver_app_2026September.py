@@ -7726,14 +7726,30 @@ def render_case14_success_def_figure(data: dict):
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     import matplotlib.dates as mdates
+    import matplotlib.font_manager as fm
 
-    for fname in ["Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans CJK JP", "SimHei", "DejaVu Sans"]:
+    # 逐一確認字型是否「實際安裝」於執行環境（HF Space 之 Linux 容器通常沒有
+    # Windows 字型，先前版本僅設定 rcParams、從未驗證存在與否，會靜默 fallback
+    # 到不含中日文字形的 DejaVu Sans，導致圖片中文字缺字/亂碼——此為根因修正）。
+    _cjk_font_ok = False
+    for fname in ["Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans CJK JP",
+                  "Noto Sans CJK SC", "SimHei", "PingFang TC", "PingFang SC",
+                  "WenQuanYi Zen Hei", "Source Han Sans TC"]:
         try:
+            # fallback_to_default=False：找不到時會拋例外，而非靜默退回無法
+            # 顯示中日文的預設字型（DejaVu Sans）——這是先前版本的根因錯誤。
+            fm.findfont(fm.FontProperties(family=fname), fallback_to_default=False)
             plt.rcParams["font.sans-serif"] = [fname]
+            _cjk_font_ok = True
             break
         except Exception:
             continue
     plt.rcParams["axes.unicode_minus"] = False
+
+    def T3fig(zh, ja, en):
+        """圖內文字專用：若執行環境找不到任何可用中日文字型，一律改用英文，
+        避免圖片中出現缺字方框（亂碼）——圖片外的頁面文字仍照常三語顯示。"""
+        return T3(zh, ja, en) if _cjk_font_ok else en
 
     sig_df, ev, dets, stats = data["sig_df"], data["ev"], data["dets"], data["stats"]
     sd = stats["sd"]
@@ -7742,9 +7758,9 @@ def render_case14_success_def_figure(data: dict):
 
     fig, ax = plt.subplots(figsize=(11, 5.3))
     ax.plot(sig_df["t"], sig_df["sig"], color="#1f6fb2", lw=1.1,
-            label=T3("位準位移訊號 (km)", "レベルシフト信号 (km)", "Level-shift signal (km)"))
+            label=T3fig("位準位移訊號 (km)", "レベルシフト信号 (km)", "Level-shift signal (km)"))
     ax.axhline(6 * sd, color="gray", ls="--", lw=1,
-               label=T3(f"門檻 ±6σ (σ={sd:.2e})", f"閾値 ±6σ (σ={sd:.2e})", f"threshold ±6σ (σ={sd:.2e})"))
+               label=T3fig(f"門檻 ±6σ (σ={sd:.2e})", f"閾値 ±6σ (σ={sd:.2e})", f"threshold ±6σ (σ={sd:.2e})"))
     ax.axhline(-6 * sd, color="gray", ls="--", lw=1)
 
     tp_ex = fn_ex = fp_ex = None
@@ -7773,24 +7789,24 @@ def render_case14_success_def_figure(data: dict):
     sig_vals = sig_df["sig"].to_numpy()
     ymax = float(np.nanmax(np.abs(sig_vals))) * 1.15 if len(sig_vals) else 1.0
     if tp_ex is not None:
-        ax.annotate(T3("命中\n(TP)", "命中\n(TP)", "Hit\n(TP)"), xy=(tp_ex, 6 * sd),
+        ax.annotate(T3fig("命中\n(TP)", "命中\n(TP)", "Hit\n(TP)"), xy=(tp_ex, 6 * sd),
                     xytext=(tp_ex, ymax * 0.75), ha="center", fontsize=10,
                     color="#1a7a3c", fontweight="bold",
                     arrowprops=dict(arrowstyle="->", color="#1a7a3c"))
     if fn_ex is not None:
         ws, we = fn_ex
-        ax.annotate(T3("漏檢\n(FN)", "漏検\n(FN)", "Miss\n(FN)"), xy=(ws + (we - ws) / 2, 0),
+        ax.annotate(T3fig("漏檢\n(FN)", "漏検\n(FN)", "Miss\n(FN)"), xy=(ws + (we - ws) / 2, 0),
                     xytext=(ws, -ymax * 0.85), ha="center", fontsize=10,
                     color="#b32424", fontweight="bold",
                     arrowprops=dict(arrowstyle="->", color="#b32424"))
     if fp_ex is not None:
-        ax.annotate(T3("虛檢\n(FP)", "虚検\n(FP)", "False alarm\n(FP)"), xy=(fp_ex, -6 * sd),
+        ax.annotate(T3fig("虛檢\n(FP)", "虚検\n(FP)", "False alarm\n(FP)"), xy=(fp_ex, -6 * sd),
                     xytext=(fp_ex, -ymax * 0.55), ha="center", fontsize=10,
                     color="#7a4fb3", fontweight="bold",
                     arrowprops=dict(arrowstyle="->", color="#7a4fb3"))
 
     ax.set_ylim(-ymax, ymax)
-    ax.set_title(T3(
+    ax.set_title(T3fig(
         f"Jason-3（NORAD {_SUCCESSDEF_NID}）位準位移訊號 · 示範窗 2016-01-14 ~ 2016-02-20\n"
         "橘色實心＝真實機動窗；橘色淺色＝±1.5天容差；藍色直線＝本專案偵測時刻",
         f"Jason-3（NORAD {_SUCCESSDEF_NID}）レベルシフト信号 · 例示区間 2016-01-14 ~ 2016-02-20\n"
@@ -7801,7 +7817,7 @@ def render_case14_success_def_figure(data: dict):
     ), fontsize=11)
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
     fig.autofmt_xdate()
-    ax.set_ylabel(T3("位準位移 (km)", "レベルシフト (km)", "Level shift (km)"))
+    ax.set_ylabel(T3fig("位準位移 (km)", "レベルシフト (km)", "Level shift (km)"))
     ax.legend(loc="upper right", fontsize=9)
     fig.tight_layout()
     return fig
