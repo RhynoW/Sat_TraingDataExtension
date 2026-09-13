@@ -7345,6 +7345,15 @@ def run_case14_curve_reproduction_live() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case14_curve_reproduction_frozen() -> pd.DataFrame:
+    """⑦動態說明之凍結快照版：雲端 HF Space（精簡資料後端）無法連線本機全庫，
+    無法現場跑 run_case14_curve_reproduction_live()；改讀取 2026-09-13 於本機
+    全庫模式下算出的快照，讓比較數字仍能在雲端正常顯示，只是不現場重算。"""
+    p = Path("data/benchmark/tasa14_curve_reproduction_20260913.csv")
+    return pd.read_csv(p) if p.exists() else pd.DataFrame()
+
+
 # --- render_storymap_case14 ---
 def render_storymap_case14():
     if st.button(t("storymap_back"), key="back_from_case14"):
@@ -7977,15 +7986,7 @@ def render_storymap_case14():
         "performs there.",
     ))
 
-    if not case14_live_backend_ok():
-        st.info(T3(
-            "此功能與⑤即時重算共用同一個「需本機全庫模式」限制，說明見上方⑤區塊。",
-            "この機能は⑤の即時再計算と同じ「ローカル全庫モードが必要」という制限を共有する。"
-            "説明は上記の⑤区画を参照。",
-            "This feature shares the same \"requires local full-database mode\" limitation as the live "
-            "recompute in section ⑤ above — see that section for details.",
-        ))
-    else:
+    if case14_live_backend_ok():
         if st.button(T3("▶ 即時重跑曲線法重現版（14＋9 星，約 20-30 秒）",
                          "▶曲線法再現版をその場で再実行（14＋9機、約20-30秒）",
                          "▶ Live-rerun the curve-method reproduction (14+9 satellites, ~20-30 seconds)"),
@@ -7995,8 +7996,23 @@ def render_storymap_case14():
                                 "Re-running the forward-prediction-error and LOWESS-smoothed-residual "
                                 "methods on 23 satellites……")):
                 st.session_state["case14_curve_repro"] = run_case14_curve_reproduction_live()
-
-    _cr = st.session_state.get("case14_curve_repro")
+        _cr = st.session_state.get("case14_curve_repro")
+    else:
+        _cr = load_case14_curve_reproduction_frozen()
+        if len(_cr):
+            st.info(T3(
+                "雲端環境（精簡資料後端）無法即時重跑，本區改顯示 2026-09-13 於本機全庫模式下"
+                "算出的凍結快照——數字與方法完全相同，只是非本次載入頁面時現場計算。"
+                "本機全庫模式下會改為上方「即時重跑」按鈕。",
+                "クラウド環境（簡易データバックエンド）ではその場での再実行ができないため、"
+                "本区は2026-09-13にローカル全庫モードで算出した凍結スナップショットを表示する——"
+                "数値と手法は全く同じであり、今回のページ読み込み時にその場で計算したものでは"
+                "ない。ローカル全庫モードでは上記の「即時再実行」ボタンに切り替わる。",
+                "The cloud environment (slim data backend) cannot recompute live, so this section shows "
+                "a frozen snapshot computed on 2026-09-13 in local full-database mode instead — same "
+                "numbers, same method, just not computed on the spot for this page load. In local "
+                "full-database mode this switches to the \"live rerun\" button above.",
+            ))
     if _cr is not None and len(_cr):
         st.subheader(T3("14 顆原始標竿：TASA 原文數字 vs 本專案重現版", "14機の原初ベンチマーク：TASA原文数値 vs 本プロジェクト再現版",
                         "14 original benchmark satellites: TASA's published figures vs. this project's reproduction"))
@@ -8083,18 +8099,29 @@ def render_storymap_case14():
             "rigorous statistical test (a significant win at 23 satellites, p=0.006); this just shows the "
             "same conclusion again, more intuitively, as a bar chart.",
         ))
+        _src_note = T3(
+            "現場對 `space_db.duckdb` 重新查詢並計算，非讀取凍結檔。",
+            "`space_db.duckdb` にその場で再照会・計算しており、凍結ファイルの読み込みではない。",
+            "queried `space_db.duckdb` fresh and computed on the spot — not reading a frozen file.",
+        ) if case14_live_backend_ok() else T3(
+            "本次顯示為 `data/benchmark/tasa14_curve_reproduction_20260913.csv` 凍結快照"
+            "（雲端精簡資料後端無法即時重跑，說明見上方提示）。",
+            "今回表示しているのは `data/benchmark/tasa14_curve_reproduction_20260913.csv` の"
+            "凍結スナップショット（クラウドの簡易データバックエンドでは即時再実行不可、"
+            "説明は上記の案内を参照）。",
+            "This display is the frozen snapshot `data/benchmark/tasa14_curve_reproduction_20260913.csv` "
+            "(the cloud slim data backend cannot recompute live — see the notice above).",
+        )
         st.caption(T3(
             "曲線法重現版採用本專案凍結、非逐星調參之全域參數（前向預測誤差法：deg=1,k=50,"
-            "n_iter=1；LOWESS平滑殘差法：k=20,n_iter=1，與 `tasa19/23_ext_arena.py` 的 "
-            "GLOBAL_CFG 一致），現場對 `space_db.duckdb` 重新查詢並計算，非讀取凍結檔。",
+            f"n_iter=1；LOWESS平滑殘差法：k=20,n_iter=1，與 `tasa19/23_ext_arena.py` 的 "
+            f"GLOBAL_CFG 一致），{_src_note}",
             "曲線法再現版は本プロジェクトの凍結済み、衛星ごとの調整を行わない全域パラメータを"
-            "採用（前向き予測誤差法：deg=1,k=50,n_iter=1；LOWESS平滑残差法：k=20,n_iter=1、"
-            "`tasa19/23_ext_arena.py` のGLOBAL_CFGと一致）。`space_db.duckdb` にその場で再照会・"
-            "計算しており、凍結ファイルの読み込みではない。",
+            f"採用（前向き予測誤差法：deg=1,k=50,n_iter=1；LOWESS平滑残差法：k=20,n_iter=1、"
+            f"`tasa19/23_ext_arena.py` のGLOBAL_CFGと一致）。{_src_note}",
             "The curve-method reproduction uses this project's frozen, non-per-satellite-tuned global "
             "parameters (predict-error: deg=1, k=50, n_iter=1; LOWESS-resid: k=20, n_iter=1, matching "
-            "`tasa19/23_ext_arena.py`'s GLOBAL_CFG), querying `space_db.duckdb` fresh and computing on "
-            "the spot — not reading a frozen file.",
+            f"`tasa19/23_ext_arena.py`'s GLOBAL_CFG); {_src_note}",
         ))
 
 
