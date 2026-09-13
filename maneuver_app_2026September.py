@@ -7354,6 +7354,165 @@ def load_case14_curve_reproduction_frozen() -> pd.DataFrame:
     return pd.read_csv(p) if p.exists() else pd.DataFrame()
 
 
+_SUCCESSDEF_WIN_LO = pd.Timestamp("2016-01-14", tz="UTC")
+_SUCCESSDEF_WIN_HI = pd.Timestamp("2016-02-20", tz="UTC")
+_SUCCESSDEF_TOL_D = 1.5
+_SUCCESSDEF_NID = 41240
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case14_success_def_demo_data() -> dict:
+    """檢測成功定義示範圖之資料（以 Jason-3 為例，比照 TASA 2026-07-30/09-11 簡報
+    p.5 之範例衛星，便於直接對照）。本機全庫模式現場查詢計算；雲端精簡後端則退回
+    2026-09-13 產生之凍結快照（data/benchmark/case14_successdef_*）。"""
+    import json
+
+    if case14_live_backend_ok():
+        try:
+            from tasa14_compare import load_events, load_a, detect_iter, _shift_signal, TOL_D as _TOL
+
+            events = load_events()
+            t, a = load_a(_SUCCESSDEF_NID)
+            tsec = t.astype("int64").to_numpy() / 1e9
+            ev_all = events[_SUCCESSDEF_NID]
+            lo = max(t.min(), ev_all["ws"].min()); hi = min(t.max(), ev_all["we"].max())
+            ev = ev_all[(ev_all["ws"] >= lo) & (ev_all["ws"] <= hi)].reset_index(drop=True)
+            dets = detect_iter(t, a, 6)
+            dets = pd.to_datetime([d for d in dets if lo <= d <= hi])
+            mask = np.zeros(len(a), bool)
+            sig = _shift_signal(a, tsec, mask)
+            sd = 1.4826 * np.nanmedian(np.abs(sig - np.nanmedian(sig)))
+            mwin = (t >= _SUCCESSDEF_WIN_LO) & (t <= _SUCCESSDEF_WIN_HI)
+            sig_df = pd.DataFrame({"t": t[mwin], "sig": sig[mwin]})
+
+            tol = pd.Timedelta(days=_SUCCESSDEF_TOL_D)
+            used = np.zeros(len(dets), bool)
+            tp = fn = 0
+            for _, e in ev.iterrows():
+                w0, w1 = e["ws"] - tol, e["we"] + tol
+                hit = [i for i, d in enumerate(dets) if w0 <= d <= w1 and not used[i]]
+                if hit:
+                    used[hit[0]] = True; tp += 1
+                else:
+                    fn += 1
+            fp = int((~used).sum())
+            n_ev = len(ev)
+            prec = tp / (tp + fp) if tp + fp else 0.0
+            rec = tp / (tp + fn) if tp + fn else 0.0
+            f1 = 2 * prec * rec / (prec + rec) if prec + rec else 0.0
+            stats = dict(sd=float(sd), n_ev=n_ev, tp=tp, fn=fn, fp=fp,
+                         precision=prec, recall=rec, f1=f1)
+            return dict(sig_df=sig_df, ev=ev, dets=dets, stats=stats, live=True)
+        except Exception:
+            pass
+
+    d = Path("data/benchmark")
+    p1 = d / "case14_successdef_signal_20260913.csv"
+    p2 = d / "case14_successdef_truth_20260913.csv"
+    p3 = d / "case14_successdef_dets_20260913.csv"
+    p4 = d / "case14_successdef_stats_20260913.json"
+    if not all(p.exists() for p in [p1, p2, p3, p4]):
+        return {}
+    try:
+        sig_df = pd.read_csv(p1)
+        sig_df["t"] = pd.to_datetime(sig_df["t"], utc=True)
+        ev = pd.read_csv(p2)
+        ev["ws"] = pd.to_datetime(ev["ws"], utc=True)
+        ev["we"] = pd.to_datetime(ev["we"], utc=True)
+        dets = pd.to_datetime(pd.read_csv(p3)["det"], utc=True)
+        stats = json.loads(p4.read_text(encoding="utf-8"))
+        return dict(sig_df=sig_df, ev=ev, dets=dets, stats=stats, live=False)
+    except Exception:
+        return {}
+
+
+def render_case14_success_def_figure(data: dict):
+    """繪製檢測成功定義示範圖（matplotlib），版面比照 TASA 簡報 p.5 風格。"""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    import matplotlib.dates as mdates
+
+    for fname in ["Microsoft JhengHei", "Noto Sans CJK TC", "Noto Sans CJK JP", "SimHei", "DejaVu Sans"]:
+        try:
+            plt.rcParams["font.sans-serif"] = [fname]
+            break
+        except Exception:
+            continue
+    plt.rcParams["axes.unicode_minus"] = False
+
+    sig_df, ev, dets, stats = data["sig_df"], data["ev"], data["dets"], data["stats"]
+    sd = stats["sd"]
+    tol = pd.Timedelta(days=_SUCCESSDEF_TOL_D)
+    win_lo, win_hi = _SUCCESSDEF_WIN_LO, _SUCCESSDEF_WIN_HI
+
+    fig, ax = plt.subplots(figsize=(11, 5.3))
+    ax.plot(sig_df["t"], sig_df["sig"], color="#1f6fb2", lw=1.1,
+            label=T3("位準位移訊號 (km)", "レベルシフト信号 (km)", "Level-shift signal (km)"))
+    ax.axhline(6 * sd, color="gray", ls="--", lw=1,
+               label=T3(f"門檻 ±6σ (σ={sd:.2e})", f"閾値 ±6σ (σ={sd:.2e})", f"threshold ±6σ (σ={sd:.2e})"))
+    ax.axhline(-6 * sd, color="gray", ls="--", lw=1)
+
+    tp_ex = fn_ex = fp_ex = None
+    used = np.zeros(len(dets), bool)
+    for _, e in ev.iterrows():
+        ws, we = e["ws"], e["we"]
+        if not (win_lo <= we and ws <= win_hi):
+            continue
+        ax.axvspan(ws - tol, we + tol, color="#ffd9a0", alpha=0.35, lw=0)
+        ax.axvspan(ws, we, color="#e2841e", alpha=0.9, lw=0)
+        w0, w1 = ws - tol, we + tol
+        hit = [i for i, d in enumerate(dets) if w0 <= d <= w1 and not used[i]]
+        if hit:
+            used[hit[0]] = True
+            if tp_ex is None:
+                tp_ex = dets[hit[0]]
+        elif fn_ex is None:
+            fn_ex = (ws, we)
+
+    for i, d_ in enumerate(dets):
+        if win_lo <= d_ <= win_hi:
+            ax.axvline(d_, color="#1f4e8c", lw=1.4, alpha=0.85)
+            if not used[i] and fp_ex is None:
+                fp_ex = d_
+
+    sig_vals = sig_df["sig"].to_numpy()
+    ymax = float(np.nanmax(np.abs(sig_vals))) * 1.15 if len(sig_vals) else 1.0
+    if tp_ex is not None:
+        ax.annotate(T3("命中\n(TP)", "命中\n(TP)", "Hit\n(TP)"), xy=(tp_ex, 6 * sd),
+                    xytext=(tp_ex, ymax * 0.75), ha="center", fontsize=10,
+                    color="#1a7a3c", fontweight="bold",
+                    arrowprops=dict(arrowstyle="->", color="#1a7a3c"))
+    if fn_ex is not None:
+        ws, we = fn_ex
+        ax.annotate(T3("漏檢\n(FN)", "漏検\n(FN)", "Miss\n(FN)"), xy=(ws + (we - ws) / 2, 0),
+                    xytext=(ws, -ymax * 0.85), ha="center", fontsize=10,
+                    color="#b32424", fontweight="bold",
+                    arrowprops=dict(arrowstyle="->", color="#b32424"))
+    if fp_ex is not None:
+        ax.annotate(T3("虛檢\n(FP)", "虚検\n(FP)", "False alarm\n(FP)"), xy=(fp_ex, -6 * sd),
+                    xytext=(fp_ex, -ymax * 0.55), ha="center", fontsize=10,
+                    color="#7a4fb3", fontweight="bold",
+                    arrowprops=dict(arrowstyle="->", color="#7a4fb3"))
+
+    ax.set_ylim(-ymax, ymax)
+    ax.set_title(T3(
+        f"Jason-3（NORAD {_SUCCESSDEF_NID}）位準位移訊號 · 示範窗 2016-01-14 ~ 2016-02-20\n"
+        "橘色實心＝真實機動窗；橘色淺色＝±1.5天容差；藍色直線＝本專案偵測時刻",
+        f"Jason-3（NORAD {_SUCCESSDEF_NID}）レベルシフト信号 · 例示区間 2016-01-14 ~ 2016-02-20\n"
+        "橙色濃＝実際の機動窓；橙色薄＝±1.5日の許容範囲；青線＝本プロジェクトの検知時刻",
+        f"Jason-3 (NORAD {_SUCCESSDEF_NID}) level-shift signal · demo window 2016-01-14 to 2016-02-20\n"
+        "Solid orange = actual maneuver window; light orange = ±1.5-day tolerance; blue lines = this "
+        "project's detections",
+    ), fontsize=11)
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y-%m-%d"))
+    fig.autofmt_xdate()
+    ax.set_ylabel(T3("位準位移 (km)", "レベルシフト (km)", "Level shift (km)"))
+    ax.legend(loc="upper right", fontsize=9)
+    fig.tight_layout()
+    return fig
+
+
 # --- render_storymap_case14 ---
 def render_storymap_case14():
     if st.button(t("storymap_back"), key="back_from_case14"):
@@ -8210,6 +8369,113 @@ def render_storymap_case14():
             "The curve-method reproduction uses this project's frozen, non-per-satellite-tuned global "
             "parameters (predict-error: deg=1, k=50, n_iter=1; LOWESS-resid: k=20, n_iter=1, matching "
             f"`tasa19/23_ext_arena.py`'s GLOBAL_CFG); {_src_note}",
+        ))
+
+    st.markdown("---")
+    st.header(T3(
+        "⑧ 檢測成功定義比較：本專案 vs TASA",
+        "⑧検出成功の定義比較：本プロジェクト vs TASA",
+        "⑧ Detection-success definition compared: this project vs. TASA",
+    ))
+    st.caption(T3(
+        "TASA 簡報（`TASA方法於NASA機動資料庫偵測結果_20260911.pdf` p.5）明確定義："
+        "「只要偵測到的機動有涵蓋到實際機動時間範圍內，就算檢測成功」——這與本專案"
+        "「真實機動窗外擴 ±1.5 天」的定義不同。本區比照該簡報版面風格，用同一顆示範衛星"
+        "（Jason-3，與 TASA 相同）畫出本專案定義的說明圖。",
+        "TASA発表資料（`TASA方法於NASA機動資料庫偵測結果_20260911.pdf` p.5）は明確に"
+        "定義している：「検知した機動が実際の機動時間範囲をカバーしていれば検出成功と"
+        "見なす」——これは本プロジェクトの「実際の機動窓を±1.5日拡張する」という定義とは"
+        "異なる。本区は同資料と同じ版面スタイルで、同じ実演衛星（Jason-3、TASAと同一）を"
+        "用いて本プロジェクトの定義を図示する。",
+        "TASA's briefing (`TASA方法於NASA機動資料庫偵測結果_20260911.pdf` p.5) explicitly defines "
+        "\"success\" as: as long as a detected maneuver covers part of the actual maneuver time range, "
+        "it counts as a success — this differs from this project's definition of widening the actual "
+        "maneuver window by ±1.5 days. This section illustrates this project's definition in the same "
+        "visual style as that briefing, using the same demo satellite (Jason-3, matching TASA's own "
+        "example).",
+    ))
+
+    _sd_data = load_case14_success_def_demo_data()
+    if _sd_data:
+        c1, c2 = st.columns([1.3, 1])
+        with c1:
+            st.markdown(T3(
+                "**本專案「檢測成功」定義**\n\n"
+                "真實機動窗（Beginning→End of maneuver）外擴 **±1.5 天**做為容差視窗；"
+                "只要偵測時刻落在「真實窗 ±1.5 天」內，就算命中（TP）；否則落單的偵測算"
+                "虛檢（FP），沒被任何偵測命中的真實窗算漏檢（FN）。\n\n"
+                "*與 TASA 定義之差異*：TASA 只要求偵測「涵蓋到」真實機動時間範圍本身"
+                "（原始窗常僅數分鐘至數小時）；本專案額外外擴 ±1.5 天，原因是 TLE 解析度"
+                "通常僅每天 0.5–2 筆，若要求偵測落在原始窗內，以 TLE 的取樣頻率幾乎不可能"
+                "達成。",
+                "**本プロジェクトの「検出成功」の定義**\n\n"
+                "実際の機動窓（機動の開始→終了）を**±1.5日**拡張した許容範囲を設定する；"
+                "検知時刻が「実際の窓±1.5日」以内に収まっていれば命中（TP）と見なし、"
+                "そうでなければ単独の検知は虚検（FP）、いかなる検知にも命中されなかった"
+                "実際の窓は漏検（FN）と見なす。\n\n"
+                "*TASAの定義との違い*：TASAは検知が実際の機動時間範囲自体を「カバーする」"
+                "ことのみを要求する（元の窓は数分から数時間程度であることが多い）；本"
+                "プロジェクトはさらに±1.5日拡張しているが、これはTLEの解像度が通常1日"
+                "0.5〜2件程度であり、検知が元の窓内に収まることを要求すればTLEのサンプリング"
+                "頻度ではほぼ達成不可能であるためである。",
+                "**This project's \"detection success\" definition**\n\n"
+                "The actual maneuver window (beginning → end of maneuver) is widened by **±1.5 days** "
+                "as a tolerance window; as long as a detection timestamp falls within \"the actual window "
+                "± 1.5 days,\" it counts as a hit (TP); otherwise, an unmatched detection counts as a "
+                "false alarm (FP), and any actual window matched by no detection counts as a miss "
+                "(FN).\n\n"
+                "*Difference from TASA's definition*: TASA only requires a detection to \"cover\" the "
+                "actual maneuver time range itself (the raw window is often only minutes to hours); this "
+                "project additionally widens it by ±1.5 days because TLE resolution is typically only "
+                "0.5–2 points per day — requiring a detection to fall inside the raw window would be "
+                "nearly unachievable at TLE's sampling rate.",
+            ))
+            _stt = _sd_data["stats"]
+            st.markdown(T3(
+                f"以 Jason-3（NORAD {_SUCCESSDEF_NID}）示範，全歷史：真實機動 {_stt['n_ev']} 次"
+                f"｜命中 {_stt['tp']}｜漏檢 {_stt['fn']}｜虛檢 {_stt['fp']}\n\n"
+                f"Precision={_stt['precision']:.2f}　Recall={_stt['recall']:.2f}　"
+                f"F1={_stt['f1']:.2f}",
+                f"Jason-3（NORAD {_SUCCESSDEF_NID}）を例に、全履歴：実際の機動 {_stt['n_ev']} 回"
+                f"｜命中 {_stt['tp']}｜漏検 {_stt['fn']}｜虚検 {_stt['fp']}\n\n"
+                f"Precision={_stt['precision']:.2f}　Recall={_stt['recall']:.2f}　"
+                f"F1={_stt['f1']:.2f}",
+                f"Using Jason-3 (NORAD {_SUCCESSDEF_NID}) as the example, full history: "
+                f"{_stt['n_ev']} actual maneuvers | {_stt['tp']} hits | {_stt['fn']} misses | "
+                f"{_stt['fp']} false alarms\n\n"
+                f"Precision={_stt['precision']:.2f}   Recall={_stt['recall']:.2f}   "
+                f"F1={_stt['f1']:.2f}",
+            ))
+        with c2:
+            _cm = pd.DataFrame(
+                [["TP\n" + T3("(命中)", "(命中)", "(hit)"), "FP\n" + T3("(虛檢)", "(虚検)", "(false alarm)")],
+                 ["FN\n" + T3("(漏檢)", "(漏検)", "(miss)"), "TN"]],
+                columns=[T3("真實-P", "真値-P", "Truth-P"), T3("真實-N", "真値-N", "Truth-N")],
+                index=[T3("偵測-P", "検知-P", "Detected-P"), T3("偵測-N", "検知-N", "Detected-N")],
+            )
+            st.dataframe(_cm, width="stretch")
+
+        _fig = render_case14_success_def_figure(_sd_data)
+        st.pyplot(_fig)
+        st.caption(T3(
+            f"橘色實心＝真實機動窗；橘色淺色＝±1.5天容差；藍色直線＝本專案偵測時刻。"
+            f"{'現場即時計算' if _sd_data.get('live') else '2026-09-13 凍結快照（雲端精簡後端無法即時查詢）'}，"
+            "產生腳本：`docs/gen_fig_detection_success_definition.py`。",
+            f"橙色濃＝実際の機動窓；橙色薄＝±1.5日の許容範囲；青線＝本プロジェクトの検知時刻。"
+            f"{'その場でリアルタイム計算' if _sd_data.get('live') else '2026-09-13の凍結スナップショット（クラウドの簡易バックエンドでは即時照会不可）'}、"
+            "生成スクリプト：`docs/gen_fig_detection_success_definition.py`。",
+            f"Solid orange = actual maneuver window; light orange = ±1.5-day tolerance; blue lines = "
+            f"this project's detections. "
+            f"{'Computed live on the spot' if _sd_data.get('live') else 'A frozen snapshot from 2026-09-13 (the cloud slim backend cannot query live)'}, "
+            "generating script: `docs/gen_fig_detection_success_definition.py`.",
+        ))
+    else:
+        st.info(T3(
+            "示範資料尚未產生（需先執行本機全庫模式一次以建立凍結快照）。",
+            "デモデータはまだ生成されていません（凍結スナップショットを作成するには、"
+            "まずローカル全庫モードで一度実行する必要があります）。",
+            "Demo data has not been generated yet (run once in local full-database mode first to "
+            "create the frozen snapshot).",
         ))
 
 
