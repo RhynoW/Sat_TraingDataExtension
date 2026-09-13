@@ -38,11 +38,15 @@ GAP_MAX_DAYS = 2.0    # 超過此間隔，n外推誤差本身可能已大於真�
 PERSIST_K = 6.0       # 下一筆若仍達此門檻，判定為單點TLE雜訊而非真實事件
 
 
-def fetch_bulk():
+def fetch_bulk(since_override: str | None = None):
     con = duckdb.connect(DB, read_only=True)
     max_t = pd.Timestamp(con.execute("SELECT MAX(epoch_utc) FROM raw_tle_archive").fetchone()[0], tz="UTC")
-    since = max_t - pd.Timedelta(days=WINDOW_DAYS + BUFFER_DAYS)
-    cutoff = max_t - pd.Timedelta(days=WINDOW_DAYS)
+    if since_override:
+        cutoff = pd.Timestamp(since_override, tz="UTC")
+        since = cutoff - pd.Timedelta(days=BUFFER_DAYS)
+    else:
+        since = max_t - pd.Timedelta(days=WINDOW_DAYS + BUFFER_DAYS)
+        cutoff = max_t - pd.Timedelta(days=WINDOW_DAYS)
     print(f"資料庫最新 epoch: {max_t}；分析窗: {cutoff} ~ {max_t}", flush=True)
     df = con.execute(
         "SELECT norad_id, object_name, epoch_utc, sma_km, mean_anomaly_deg, argp_deg, mean_motion "
@@ -149,9 +153,37 @@ def analyze_one(g: pd.DataFrame, cutoff: pd.Timestamp):
     return out
 
 
+DEBRIS_KEYWORDS = ("DEB", "R/B", "ROCKET BODY", "TBA")
+
+
+def classify_object(name) -> str:
+    n = str(name or "").upper()
+    for kw in DEBRIS_KEYWORDS:
+        if kw in n:
+            return "debris_or_rb"
+    return "active_payload"
+
+
+def sma_trend(g: pd.DataFrame) -> tuple[float, float]:
+    """回傳 (sma平均值, 對時間之線性趨勢斜率 km/day)——用來分辨「已穩定在軌道
+    殼層之衛星做相位調整」vs「仍在連續軌道轉移(orbit-raise/衰減)過程中」。"""
+    g = g.sort_values("epoch_utc")
+    t = to_epoch_sec(g["epoch_utc"]) / 86400.0
+    a = g["sma_km"].to_numpy(float)
+    if len(a) < 2 or np.ptp(t) == 0:
+        return float(np.mean(a)), 0.0
+    slope = np.polyfit(t, a, 1)[0]
+    return float(np.mean(a)), float(slope)
+
+
 def main():
+    since_override = None
+    for arg in sys.argv[1:]:
+        if arg.startswith("--since="):
+            since_override = arg.split("=", 1)[1]
+
     t0 = time.time()
-    df, cutoff, max_t = fetch_bulk()
+    df, cutoff, max_t = fetch_bulk(since_override)
     print(f"共 {len(df):,} 列，{df['norad_id'].nunique():,} 顆衛星（{time.time()-t0:.0f}s）", flush=True)
 
     candidates = []
@@ -174,14 +206,42 @@ def main():
         print(f"共 {n_err} 顆衛星計算時發生例外並被跳過（見上方 WARN）", flush=True)
 
     out = pd.DataFrame(candidates)
+    tag = f"_{since_override}" if since_override else ""
     if len(out):
         out = out.sort_values("z_phase", key=lambda s: s.abs(), ascending=False)
-    dst = Path("data/benchmark/phase_residual_broad_scan_candidates_20260913.csv")
+        out["object_type"] = out["name"].map(classify_object)
+    dst = Path(f"data/benchmark/phase_residual_broad_scan_candidates{tag}_20260913.csv")
     out.to_csv(dst, index=False, encoding="utf-8-sig")
     print(f"\n掃描完成：{n_done:,} 顆衛星，耗時 {time.time()-t0:.0f}s", flush=True)
     print(f"候選（相位殘差異常但sma未同步異常）：{len(out)} 筆 → {dst}", flush=True)
+
     if len(out):
-        print(out.head(30).to_string(index=False), flush=True)
+        # 逐衛星彙整：事件次數、sma長期趨勢（分辨已穩定殼層 vs 仍在軌道轉移）。
+        # 用排序後索引做 .loc 查找（近 O(log n)），避免對每顆候選衛星都對
+        # 全量 df 做一次 O(n) 布林遮罩掃描（12.5M 列 × 上千顆候選會極慢）。
+        df_idx = df.set_index("norad_id", drop=False).sort_index()
+        rows = []
+        for nid, gc in out.groupby("norad_id"):
+            g_full = df_idx.loc[[nid]]
+            sma_mean, slope = sma_trend(g_full)
+            rows.append(dict(
+                norad_id=int(nid), name=gc["name"].iloc[0],
+                object_type=gc["object_type"].iloc[0],
+                n_events=len(gc), max_abs_z=gc["z_phase"].abs().max(),
+                median_phase_resid_km=gc["phase_resid_km"].abs().median(),
+                sma_mean_km=sma_mean, sma_trend_km_per_day=slope,
+                first_event=gc["epoch_utc"].min(), last_event=gc["epoch_utc"].max(),
+            ))
+        summ = pd.DataFrame(rows).sort_values("n_events", ascending=False)
+        summ_dst = Path(f"data/benchmark/phase_residual_broad_scan_summary{tag}_20260913.csv")
+        summ.to_csv(summ_dst, index=False, encoding="utf-8-sig")
+        print(f"逐衛星彙整（{len(summ)} 顆）→ {summ_dst}", flush=True)
+        print(f"\n物體類型分布：\n{out.drop_duplicates('norad_id')['object_type'].value_counts().to_string()}", flush=True)
+        print(f"\n事件數最多前 20 顆（且為 active_payload）：", flush=True)
+        print(summ[summ['object_type'] == 'active_payload'].head(20).to_string(index=False), flush=True)
+        print(f"\nsma長期趨勢（|slope|<0.01km/day＝已穩定殼層，非仍在軌道轉移）之 active_payload 候選數："
+              f"{(summ[(summ.object_type=='active_payload')]['sma_trend_km_per_day'].abs() < 0.01).sum()} / "
+              f"{(summ.object_type=='active_payload').sum()}", flush=True)
 
 
 if __name__ == "__main__":
