@@ -8935,6 +8935,8 @@ def render_storymap_case14():
             ))
         _fs7_df = pd.read_csv("data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv") \
             if Path("data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv").exists() else pd.DataFrame()
+        _fs7_l3_path = Path("data/benchmark/fs7_l3_fusion_apply_20260914.csv")
+        _fs7_l3_df = pd.read_csv(_fs7_l3_path) if _fs7_l3_path.exists() else pd.DataFrame()
         if len(_fs7_df):
             _fs7_poly = _fs7_df[_fs7_df["method"] == "polynomial"][["norad", "name", "recall", "f1"]].rename(
                 columns={"recall": "recall_poly", "f1": "f1_poly"})
@@ -8943,9 +8945,16 @@ def render_storymap_case14():
             _fs7_ours = _fs7_df[_fs7_df["method"] == "iter2_k8"][["norad", "name", "recall", "f1"]].rename(
                 columns={"recall": "recall_ours", "f1": "f1_ours"})
             _fs7_tbl = (_fs7_poly.merge(_fs7_low, on=["norad", "name"], how="left")
-                                  .merge(_fs7_ours, on=["norad", "name"], how="left")
-                                  .sort_values("name"))
-            _fs7_avg_cols = ["recall_poly", "f1_poly", "recall_low", "f1_low", "recall_ours", "f1_ours"]
+                                  .merge(_fs7_ours, on=["norad", "name"], how="left"))
+            if len(_fs7_l3_df):
+                _fs7_l3 = _fs7_l3_df[["norad", "name", "recall", "f1"]].rename(
+                    columns={"recall": "recall_l3", "f1": "f1_l3"})
+                _fs7_tbl = _fs7_tbl.merge(_fs7_l3, on=["norad", "name"], how="left")
+            else:
+                _fs7_tbl["recall_l3"] = np.nan; _fs7_tbl["f1_l3"] = np.nan
+            _fs7_tbl = _fs7_tbl.sort_values("name")
+            _fs7_avg_cols = ["recall_poly", "f1_poly", "recall_low", "f1_low",
+                             "recall_ours", "f1_ours", "recall_l3", "f1_l3"]
             _fs7_avg = pd.DataFrame([{
                 "name": T3("平均值", "平均値", "Average"),
                 **{c: _fs7_tbl[c].mean() for c in _fs7_avg_cols},
@@ -8955,9 +8964,9 @@ def render_storymap_case14():
                 _fs7_tbl[["name"] + _fs7_avg_cols]
                 .style.format({c: "{:.3f}" for c in _fs7_avg_cols})
                 .apply(_highlight_row_extrema, hi_color="#90EE90", lo_color="#FFF176", axis=1,
-                       subset=["recall_poly", "recall_low", "recall_ours"])
+                       subset=["recall_poly", "recall_low", "recall_ours", "recall_l3"])
                 .apply(_highlight_row_extrema, hi_color="#87CEFA", lo_color="#FFB3B3", axis=1,
-                       subset=["f1_poly", "f1_low", "f1_ours"])
+                       subset=["f1_poly", "f1_low", "f1_ours", "f1_l3"])
             )
             st.dataframe(
                 _fs7_styler, width="stretch", hide_index=True,
@@ -8969,59 +8978,94 @@ def render_storymap_case14():
                     "f1_low": T3("LOWESS·F1", "LOWESS·F1", "LOWESS·F1"),
                     "recall_ours": T3("我們方法(iter2 k=8)·Recall", "本手法(iter2 k=8)·Recall", "Our method (iter2 k=8)·Recall"),
                     "f1_ours": T3("我們方法(iter2 k=8)·F1", "本手法(iter2 k=8)·F1", "Our method (iter2 k=8)·F1"),
+                    "recall_l3": T3("我們方法(LOSO L3融合)·Recall", "本手法(LOSO L3融合)·Recall", "Our method (LOSO L3 fusion)·Recall"),
+                    "f1_l3": T3("我們方法(LOSO L3融合)·F1", "本手法(LOSO L3融合)·F1", "Our method (LOSO L3 fusion)·F1"),
                 },
             )
+            st.caption(T3(
+                "「LOSO L3融合」欄之做法：用全部 23 星（福衛七號本不在此 23 星內，"
+                "天然無需再排除）訓練單一模型，門檻依福衛七號自身 cadence 類別在"
+                "23 星上網格搜尋選出——福衛七號全程未參與訓練或選門檻，是真正"
+                "樣本外（out-of-sample）測試，比既有 LOSO 對 23 星互測更嚴格。"
+                "詳見 `fs7_l3_fusion_apply.py`。",
+                "「LOSO L3融合」列の方法：全23機（フォルモサット7号はもとよりこの23機に"
+                "含まれないため、改めて除外する必要はない）で単一モデルを訓練し、閾値は"
+                "フォルモサット7号自身のcadenceクラスに応じて23機上でグリッドサーチにより"
+                "選定——フォルモサット7号は訓練にも閾値選定にも一切関与しておらず、真の"
+                "サンプル外（out-of-sample）テストであり、既存の23機相互LOSOよりも厳格で"
+                "ある。詳細は `fs7_l3_fusion_apply.py` を参照。",
+                "How the \"LOSO L3 fusion\" column works: a single model is trained on all 23 "
+                "satellites (FORMOSAT-7 was never part of that 23, so no further exclusion is "
+                "needed); the threshold is grid-searched on those 23 satellites according to "
+                "FORMOSAT-7's own cadence class. FORMOSAT-7 never participates in training or "
+                "threshold selection at all — a genuine out-of-sample test, stricter than the "
+                "existing 23-satellite mutual LOSO. See `fs7_l3_fusion_apply.py`.",
+            ))
             st.warning(T3(
-                "**誠實判讀**：三法在福衛七號上之 F1 全數落於 0.07-0.24，明顯低於同批方法"
+                "**誠實判讀**：四法在福衛七號上之 F1 全數落於 0.07-0.24，明顯低於同批方法"
                 "在其餘 23 星標竿上的表現（0.3-0.5 級）——**這正是上方預期的物理解析度"
-                "限制被證實**。意外的是，本專案自己的規則式方法（iter2 k=8）在此反而是"
-                "**三者中最弱**（F1=0.071），弱於 Polynomial 重現版（F1=0.239）——推測"
-                "原因是 iter2 之「位準位移」設計假設機動會留下清晰可辨的階躍，但福衛七號"
-                "機動量級（數十公尺）已被 TLE 雜訊淹沒到階躍本身難以與雜訊區分，而"
-                "Polynomial 之前向外推誤差對這種細微訊號的統計行為恰好較不敏感於此假設。"
-                "此為誠實記錄之意外發現，非本專案方法之普遍性結論。",
-                "**誠実な判読**：3手法のフォルモサット7号でのF1は全て0.07-0.24の範囲にあり、"
+                "限制被證實**。四法排名：Polynomial（0.239）＞LOSO L3融合（0.216）＞"
+                "LOWESS（0.152）＞iter2 k=8（0.071）。**加入 L3 融合後有兩個值得記錄的"
+                "發現**：(1) 本專案較進階之 L3 融合大幅優於簡單規則式 iter2（0.216 vs "
+                "0.071），顯示融合多通道特徵確實有助於偵測這類細微機動，方向與 23 星"
+                "標竿上的結論一致；(2) 但即使是 L3 融合，仍未能超越最簡單的 Polynomial "
+                "重現版——福衛七號機動量級（數十公尺）已被 TLE 雜訊淹沒到連本專案最強"
+                "方法都難以穩定辨識，這是資料本身之物理解析度限制，如實記錄而非隱藏，"
+                "不宜過度解讀為「本專案方法在此類任務上全面不如簡單基準線」。",
+                "**誠実な判読**：4手法のフォルモサット7号でのF1は全て0.07-0.24の範囲にあり、"
                 "同じ手法群の他の23機ベンチマークでの成績（0.3-0.5級）よりも明らかに低い——"
                 "**これはまさに上記で予想された物理的解像度の限界が実証されたものである**。"
-                "意外なことに、本プロジェクト自身のルールベース手法（iter2 k=8）がここでは"
-                "むしろ**3つの中で最も弱く**（F1=0.071）、Polynomial再現版（F1=0.239）より"
-                "劣っている——推測される原因は、iter2の「レベルシフト」設計が機動によって"
-                "明確に識別可能な階段状変化が残ることを前提としているが、フォルモサット7号"
-                "の機動規模（数十メートル）はすでにTLEノイズに埋もれて階段状変化自体が"
-                "ノイズと区別しにくくなっている一方、Polynomialの前向き外挿誤差はこの種の"
-                "微細な信号に対する統計的挙動がたまたまこの前提に対して鈍感であるためと"
-                "考えられる。これは誠実に記録された意外な発見であり、本プロジェクトの手法"
-                "の普遍的な結論ではない。",
-                "**Honest interpretation**: all three methods' F1 on FORMOSAT-7 fall in the "
+                "4手法のランキング：Polynomial（0.239）＞LOSO L3融合（0.216）＞LOWESS"
+                "（0.152）＞iter2 k=8（0.071）。**L3融合を追加したことで2つの記録に値する"
+                "発見があった**：(1) 本プロジェクトのより高度なL3融合は単純なルールベース"
+                "のiter2を大幅に上回っており（0.216 vs 0.071）、複数チャネルの特徴を融合"
+                "することがこの種の微細な機動の検知に確かに役立つことを示しており、23機"
+                "ベンチマークでの結論と方向性が一致する；(2) しかしL3融合であっても、"
+                "最も単純なPolynomial再現版を上回ることはできなかった——フォルモサット7号"
+                "の機動規模（数十メートル）は、本プロジェクトの最強手法でさえ安定して"
+                "識別することが困難なほどTLEノイズに埋もれており、これはデータ自体の"
+                "物理的解像度の限界であり、隠さず誠実に記録するが、「本プロジェクトの"
+                "手法はこの種のタスクで単純な基準線に全面的に劣る」と過度に解釈すべき"
+                "ではない。",
+                "**Honest interpretation**: all four methods' F1 on FORMOSAT-7 fall in the "
                 "0.07-0.24 range, clearly below the same methods' performance on the rest of "
                 "the 23-satellite benchmark (roughly 0.3-0.5) — **exactly confirming the "
-                "physical resolution limit anticipated above**. Surprisingly, this project's "
-                "own rule-based method (iter2 k=8) is actually **the weakest of the three** "
-                "here (F1=0.071), underperforming the Polynomial reproduction (F1=0.239) — "
-                "likely because iter2's \"level-shift\" design assumes maneuvers leave a "
-                "clearly distinguishable step, but at FORMOSAT-7's maneuver scale (tens of "
-                "meters) that step is already buried in TLE noise to the point of being hard "
-                "to distinguish, whereas the Polynomial method's forward-extrapolation-error "
-                "statistic happens to be less sensitive to that particular assumption. This is "
-                "an honestly recorded surprising finding, not a general conclusion about this "
-                "project's method.",
+                "physical resolution limit anticipated above**. Ranking: Polynomial (0.239) > "
+                "LOSO L3 fusion (0.216) > LOWESS (0.152) > iter2 k=8 (0.071). **Adding the L3 "
+                "fusion column reveals two findings worth recording**: (1) this project's more "
+                "advanced L3 fusion substantially outperforms the simple rule-based iter2 "
+                "(0.216 vs 0.071), showing that fusing multiple-channel features does help "
+                "detect this kind of subtle maneuver, consistent in direction with the "
+                "conclusion on the 23-satellite benchmark; (2) but even L3 fusion still fails "
+                "to beat the simplest Polynomial reproduction — FORMOSAT-7's maneuver scale "
+                "(tens of meters) is buried in TLE noise deeply enough that even this "
+                "project's strongest method cannot reliably identify it, a physical "
+                "resolution limit of the data itself, reported honestly rather than hidden, "
+                "and should not be over-read as \"this project's methods are generally "
+                "inferior to a simple baseline for this kind of task.\"",
             ))
             st.caption(T3(
                 "可重現性：真值演算法 `formosat7_leoorb/detect.py`（含 `archive.py`/"
                 "`satmap.py`），真值產出 `fs7_campaign_truth_build.py` → "
-                "`data/benchmark/fs7_events_campaigns_20260825.csv`；本節比較腳本 "
-                "`fs7_curve_method_vs_precise_truth.py` → "
-                "`data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv`。",
+                "`data/benchmark/fs7_events_campaigns_20260825.csv`；Polynomial/LOWESS/"
+                "iter2 比較腳本 `fs7_curve_method_vs_precise_truth.py` → "
+                "`data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv`；"
+                "LOSO L3融合套用腳本 `fs7_l3_fusion_apply.py` → "
+                "`data/benchmark/fs7_l3_fusion_apply_20260914.csv`。",
                 "再現性：真値アルゴリズム `formosat7_leoorb/detect.py`（`archive.py`/"
                 "`satmap.py`を含む）、真値の生成は `fs7_campaign_truth_build.py` → "
-                "`data/benchmark/fs7_events_campaigns_20260825.csv`；本節の比較スクリプトは "
-                "`fs7_curve_method_vs_precise_truth.py` → "
-                "`data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv`。",
+                "`data/benchmark/fs7_events_campaigns_20260825.csv`；Polynomial/LOWESS/"
+                "iter2比較スクリプトは `fs7_curve_method_vs_precise_truth.py` → "
+                "`data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv`；"
+                "LOSO L3融合適用スクリプトは `fs7_l3_fusion_apply.py` → "
+                "`data/benchmark/fs7_l3_fusion_apply_20260914.csv`。",
                 "Reproducibility: truth algorithm `formosat7_leoorb/detect.py` (with "
                 "`archive.py`/`satmap.py`), truth generation via `fs7_campaign_truth_build.py` "
-                "→ `data/benchmark/fs7_events_campaigns_20260825.csv`; this section's "
-                "comparison script `fs7_curve_method_vs_precise_truth.py` → "
-                "`data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv`.",
+                "→ `data/benchmark/fs7_events_campaigns_20260825.csv`; the Polynomial/LOWESS/"
+                "iter2 comparison script `fs7_curve_method_vs_precise_truth.py` → "
+                "`data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv`; the LOSO L3 "
+                "fusion application script `fs7_l3_fusion_apply.py` → "
+                "`data/benchmark/fs7_l3_fusion_apply_20260914.csv`.",
             ))
         else:
             st.info(T3(
