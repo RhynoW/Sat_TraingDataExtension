@@ -9178,7 +9178,17 @@ def render_storymap_case16():
         "3. **與本案例自己的「解鎖條件」不謀而合**：上方判讀提到深度學習之"
         "解鎖條件是「自監督預訓練與真值資料擴增」——2025 年那篇《Masked and "
         "Clustered Pre-Training》論文正是走這條路，獨立印證本案例當初的診斷"
-        "方向，而非本專案自行猜測。",
+        "方向，而非本專案自行猜測。\n\n"
+        "4. **本專案第三次獨立驗證，方向一致**：依 2 篇 SNN 論文全文架構（多重"
+        "門檻LIF＋替代梯度、多通道差分軌道根數）實作 4 個概念代理（LSTM、"
+        "Bi-LSTM、脈衝神經網路、遮罩自編碼器），在同一 23 星標竿 LOSO 交叉"
+        "驗證下，Macro F1 僅 0.018-0.034——精確率尚可（0.46-0.74）但召回率"
+        "極低（0.009-0.018），模型幾乎不觸發偵測。除錯過程中修正兩個真實"
+        "錯誤（時間戳單位、近圓軌道退化重現）後仍如此，診斷為小樣本 LOSO "
+        "訓練下的模型退化解，而非程式錯誤。**這是本專案第三次（bi-GRU、"
+        "LSTM-AE/PatchTST、本次）獨立驗證深度學習在小樣本 TLE 機動偵測任務"
+        "上的侷限性，三次方向一致**，完整記錄：`docs/案例十一2024-2026深度"
+        "學習方法實作嘗試_20260914.md`。",
         "ユーザーの質問に応えて行った文献調査：ネット上に「深層学習を試したが失敗した」と明記した"
         "論文は見つからなかった——**しかしこれ自体は深層学習がすでに成功している証拠にはならない**。"
         "学術発表には正の結果への偏りがあり、負の結果は通常発表されにくい。本事例の結論を"
@@ -9198,7 +9208,18 @@ def render_storymap_case16():
         "3. **本事例自身の「解除条件」と符合**：上記の判読は深層学習の解除条件を「自己教師あり"
         "事前学習と真値データの拡充」としている——2025年の《Masked and Clustered "
         "Pre-Training》論文はまさにこの道を歩んでおり、本事例が当初診断した方向を独立に"
-        "裏付けている。本プロジェクトの憶測ではない。",
+        "裏付けている。本プロジェクトの憶測ではない。\n\n"
+        "4. **本プロジェクト3回目の独立検証、方向は一致**：2篇のSNN論文全文のアーキテクチャ"
+        "（多重閾値LIF＋代理勾配、多チャネル差分軌道要素）に基づき4つの概念プロキシ"
+        "（LSTM、Bi-LSTM、スパイキングニューラルネットワーク、マスク付きオートエンコーダ）"
+        "を実装し、同一23機ベンチマークのLOSO交差検証下でMacro F1はわずか0.018〜0.034——"
+        "適合率はまずまず（0.46〜0.74）だが再現率は極めて低く（0.009〜0.018）、モデルは"
+        "ほとんど検知を発火しない。デバッグ過程で2つの実際のバグ（タイムスタンプ単位、"
+        "近円軌道退化の再発）を修正した後もこの状態であり、小サンプルLOSO訓練下でのモデル"
+        "退化解と診断され、プログラムの誤りではない。**これは本プロジェクトが3回目"
+        "（bi-GRU、LSTM-AE/PatchTST、今回）に独立して深層学習の小サンプルTLE機動検知"
+        "タスクにおける限界を検証したものであり、3回とも方向性が一致している**。完全な"
+        "記録：`docs/案例十一2024-2026深度學習方法實作嘗試_20260914.md`。",
         "Literature search done in response to a user question: no paper explicitly states "
         "\"we tried deep learning and it failed\" — **but this alone is not evidence that deep "
         "learning has already succeeded here**; academic publishing has a well-known bias "
@@ -9220,13 +9241,30 @@ def render_storymap_case16():
         "below names \"self-supervised pretraining and expanded ground truth\" as deep "
         "learning's unlock condition here — the 2025 \"Masked and Clustered Pre-Training\" "
         "paper takes exactly that path, an independent confirmation of this case's original "
-        "diagnosis rather than this project's own speculation.",
+        "diagnosis rather than this project's own speculation.\n\n"
+        "4. **This project's third independent verification, same direction**: based on the "
+        "full-text architecture of the 2 SNN papers (multi-threshold LIF + surrogate gradient, "
+        "multi-channel differential orbital elements), 4 concept-proxy methods were implemented "
+        "(LSTM, Bi-LSTM, a spiking neural network, and a masked autoencoder). Under the same "
+        "23-satellite LOSO cross-validation, Macro F1 reached only 0.018-0.034 — precision was "
+        "decent (0.46-0.74) but recall was extremely low (0.009-0.018); the models almost never "
+        "fire a detection. This persisted even after fixing two genuine bugs found along the way "
+        "(a timestamp-unit error, a recurrence of the near-circular-orbit degeneracy), and was "
+        "diagnosed as a degenerate training solution under this small-sample LOSO setup, not a "
+        "code error. **This is this project's third independent verification (bi-GRU, LSTM-AE/"
+        "PatchTST, and now this) of deep learning's limitations on small-sample TLE maneuver "
+        "detection, and all three point the same direction.** Full record: "
+        "`docs/案例十一2024-2026深度學習方法實作嘗試_20260914.md`.",
     ))
     st.caption(T3(
-        "完整清單見案例十一③文獻列表「機器學習」分類（2026-09-14新增6篇）。",
-        "完全なリストは事例十一③文献リストの「機械学習」分類を参照（2026-09-14に6篇追加）。",
+        "完整清單見案例十一③文獻列表「機器學習」分類（2026-09-14新增6篇）；"
+        "本專案獨立實作嘗試詳見 `docs/案例十一2024-2026深度學習方法實作嘗試_20260914.md`。",
+        "完全なリストは事例十一③文献リストの「機械学習」分類を参照（2026-09-14に6篇追加）；"
+        "本プロジェクトの独自実装の試みは `docs/案例十一2024-2026深度學習方法實作嘗試_"
+        "20260914.md` を参照。",
         "See Case 11 ③'s literature list under the \"Machine Learning\" category for the full "
-        "list (6 papers added 2026-09-14).",
+        "list (6 papers added 2026-09-14); this project's own independent implementation "
+        "attempt is documented in `docs/案例十一2024-2026深度學習方法實作嘗試_20260914.md`.",
     ))
 
     st.markdown("---")
