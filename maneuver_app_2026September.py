@@ -8840,6 +8840,198 @@ def render_storymap_case14():
             f"`tasa19/23_ext_arena.py`'s GLOBAL_CFG); {_src_note}",
         ))
 
+        st.subheader(T3(
+            "擴充：福衛七號（FORMOSAT-7）6 星——精密星曆推估機動 vs TLE 曲線法",
+            "拡張：フォルモサット7号（FORMOSAT-7）6機——精密暦による機動推定 vs TLE曲線法",
+            "Extension: FORMOSAT-7 (6 satellites) — precise-ephemeris-derived maneuvers vs. TLE curve methods",
+        ))
+        with st.expander(T3(
+            "🛰️ 真值來源：從精密星曆（leoOrb SP3）推估機動之演算法（點開看方法與誠實限制）",
+            "🛰️真値の出所：精密暦（leoOrb SP3）から機動を推定するアルゴリズム（クリックして方法と限界を見る）",
+            "🛰️ Truth source: the algorithm that derives maneuvers from precise ephemeris (leoOrb SP3) — click for method and honest limitations",
+        ), expanded=False):
+            st.markdown(T3(
+                "福衛七號（COSMIC-2）非 DORIS/ILRS 衛星，沒有官方機動公告可用；"
+                "但中央氣象署 TACC 每日發布 leoOrb SP3 精密軌道（`formosat7_leoorb/` 套件"
+                "已建置下載/解析），故本專案**自建**一套從精密星曆推估機動候選之演算法"
+                "（`formosat7_leoorb/detect.py`），步驟如下：\n\n"
+                "1. 由 SP3 之位置/地固速度算出瞬時半長軸 a(t) 與傾角 i(t)（先做地固→"
+                "慣性速度修正）；重採樣至均勻 60 秒網格。\n"
+                "2. 以一個軌道週期滾動平均去除 J2 短週期項，再以整數軌道圈差分，"
+                "避免非整數圈導致殘留諧波混疊。\n"
+                "3. 門檻取序列自身穩健標準差之 4 倍，找出候選異常段。\n"
+                "4. **四項獨立證據交叉驗證**才判定為「疑似真事件」：(a) 持久性"
+                "（真機動使半長軸永久階躍，暫態假訊號會回復）、(b) 弧段一致性"
+                "（同時刻 4-6 個獨立解算弧段須一致）、(c) 共模檢查（排除同時多星"
+                "共同來源之假訊號，如太空天氣）、(d) 傾角通道佐證。\n\n"
+                "**誠實聲明**：這是本專案自建之最佳可得替代真值，**非官方機動公告**"
+                "（因福衛七號無此類官方紀錄）；經 4 個觀測期（2024-07、2024-11/12、"
+                "2025-05、2026-01）掃描，共 624 個候選段，其中 **85 個通過全部四項"
+                "驗證**判定為「疑似真事件」，作為本節比較之真值。這些事件量級多為"
+                "**數十公尺**（peak_m 常在 20-250 公尺），**遠小於**本專案其餘 23 星"
+                "標竿之典型公里級機動——TLE 半長軸雜訊底通常已達百公尺至公里級，故"
+                "**預期 TLE 版方法在此召回率會明顯偏低，這是資料本身之物理解析度"
+                "限制，不代表演算法失效**，如實記錄而非隱藏。",
+                "フォルモサット7号（COSMIC-2）はDORIS/ILRS衛星ではなく、公式の機動公告が"
+                "存在しない；しかし中央気象署TACCが毎日leoOrb SP3精密軌道を発表しており"
+                "（`formosat7_leoorb/`パッケージに既にダウンロード/解析機能を構築済み）、"
+                "本プロジェクトは**独自に**精密暦から機動候補を推定するアルゴリズム"
+                "（`formosat7_leoorb/detect.py`）を構築した。手順は以下の通り：\n\n"
+                "1. SP3の位置／地心固定速度から瞬時半長軸a(t)と傾斜角i(t)を算出"
+                "（地心固定→慣性速度への補正を先に実施）；均一な60秒グリッドに再標本化。\n"
+                "2. 1軌道周期の移動平均でJ2短周期項を除去し、整数軌道周回で差分を取り、"
+                "非整数周回による残留調波の混入を回避。\n"
+                "3. 閾値は系列自身の頑健標準偏差の4倍とし、候補異常区間を検出。\n"
+                "4. **4つの独立した証拠による相互検証**を経て初めて「疑似真事件」と判定："
+                "(a) 持続性（真の機動は半長軸に永久的な階段状変化を残すが、一過性の偽信号"
+                "は元に戻る）、(b) 弧セグメント一貫性（同時刻の4-6個の独立解算弧が一致する"
+                "必要がある）、(c) 共通モード検査（宇宙天気など複数衛星同時発生の共通"
+                "要因による偽信号を排除）、(d) 傾斜角チャネルによる裏付け。\n\n"
+                "**誠実な表明**：これは本プロジェクトが独自に構築した現時点で最良の代替"
+                "真値であり、**公式の機動公告ではない**（フォルモサット7号にはこの種の"
+                "公式記録がないため）；4つの観測期間（2024-07、2024-11/12、2025-05、"
+                "2026-01）をスキャンした結果、624個の候補区間のうち**85個が全4項目の"
+                "検証を通過**し「疑似真事件」と判定され、本節の比較における真値として"
+                "用いる。これらのイベントの規模は多くが**数十メートル**（peak_mは通常"
+                "20-250メートル）であり、本プロジェクトの他の23機ベンチマークの典型的な"
+                "キロメートル級機動よりも**はるかに小さい**——TLEの半長軸ノイズフロアは"
+                "通常すでに数百メートルからキロメートル級に達しており、**そのためTLE版"
+                "手法の再現率はここで明らかに低くなると予想され、これはデータ自体の物理的"
+                "解像度の限界であり、アルゴリズムの失敗を意味しない**ことを誠実に記録する"
+                "（隠さない）。",
+                "FORMOSAT-7 (COSMIC-2) is not a DORIS/ILRS satellite, so no official maneuver "
+                "announcements exist; but Taiwan's Central Weather Administration (TACC) "
+                "publishes daily leoOrb SP3 precise orbits (the `formosat7_leoorb/` package "
+                "already has a downloader/parser), so this project **built its own** algorithm "
+                "(`formosat7_leoorb/detect.py`) to derive candidate maneuvers from precise "
+                "ephemeris:\n\n"
+                "1. Compute instantaneous semi-major axis a(t) and inclination i(t) from SP3 "
+                "position/Earth-fixed velocity (correcting Earth-fixed → inertial velocity "
+                "first); resample to a uniform 60-second grid.\n"
+                "2. Remove J2 short-period terms with a one-orbital-period rolling mean, then "
+                "difference over an integer number of orbits to avoid aliased residual "
+                "harmonics from non-integer orbit counts.\n"
+                "3. Threshold at 4x the series' own robust standard deviation to find candidate "
+                "anomalous segments.\n"
+                "4. Only judged a \"suspected genuine event\" after **cross-validation against "
+                "4 independent pieces of evidence**: (a) persistence (a genuine maneuver leaves "
+                "a permanent step in sma; a transient false signal reverts), (b) arc "
+                "consistency (4-6 independently solved arcs at the same epoch must agree), "
+                "(c) common-mode check (rules out signals from a shared cause like space "
+                "weather affecting multiple satellites at once), (d) inclination-channel "
+                "corroboration.\n\n"
+                "**Honest disclosure**: this is this project's own best-available substitute "
+                "ground truth, **not an official maneuver announcement** (FORMOSAT-7 has no "
+                "such official record). Scanning 4 observation campaigns (2024-07, 2024-11/12, "
+                "2025-05, 2026-01) found 624 candidate segments, of which **85 passed all four "
+                "checks** and were judged \"suspected genuine events\" — these serve as this "
+                "section's ground truth. Most of these events are on the scale of **tens of "
+                "meters** (peak_m typically 20-250 m), **far smaller** than the kilometer-scale "
+                "maneuvers typical of this project's other 23-satellite benchmark — TLE "
+                "semi-major-axis noise floors are usually already at the hundred-meter-to-"
+                "kilometer scale, so **TLE-based methods are expected to show clearly lower "
+                "recall here; this is a physical resolution limit of the data itself, not an "
+                "algorithm failure**, reported honestly rather than hidden.",
+            ))
+        _fs7_df = pd.read_csv("data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv") \
+            if Path("data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv").exists() else pd.DataFrame()
+        if len(_fs7_df):
+            _fs7_poly = _fs7_df[_fs7_df["method"] == "polynomial"][["norad", "name", "recall", "f1"]].rename(
+                columns={"recall": "recall_poly", "f1": "f1_poly"})
+            _fs7_low = _fs7_df[_fs7_df["method"] == "lowess"][["norad", "name", "recall", "f1"]].rename(
+                columns={"recall": "recall_low", "f1": "f1_low"})
+            _fs7_ours = _fs7_df[_fs7_df["method"] == "iter2_k8"][["norad", "name", "recall", "f1"]].rename(
+                columns={"recall": "recall_ours", "f1": "f1_ours"})
+            _fs7_tbl = (_fs7_poly.merge(_fs7_low, on=["norad", "name"], how="left")
+                                  .merge(_fs7_ours, on=["norad", "name"], how="left")
+                                  .sort_values("name"))
+            _fs7_avg_cols = ["recall_poly", "f1_poly", "recall_low", "f1_low", "recall_ours", "f1_ours"]
+            _fs7_avg = pd.DataFrame([{
+                "name": T3("平均值", "平均値", "Average"),
+                **{c: _fs7_tbl[c].mean() for c in _fs7_avg_cols},
+            }])
+            _fs7_tbl = pd.concat([_fs7_tbl, _fs7_avg], ignore_index=True)
+            _fs7_styler = (
+                _fs7_tbl[["name"] + _fs7_avg_cols]
+                .style.format({c: "{:.3f}" for c in _fs7_avg_cols})
+                .apply(_highlight_row_extrema, hi_color="#90EE90", lo_color="#FFF176", axis=1,
+                       subset=["recall_poly", "recall_low", "recall_ours"])
+                .apply(_highlight_row_extrema, hi_color="#87CEFA", lo_color="#FFB3B3", axis=1,
+                       subset=["f1_poly", "f1_low", "f1_ours"])
+            )
+            st.dataframe(
+                _fs7_styler, width="stretch", hide_index=True,
+                column_config={
+                    "name": T3("衛星", "衛星", "Satellite"),
+                    "recall_poly": T3("Polynomial·Recall", "Polynomial·Recall", "Polynomial·Recall"),
+                    "f1_poly": T3("Polynomial·F1", "Polynomial·F1", "Polynomial·F1"),
+                    "recall_low": T3("LOWESS·Recall", "LOWESS·Recall", "LOWESS·Recall"),
+                    "f1_low": T3("LOWESS·F1", "LOWESS·F1", "LOWESS·F1"),
+                    "recall_ours": T3("我們方法(iter2 k=8)·Recall", "本手法(iter2 k=8)·Recall", "Our method (iter2 k=8)·Recall"),
+                    "f1_ours": T3("我們方法(iter2 k=8)·F1", "本手法(iter2 k=8)·F1", "Our method (iter2 k=8)·F1"),
+                },
+            )
+            st.warning(T3(
+                "**誠實判讀**：三法在福衛七號上之 F1 全數落於 0.07-0.24，明顯低於同批方法"
+                "在其餘 23 星標竿上的表現（0.3-0.5 級）——**這正是上方預期的物理解析度"
+                "限制被證實**。意外的是，本專案自己的規則式方法（iter2 k=8）在此反而是"
+                "**三者中最弱**（F1=0.071），弱於 Polynomial 重現版（F1=0.239）——推測"
+                "原因是 iter2 之「位準位移」設計假設機動會留下清晰可辨的階躍，但福衛七號"
+                "機動量級（數十公尺）已被 TLE 雜訊淹沒到階躍本身難以與雜訊區分，而"
+                "Polynomial 之前向外推誤差對這種細微訊號的統計行為恰好較不敏感於此假設。"
+                "此為誠實記錄之意外發現，非本專案方法之普遍性結論。",
+                "**誠実な判読**：3手法のフォルモサット7号でのF1は全て0.07-0.24の範囲にあり、"
+                "同じ手法群の他の23機ベンチマークでの成績（0.3-0.5級）よりも明らかに低い——"
+                "**これはまさに上記で予想された物理的解像度の限界が実証されたものである**。"
+                "意外なことに、本プロジェクト自身のルールベース手法（iter2 k=8）がここでは"
+                "むしろ**3つの中で最も弱く**（F1=0.071）、Polynomial再現版（F1=0.239）より"
+                "劣っている——推測される原因は、iter2の「レベルシフト」設計が機動によって"
+                "明確に識別可能な階段状変化が残ることを前提としているが、フォルモサット7号"
+                "の機動規模（数十メートル）はすでにTLEノイズに埋もれて階段状変化自体が"
+                "ノイズと区別しにくくなっている一方、Polynomialの前向き外挿誤差はこの種の"
+                "微細な信号に対する統計的挙動がたまたまこの前提に対して鈍感であるためと"
+                "考えられる。これは誠実に記録された意外な発見であり、本プロジェクトの手法"
+                "の普遍的な結論ではない。",
+                "**Honest interpretation**: all three methods' F1 on FORMOSAT-7 fall in the "
+                "0.07-0.24 range, clearly below the same methods' performance on the rest of "
+                "the 23-satellite benchmark (roughly 0.3-0.5) — **exactly confirming the "
+                "physical resolution limit anticipated above**. Surprisingly, this project's "
+                "own rule-based method (iter2 k=8) is actually **the weakest of the three** "
+                "here (F1=0.071), underperforming the Polynomial reproduction (F1=0.239) — "
+                "likely because iter2's \"level-shift\" design assumes maneuvers leave a "
+                "clearly distinguishable step, but at FORMOSAT-7's maneuver scale (tens of "
+                "meters) that step is already buried in TLE noise to the point of being hard "
+                "to distinguish, whereas the Polynomial method's forward-extrapolation-error "
+                "statistic happens to be less sensitive to that particular assumption. This is "
+                "an honestly recorded surprising finding, not a general conclusion about this "
+                "project's method.",
+            ))
+            st.caption(T3(
+                "可重現性：真值演算法 `formosat7_leoorb/detect.py`（含 `archive.py`/"
+                "`satmap.py`），真值產出 `fs7_campaign_truth_build.py` → "
+                "`data/benchmark/fs7_events_campaigns_20260825.csv`；本節比較腳本 "
+                "`fs7_curve_method_vs_precise_truth.py` → "
+                "`data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv`。",
+                "再現性：真値アルゴリズム `formosat7_leoorb/detect.py`（`archive.py`/"
+                "`satmap.py`を含む）、真値の生成は `fs7_campaign_truth_build.py` → "
+                "`data/benchmark/fs7_events_campaigns_20260825.csv`；本節の比較スクリプトは "
+                "`fs7_curve_method_vs_precise_truth.py` → "
+                "`data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv`。",
+                "Reproducibility: truth algorithm `formosat7_leoorb/detect.py` (with "
+                "`archive.py`/`satmap.py`), truth generation via `fs7_campaign_truth_build.py` "
+                "→ `data/benchmark/fs7_events_campaigns_20260825.csv`; this section's "
+                "comparison script `fs7_curve_method_vs_precise_truth.py` → "
+                "`data/benchmark/fs7_curve_method_vs_precise_truth_20260914.csv`.",
+            ))
+        else:
+            st.info(T3(
+                "尚無福衛七號比較結果檔案，需先執行 `fs7_curve_method_vs_precise_truth.py`。",
+                "フォルモサット7号の比較結果ファイルがまだありません。先に "
+                "`fs7_curve_method_vs_precise_truth.py` を実行してください。",
+                "No FORMOSAT-7 comparison results file yet — run "
+                "`fs7_curve_method_vs_precise_truth.py` first.",
+            ))
+
     st.markdown("---")
     st.header(T3(
         "⑧ 檢測成功定義比較：本專案 vs TASA",
