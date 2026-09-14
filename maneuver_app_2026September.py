@@ -5704,9 +5704,9 @@ def render_storymap_case11():
                 ))
 
     with st.expander(T3(
-        "📚 機動偵測方法與外部真值（含一篇兩岸署名政策適用文獻）",
-        "📚 機動検知手法と外部真値（両岸署名ポリシー適用文献1篇を含む）",
-        "📚 Maneuver-Detection Methods and External Ground Truth (Including One Reference Subject to the Cross-Strait Attribution Policy)",
+        "📚 機動偵測方法與外部真值（含一篇中國大陸署名政策適用文獻）",
+        "📚 機動検知手法と外部真値（中国大陸署名ポリシー適用文献1篇を含む）",
+        "📚 Maneuver-Detection Methods and External Ground Truth (Including One Reference Subject to the Mainland China Attribution Policy)",
     ), expanded=False):
         st.markdown(f"1. {_LIT_EXTERNAL_NOTE} {_LIT_EXTERNAL_DOI}")
         st.caption(T3(
