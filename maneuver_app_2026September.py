@@ -4715,6 +4715,38 @@ _LIT_REFS: list[tuple[str, str, str]] = [
      "ILRS/IDS, \"Satellite Maneuver Histories（DORIS 測高衛星 operator 點火日誌）,\" "
      "International DORIS Service（本專案第二 hold-out 外部真值集來源）。",
      "[IDS](https://ids-doris.org/documents/BC/satellites/)"),
+    # 2026-09-14 新增：回應使用者提問「有無2024-2026年參考資料／深度學習以外的
+    # 學習方式」，網路搜尋補充之最新文獻（含 TierA2 之 MDPI Aerospace 2026
+    # 完整書目確認）。
+    ("機器學習",
+     "\"Spacecraft Orbital Maneuver Detection Using Adaptive Multi-Feature Criteria,\" "
+     "*Aerospace*, 13(8):718, 2026（案例十一 TierA2「同源對照組」之完整書目確認）。",
+     "[MDPI](https://www.mdpi.com/2226-4310/13/8/718)"),
+    ("機器學習",
+     "\"Adaptive Spiking Gating Multi-Scale Liquid State Machine for Orbital Maneuver "
+     "Detection,\" *Aerospace*, 13(5):417, 2026（脈衝神經網路／液態狀態機，神經型態運算）。",
+     "[MDPI](https://doi.org/10.3390/aerospace13050417)"),
+    ("機器學習",
+     "\"Multi-Level Firing with Spiking Neural Network for Orbital Maneuver Detection,\" "
+     "*Aerospace*, 12(11):991, 2025（脈衝神經網路）。",
+     "[MDPI](https://www.mdpi.com/2226-4310/12/11/991)"),
+    ("機器學習",
+     "\"Masked and Clustered Pre-Training for Geosynchronous Satellite Maneuver "
+     "Detection,\" *Remote Sensing*, 17(17):2994, 2025（自監督遮罩預訓練＋聚類）。",
+     "[MDPI](https://doi.org/10.3390/rs17172994)"),
+    ("機器學習",
+     "\"LSTM-based Maneuver Detection for Resident Space Object Catalog Maintenance,\" "
+     "*Neural Computing and Applications*, 2025（Sentinel-3A，LSTM）。",
+     "[Springer](https://link.springer.com/article/10.1007/s00521-025-11177-7)"),
+    ("機器學習",
+     "\"TLE Prediction using Machine Learning for Satellite Maneuver Detection,\" "
+     "AIAA 2025-98101（Bi-LSTM，僅25個標註樣本，本專案評估其樣本量過小、"
+     "結果需謹慎看待）。",
+     "[AIAA](https://arc.aiaa.org/doi/10.2514/6.2025-98101)"),
+    ("軌道力學與 TLE 機動偵測",
+     "\"Space-Based Passive Orbital Maneuver Detection Algorithm for High-Altitude "
+     "Situational Awareness,\" *Aerospace*, 11(7):563, 2024。",
+     "[MDPI](https://www.mdpi.com/2226-4310/11/7/563)"),
 ]
 
 # 兩岸署名政策（見 feedback_cross_strait_attribution 備忘）：大陸文獻列為外部獨立文獻，
@@ -9121,6 +9153,80 @@ def render_storymap_case16():
         "candidate sixth channel and confirmed not worth including. **Concretely pointing out why a "
         "channel is bad, and actually removing it**, earns far more trust than vaguely saying \"feature "
         "selection was performed.\"",
+    ))
+
+    st.header(T3(
+        "⑤ 外部文獻佐證（2026-09-14 新增）：2025-2026 年研究社群怎麼看這個問題",
+        "⑤外部文献による裏付け（2026-09-14追加）：2025〜2026年の研究コミュニティはこの問題をどう見ているか",
+        "⑤ External literature corroboration (added 2026-09-14): how the 2025-2026 research community sees this problem",
+    ))
+    st.markdown(T3(
+        "回應使用者提問而做的文獻搜尋：網路上找不到任何一篇論文明確寫「我們試過"
+        "深度學習但失敗了」——**但這本身不能當作深度學習已經成功的證據**，學術"
+        "發表存在正面結果偏誤，負面結果通常投不出去。真正支撐本案例結論的是"
+        "**間接但具體**的證據：\n\n"
+        "1. **樣本量極小卻聲稱極高指標**：2025 年一篇 Bi-LSTM 論文（AIAA "
+        "2025-98101）僅用 **25 個標註樣本**就宣稱 R²=0.9972——這種樣本規模對"
+        "深度學習而言極度不足，結果高度可疑是過擬合或資料洩漏，而非真實泛化"
+        "能力，與本案例 bi-GRU 逐點AUC天花板僅0.572 之根因（資料量/真值解析度"
+        "不足）方向一致。\n"
+        "2. **研究社群正在遠離「純」深度學習**：2025-2026 最新論文並非直接"
+        "套用 LSTM/CNN，而是轉向脈衝神經網路／液態狀態機（神經型態運算，"
+        "2 篇）、自監督遮罩預訓練＋聚類（1 篇），或回頭用多特徵穩健統計"
+        "（即案例十一 TierA2「同源對照組」）——這個遷移方向本身是一種訊號："
+        "若標準深度學習已經夠好，不需要研究社群持續發明新架構來繞過它。\n"
+        "3. **與本案例自己的「解鎖條件」不謀而合**：上方判讀提到深度學習之"
+        "解鎖條件是「自監督預訓練與真值資料擴增」——2025 年那篇《Masked and "
+        "Clustered Pre-Training》論文正是走這條路，獨立印證本案例當初的診斷"
+        "方向，而非本專案自行猜測。",
+        "ユーザーの質問に応えて行った文献調査：ネット上に「深層学習を試したが失敗した」と明記した"
+        "論文は見つからなかった——**しかしこれ自体は深層学習がすでに成功している証拠にはならない**。"
+        "学術発表には正の結果への偏りがあり、負の結果は通常発表されにくい。本事例の結論を"
+        "実際に裏付けるのは**間接的だが具体的な**証拠である：\n\n"
+        "1. **サンプル数が極めて少ないのに極めて高い指標を主張**：2025年のBi-LSTM論文"
+        "（AIAA 2025-98101）はわずか**25個の標注サンプル**でR²=0.9972を主張している——"
+        "このサンプル規模は深層学習にとって極度に不十分であり、結果は過学習やデータ漏洩の"
+        "疑いが強く、真の汎化能力ではない。本事例のbi-GRUの逐点AUC天井が0.572にとどまる"
+        "根本原因（データ量／真値解像度の不足）と方向性が一致する。\n"
+        "2. **研究コミュニティは「純粋な」深層学習から離れつつある**：2025〜2026年の最新論文は"
+        "LSTM/CNNを直接適用するのではなく、スパイキングニューラルネットワーク／リザバー"
+        "コンピューティング（神経形態計算、2篇）、自己教師あり遮蔽事前学習＋クラスタリング"
+        "（1篇）、あるいは多特徴量の頑健統計（すなわち事例十一TierA2の「同源対照群」）に"
+        "回帰している——この移行方向自体が一つのシグナルである：標準的な深層学習がすでに"
+        "十分であれば、研究コミュニティが新しいアーキテクチャを発明し続けてそれを回避する"
+        "必要はない。\n"
+        "3. **本事例自身の「解除条件」と符合**：上記の判読は深層学習の解除条件を「自己教師あり"
+        "事前学習と真値データの拡充」としている——2025年の《Masked and Clustered "
+        "Pre-Training》論文はまさにこの道を歩んでおり、本事例が当初診断した方向を独立に"
+        "裏付けている。本プロジェクトの憶測ではない。",
+        "Literature search done in response to a user question: no paper explicitly states "
+        "\"we tried deep learning and it failed\" — **but this alone is not evidence that deep "
+        "learning has already succeeded here**; academic publishing has a well-known bias "
+        "toward positive results, and negative ones rarely get published. What actually "
+        "supports this case's conclusion is **indirect but concrete** evidence:\n\n"
+        "1. **Tiny sample sizes paired with implausibly high metrics**: a 2025 Bi-LSTM paper "
+        "(AIAA 2025-98101) claims R²=0.9972 using only **25 labeled samples** — a sample size "
+        "far too small for deep learning, making overfitting or data leakage far more likely "
+        "than genuine generalization, consistent in direction with this case's own root cause "
+        "(data volume / ground-truth resolution) for the bi-GRU's 0.572 point-wise AUC ceiling.\n"
+        "2. **The research community is moving away from \"plain\" deep learning**: the newest "
+        "2025-2026 papers don't apply LSTM/CNN directly but instead turn to spiking neural "
+        "networks / liquid state machines (neuromorphic computing, 2 papers), self-supervised "
+        "masked pretraining + clustering (1 paper), or back to multi-feature robust statistics "
+        "(i.e., Case 11 TierA2's \"conceptually similar counterpart\") — this migration is "
+        "itself a signal: if standard deep learning were already good enough, the field "
+        "wouldn't keep inventing new architectures to work around it.\n"
+        "3. **Independently converges with this case's own \"unlock condition\"**: the verdict "
+        "below names \"self-supervised pretraining and expanded ground truth\" as deep "
+        "learning's unlock condition here — the 2025 \"Masked and Clustered Pre-Training\" "
+        "paper takes exactly that path, an independent confirmation of this case's original "
+        "diagnosis rather than this project's own speculation.",
+    ))
+    st.caption(T3(
+        "完整清單見案例十一③文獻列表「機器學習」分類（2026-09-14新增6篇）。",
+        "完全なリストは事例十一③文献リストの「機械学習」分類を参照（2026-09-14に6篇追加）。",
+        "See Case 11 ③'s literature list under the \"Machine Learning\" category for the full "
+        "list (6 papers added 2026-09-14).",
     ))
 
     st.markdown("---")
