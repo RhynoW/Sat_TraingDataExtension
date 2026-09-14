@@ -8722,15 +8722,23 @@ def render_storymap_case14():
         }])
         _tbl = pd.concat([_tbl, _avg_row], ignore_index=True)
 
-        def _highlight_row_extrema(row, hi_color, lo_color):
+        def _highlight_row_extrema(row, hi_color, lo_color, tol=1e-9):
+            """逐列標示最高分／最低分；**並列同分視為同一等級，全部一併標示**
+            （例如 LOSO L3 融合與 Polynomial 之 Recall 完全相同時，兩者皆標
+            最高分色＋粗體，而非只挑其中一個），非僅取 argmax/argmin 之
+            第一個索引。"""
             vals = pd.to_numeric(row, errors="coerce").to_numpy(dtype=float)
             styles = [""] * len(row)
-            if np.all(np.isnan(vals)):
+            finite = np.isfinite(vals)
+            if not finite.any():
                 return styles
-            i_max = int(np.nanargmax(vals)); i_min = int(np.nanargmin(vals))
-            styles[i_max] = f"background-color: {hi_color}; color: #000; font-weight: bold;"
-            if i_min != i_max:
-                styles[i_min] = f"background-color: {lo_color}; color: #000;"
+            v_max = np.nanmax(vals); v_min = np.nanmin(vals)
+            is_max = finite & (np.abs(vals - v_max) <= tol)
+            is_min = finite & (np.abs(vals - v_min) <= tol) & ~is_max
+            for i in np.where(is_max)[0]:
+                styles[i] = f"background-color: {hi_color}; color: #000; font-weight: bold;"
+            for i in np.where(is_min)[0]:
+                styles[i] = f"background-color: {lo_color}; color: #000;"
             return styles
 
         _recall_cols = ["recall_poly", "recall_low", "recall_ours", "recall_l3"]
@@ -8792,13 +8800,17 @@ def render_storymap_case14():
             "measure of \"this project's method.\"",
         ))
         st.caption(T3(
-            "顏色標示（逐列比較 4 個 Recall／4 個 F1）：綠底＋粗體＝該列 Recall 最高、黃底＝"
-            "該列 Recall 最低；天藍底＋粗體＝該列 F1 最高、淡紅底＝該列 F1 最低。",
-            "色分け（各行のRecall4列／F1 4列を比較）：緑＋太字＝その行のRecallが最高、黄＝"
-            "その行のRecallが最低；水色＋太字＝その行のF1が最高、薄紅＝その行のF1が最低。",
-            "Color coding (compares the 4 Recall / 4 F1 columns within each row): green + bold "
-            "= highest Recall in that row, yellow = lowest Recall; sky blue + bold = highest "
-            "F1, light red = lowest F1.",
+            "顏色標示（逐列比較 4 個 Recall／4 個 F1，**並列同分視為同一等級、一併標示**，"
+            "非僅標示第一個找到的最高/最低值）：綠底＋粗體＝該列 Recall 最高、黃底＝該列 "
+            "Recall 最低；天藍底＋粗體＝該列 F1 最高、淡紅底＝該列 F1 最低。",
+            "色分け（各行のRecall4列／F1 4列を比較、**同点は同じ等級として扱い、まとめて"
+            "表示**、最初に見つかった最高/最低値のみを表示するのではない）：緑＋太字＝"
+            "その行のRecallが最高、黄＝その行のRecallが最低；水色＋太字＝その行のF1が"
+            "最高、薄紅＝その行のF1が最低。",
+            "Color coding (compares the 4 Recall / 4 F1 columns within each row; **ties are "
+            "treated as the same rank and all highlighted together**, not just the first "
+            "max/min found): green + bold = highest Recall in that row, yellow = lowest "
+            "Recall; sky blue + bold = highest F1, light red = lowest F1.",
         ))
         st.caption(T3(
             "逐星對照：TASA 簡報 p3/p4 之「平均成功率」對應本表之 Recall 欄、「平均F1-score」"
