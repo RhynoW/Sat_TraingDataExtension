@@ -8706,10 +8706,35 @@ def render_storymap_case14():
                         .sort_values(["scope", "name"]))
         _tbl["scope"] = _tbl["scope"].map({"14原始": T3("14原始", "14原初", "orig-14"),
                                             "9延伸": T3("9延伸", "9延伸", "ext-9")})
-        st.dataframe(
+        _avg_cols = ["recall_poly", "f1_poly", "recall_low", "f1_low", "recall_ours", "f1_ours"]
+        _avg_row = pd.DataFrame([{
+            "name": T3("平均值", "平均値", "Average"), "scope": "",
+            **{c: _tbl[c].mean() for c in _avg_cols},
+        }])
+        _tbl = pd.concat([_tbl, _avg_row], ignore_index=True)
+
+        def _highlight_row_extrema(row, hi_color, lo_color):
+            vals = pd.to_numeric(row, errors="coerce").to_numpy(dtype=float)
+            styles = [""] * len(row)
+            if np.all(np.isnan(vals)):
+                return styles
+            i_max = int(np.nanargmax(vals)); i_min = int(np.nanargmin(vals))
+            styles[i_max] = f"background-color: {hi_color}; color: #000;"
+            if i_min != i_max:
+                styles[i_min] = f"background-color: {lo_color}; color: #000;"
+            return styles
+
+        _styler = (
             _tbl[["name", "scope", "recall_poly", "f1_poly", "recall_low", "f1_low", "recall_ours", "f1_ours"]]
             .style.format({"recall_poly": "{:.3f}", "f1_poly": "{:.3f}", "recall_low": "{:.3f}",
-                           "f1_low": "{:.3f}", "recall_ours": "{:.3f}", "f1_ours": "{:.3f}"}),
+                           "f1_low": "{:.3f}", "recall_ours": "{:.3f}", "f1_ours": "{:.3f}"})
+            .apply(_highlight_row_extrema, hi_color="#90EE90", lo_color="#FFF176", axis=1,
+                   subset=["recall_poly", "recall_low", "recall_ours"])
+            .apply(_highlight_row_extrema, hi_color="#87CEFA", lo_color="#FFB3B3", axis=1,
+                   subset=["f1_poly", "f1_low", "f1_ours"])
+        )
+        st.dataframe(
+            _styler,
             width="stretch", hide_index=True,
             column_config={
                 "name": T3("衛星", "衛星", "Satellite"),
@@ -8722,6 +8747,15 @@ def render_storymap_case14():
                 "f1_ours": T3("我們方法(iter2 k=8)·F1", "本手法(iter2 k=8)·F1", "Our method (iter2 k=8)·F1"),
             },
         )
+        st.caption(T3(
+            "顏色標示（逐列比較 3 個 Recall／3 個 F1）：綠底＝該列 Recall 最高、黃底＝該列 "
+            "Recall 最低；天藍底＝該列 F1 最高、淡紅底＝該列 F1 最低。",
+            "色分け（各行のRecall3列／F1 3列を比較）：緑＝その行のRecallが最高、黄＝その行の"
+            "Recallが最低；水色＝その行のF1が最高、薄紅＝その行のF1が最低。",
+            "Color coding (compares the 3 Recall / 3 F1 columns within each row): green = "
+            "highest Recall in that row, yellow = lowest Recall; sky blue = highest F1, "
+            "light red = lowest F1.",
+        ))
         st.caption(T3(
             "逐星對照：TASA 簡報 p3/p4 之「平均成功率」對應本表之 Recall 欄、「平均F1-score」"
             "對應 F1 欄；「我們方法」統一採 iter2(k=8)（零逐星調參之全域規則式方法），"
