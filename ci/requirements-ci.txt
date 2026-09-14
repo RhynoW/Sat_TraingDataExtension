@@ -1,0 +1,9 @@
+# GitHub Actions 每日資料更新流程專用相依套件
+# 對應 .github/workflows/daily_data_update.yml
+duckdb>=0.10
+pandas
+numpy
+python-dotenv
+skyfield
+spacetrack
+huggingface_hub>=0.24

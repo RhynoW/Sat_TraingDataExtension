@@ -1,0 +1,59 @@
+name: 每日 TLE 更新與資料庫發布
+
+on:
+  schedule:
+    # UTC 00:00 = 台灣時間 08:00
+    - cron: '0 0 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: daily-data-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: 取出程式碼
+        uses: actions/checkout@v4
+
+      - name: 取出 SatDashboard 程式碼（scenario-advanced01 為獨立 repo，非本 repo 的一部分）
+        uses: actions/checkout@v4
+        with:
+          repository: RhynoW/ATRDC-SatDashboard
+          path: scenario-advanced01
+
+      - name: 設定 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安裝相依套件
+        run: pip install -r ci/requirements-ci.txt
+
+      - name: 每日 TLE 增量更新（寫回 HF Dataset 年度 parquet）
+        env:
+          SPACE_TRACK_IDENTITY: ${{ secrets.SPACE_TRACK_IDENTITY }}
+          SPACE_TRACK_PASSWORD: ${{ secrets.SPACE_TRACK_PASSWORD }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python ci/ci_daily_tle_update.py --dataset-repo RhynoWu/starlink-maneuver-db
+
+      - name: 重建 slim DB
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python ci/ci_build_and_publish_slim.py --dataset-repo RhynoWu/starlink-maneuver-db
+
+      - name: 發布 slim DB 到 SatDashboard Dataset 並重啟 Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: python scenario-advanced01/tools/publish_db_to_dataset.py
+
+      - name: 失敗時上傳除錯用工作目錄（保留 7 天）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-work-debug
+          path: ci_work/
+          retention-days: 7
+          if-no-files-found: ignore
