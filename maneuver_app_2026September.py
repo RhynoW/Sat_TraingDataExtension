@@ -8728,7 +8728,7 @@ def render_storymap_case14():
             if np.all(np.isnan(vals)):
                 return styles
             i_max = int(np.nanargmax(vals)); i_min = int(np.nanargmin(vals))
-            styles[i_max] = f"background-color: {hi_color}; color: #000;"
+            styles[i_max] = f"background-color: {hi_color}; color: #000; font-weight: bold;"
             if i_min != i_max:
                 styles[i_min] = f"background-color: {lo_color}; color: #000;"
             return styles
@@ -8792,13 +8792,13 @@ def render_storymap_case14():
             "measure of \"this project's method.\"",
         ))
         st.caption(T3(
-            "顏色標示（逐列比較 4 個 Recall／4 個 F1）：綠底＝該列 Recall 最高、黃底＝該列 "
-            "Recall 最低；天藍底＝該列 F1 最高、淡紅底＝該列 F1 最低。",
-            "色分け（各行のRecall4列／F1 4列を比較）：緑＝その行のRecallが最高、黄＝その行の"
-            "Recallが最低；水色＝その行のF1が最高、薄紅＝その行のF1が最低。",
-            "Color coding (compares the 4 Recall / 4 F1 columns within each row): green = "
-            "highest Recall in that row, yellow = lowest Recall; sky blue = highest F1, "
-            "light red = lowest F1.",
+            "顏色標示（逐列比較 4 個 Recall／4 個 F1）：綠底＋粗體＝該列 Recall 最高、黃底＝"
+            "該列 Recall 最低；天藍底＋粗體＝該列 F1 最高、淡紅底＝該列 F1 最低。",
+            "色分け（各行のRecall4列／F1 4列を比較）：緑＋太字＝その行のRecallが最高、黄＝"
+            "その行のRecallが最低；水色＋太字＝その行のF1が最高、薄紅＝その行のF1が最低。",
+            "Color coding (compares the 4 Recall / 4 F1 columns within each row): green + bold "
+            "= highest Recall in that row, yellow = lowest Recall; sky blue + bold = highest "
+            "F1, light red = lowest F1.",
         ))
         st.caption(T3(
             "逐星對照：TASA 簡報 p3/p4 之「平均成功率」對應本表之 Recall 欄、「平均F1-score」"
