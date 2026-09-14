@@ -8688,6 +8688,55 @@ def render_storymap_case14():
             "rigorous statistical test (a significant win at 23 satellites, p=0.006); this just shows the "
             "same conclusion again, more intuitively, as a bar chart.",
         ))
+        st.subheader(T3(
+            "每一顆衛星的 Polynomial Fit 與 LOWESS 數據重現版 vs 我們方法（14＋9 星全列）",
+            "衛星ごとのPolynomial FitとLOWESSデータ再現版 vs 本手法（14＋9機全件）",
+            "Per-satellite Polynomial Fit and LOWESS reproduction vs. our method (all 14+9 satellites)",
+        ))
+        _cr_poly = (_cr[_cr["family"] == "predict_error"][["norad", "name", "scope", "recall", "f1"]]
+                    .rename(columns={"recall": "recall_poly", "f1": "f1_poly"}))
+        _cr_low = (_cr[_cr["family"] == "lowess_resid"][["norad", "name", "recall", "f1"]]
+                   .rename(columns={"recall": "recall_low", "f1": "f1_low"}))
+        _ours14 = _d14["b1_14"][_d14["b1_14"]["method"] == "iter2(k=8)"][["norad", "name", "recall", "f1"]] if _d14 else pd.DataFrame()
+        _ours9 = _d14["b1_9"][["norad", "name", "recall", "f1"]] if _d14 else pd.DataFrame()
+        _ours_all = (pd.concat([_ours14, _ours9], ignore_index=True)
+                     .rename(columns={"recall": "recall_ours", "f1": "f1_ours"}))
+        _tbl = (_cr_poly.merge(_cr_low, on=["norad", "name"], how="left")
+                        .merge(_ours_all, on=["norad", "name"], how="left")
+                        .sort_values(["scope", "name"]))
+        _tbl["scope"] = _tbl["scope"].map({"14原始": T3("14原始", "14原初", "orig-14"),
+                                            "9延伸": T3("9延伸", "9延伸", "ext-9")})
+        st.dataframe(
+            _tbl[["name", "scope", "recall_poly", "f1_poly", "recall_low", "f1_low", "recall_ours", "f1_ours"]]
+            .style.format({"recall_poly": "{:.3f}", "f1_poly": "{:.3f}", "recall_low": "{:.3f}",
+                           "f1_low": "{:.3f}", "recall_ours": "{:.3f}", "f1_ours": "{:.3f}"}),
+            width="stretch", hide_index=True,
+            column_config={
+                "name": T3("衛星", "衛星", "Satellite"),
+                "scope": T3("範疇", "範囲", "Scope"),
+                "recall_poly": T3("Polynomial·Recall", "Polynomial·Recall", "Polynomial·Recall"),
+                "f1_poly": T3("Polynomial·F1", "Polynomial·F1", "Polynomial·F1"),
+                "recall_low": T3("LOWESS·Recall", "LOWESS·Recall", "LOWESS·Recall"),
+                "f1_low": T3("LOWESS·F1", "LOWESS·F1", "LOWESS·F1"),
+                "recall_ours": T3("我們方法(iter2 k=8)·Recall", "本手法(iter2 k=8)·Recall", "Our method (iter2 k=8)·Recall"),
+                "f1_ours": T3("我們方法(iter2 k=8)·F1", "本手法(iter2 k=8)·F1", "Our method (iter2 k=8)·F1"),
+            },
+        )
+        st.caption(T3(
+            "逐星對照：TASA 簡報 p3/p4 之「平均成功率」對應本表之 Recall 欄、「平均F1-score」"
+            "對應 F1 欄；「我們方法」統一採 iter2(k=8)（零逐星調參之全域規則式方法），"
+            "與上方 14 星、9 星摘要圖表使用同一批原始逐星數字，僅此處攤開成逐星表格。",
+            "衛星ごとの対照：TASA発表資料p3/p4の「平均成功率」は本表のRecall列に、「平均"
+            "F1-score」はF1列に対応する；「本手法」は統一してiter2(k=8)（衛星ごとの調整を"
+            "行わない全域ルールベース手法）を採用しており、上記の14機・9機の要約図表と"
+            "同一の元データを使用し、ここでは衛星ごとの表として展開しているだけである。",
+            "Per-satellite: TASA's briefing p.3/p.4 \"mean success rate\" corresponds to this "
+            "table's Recall column, and \"mean F1-score\" to the F1 column; \"our method\" is "
+            "uniformly iter2(k=8) (a zero-per-satellite-tuned global rule-based method), using "
+            "the same underlying per-satellite numbers as the summary charts above, just laid "
+            "out here satellite by satellite.",
+        ))
+
         _src_note = T3(
             "現場對 `space_db.duckdb` 重新查詢並計算，非讀取凍結檔。",
             "`space_db.duckdb` にその場で再照会・計算しており、凍結ファイルの読み込みではない。",
