@@ -8701,12 +8701,21 @@ def render_storymap_case14():
         _ours9 = _d14["b1_9"][["norad", "name", "recall", "f1"]] if _d14 else pd.DataFrame()
         _ours_all = (pd.concat([_ours14, _ours9], ignore_index=True)
                      .rename(columns={"recall": "recall_ours", "f1": "f1_ours"}))
+        # 加入 LOSO L3 融合（本專案最強方法，非簡單規則式 iter2）之逐星數字——
+        # 稍早僅展示 iter2(k=8) 曾讓讀者誤以為與案例十一/十四其他頁面「9星L3融合
+        # 對比curve法9勝0敗」之結論矛盾；實際上那個結論比較的是「L3融合」而非
+        # 「iter2」，且比較對象是Polynomial單一家族而非「Polynomial與LOWESS取
+        # 最佳」。加入L3融合欄後，讀者可同時看到本專案兩種方法量級，避免誤讀。
+        _l3_path = Path("data/benchmark/tasa23_l3_stack_q23_20260804.csv")
+        _l3_all = (pd.read_csv(_l3_path)[["norad", "name", "recall", "f1"]]
+                   .rename(columns={"recall": "recall_l3", "f1": "f1_l3"})) if _l3_path.exists() else pd.DataFrame()
         _tbl = (_cr_poly.merge(_cr_low, on=["norad", "name"], how="left")
                         .merge(_ours_all, on=["norad", "name"], how="left")
+                        .merge(_l3_all, on=["norad", "name"], how="left")
                         .sort_values(["scope", "name"]))
         _tbl["scope"] = _tbl["scope"].map({"14原始": T3("14原始", "14原初", "orig-14"),
                                             "9延伸": T3("9延伸", "9延伸", "ext-9")})
-        _avg_cols = ["recall_poly", "f1_poly", "recall_low", "f1_low", "recall_ours", "f1_ours"]
+        _avg_cols = ["recall_poly", "f1_poly", "recall_low", "f1_low", "recall_ours", "f1_ours", "recall_l3", "f1_l3"]
         _avg_row = pd.DataFrame([{
             "name": T3("平均值", "平均値", "Average"), "scope": "",
             **{c: _tbl[c].mean() for c in _avg_cols},
@@ -8724,14 +8733,18 @@ def render_storymap_case14():
                 styles[i_min] = f"background-color: {lo_color}; color: #000;"
             return styles
 
+        _recall_cols = ["recall_poly", "recall_low", "recall_ours", "recall_l3"]
+        _f1_cols = ["f1_poly", "f1_low", "f1_ours", "f1_l3"]
+        _display_cols = ["name", "scope", "recall_poly", "f1_poly", "recall_low", "f1_low",
+                          "recall_ours", "f1_ours", "recall_l3", "f1_l3"]
+        _fmt = {c: "{:.3f}" for c in _recall_cols + _f1_cols}
         _styler = (
-            _tbl[["name", "scope", "recall_poly", "f1_poly", "recall_low", "f1_low", "recall_ours", "f1_ours"]]
-            .style.format({"recall_poly": "{:.3f}", "f1_poly": "{:.3f}", "recall_low": "{:.3f}",
-                           "f1_low": "{:.3f}", "recall_ours": "{:.3f}", "f1_ours": "{:.3f}"})
+            _tbl[_display_cols]
+            .style.format(_fmt)
             .apply(_highlight_row_extrema, hi_color="#90EE90", lo_color="#FFF176", axis=1,
-                   subset=["recall_poly", "recall_low", "recall_ours"])
+                   subset=_recall_cols)
             .apply(_highlight_row_extrema, hi_color="#87CEFA", lo_color="#FFB3B3", axis=1,
-                   subset=["f1_poly", "f1_low", "f1_ours"])
+                   subset=_f1_cols)
         )
         st.dataframe(
             _styler,
@@ -8745,14 +8758,45 @@ def render_storymap_case14():
                 "f1_low": T3("LOWESS·F1", "LOWESS·F1", "LOWESS·F1"),
                 "recall_ours": T3("我們方法(iter2 k=8)·Recall", "本手法(iter2 k=8)·Recall", "Our method (iter2 k=8)·Recall"),
                 "f1_ours": T3("我們方法(iter2 k=8)·F1", "本手法(iter2 k=8)·F1", "Our method (iter2 k=8)·F1"),
+                "recall_l3": T3("我們方法(LOSO L3融合)·Recall", "本手法(LOSO L3融合)·Recall", "Our method (LOSO L3 fusion)·Recall"),
+                "f1_l3": T3("我們方法(LOSO L3融合)·F1", "本手法(LOSO L3融合)·F1", "Our method (LOSO L3 fusion)·F1"),
             },
         )
+        st.info(T3(
+            "**釐清一個容易誤讀的地方**：本表新增「LOSO L3融合」欄後，比較基準是"
+            "「4 個數字互相比較」（Polynomial、LOWESS、iter2、L3融合），與別處"
+            "（案例十一/十四其他段落）所稱「9 顆延伸衛星本專案 9 勝 0 敗」**並不"
+            "矛盾**——那個結論比較的是「LOSO L3融合」（本專案最強方法）vs"
+            "「Polynomial 單一家族」，而本表額外納入了 LOWESS 家族、以及較簡單的"
+            "iter2(k=8) 規則式基準線，比較組合更廣，因此在某些衛星上簡單基準線"
+            "（iter2）未必贏過 LOWESS 或 Polynomial，但完整方法（L3融合）幾乎皆為"
+            "最高分——建議以 L3融合欄為準判讀「本專案方法」之真實水準。",
+            "**誤解しやすい点を明確化**：本表に「LOSO L3融合」列を追加したことで、比較基準は"
+            "「4つの数値の相互比較」（Polynomial、LOWESS、iter2、L3融合）となった。これは他の"
+            "箇所（事例十一／十四の他のセクション）で述べている「延伸衛星9機で本プロジェクトが"
+            "9勝0敗」という結論と**矛盾しない**——その結論は「LOSO L3融合」（本プロジェクト"
+            "最強の手法）vs「Polynomial単一系統」の比較であり、本表はさらにLOWESS系統や、"
+            "より単純なiter2(k=8)ルールベースの基準線も含めているため、比較の組み合わせが"
+            "より広い。そのため一部の衛星では単純な基準線（iter2）がLOWESSやPolynomialに"
+            "勝てないことがあるが、完全な手法（L3融合）はほぼ常に最高得点である——「本"
+            "プロジェクトの手法」の真の水準を判読するにはL3融合列を基準にすることを推奨する。",
+            "**Clarifying a point that's easy to misread**: adding the \"LOSO L3 fusion\" column "
+            "makes this table a 4-way comparison (Polynomial, LOWESS, iter2, L3 fusion). This "
+            "does **not** contradict the \"9 wins, 0 losses on the 9 extension satellites\" claim "
+            "found elsewhere (Case 11/14) — that claim compares \"LOSO L3 fusion\" (this "
+            "project's strongest method) against the \"Polynomial\" family alone, whereas this "
+            "table additionally includes the LOWESS family and the simpler iter2(k=8) rule-based "
+            "baseline, widening the comparison set. As a result, the simpler baseline (iter2) does "
+            "not always beat LOWESS or Polynomial on every satellite, but the full method (L3 "
+            "fusion) is nearly always the top score — read the L3 fusion column as the true "
+            "measure of \"this project's method.\"",
+        ))
         st.caption(T3(
-            "顏色標示（逐列比較 3 個 Recall／3 個 F1）：綠底＝該列 Recall 最高、黃底＝該列 "
+            "顏色標示（逐列比較 4 個 Recall／4 個 F1）：綠底＝該列 Recall 最高、黃底＝該列 "
             "Recall 最低；天藍底＝該列 F1 最高、淡紅底＝該列 F1 最低。",
-            "色分け（各行のRecall3列／F1 3列を比較）：緑＝その行のRecallが最高、黄＝その行の"
+            "色分け（各行のRecall4列／F1 4列を比較）：緑＝その行のRecallが最高、黄＝その行の"
             "Recallが最低；水色＝その行のF1が最高、薄紅＝その行のF1が最低。",
-            "Color coding (compares the 3 Recall / 3 F1 columns within each row): green = "
+            "Color coding (compares the 4 Recall / 4 F1 columns within each row): green = "
             "highest Recall in that row, yellow = lowest Recall; sky blue = highest F1, "
             "light red = lowest F1.",
         ))
