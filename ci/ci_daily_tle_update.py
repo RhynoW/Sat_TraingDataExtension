@@ -39,7 +39,13 @@ from download_TLE_unified import (  # noqa: E402
     init_space_db,
 )
 
-RAW_TABLE_COLS_ORDER = None  # 直接用 SELECT * ，欄位順序以 init_space_db 之 schema 為準
+RAW_TABLE_COLS = [
+    "norad_id", "object_name", "line1", "line2", "epoch_jd", "epoch_utc",
+    "downloaded_at_utc", "sma_km", "eccentricity", "inclination_deg", "raan_deg",
+    "argp_deg", "mean_anomaly_deg", "mean_motion", "energy", "rmin_km", "rmax_km", "bstar",
+]  # 須與 init_space_db 之 raw_tle_archive DDL 完全一致；用具名 SELECT 而非 SELECT *，
+   # 因 Dataset 上的年度分割檔（export_to_hf_parquet.py 產出）多帶一個 year 分割欄，
+   # 位置對應的 SELECT * 會導致欄位數不符（19 vs 18）而 INSERT 失敗
 
 
 def year_path(year: int) -> str:
@@ -88,7 +94,8 @@ def main() -> int:
     for yr in (this_year - 1, this_year):
         p = try_fetch_year_parquet(args.dataset_repo, yr, work / "hf_cache")
         if p:
-            con.execute(f"INSERT INTO raw_tle_archive SELECT * FROM read_parquet('{Path(p).as_posix()}')")
+            cols = ", ".join(RAW_TABLE_COLS)
+            con.execute(f"INSERT INTO raw_tle_archive SELECT {cols} FROM read_parquet('{Path(p).as_posix()}')")
             n = con.execute("SELECT count(*) FROM raw_tle_archive").fetchone()[0]
             print(f"      年度 {yr} 匯入後累計 {n:,} 列")
             n_imported += 1
