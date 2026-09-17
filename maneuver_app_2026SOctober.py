@@ -190,6 +190,14 @@ L: dict[str, dict[str, str]] = {
                                    "ja": "事例二十一：半長軸では見えない機動——位相残差の新チャネル", "en": "Case 21: The Maneuver Semi-Major Axis Can't See — the New Phase-Residual Channel"},
     "storymap_case21_card_desc": {"zh": "從一次意外發現到新偵測通道：緯度幅角相位殘差法、一次自我修正的方法學錯誤、兩次全LEO廣泛掃描，以及「這是否為刻意規避偵測」的誠實評估。",
                                   "ja": "偶然の発見から新しい検知チャネルへ：緯度引数の位相残差法、自ら修正した方法論上の誤り、2回の全LEO広域スキャン、そして「これは検知回避を意図したものか」という誠実な評価。", "en": "From an accidental discovery to a new detection channel: the argument-of-latitude phase-residual method, one self-corrected methodological error, two full-LEO broad scans, and an honest assessment of whether this is deliberate detection evasion."},
+    "storymap_case22_card_title": {"zh": "案例二十二：機動偵測的核心構想——TLE 差分怎麼抓到偷偷動的衛星？",
+                                   "ja": "事例二十二：機動検知の核心構想——TLE差分でこっそり動いた衛星をどう捕まえるか？", "en": "Case 22: The Core Concept of Maneuver Detection — How TLE Differencing Catches a Satellite That Quietly Moved"},
+    "storymap_case22_card_desc": {"zh": "只用公開 TLE、不靠機密星曆：六項改進構想（P1–P6）如何一步步剔除大氣阻力誤報，並用兩種截然不同規模的實驗誠實驗證。",
+                                  "ja": "公開TLEのみを使い、機密暦に頼らない：6つの改良構想（P1–P6）が大気抵抗による誤検知をどう段階的に除去するか、規模の異なる2つの実験で誠実に検証する。", "en": "Using only public TLEs, no confidential ephemerides: how six incremental concepts (P1–P6) strip away atmospheric-drag false positives, honestly validated across two experiments of very different scale."},
+    "storymap_case23_card_title": {"zh": "案例二十三：教 AI 當太空偵探的構想——LightGBM 融合分類器與一次誠實抓漏",
+                                   "ja": "事例二十三：AIを宇宙探偵にする構想——LightGBM融合分類器と、自ら見つけたラベル漏洩", "en": "Case 23: The Concept of Teaching AI to Be a Space Detective — the LightGBM Fusion Classifier and a Self-Caught Data Leak"},
+    "storymap_case23_card_desc": {"zh": "20 個 TLE 聚合特徵、14,023 顆衛星——以及訓練途中自己抓到的一項標籤洩漏，修正後模型表現才是可信的。",
+                                  "ja": "20個のTLE集約特徴量、14,023機の衛星——そして学習中に自ら発見したラベル漏洩。修正後のモデル性能こそ信頼できる。", "en": "20 aggregated TLE features across 14,023 satellites — and a label-leakage bug the team caught in its own training pipeline; only the post-fix numbers are trustworthy."},
 
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
@@ -1819,7 +1827,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 22):
+    for _n in range(14, 24):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -10708,6 +10716,394 @@ def render_storymap_case21():
     ))
 
 
+def render_storymap_case22():
+    if st.button(t("storymap_back"), key="back_from_case22"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例二十二：機動偵測的核心構想——TLE 差分怎麼抓到偷偷動的衛星？",
+        "事例二十二：機動検知の核心構想——TLE差分でこっそり動いた衛星をどう捕まえるか？",
+        "Case 22: The Core Concept of Maneuver Detection — How TLE Differencing Catches a Satellite That Quietly Moved",
+    ))
+    st.subheader(T3(
+        "六項改進構想（P1–P6），從一個會被大氣阻力誤導的陽春版本，"
+        "走到能在大規模衛星群上可信部署的偵測框架",
+        "6つの改良構想（P1–P6）——大気抵抗に惑わされる素朴な初期版から、"
+        "大規模衛星群に信頼して展開できる検知フレームワークへ",
+        "Six incremental concepts (P1–P6) — from a naive version easily fooled by atmospheric drag, "
+        "to a detection framework deployable with confidence across large satellite populations",
+    ))
+    st.caption(T3(
+        "本案例把 `docs/paper1_tle_maneuver_detection_zh.md` 的完整技術構想，"
+        "改寫成適合快速理解的敘事版本：構想從何而來、六項改進各自解決什麼問題、"
+        "以及兩種截然不同規模的誠實驗證結果。",
+        "本事例は `docs/paper1_tle_maneuver_detection_zh.md` の完全な技術構想を、"
+        "素早く理解できる物語形式に書き直したものである：構想の出発点、6つの改良が"
+        "それぞれ何を解決するのか、そして規模の異なる2つの誠実な検証結果を扱う。",
+        "This case rewrites the full technical concept in `docs/paper1_tle_maneuver_detection_zh.md` "
+        "into a fast-reading narrative: where the idea came from, what each of the six improvements "
+        "actually fixes, and honest validation results at two very different scales.",
+    ))
+
+    st.header(T3(
+        "① 問題：為什麼不能只靠精密星曆？",
+        "①課題：なぜ精密暦だけに頼れないのか？",
+        "① The problem: why can't we just rely on precise ephemerides?",
+    ))
+    st.markdown(T3(
+        "要知道一顆衛星有沒有機動，最直接的方法是拿到它的精密星曆（POD 等級軌道），"
+        "但這類資料通常屬於衛星操作方內部資料，公開衛星目錄裡有這種等級真值的衛星"
+        "只是極少數。真正大規模、每天更新、對任何一顆已編目衛星都拿得到的，只有"
+        "**TLE（雙行軌道根數）**——但 TLE 本身就有雜訊，而且大氣阻力造成的自然衰減，"
+        "跟推進機動在半長軸曲線上長得很像。這個構想的起點，就是問一句：**光用公開 "
+        "TLE，能不能可信地把兩者分開？**",
+        "衛星に機動があったかを知る最も直接的な方法は精密暦（POD級の軌道）を入手する"
+        "ことだが、この種のデータは通常衛星運用者内部のものであり、カタログ全体で"
+        "この精度の真値を持つ衛星はごく少数である。大規模かつ毎日更新され、カタログ"
+        "済みのどの衛星でも入手できるのは**TLE（二行軌道要素）**だけである——しかし"
+        "TLEそのものにノイズがあり、大気抵抗による自然な減衰は、半長軸カーブ上で"
+        "推進機動と非常によく似て見える。この構想の出発点は、まさにこの問いである："
+        "**公開TLEだけで、両者を信頼できる形で区別できるか？**",
+        "The most direct way to know whether a satellite maneuvered is to obtain its precise "
+        "ephemeris (POD-grade orbit) — but that data is typically internal to the satellite "
+        "operator, and only a tiny fraction of cataloged satellites have ground truth at that "
+        "precision. What's available at scale, updated daily, for essentially any cataloged "
+        "satellite, is **TLE (Two-Line Elements)** — but TLE itself is noisy, and atmospheric-drag "
+        "decay looks a lot like a propulsive maneuver on a semi-major-axis curve. The starting "
+        "point of this concept is one question: **can public TLE data alone tell the two apart "
+        "with confidence?**",
+    ))
+
+    st.header(T3(
+        "② 核心構想：拿連續兩筆 TLE 的軌道根數相減",
+        "②核心構想：連続する2つのTLEの軌道要素を差分する",
+        "② The core concept: difference the orbital elements of consecutive TLE pairs",
+    ))
+    st.markdown(T3(
+        "構想本身並不複雜：把同一顆衛星前後兩筆 TLE 換算出的半長軸 a、傾角 i、"
+        "離心率 e、升交點赤經 RAAN 相減，得到 Δa／Δi／Δe／ΔRAAN。如果某一次差值"
+        "遠超過「正常雜訊該有的大小」，就是候選的機動訊號。真正困難的地方，"
+        "在於「正常雜訊該有的大小」這件事——不同高度、不同太陽活動強度、不同"
+        "衛星本身的阻力特性，雜訊水準完全不一樣，一個固定門檻在低軌會誤報成災，"
+        "在高軌又會遲鈍到抓不到真正的機動。",
+        "構想自体は複雑ではない：同一衛星の前後2つのTLEから換算した半長軸a、"
+        "傾斜角i、離心率e、昇交点赤経RAANを差分し、Δa／Δi／Δe／ΔRAANを得る。"
+        "ある差分が「通常あるべきノイズの大きさ」を大きく超えていれば、それは候補と"
+        "なる機動信号である。本当に難しいのは、この「通常あるべきノイズの大きさ」"
+        "そのものである——高度、太陽活動強度、衛星固有の抵抗特性によってノイズ水準は"
+        "まったく異なり、固定閾値では低軌道で誤検知が氾濫し、高軌道では鈍感すぎて"
+        "本当の機動を見逃す。",
+        "The concept itself isn't complicated: subtract the semi-major axis a, inclination i, "
+        "eccentricity e, and RAAN of consecutive TLEs for the same satellite to get Δa/Δi/Δe/ΔRAAN. "
+        "If a jump far exceeds \"what normal noise should look like,\" it's a maneuver candidate. "
+        "The real difficulty is exactly that phrase — noise levels differ wildly by altitude, solar "
+        "activity, and each satellite's own drag characteristics. A single fixed threshold either "
+        "floods low orbits with false positives or is too insensitive to catch real maneuvers at "
+        "high altitude.",
+    ))
+
+    st.header(T3(
+        "③ 六項改進構想（P1–P6）：每一項都在解決一個具體的誤判情境",
+        "③6つの改良構想（P1–P6）：それぞれが具体的な誤判定シナリオを解決する",
+        "③ Six improvement concepts (P1–P6): each targets one concrete failure mode",
+    ))
+    _c22_p = [
+        ("P1", T3("單調衰減抑制", "単調減衰の抑制", "Monotonic-decay suppression"),
+         T3("連續多筆小幅衰減、無大跳變、B* 為正 → 判為大氣阻力自然衰減，不是機動。",
+            "連続する小幅な減衰、大きな跳躍なし、B*が正 → 大気抵抗による自然減衰と判定し、機動としない。",
+            "Several consecutive small declines, no big jump, positive B* → judged as natural drag decay, not a maneuver.")),
+        ("P2", T3("軌道高度自適應閾值", "軌道高度に適応する閾値", "Altitude-adaptive threshold"),
+         T3("同一個 Δa 門檻，在不同高度代表完全不同的顯著性，改用隨高度變化的門檻曲線。",
+            "同じΔa閾値でも高度によって意味する有意性はまったく異なるため、高度に応じて変化する閾値曲線に置き換える。",
+            "The same Δa threshold means very different significance at different altitudes, so the threshold itself varies with altitude.")),
+        ("P3", T3("B* 輔助條件", "B*補助条件", "B*-assisted condition")),
+        ("P4", T3("多窗口補充偵測", "複数ウィンドウの補完検知", "Multi-window supplementary detection"),
+         T3("單筆比對容易漏掉持續多天、每天量都不大的機動，改用滑動窗口找回這類事件。",
+            "1回だけの比較では、数日間続くが1日あたりの量が小さい機動を見逃しやすいため、"
+            "スライディングウィンドウでこの種の事象を拾い直す。",
+            "A single pairwise comparison misses maneuvers spread across several days with small "
+            "daily increments; a sliding window recovers these.")),
+        ("P5", T3("F10.7 太陽通量自適應倍率", "F10.7太陽フラックス適応倍率", "F10.7 solar-flux adaptive multiplier"),
+         T3("太陽活動越強，大氣越膨脹、阻力雜訊越大，門檻倍率隨 F10.7 指數同步調整。",
+            "太陽活動が強いほど大気が膨張し抵抗ノイズが増すため、閾値の倍率をF10.7指数に連動させる。",
+            "Stronger solar activity expands the atmosphere and increases drag noise, so the threshold "
+            "multiplier tracks the F10.7 index.")),
+        ("P6", T3("星座感知專屬閾值", "コンステレーション認識閾値", "Constellation-aware threshold"),
+         T3("同一傾角族群的巨型星座（如 Starlink）彼此阻力特性相近，可共用一套校準過的基準倍率。",
+            "同一傾斜角群の巨大コンステレーション（Starlinkなど）は抵抗特性が似ているため、"
+            "校正済みの基準倍率を共有できる。",
+            "Mega-constellations within the same inclination family (e.g. Starlink) share similar drag "
+            "characteristics and can share one calibrated baseline multiplier.")),
+    ]
+    for code, name, *desc in _c22_p:
+        with st.expander(f"{code}　{name}"):
+            if desc:
+                st.markdown(desc[0])
+            else:
+                st.markdown(T3(
+                    "B* 值異常偏高時，Δa 的變化多半可由阻力本身解釋，作為 P1 之外的第二道抑制條件。",
+                    "B*値が異常に高い場合、Δaの変化の多くは抵抗自体で説明でき、P1に次ぐ第2の抑制条件となる。",
+                    "When B* is unusually high, most of the Δa change can be explained by drag alone — a "
+                    "second suppression condition alongside P1.",
+                ))
+
+    st.header(T3(
+        "④ 兩種規模的誠實驗證",
+        "④規模の異なる2つの誠実な検証",
+        "④ Honest validation at two different scales",
+    ))
+    _c22_df = pd.DataFrame([
+        {"設定": "30 天／14,019 顆（P1–P4 消融）", "假陽性": "68 → 29（-57%）", "精確率": "94.8% → 97.5%", "補充找回": "26 顆真實機動"},
+        {"設定": "54 天／14,090 顆（＋P5–P6）", "假陽性": "—", "精確率": "Precision@1000 = 98.2%", "補充找回": "Overall Recall 26.9%、FAR 5.4%"},
+    ])
+    st.dataframe(_c22_df, use_container_width=True, hide_index=True)
+    st.markdown(T3(
+        "另以 99 個 MEME 觀測到的真實軌道偏移事件做獨立 Hold-out 驗證，取得事件級 "
+        "Recall = 57.6%、平均偵測前置時間 24.4 小時；跨時間段穩定性測試一致率 89.7%。"
+        "本文亦誠實記錄一項負向結果：CDM（碰撞警示訊息）弱監督嘗試並未產生可用的量化證據。",
+        "さらに、MEMEで観測された99件の実際の軌道変位イベントを用いた独立ホールドアウト検証で、"
+        "イベント単位のRecall = 57.6%、平均検知リードタイム24.4時間を得た；時間帯を跨いだ安定性"
+        "テストの一致率は89.7%。本研究はCDM（衝突警報メッセージ）による弱教師あり学習の試みが"
+        "有効な定量的証拠を生まなかったという負の結果も誠実に記録している。",
+        "An independent hold-out validation against 99 real orbital-shift events observed by MEME "
+        "yielded event-level Recall = 57.6% and an average detection lead time of 24.4 hours; a "
+        "cross-period stability test showed 89.7% agreement. The paper also honestly records a "
+        "negative result: a CDM (conjunction data message) weak-supervision attempt did not yield "
+        "usable quantitative evidence.",
+    ))
+
+    st.header(T3(
+        "⑤ 結論與可重複展示",
+        "⑤結論と再現可能なデモ",
+        "⑤ Conclusion and a reproducible live demo",
+    ))
+    st.success(T3(
+        "這套構想的價值不在單一數字漂亮，而在於誠實面對「大氣阻力像不像機動」這個"
+        "核心難題，用六個各自針對具體失效情境的改進逐步逼近可信結果——並且已經封裝"
+        "成任何人都能線上重現的工具，而非只停留在論文裡的表格。",
+        "この構想の価値は単一の数字が美しいことではなく、「大気抵抗は機動に似ているか"
+        "どうか」という核心的な難題に誠実に向き合い、それぞれ具体的な失敗シナリオを"
+        "対象とする6つの改良によって段階的に信頼できる結果へ近づけたことにある——"
+        "そして、それは論文の表の中だけに留まらず、誰でもオンラインで再現できる"
+        "ツールとして実装済みである。",
+        "The value of this concept isn't a single pretty number — it's honestly confronting the core "
+        "difficulty of \"does drag look like a maneuver,\" and closing in on trustworthy results "
+        "through six improvements, each targeting a concrete failure mode. It is already packaged as "
+        "a tool anyone can reproduce live, not just a table in a paper.",
+    ))
+    st.caption(T3(
+        "互動式驗證：開啟本 App「工具」頁任選一顆衛星，或直接呼叫機動偵測 PDF 報表 API"
+        "（`GET /report?NORAD=<編號>&StartDate=...&EndDate=...&Format=F2`），"
+        "報表「系統偵測邏輯說明」頁會逐項列出 P1–P6 對該次查詢的實際觸發次數。"
+        "完整技術構想：`docs/paper1_tle_maneuver_detection_zh.md`；核心程式："
+        "`maneuver_strategies_july.py`、`maneuver_report_builder.py`。",
+        "対話的検証：本Appの「ツール」ページで任意の衛星を選ぶか、機動検知PDFレポートAPI"
+        "（`GET /report?NORAD=<番号>&StartDate=...&EndDate=...&Format=F2`）を直接呼び出す。"
+        "レポートの「システム検知ロジック説明」ページには、その照会におけるP1–P6の実際の"
+        "発火回数が項目ごとに示される。完全な技術構想：`docs/paper1_tle_maneuver_detection_zh.md`；"
+        "コア実装：`maneuver_strategies_july.py`、`maneuver_report_builder.py`。",
+        "Interactive verification: open this App's Tool page for any satellite, or call the maneuver "
+        "detection PDF report API directly (`GET /report?NORAD=<id>&StartDate=...&EndDate=...&"
+        "Format=F2`) — the report's \"system detection logic\" page itemizes exactly how many times "
+        "each of P1–P6 fired for that query. Full concept write-up: "
+        "`docs/paper1_tle_maneuver_detection_zh.md`; core code: `maneuver_strategies_july.py`, "
+        "`maneuver_report_builder.py`.",
+    ))
+
+
+def render_storymap_case23():
+    if st.button(t("storymap_back"), key="back_from_case23"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例二十三：教 AI 當太空偵探的構想——LightGBM 融合分類器與一次誠實抓漏",
+        "事例二十三：AIを宇宙探偵にする構想——LightGBM融合分類器と、自ら見つけたラベル漏洩",
+        "Case 23: The Concept of Teaching AI to Be a Space Detective — the LightGBM Fusion Classifier and a Self-Caught Data Leak",
+    ))
+    st.subheader(T3(
+        "20 個 TLE 聚合特徵、14,023 顆衛星——以及訓練途中自己抓到的一項標籤洩漏",
+        "20個のTLE集約特徴量、14,023機の衛星——そして学習中に自ら発見したラベル漏洩",
+        "20 aggregated TLE features, 14,023 satellites — and a label-leakage bug caught mid-training",
+    ))
+    st.caption(T3(
+        "本案例把 `docs/paper2_lightgbm_classifier_zh.md` 的完整技術構想，"
+        "改寫成適合快速理解的敘事版本：為什麼規則式偵測還不夠、AI 分類器的構想是什麼、"
+        "訓練途中發現的一項方法論陷阱，以及修正後才可信的結果。",
+        "本事例は `docs/paper2_lightgbm_classifier_zh.md` の完全な技術構想を、"
+        "素早く理解できる物語形式に書き直したものである：ルールベース検知だけでは"
+        "なぜ不十分なのか、AI分類器の構想とは何か、学習途中で発見した方法論上の落とし穴、"
+        "そして修正後にのみ信頼できる結果を扱う。",
+        "This case rewrites the full technical concept in `docs/paper2_lightgbm_classifier_zh.md` "
+        "into a fast-reading narrative: why rule-based detection alone isn't enough, what the AI "
+        "classifier concept is, a methodological trap discovered mid-training, and the results that "
+        "are only trustworthy after the fix.",
+    ))
+
+    st.header(T3(
+        "① 問題：規則式偵測抓得到「有沒有跳」，但怎麼一次幫上萬顆衛星打總分？",
+        "①課題：ルールベース検知は「跳んだかどうか」は分かるが、"
+        "どうやって一度に万単位の衛星に総合スコアをつけるのか？",
+        "① The problem: rule-based detection tells you \"did it jump,\" but how do you score "
+        "tens of thousands of satellites at once?",
+    ))
+    st.markdown(T3(
+        "案例二十二的 P1–P6 是逐筆 TLE 轉換的判定，回答的是「這一次差分算不算異常」。"
+        "但「這顆衛星在這 30 天內算不算有機動行為」是另一個層次的問題——需要把整段"
+        "觀測窗口的旗標次數、跳變幅度、B* 特性等一次濃縮成一組特徵，再交給模型判斷。"
+        "這正是本構想的起點：**能不能訓練一個分類器，把這件事自動化、且做得比單看"
+        "規則旗標次數更準？**",
+        "事例二十二のP1–P6は個々のTLE遷移ごとの判定であり、「この1回の差分が異常か"
+        "どうか」に答える。しかし「この衛星はこの30日間で機動行動があったと言えるか」は"
+        "別の階層の問題であり、観測ウィンドウ全体の旗立て回数、跳躍幅、B*特性などを"
+        "一組の特徴量に凝縮し、モデルに判定させる必要がある。これこそが本構想の出発点"
+        "である：**この作業を自動化し、単純な旗立て回数のカウントより正確に行う分類器を"
+        "学習できるか？**",
+        "Case 22's P1–P6 judge each individual TLE transition — answering \"is this one "
+        "difference anomalous.\" But \"did this satellite maneuver over this 30-day window\" is a "
+        "different-level question: it requires condensing flag counts, jump magnitudes, and B* "
+        "characteristics across the whole window into a feature set for a model to judge. That's "
+        "the starting point of this concept: **can a classifier be trained to automate this, and do "
+        "it more accurately than simply counting rule flags?**",
+    ))
+
+    st.header(T3(
+        "② 核心構想：20 個聚合特徵 + LightGBM",
+        "②核心構想：20個の集約特徴量＋LightGBM",
+        "② The core concept: 20 aggregated features + LightGBM",
+    ))
+    st.markdown(T3(
+        "從每顆衛星的觀測窗口 TLE 序列，萃取 20 個聚合特徵（如單筆最大 |Δa|、旗標比率、"
+        "B* 對太陽通量正規化值、單調衰減旗標等），以梯度提升樹（LightGBM）做二元分類："
+        "「機動」或「未機動」。為避免同一顆衛星同時出現在訓練與測試集造成資訊外洩，"
+        "採用嚴格的**衛星層級**分層隨機切分（70%/15%/15%），確保測試分數反映的是"
+        "模型對「沒看過的衛星」的判斷力，而非記憶力。",
+        "各衛星の観測ウィンドウのTLE系列から20個の集約特徴量（1回あたりの最大|Δa|、"
+        "旗立て比率、B*の太陽フラックス正規化値、単調減衰フラグなど）を抽出し、"
+        "勾配ブースティング木（LightGBM）で「機動あり」か「機動なし」かの二値分類を"
+        "行う。同一衛星が学習セットとテストセットの両方に現れることによる情報漏洩を"
+        "防ぐため、厳密な**衛星単位**の層化ランダム分割（70%/15%/15%）を採用し、"
+        "テストスコアが「見たことのない衛星」に対するモデルの判断力を反映し、"
+        "記憶力を反映しないようにしている。",
+        "From each satellite's TLE sequence within the observation window, 20 aggregated features are "
+        "extracted (e.g. max single-step |Δa|, flag rate, F10.7-normalized B*, a monotonic-decay flag) "
+        "and fed to a gradient-boosted tree (LightGBM) for binary classification: maneuvered or not. "
+        "To prevent the same satellite appearing in both train and test sets, a strict "
+        "**satellite-level** stratified split (70%/15%/15%) is used, so the test score reflects the "
+        "model's judgment on satellites it has never seen — not memorization.",
+    ))
+
+    st.header(T3(
+        "③ 一次誠實抓漏：標籤洩漏是怎麼被發現的",
+        "③自ら見つけた漏洩：ラベル漏洩はどのように発見されたか",
+        "③ A self-caught leak: how the label leakage was discovered",
+    ))
+    st.warning(T3(
+        "初版特徵集裡的 `flag_rate`、`n_flagged`、`n_windows_flagged`、`burn_freq_per_day` "
+        "四個特徵，其計算邏輯與訓練標籤 `maneuver_detected` 共用同一套規則式旗標——"
+        "模型學到的其實是「複誦規則法的判定結果」，而不是獨立學會辨認機動特徵，"
+        "會導致 AUC 虛高到接近 1.0。這類洩漏的危險之處在於：特徵重要性分析（如 SHAP）"
+        "並不會把它標成「異常無意義」，反而會顯示成「異常重要」，很容易被誤讀成"
+        "模型找到了關鍵物理規律。",
+        "初版の特徴量セットに含まれる `flag_rate`、`n_flagged`、`n_windows_flagged`、"
+        "`burn_freq_per_day` の4つの特徴量は、その計算ロジックが学習ラベル "
+        "`maneuver_detected` と同じルールベースの旗立てロジックを共有していた——"
+        "モデルが実際に学習していたのは「ルールベース手法の判定結果を復唱すること」で"
+        "あり、機動の特徴を独立に認識することではなく、AUCが1.0近くまで見かけ上"
+        "高くなっていた。この種の漏洩の危険な点は、SHAPなどの特徴量重要度分析では"
+        "「異常に無意味」ではなく「異常に重要」と表示され、モデルが重要な物理法則を"
+        "発見したものと誤読されやすいことである。",
+        "Four features in the original set — `flag_rate`, `n_flagged`, `n_windows_flagged`, and "
+        "`burn_freq_per_day` — shared the exact same rule-based flagging logic as the training label "
+        "`maneuver_detected`. The model was effectively learning to \"echo the rule-based method's "
+        "verdict\" rather than independently recognizing maneuver signatures, inflating AUC to nearly "
+        "1.0. What makes this kind of leak dangerous is that feature-importance analysis (e.g. SHAP) "
+        "doesn't flag it as \"suspiciously meaningless\" — it shows up as \"suspiciously important,\" "
+        "easily misread as the model discovering a key physical law.",
+    ))
+    st.markdown(T3(
+        "修正方式：剔除四個洩漏特徵，新增 `da_monotonic_decay`（物理量化的純阻力衰減旗標）"
+        "與 `bstar_f107_normalized`（B* 對太陽通量正規化值）兩項獨立特徵。",
+        "修正方法：4つの漏洩特徴量を除去し、`da_monotonic_decay`（物理的に定量化された"
+        "純粋な抵抗減衰フラグ）と `bstar_f107_normalized`（太陽フラックスで正規化した"
+        "B*値）という2つの独立した特徴量を新たに追加した。",
+        "The fix: remove the four leaking features, and add two independent ones — "
+        "`da_monotonic_decay` (a physically quantified pure-drag-decay flag) and "
+        "`bstar_f107_normalized` (B* normalized by solar flux).",
+    ))
+
+    st.header(T3(
+        "④ 修正後才可信的結果",
+        "④修正後にのみ信頼できる結果",
+        "④ Results that are only trustworthy after the fix",
+    ))
+    _c23_df = pd.DataFrame([
+        {"項目": "精確率 Precision", "數值": "99.5%"},
+        {"項目": "召回率 Recall", "數值": "97.5%"},
+        {"項目": "F1", "數值": "98.5%"},
+        {"項目": "AUC-ROC", "數值": "0.996（5-fold OOF：0.998）"},
+        {"項目": "主導特徵（SHAP）", "數值": "max_da_km，貢獻佔比 54.6%"},
+    ])
+    st.dataframe(_c23_df, use_container_width=True, hide_index=True)
+    st.markdown(T3(
+        "修正後與隨機森林（Precision 98.6%）、XGBoost（97.9%）表現相近——三者差距遠"
+        "小於修正前，證實初版懸殊差距主要來自洩漏特徵，而非演算法本身的優勢。另以"
+        "獨立的 Starlink MEME 真值做外部驗證（Plan A），Recall 降至 39.7%（Precision "
+        "維持 100%），誠實揭露模型在跨標籤來源遷移時的泛化落差。",
+        "修正後はランダムフォレスト（Precision 98.6%）、XGBoost（97.9%）と近い性能を"
+        "示した——3者の差は修正前よりはるかに小さく、初版の突出した差が主に漏洩特徴量に"
+        "由来し、アルゴリズム自体の優位性ではなかったことが裏付けられた。さらに独立した"
+        "Starlink MEME真値による外部検証（Plan A）では、RecallがPrecision 100%を維持し"
+        "たまま39.7%まで低下し、ラベル源をまたいだ汎化性能のギャップを誠実に公開している。",
+        "After the fix, performance is close to Random Forest (98.6% precision) and XGBoost (97.9%) "
+        "— a far smaller gap than before, confirming the original stark advantage came mostly from "
+        "the leaking features rather than the algorithm itself. An external validation against "
+        "independent Starlink MEME ground truth (Plan A) showed recall dropping to 39.7% (precision "
+        "held at 100%), honestly disclosing the generalization gap when the model moves to a "
+        "different label source.",
+    ))
+
+    st.header(T3(
+        "⑤ 結論與可重複展示",
+        "⑤結論と再現可能なデモ",
+        "⑤ Conclusion and a reproducible live demo",
+    ))
+    st.success(T3(
+        "這個構想最有價值的部分，不是最後的高分表格，而是「發現洩漏、公開承認、"
+        "重新來過」的完整過程——它證明了特徵重要性分析無法自動抓出標籤洩漏，"
+        "任何與標籤生成邏輯有共同上游依賴的特徵，都必須在建模前逐一追溯確認獨立性。",
+        "この構想で最も価値のある部分は、最終的な高いスコアの表ではなく、「漏洩を発見し、"
+        "公に認め、やり直した」という一連の過程である——これは特徴量重要度分析だけでは"
+        "ラベル漏洩を自動的に検出できないこと、そしてラベル生成ロジックと共通の上流"
+        "依存を持つ特徴量は、モデリング前に一つずつ独立性を遡って確認しなければならない"
+        "ことを示している。",
+        "The most valuable part of this concept isn't the final high-score table — it's the full "
+        "process of finding the leak, disclosing it openly, and redoing the work. It demonstrates "
+        "that feature-importance analysis alone cannot catch label leakage, and any feature sharing "
+        "an upstream dependency with the label-generation logic must be traced and verified "
+        "independently before modeling.",
+    ))
+    st.caption(T3(
+        "互動式驗證：機動偵測 PDF 報表 API（`GET /report?NORAD=<編號>&StartDate=...&"
+        "EndDate=...&Format=F2`）之「逐窗 ML 模型」欄位即為本分類器的線上部署結果，"
+        "「系統偵測邏輯說明」頁另可對照另一套架構不同的融合評分器。完整技術構想："
+        "`docs/paper2_lightgbm_classifier_zh.md`；訓練程式：`Orbital_Maneuver_V2/train.py`、"
+        "`build_training_dataset.py`。",
+        "対話的検証：機動検知PDFレポートAPI（`GET /report?NORAD=<番号>&StartDate=...&"
+        "EndDate=...&Format=F2`）の「逐次ウィンドウMLモデル」欄が本分類器のオンライン"
+        "デプロイ結果であり、「システム検知ロジック説明」ページではアーキテクチャの異なる"
+        "融合スコアラーとも対照できる。完全な技術構想：`docs/paper2_lightgbm_classifier_zh.md`；"
+        "学習スクリプト：`Orbital_Maneuver_V2/train.py`、`build_training_dataset.py`。",
+        "Interactive verification: in the maneuver detection PDF report API "
+        "(`GET /report?NORAD=<id>&StartDate=...&EndDate=...&Format=F2`), the \"per-window ML "
+        "model\" field is this classifier's live deployment; the \"system detection logic\" page "
+        "also lets you compare it against an architecturally distinct fusion scorer. Full concept "
+        "write-up: `docs/paper2_lightgbm_classifier_zh.md`; training scripts: "
+        "`Orbital_Maneuver_V2/train.py`, `build_training_dataset.py`.",
+    ))
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -10718,7 +11114,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
-        "case21"):
+        "case21", "case22", "case23"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -10783,6 +11179,10 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case20()
     elif _case == "case21":
         render_storymap_case21()
+    elif _case == "case22":
+        render_storymap_case22()
+    elif _case == "case23":
+        render_storymap_case23()
     else:
         render_storymap_landing()
     st.stop()
