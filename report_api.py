@@ -14,6 +14,7 @@ Format：F1＝簡版（1 頁摘要）／F2＝完整版（摘要＋時序圖＋AI
 from __future__ import annotations
 
 import logging
+import os
 from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -26,6 +27,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("report_api")
 
 app = FastAPI(title="Maneuver Detection Report API", version="1.0.0")
+
+# 互動式儀表板 app 的公開網址，用來組深連結（?mode=tool&norad=&d0=&d1=，
+# 見 maneuver_app_2026SOctober.py 的對應支援）。可用環境變數覆寫（例如本機測試
+# 時指向 http://localhost:8501）；未設時預設指向目前實際部署的正式站。
+APP_BASE_URL = os.environ.get("APP_BASE_URL", "https://rhynowu-maneuver-detection-i18n.hf.space").rstrip("/")
 
 
 class ReportRequest(BaseModel):
@@ -69,9 +75,11 @@ def _generate(request: Request, norad: int, start: str, end: str, fmt: str) -> R
     scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
     base = f"{scheme}://{request.url.netloc}/report"
     source_url = f"{base}?NORAD={norad}&StartDate={start}&EndDate={end}&Format={fmt_u}"
+    app_url = (f"{APP_BASE_URL}/?mode=tool&norad={norad}"
+               f"&d0={d0.isoformat()}&d1={d1.isoformat()}")
 
     try:
-        pdf_bytes = rb.render_pdf(data, fmt=fmt_u, source_url=source_url)
+        pdf_bytes = rb.render_pdf(data, fmt=fmt_u, source_url=source_url, app_url=app_url)
     except Exception as e:
         logger.exception("render_pdf 失敗：NORAD=%s", norad)
         raise HTTPException(status_code=500, detail=f"PDF 產製失敗：{e}")

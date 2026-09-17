@@ -376,10 +376,31 @@ def build_ml_maneuver_narrative(satellite_id, p_maneuver: float, lgbm_feat: dict
     return "\n".join(lines)
 
 
-def get_ai_explanation(narrative: str, topic: str = "maneuver") -> dict:
+def _rag_query_from_narrative(narrative: str, n_events: int) -> str:
+    """把送給 RAG 檢索的問句與「給人看的完整敘述」分開：0 事件情境下，敘述開頭
+    「衛星 NORAD xxx（xxx km）在 xxx 至 xxx 期間...」這段對這顆衛星獨一無二、
+    但知識庫文件裡不會出現的具體數字/編號，會稀釋掉後面真正的概念性問題，導致
+    向量檢索找不到任何文件（0 篇來源），RAG 因此誠實回答「資料不足」——2026-09-17
+    以 NORAD 68196、2025-08-01~2026-09-16 區間實測重現：帶著這段開頭送出 0 篇來源，
+    拿掉開頭只問概念性問題則正常檢索到 4 篇文件並得到完整答案。故 0 事件情境改為
+    只送純概念性問題；有具體事件時的敘述（含事件清單／方向統計）檢索本來就正常
+    （已用 10 顆近期偵測到機動的衛星驗證），不動它。"""
+    if n_events == 0:
+        return ("此段 TLE 觀測期間，以半長軸（SMA）跳變法未偵測到明顯機動。"
+                 "請解說：此類情況下，未偵測到明顯機動的可能原因有哪些？"
+                 "大氣阻力造成的自然衰減與推進機動在 TLE 半長軸變化上如何區分？")
+    return narrative
+
+
+def get_ai_explanation(query: str, fallback_text: str | None = None,
+                       topic: str = "maneuver") -> dict:
     """呼叫 SSA-RAG 取得說明；離線或逾時一律 fallback 成規則式敘述文字本身，
-    絕不讓報表產製因外部服務不穩而失敗或卡住。回傳 {"answer","confidence","source"}。"""
-    fallback = {"answer": narrative, "confidence": "n/a",
+    絕不讓報表產製因外部服務不穩而失敗或卡住。回傳 {"answer","confidence","source"}。
+    query＝實際送去檢索的問句；fallback_text＝服務離線時顯示的文字（預設沿用 query，
+    但呼叫端可傳入內容更完整的敘述，例如 0 事件情境時 query 已被簡化，fallback 仍
+    想顯示含衛星編號/日期的完整敘述）。"""
+    fallback_text = query if fallback_text is None else fallback_text
+    fallback = {"answer": fallback_text, "confidence": "n/a",
                 "source": "rule_based_fallback（SSA-RAG 服務未回應／未啟用）"}
     try:
         from ssa_rag_client import SSARAGClient
@@ -389,7 +410,7 @@ def get_ai_explanation(narrative: str, topic: str = "maneuver") -> dict:
         client = SSARAGClient(base_url=RAG_DEFAULT_URL, timeout=RAG_TIMEOUT_S)
         if not client.health():
             return fallback
-        result = client.ask(narrative, topic=topic, client_id="maneuver_report_api")
+        result = client.ask(query, topic=topic, client_id="maneuver_report_api")
         return {"answer": result.answer, "confidence": result.confidence, "source": "ssa_rag"}
     except Exception as e:
         logger.warning("SSA-RAG 呼叫失敗，退回規則式敘述：%s", e)
@@ -459,7 +480,8 @@ def build_report_data(norad: int, start_date: date, end_date: date, lang: str = 
 
     narrative_tle = build_tle_maneuver_narrative(
         norad, alt_km_avg, str(d0), str(d1), event_df)
-    ai_explanation = get_ai_explanation(narrative_tle, topic="maneuver")
+    rag_query = _rag_query_from_narrative(narrative_tle, len(event_df))
+    ai_explanation = get_ai_explanation(rag_query, fallback_text=narrative_tle, topic="maneuver")
 
     return {
         "norad": norad, "name": name, "start_date": str(d0), "end_date": str(d1),
@@ -517,9 +539,13 @@ def _qr_image(url: str):
 
 
 # ── PDF 產製：F1 簡版（1 頁）／F2 完整版（多頁，含圖表＋AI 說明）──────────────
-def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None) -> bytes:
-    """source_url：若提供，會在摘要頁正下方加印該網址的 QR code
-    （掃描可回到產生這份報表的原始 API 呼叫網址）。"""
+def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None,
+               app_url: str | None = None) -> bytes:
+    """source_url：若提供，會在摘要頁左下角印該網址的 QR code
+    （掃描可回到產生這份報表的原始 API 呼叫網址）。
+    app_url：若提供，會在摘要頁右下角另印一個 QR code（掃描可直接開啟互動式
+    儀表板 app，並自動預填這顆衛星與日期區間——見 maneuver_app_2026SOctober.py
+    的 ?mode=tool&norad=&d0=&d1= 深連結支援）。"""
     import io
     import matplotlib
     matplotlib.use("Agg")
@@ -536,8 +562,8 @@ def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None
         fig.clf()
         fig.suptitle(f"衛星機動偵測報表 — NORAD {r['norad']}"
                      f"{'（' + r['name'] + '）' if r.get('name') else ''}", fontsize=16)
-        # 留出頁面最下方 ~14% 高度給 QR code（有給 source_url 才畫），其餘不變
-        text_bottom = 0.18 if source_url else 0.06
+        # 留出頁面最下方 ~14% 高度給 QR code（有給 source_url／app_url 才畫），其餘不變
+        text_bottom = 0.18 if (source_url or app_url) else 0.06
         ax = fig.add_axes([0.06, text_bottom, 0.88, 0.94 - text_bottom])
         ax.axis("off")
         lines = [
@@ -575,13 +601,24 @@ def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None
                 transform=ax.transAxes)
 
         if source_url:
-            qr_ax = fig.add_axes([0.42, 0.02, 0.16, 0.16])
+            qr_ax = fig.add_axes([0.24, 0.02, 0.16, 0.16])
             qr_ax.imshow(_qr_image(source_url), cmap="gray")
             qr_ax.axis("off")
-            label_ax = fig.add_axes([0.06, 0.005, 0.88, 0.03])
+            qr_ax.set_title("重新產生本報表", fontsize=6.5, pad=2)
+            label_ax = fig.add_axes([0.06, 0.005, 0.4, 0.03])
             label_ax.axis("off")
-            label_ax.text(0.5, 0.5, source_url, ha="center", va="center", fontsize=6.5,
+            label_ax.text(0.5, 0.5, source_url, ha="center", va="center", fontsize=5.5,
                           transform=label_ax.transAxes)
+
+        if app_url:
+            qr_ax2 = fig.add_axes([0.60, 0.02, 0.16, 0.16])
+            qr_ax2.imshow(_qr_image(app_url), cmap="gray")
+            qr_ax2.axis("off")
+            qr_ax2.set_title("互動查詢儀表板", fontsize=6.5, pad=2)
+            label_ax2 = fig.add_axes([0.54, 0.005, 0.4, 0.03])
+            label_ax2.axis("off")
+            label_ax2.text(0.5, 0.5, app_url, ha="center", va="center", fontsize=5.5,
+                           transform=label_ax2.transAxes)
 
     with PdfPages(buf) as pdf:
         fig = plt.figure(figsize=(8.27, 11.69))  # A4

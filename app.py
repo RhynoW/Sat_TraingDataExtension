@@ -2,8 +2,12 @@
 """
 app.py — HuggingFace Space 進入點（Streamlit）。
 =====================================================
-薄殼:每次 Streamlit rerun 以 __main__ 重新執行 maneuver_app_2026September.py，
+薄殼:每次 Streamlit rerun 以 __main__ 重新執行 maneuver_app_2026SOctober.py，
 維持單一真相來源(避免 import 只跑一次、UI 不再更新的問題)。
+
+2026-09-18：進入點由 maneuver_app_2026September.py 切換為 maneuver_app_2026SOctober.py
+（4 個函式改呼叫共用模組 maneuver_report_builder.py，另新增 ?mode=tool&norad=&d0=&d1=
+深連結支援，供 report_api.py 之 PDF 報表 QR code 使用；行為與 September 版其餘部分相同）。
 
 Space 需設環境變數:
   HF_DATASET_REPO = <帳號>/<dataset-repo>   ← 設了即走遠端 Parquet 模式(不需 14GB 全庫)
@@ -15,7 +19,7 @@ from __future__ import annotations
 import runpy
 from pathlib import Path
 
-APP = Path(__file__).with_name("maneuver_app_2026September.py")
+APP = Path(__file__).with_name("maneuver_app_2026SOctober.py")
 
 if not APP.exists():
     import streamlit as st

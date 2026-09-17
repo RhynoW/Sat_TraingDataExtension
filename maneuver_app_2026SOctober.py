@@ -10722,6 +10722,16 @@ if "storymap_case" not in st.session_state and _qp.get("case") in (
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
+# 工具頁深連結（2026-09-18 新增）：網址帶 ?mode=tool&norad=<id>&d0=<YYYY-MM-DD>&d1=<YYYY-MM-DD>
+# 即可直接落地到工具頁並預填衛星與日期區間——供 PDF 報表（report_api.py）內的連結／QR code 使用。
+# 僅在該衛星有 TLE 資料時才夾（clamp）到範圍內；查無資料則忽略 d0/d1、留給下方既有邏輯用預設值。
+if "tool_norad" not in st.session_state and _qp.get("norad", "").strip().isdigit():
+    st.session_state["tool_norad"] = _qp.get("norad").strip()
+if "tool_d0" not in st.session_state and _qp.get("d0"):
+    st.session_state["tool_d0"] = _qp.get("d0")
+if "tool_d1" not in st.session_state and _qp.get("d1"):
+    st.session_state["tool_d1"] = _qp.get("d1")
+
 with st.sidebar:
     st.selectbox("Language / 語言 / 言語", options=list(LANG_LABELS.keys()),
                  format_func=lambda k: LANG_LABELS[k], key="app_lang")
@@ -10787,7 +10797,8 @@ render_fleet_kpi_row(names)
 
 with st.sidebar:
     st.header(t("sidebar_query_header"))
-    query = st.text_input(t("input_query"), value="STARLINK-30273",
+    query = st.text_input(t("input_query"),
+                          value=st.session_state.get("tool_norad", "STARLINK-30273"),
                           help=t("help_query"))
     st.header(t("sidebar_p2_header"))
     p2_vertex = st.slider(t("slider_p2_vertex"), 400.0, 1000.0, 700.0, 10.0)
@@ -10830,9 +10841,26 @@ if df.empty or len(df) < 3:
 
 # 日期範圍
 dmin, dmax = df["epoch"].min().date(), df["epoch"].max().date()
+
+
+def _clamp_qp_date(key: str, fallback):
+    """深連結帶進來的日期可能超出該衛星實際 TLE 涵蓋範圍（不同衛星的 dmin/dmax
+    不同、且 URL 是外部產生的，例如 report_api.py 的 PDF 連結），若直接原樣傳給
+    st.date_input 的預設值、超出 min_value/max_value 範圍會直接丟例外。這裡一律
+    夾（clamp）到 [dmin, dmax] 內，解析失敗則安靜退回原本的預設值，不讓整頁掛掉。"""
+    raw = st.session_state.get(key)
+    if not raw:
+        return fallback
+    try:
+        parsed = pd.Timestamp(raw).date()
+    except (ValueError, TypeError):
+        return fallback
+    return min(max(parsed, dmin), dmax)
+
+
 c1, c2 = st.columns(2)
-d0 = c1.date_input(t("date_start"), dmin, min_value=dmin, max_value=dmax)
-d1 = c2.date_input(t("date_end"), dmax, min_value=dmin, max_value=dmax)
+d0 = c1.date_input(t("date_start"), _clamp_qp_date("tool_d0", dmin), min_value=dmin, max_value=dmax)
+d1 = c2.date_input(t("date_end"), _clamp_qp_date("tool_d1", dmax), min_value=dmin, max_value=dmax)
 df = df[(df["epoch"].dt.date >= d0) & (df["epoch"].dt.date <= d1)].reset_index(drop=True)
 if len(df) < 3:
     st.warning(t("warn_range_lt3"))
