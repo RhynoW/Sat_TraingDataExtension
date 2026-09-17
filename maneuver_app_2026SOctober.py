@@ -10854,7 +10854,7 @@ def render_storymap_case22():
         "④ Honest validation at two different scales",
     ))
     _c22_df = pd.DataFrame([
-        {"設定": "30 天／14,019 顆（P1–P4 消融）", "假陽性": "68 → 29（-57%）", "精確率": "94.8% → 97.5%", "補充找回": "26 顆真實機動"},
+        {"設定": "30 天／14,019 顆（P1–P4 消融）", "假陽性": "68 → 29（-57%）", "精確率": "94.8% → 97.5%", "補充找回": "26 顆代理正例"},
         {"設定": "54 天／14,090 顆（＋P5–P6）", "假陽性": "—", "精確率": "Precision@1000 = 98.2%", "補充找回": "Overall Recall 26.9%、FAR 5.4%"},
     ])
     st.dataframe(_c22_df, use_container_width=True, hide_index=True)
