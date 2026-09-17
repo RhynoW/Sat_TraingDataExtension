@@ -605,20 +605,22 @@ def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None
             qr_ax.imshow(_qr_image(source_url), cmap="gray")
             qr_ax.axis("off")
             qr_ax.set_title("重新產生本報表", fontsize=6.5, pad=2)
-            label_ax = fig.add_axes([0.06, 0.005, 0.4, 0.03])
+            label_ax = fig.add_axes([0.02, 0.005, 0.46, 0.03])
             label_ax.axis("off")
-            label_ax.text(0.5, 0.5, source_url, ha="center", va="center", fontsize=5.5,
-                          transform=label_ax.transAxes)
+            # clip_on=True：網址長度不固定（不同 NORAD／日期），太長時寧可被裁掉，
+            # 也不能讓文字溢出邊框跟右邊那組 QR 的網址文字疊在一起、變成兩行黏一起。
+            label_ax.text(0.5, 0.5, source_url, ha="center", va="center", fontsize=5,
+                          clip_on=True, transform=label_ax.transAxes)
 
         if app_url:
             qr_ax2 = fig.add_axes([0.60, 0.02, 0.16, 0.16])
             qr_ax2.imshow(_qr_image(app_url), cmap="gray")
             qr_ax2.axis("off")
             qr_ax2.set_title("互動查詢儀表板", fontsize=6.5, pad=2)
-            label_ax2 = fig.add_axes([0.54, 0.005, 0.4, 0.03])
+            label_ax2 = fig.add_axes([0.52, 0.005, 0.46, 0.03])
             label_ax2.axis("off")
-            label_ax2.text(0.5, 0.5, app_url, ha="center", va="center", fontsize=5.5,
-                           transform=label_ax2.transAxes)
+            label_ax2.text(0.5, 0.5, app_url, ha="center", va="center", fontsize=5,
+                           clip_on=True, transform=label_ax2.transAxes)
 
     with PdfPages(buf) as pdf:
         fig = plt.figure(figsize=(8.27, 11.69))  # A4
