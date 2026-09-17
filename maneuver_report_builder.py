@@ -563,12 +563,10 @@ def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None
             "",
             f"── 機動偵測落點（共 {len(r['landing_events'])} 筆）──",
         ]
-        for ev in r["landing_events"][:20]:
+        for ev in r["landing_events"]:
             ts = pd.Timestamp(ev["epoch"]).strftime("%Y-%m-%d %H:%M UTC")
             extra = f"　Δa={ev['sma_delta']:+.3f} km（{ev['sma_direction']}）" if "sma_delta" in ev else ""
             lines.append(f"  - {ts}{extra}")
-        if len(r["landing_events"]) > 20:
-            lines.append(f"  -（其餘 {len(r['landing_events']) - 20} 筆省略，完整版見 F2）")
         lines.append("")
         lines.append(f"報表產生時間：{r['generated_at']}")
         # 不強制 family="monospace"：該字型不含中文全形標點（全形括號等會變缺字方框），
