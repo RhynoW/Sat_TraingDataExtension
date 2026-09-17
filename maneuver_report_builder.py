@@ -164,7 +164,7 @@ def compute_l1(df: pd.DataFrame, f107: dict, lang: str = "zh") -> dict:
     res = ms.apply_strategies(tr, orbit_class, lang=lang)
     combined = res["combined"] if len(tr) else np.array([], dtype=bool)
     return {"orbit_class": orbit_class, "inc_family": fam, "combined": combined,
-            "n_flagged": int(np.sum(combined)), "detail": res}
+            "n_flagged": int(np.sum(combined)), "detail": res, "tr": tr}
 
 
 # ── L2：CUSUM／BOCPD／SSA／3σ-MAD（沿用 statistical_detectors）───────────────
@@ -498,6 +498,7 @@ def build_report_data(norad: int, start_date: date, end_date: date, lang: str = 
         "tle_df": df,          # 給 render_pdf 畫時序圖用，不落入 JSON 序列化路徑
         "l2_raw": l2_raw,      # 同上
         "fusion_df": fusion,   # 同上
+        "tr_df": l1["tr"],     # 同上：軌道根數逐轉換差值（da/di/de/draan_res），供①根數圖用
     }
 
 
@@ -672,6 +673,35 @@ def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None
             fig2.tight_layout(rect=[0, 0, 1, 0.96])
             pdf.savefig(fig2)
             plt.close(fig2)
+
+            # ① 軌道根數連續變化與差值頁：a/i/e/RAAN 連續時序（左）＋ Δ 差值（右），
+            # 對應 maneuver_app_2026SOctober.py 之 plot_elements_and_deltas()（不含其
+            # 第三欄極座標時間視圖──PDF 為靜態列印用途，取核心資訊即可）。
+            tr = r["tr_df"]
+            fig_elem = plt.figure(figsize=(8.27, 11.69))
+            fig_elem.suptitle("① 軌道根數連續變化與差值", fontsize=13)
+            rows = [
+                ("sma_km", "半長軸 a (km)", "da_km", "Δa (km)"),
+                ("inclination_deg", "傾角 i (deg)", "di_deg", "Δi (deg)"),
+                ("eccentricity", "離心率 e", "de", "Δe"),
+                ("raan_deg", "RAAN (deg)", "draan_res_deg", "ΔRAAN 殘差 (deg)"),
+            ]
+            for i, (col_l, title_l, col_r, title_r) in enumerate(rows):
+                axl = fig_elem.add_subplot(4, 2, 2 * i + 1)
+                axl.plot(df["epoch"], df[col_l], lw=0.7, color="#0072B2")
+                axl.set_title(title_l, fontsize=9)
+                axl.tick_params(axis="x", labelrotation=30, labelsize=7)
+                axl.tick_params(axis="y", labelsize=7)
+
+                axr = fig_elem.add_subplot(4, 2, 2 * i + 2)
+                if len(tr):
+                    axr.plot(tr["epoch"], tr[col_r], lw=0.6, color="#888888")
+                axr.set_title(title_r, fontsize=9)
+                axr.tick_params(axis="x", labelrotation=30, labelsize=7)
+                axr.tick_params(axis="y", labelsize=7)
+            fig_elem.tight_layout(rect=[0, 0, 1, 0.96])
+            pdf.savefig(fig_elem)
+            plt.close(fig_elem)
 
             fig3 = plt.figure(figsize=(8.27, 11.69))
             ax3 = fig3.add_axes([0.06, 0.06, 0.88, 0.86])
