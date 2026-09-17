@@ -1,0 +1,28 @@
+# Dockerfile.report_api — 獨立部署機動偵測 PDF 報表 API（HF Space, sdk: docker）
+# 與 maneuver_app_2026September(October).py 的 Streamlit Space 完全分開部署，
+# 互不影響：這支服務不含 streamlit，只跑 report_api.py。
+FROM python:3.11-slim
+
+# libgomp1：LightGBM／scikit-learn 之 OpenMP 執行期相依，python:3.11-slim 預設不含
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements_report_api.txt .
+RUN pip install --no-cache-dir -r requirements_report_api.txt
+
+COPY maneuver_report_builder.py .
+COPY report_api.py .
+COPY assets/fonts/NotoSansTC-Regular.otf ./assets/fonts/NotoSansTC-Regular.otf
+COPY maneuver_strategies_july.py .
+COPY statistical_detectors.py .
+COPY build_training_dataset.py .
+COPY atmospheric_drag.py .
+COPY ssa_rag_client.py .
+COPY models_fusion/ ./models_fusion/
+COPY Orbital_Maneuver_V2/models_meme/ ./Orbital_Maneuver_V2/models_meme/
+
+# HF Space（docker SDK）預設對外埠為 7860
+EXPOSE 7860
+CMD ["uvicorn", "report_api:app", "--host", "0.0.0.0", "--port", "7860"]

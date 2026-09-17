@@ -1,0 +1,20 @@
+# report_api.py — 機動偵測 PDF 報表 API 相依（不含 streamlit）
+# 版本對齊 requirements_hf.txt，確保 .pkl 模型可正確反序列化。
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.0
+qrcode[pil]>=7.4
+duckdb>=1.1.0
+pandas
+numpy
+pyarrow
+joblib
+scipy>=1.10.0
+scikit-learn==1.8.0
+lightgbm==4.6.0
+matplotlib
+skyfield
+requests
+statsmodels
+pymsis
+huggingface_hub
