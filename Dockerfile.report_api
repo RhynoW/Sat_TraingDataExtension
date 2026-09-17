@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements_report_api.txt
 
 COPY maneuver_report_builder.py .
 COPY report_api.py .
-COPY assets/fonts/NotoSansTC-Regular.otf ./assets/fonts/NotoSansTC-Regular.otf
+COPY assets/fonts/NotoSansTC-Regular.ttf ./assets/fonts/NotoSansTC-Regular.ttf
 COPY maneuver_strategies_july.py .
 COPY statistical_detectors.py .
 COPY build_training_dataset.py .

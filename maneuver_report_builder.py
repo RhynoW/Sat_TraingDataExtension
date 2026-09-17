@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import textwrap
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -297,7 +298,7 @@ def compute_fusion_detection(norad: int, d0, d1):
 
 # ── AI 思維過程說明（SSA-RAG，best-effort；離線／逾時自動退回規則式敘述）──────
 RAG_DEFAULT_URL = os.environ.get("SSA_RAG_URL", "http://127.0.0.1:8000")
-RAG_TIMEOUT_S = float(os.environ.get("SSA_RAG_TIMEOUT_S", "8"))
+RAG_TIMEOUT_S = float(os.environ.get("SSA_RAG_TIMEOUT_S", "120"))
 
 
 def build_tle_maneuver_narrative(satellite_id, alt_km_avg, start_date: str,
@@ -500,7 +501,7 @@ def build_report_data(norad: int, start_date: date, end_date: date, lang: str = 
     }
 
 
-_BUNDLED_CJK_FONT = Path(__file__).resolve().parent / "assets" / "fonts" / "NotoSansTC-Regular.otf"
+_BUNDLED_CJK_FONT = Path(__file__).resolve().parent / "assets" / "fonts" / "NotoSansTC-Regular.ttf"
 
 
 def _ensure_cjk_font() -> None:
@@ -511,6 +512,12 @@ def _ensure_cjk_font() -> None:
     host OS 剛好裝了哪些字型），找不到才退回本機系統字型清單。"""
     import matplotlib.pyplot as plt
     import matplotlib.font_manager as fm
+
+    # fonttype 3（matplotlib 預設）把中文字嵌成不可靠的點陣/路徑字型子集，
+    # PDF 閱讀器無法正確選取/複製文字（曾用 pypdf 與 PyMuPDF 兩種方式驗證，
+    # 抽出來的內容都是亂碼 /uniXXXX），改用 42（TrueType 直接嵌入）讓文字
+    # 可被選取、複製、搜尋。
+    plt.rcParams["pdf.fonttype"] = 42
 
     if _BUNDLED_CJK_FONT.exists():
         fm.fontManager.addfont(str(_BUNDLED_CJK_FONT))
@@ -529,13 +536,28 @@ def _ensure_cjk_font() -> None:
         except Exception:
             continue
     logger.warning("找不到任何可用中文字型（含 bundled Noto Sans TC），"
-                   "PDF 內中文可能顯示為缺字方框；請確認 assets/fonts/NotoSansTC-Regular.otf 存在")
+                   "PDF 內中文可能顯示為缺字方框；請確認 assets/fonts/NotoSansTC-Regular.ttf 存在")
 
 
 def _qr_image(url: str):
     """把網址轉成 QR code PIL 圖，供 matplotlib imshow 嵌入 PDF。"""
     import qrcode
     return qrcode.make(url)
+
+
+def _wrap_cjk_text(text: str, width: int = 44) -> str:
+    """matplotlib Text 的 wrap=True 對中文長段落不可靠（曾在 F2 報表的 AI 說明頁
+    確認：長句直接被裁在頁面右緣，未換行），因此改用 textwrap 依字元數手動預先
+    斷行。width 以「字元數」估算（非顯示寬度），44 是以 fontsize=9、ax3 可用寬度
+    約 7.3 吋反推的保守值，留有餘裕避免半形字混排時仍溢出。"""
+    lines = []
+    for para in text.split("\n"):
+        if not para.strip():
+            lines.append("")
+            continue
+        lines.extend(textwrap.wrap(para, width=width, break_long_words=True,
+                                    break_on_hyphens=False) or [""])
+    return "\n".join(lines)
 
 
 # ── PDF 產製：F1 簡版（1 頁）／F2 完整版（多頁，含圖表＋AI 說明）──────────────
@@ -658,7 +680,8 @@ def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None
             ai = r["ai_explanation"]
             body = (f"（來源：{ai['source']}，信心度：{ai['confidence']}）\n\n"
                     f"{ai['answer']}")
-            ax3.text(0, 0.95, body, va="top", ha="left", fontsize=9, wrap=True,
+            body = _wrap_cjk_text(body)
+            ax3.text(0, 0.95, body, va="top", ha="left", fontsize=9,
                       transform=ax3.transAxes)
             pdf.savefig(fig3)
             plt.close(fig3)
