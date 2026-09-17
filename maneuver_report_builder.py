@@ -581,49 +581,27 @@ def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None
     buf = io.BytesIO()
     r = report_data
 
-    def _summary_page(fig):
+    # 頁面容量（行數）以 fontsize=9、預設行距估算：有 QR code 時留白較多，容量較小；
+    # 續頁沒有 QR，容量較大。曾在 ISS（NORAD 25544，87 筆機動落點）發現：拿掉 20 筆
+    # 截斷後（"請不要省略"），落點多的衛星仍會被 matplotlib 無聲裁到頁面外看不到
+    # ——這裡改成「印不下就自動另開續頁」，而非再度截斷或無限縮小字級。
+    FIRST_PAGE_CAP = 55 if (source_url or app_url) else 62
+    CONT_PAGE_CAP = 62
+
+    def _text_page(fig, lines: list[str], title: str | None = None, draw_qr: bool = False):
         fig.clf()
-        fig.suptitle(f"衛星機動偵測報表 — NORAD {r['norad']}"
-                     f"{'（' + r['name'] + '）' if r.get('name') else ''}", fontsize=16)
-        # 留出頁面最下方 ~14% 高度給 QR code（有給 source_url／app_url 才畫），其餘不變
-        text_bottom = 0.18 if (source_url or app_url) else 0.06
-        ax = fig.add_axes([0.06, text_bottom, 0.88, 0.94 - text_bottom])
+        if title:
+            fig.suptitle(title, fontsize=16)
+        text_bottom = 0.18 if draw_qr else 0.06
+        top = 0.94 if title else 0.96
+        ax = fig.add_axes([0.06, text_bottom, 0.88, top - text_bottom])
         ax.axis("off")
-        lines = [
-            f"分析區間：{r['start_date']} ～ {r['end_date']}（TLE 筆數：{r['n_tle']}）",
-            f"軌道分類：{r['orbit_class']}（傾角族群：{r['inc_family']}）；"
-            f"平均軌道高度：約 {r['alt_km_avg']:.0f} km",
-            "",
-            "── L1 規則式（P1–P6）──",
-            f"旗標命中次數：{r['l1']['n_flagged']}",
-            "",
-            "── L2 統計變點通道 ──",
-        ]
-        for ch, v in r["l2"].items():
-            lines.append(f"  {ch}：事件數 {v['n_events']}")
-        lines += [
-            "",
-            "── L3 訓練式融合 ──",
-            f"逐窗 ML 模型：{'可用' if r['l3']['ml_available'] else '無模型檔，略過'}"
-            + (f"，旗標次數 {r['l3']['ml_n_flagged']}" if r['l3']['ml_n_flagged'] is not None else ""),
-            f"融合評分器：{'可用' if r['l3']['fusion_available'] else '無模型檔，略過'}"
-            + (f"，最大機率 {r['l3']['fusion_max_prob']:.3f}（門檻 {r['l3']['fusion_thr']:.3f}）"
-               if r['l3']['fusion_max_prob'] is not None else ""),
-            "",
-            f"── 機動偵測落點（共 {len(r['landing_events'])} 筆）──",
-        ]
-        for ev in r["landing_events"]:
-            ts = pd.Timestamp(ev["epoch"]).strftime("%Y-%m-%d %H:%M UTC")
-            extra = f"　Δa={ev['sma_delta']:+.3f} km（{ev['sma_direction']}）" if "sma_delta" in ev else ""
-            lines.append(f"  - {ts}{extra}")
-        lines.append("")
-        lines.append(f"報表產生時間：{r['generated_at']}")
         # 不強制 family="monospace"：該字型不含中文全形標點（全形括號等會變缺字方框），
         # 沿用 rcParams 設定之中文字型即可，犧牲數字欄位等寬對齊換取正確顯示中文標點。
         ax.text(0, 1, "\n".join(lines), va="top", ha="left", fontsize=9,
                 transform=ax.transAxes)
 
-        if source_url:
+        if draw_qr and source_url:
             qr_ax = fig.add_axes([0.24, 0.02, 0.16, 0.16])
             qr_ax.imshow(_qr_image(source_url), cmap="gray")
             qr_ax.axis("off")
@@ -635,7 +613,7 @@ def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None
             label_ax.text(0.5, 0.5, source_url, ha="center", va="center", fontsize=5,
                           clip_on=True, transform=label_ax.transAxes)
 
-        if app_url:
+        if draw_qr and app_url:
             qr_ax2 = fig.add_axes([0.60, 0.02, 0.16, 0.16])
             qr_ax2.imshow(_qr_image(app_url), cmap="gray")
             qr_ax2.axis("off")
@@ -645,10 +623,60 @@ def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None
             label_ax2.text(0.5, 0.5, app_url, ha="center", va="center", fontsize=5,
                            clip_on=True, transform=label_ax2.transAxes)
 
+    def _summary_pages():
+        head_lines = [
+            f"分析區間：{r['start_date']} ～ {r['end_date']}（TLE 筆數：{r['n_tle']}）",
+            f"軌道分類：{r['orbit_class']}（傾角族群：{r['inc_family']}）；"
+            f"平均軌道高度：約 {r['alt_km_avg']:.0f} km",
+            "",
+            "── L1 規則式（P1–P6）──",
+            f"旗標命中次數：{r['l1']['n_flagged']}",
+            "",
+            "── L2 統計變點通道 ──",
+        ]
+        for ch, v in r["l2"].items():
+            head_lines.append(f"  {ch}：事件數 {v['n_events']}")
+        head_lines += [
+            "",
+            "── L3 訓練式融合 ──",
+            f"逐窗 ML 模型：{'可用' if r['l3']['ml_available'] else '無模型檔，略過'}"
+            + (f"，旗標次數 {r['l3']['ml_n_flagged']}" if r['l3']['ml_n_flagged'] is not None else ""),
+            f"融合評分器：{'可用' if r['l3']['fusion_available'] else '無模型檔，略過'}"
+            + (f"，最大機率 {r['l3']['fusion_max_prob']:.3f}（門檻 {r['l3']['fusion_thr']:.3f}）"
+               if r['l3']['fusion_max_prob'] is not None else ""),
+            "",
+            f"── 機動偵測落點（共 {len(r['landing_events'])} 筆）──",
+        ]
+        event_lines = []
+        for ev in r["landing_events"]:
+            ts = pd.Timestamp(ev["epoch"]).strftime("%Y-%m-%d %H:%M UTC")
+            extra = f"　Δa={ev['sma_delta']:+.3f} km（{ev['sma_direction']}）" if "sma_delta" in ev else ""
+            event_lines.append(f"  - {ts}{extra}")
+        tail_lines = ["", f"報表產生時間：{r['generated_at']}"]
+
+        title = (f"衛星機動偵測報表 — NORAD {r['norad']}"
+                 f"{'（' + r['name'] + '）' if r.get('name') else ''}")
+        avail1 = FIRST_PAGE_CAP - len(head_lines)
+        if len(event_lines) + len(tail_lines) <= avail1:
+            return [(head_lines + event_lines + tail_lines, title, True)]
+
+        avail1_events = max(avail1 - 1, 0)
+        page1 = (head_lines + event_lines[:avail1_events]
+                 + ["", f"（機動偵測落點續下頁，共 {len(event_lines) - avail1_events} 筆）"])
+        pages = [(page1, title, True)]
+        remaining = event_lines[avail1_events:] + tail_lines
+        while remaining:
+            avail_cont = CONT_PAGE_CAP - 1
+            chunk, remaining = remaining[:avail_cont], remaining[avail_cont:]
+            pages.append((["── 機動偵測落點（續）──"] + chunk, None, False))
+        return pages
+
     with PdfPages(buf) as pdf:
-        fig = plt.figure(figsize=(8.27, 11.69))  # A4
-        _summary_page(fig)
-        pdf.savefig(fig)
+        for lines, title, draw_qr in _summary_pages():
+            fig = plt.figure(figsize=(8.27, 11.69))  # A4
+            _text_page(fig, lines, title=title, draw_qr=draw_qr)
+            pdf.savefig(fig)
+            plt.close(fig)
 
         if fmt == "F2":
             # 時序圖頁：SMA + 機動落點標註
