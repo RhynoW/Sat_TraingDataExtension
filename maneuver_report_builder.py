@@ -344,6 +344,78 @@ def build_tle_maneuver_narrative(satellite_id, alt_km_avg, start_date: str,
     return "\n".join(lines)
 
 
+_STRATEGY_LABELS = {
+    "P2": "P2 高度自適應 Δa 閾值",
+    "P5": "P5 F10.7 太陽活動強度調整",
+    "P6": "P6 星座／傾角族群基準倍率",
+    "P4": "P4 相鄰窗口補充判定",
+    "other(di/de/dΩ)": "其他根數（Δi／Δe／ΔRAAN）異常",
+    "P1_suppress": "P1 單調衰減抑制（判為大氣阻力自然衰減）",
+    "P3_suppress": "P3 高 B* 抑制（判為阻力可解釋、非機動）",
+}
+
+
+def build_pipeline_logic_text(r: dict) -> str:
+    """給客戶看的「系統思維邏輯」說明：L1／L2 各自看到什麼徵候、L3 如何從這些徵候
+    篩出可信結果——與 render_pdf() 的 AI 思維過程說明頁（LLM 自由文字）互補，
+    這裡是決定論、可逐項對照原始數字重現的規則式敘述，不經過 LLM。"""
+    l1 = r["l1"]
+    sc = l1.get("strategy_counts", {})
+    detect_keys = ["P2", "P5", "P6", "P4", "other(di/de/dΩ)"]
+    suppress_keys = ["P1_suppress", "P3_suppress"]
+    detect_parts = [f"{_STRATEGY_LABELS[k]} {sc.get(k, 0)} 次" for k in detect_keys if k in sc]
+    suppress_parts = [f"{_STRATEGY_LABELS[k]} {sc.get(k, 0)} 次" for k in suppress_keys if k in sc]
+
+    lines = [
+        "【L1 規則式（P1–P6）看到的徵候】",
+        f"本區間共 {l1.get('n_transitions', 0)} 筆相鄰 TLE 轉換。各項判定各自標記候選異常次數："
+        + "、".join(detect_parts) + "。",
+        "其中會被視為「非機動」而扣除的抑制判定：" + "、".join(suppress_parts)
+        + "（連續小幅衰減、無大跳變、且 B* 為正／偏高，較符合大氣阻力自然衰減的特徵）。",
+        f"偵測（聯集）扣除抑制後，L1 最終合併標記 {l1['n_flagged']} 次候選機動轉換。",
+        "",
+        "【L2 統計變點通道看到的徵候】",
+        "L2 由四種原理互不相同、且不依賴軌道物理閾值的統計變點演算法各自獨立掃描"
+        "半長軸（SMA）時序，純粹從數列本身的統計特徵（均值/變異數突變、貝氏變點機率、"
+        "奇異譜分解殘差、3σ 穩健離群值）找出可疑轉折點：",
+    ]
+    for ch, v in r["l2"].items():
+        lines.append(f"  {ch}：{v['n_events']} 次")
+    lines.append(
+        "這四個通道彼此獨立、對雜訊的敏感方式不同，任一通道單獨觸發都可能只是雜訊"
+        "或量測誤差，需要交叉比對才能判斷是否為真實機動。")
+    lines += [
+        "",
+        "【L3 如何從這些徵候中篩出可信結果】",
+    ]
+    l3 = r["l3"]
+    if l3["fusion_available"]:
+        lines.append(
+            f"融合評分器（L3）把 L2 四通道分數＋大氣阻力殘差，整合成同一組學習到的"
+            f"機率模型，逐窗口輸出單一「機動機率」；本報表區間內最高機率為 "
+            f"{l3['fusion_max_prob']:.3f}，判定門檻為 {l3['fusion_thr']:.3f}"
+            f"（門檻以歷史標註資料訓練/校準得出，非人為拍板）。"
+            f"單一通道分數再高，若無法讓融合機率跨過此門檻，仍會被判為不可信、"
+            f"不列入最終落點；反之，跨過門檻代表多個徵候在同一時間窗口相互佐證，"
+            f"才視為可信的機動候選。")
+    else:
+        lines.append("融合評分器（L3）本次無可用模型檔，略過此層篩選。")
+    if l3["ml_available"]:
+        lines.append(
+            f"逐窗 ML 模型（L3）另以獨立訓練的門檻，在本區間標記 {l3['ml_n_flagged']} 次候選窗口，"
+            "作為與融合評分器互相驗證的第二道判斷。")
+    src_txt = {
+        "l1_combined": "本報表最終列出的機動偵測落點，以 L1 規則式合併結果為準"
+                       "（L1 有標記時優先採用，判定依據最直接對應到單一 TLE 轉換的時間點）。",
+        "l3_fusion_fallback": "本區間 L1 規則式未標記任何候選，故改以 L3 融合評分器機率"
+                              "跨過門檻的時間窗口為準，列為最終機動偵測落點。",
+        "none": "本區間 L1／L3 皆無可用判定結果，故無機動偵測落點。",
+    }.get(r.get("landing_source", "none"), "")
+    lines.append(src_txt)
+    lines.append(f"最終列出機動偵測落點共 {len(r['landing_events'])} 筆（詳見摘要頁清單）。")
+    return "\n".join(lines)
+
+
 def build_ml_maneuver_narrative(satellite_id, p_maneuver: float, lgbm_feat: dict,
                                 start_date: str, end_date: str,
                                 alert: bool | None = None) -> str:
@@ -459,10 +531,19 @@ def build_report_data(norad: int, start_date: date, end_date: date, lang: str = 
     if len(l1["combined"]):
         hit_idx = np.where(l1["combined"])[0]
         landing_epochs = df["epoch"].iloc[hit_idx].tolist() if len(hit_idx) else []
+        landing_source = "l1_combined"
     elif fusion is not None and l3["fusion_thr"] is not None:
         landing_epochs = fusion.loc[fusion["fusion"] >= l3["fusion_thr"], "epoch"].tolist()
+        landing_source = "l3_fusion_fallback"
     else:
         landing_epochs = []
+        landing_source = "none"
+
+    # L1 各子策略觸發次數（②系統偵測邏輯頁用）：P2/P5/P6/other 為「偵測」，
+    # P1/P3 為「抑制」（判定為大氣阻力自然衰減、非機動而剔除的候選）。
+    per_strategy = l1["detail"].get("per_strategy", {})
+    l1_strategy_counts = {k: int(np.sum(v)) for k, v in per_strategy.items()}
+    l1_n_transitions = len(l1["tr"])
 
     alt_km_avg = float(df["sma_km"].mean() - R_E)
     event_df = pd.DataFrame({"epoch": landing_epochs})
@@ -489,10 +570,12 @@ def build_report_data(norad: int, start_date: date, end_date: date, lang: str = 
         "generated_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
         "orbit_class": l1["orbit_class"], "inc_family": l1["inc_family"],
         "alt_km_avg": alt_km_avg, "n_tle": len(df),
-        "l1": {"n_flagged": l1["n_flagged"]},
+        "l1": {"n_flagged": l1["n_flagged"], "n_transitions": l1_n_transitions,
+               "strategy_counts": l1_strategy_counts},
         "l2": l2,
         "l3": l3,
         "landing_events": event_df.to_dict("records"),
+        "landing_source": landing_source,
         "narrative": narrative_tle,
         "ai_explanation": ai_explanation,
         "tle_df": df,          # 給 render_pdf 畫時序圖用，不落入 JSON 序列化路徑
@@ -730,6 +813,20 @@ def render_pdf(report_data: dict, fmt: str = "F1", source_url: str | None = None
             fig_elem.tight_layout(rect=[0, 0, 1, 0.96])
             pdf.savefig(fig_elem)
             plt.close(fig_elem)
+
+            # ② 系統偵測邏輯說明頁：L1/L2 各自看到的徵候、L3 如何篩出可信結果
+            # ——決定論、可逐項對照原始數字重現的規則式敘述，與下一頁 AI（LLM）
+            # 自由文字說明互補、不重複。內容固定幾個段落，不隨事件數量成長，
+            # 因此沿用單頁＋手動預先斷行即可，不需要像機動落點清單那樣做續頁。
+            fig_logic = plt.figure(figsize=(8.27, 11.69))
+            ax_logic = fig_logic.add_axes([0.06, 0.06, 0.88, 0.86])
+            ax_logic.axis("off")
+            ax_logic.set_title("② 系統偵測邏輯說明", loc="left", fontsize=13)
+            logic_text = _wrap_cjk_text(build_pipeline_logic_text(r))
+            ax_logic.text(0, 0.97, logic_text, va="top", ha="left", fontsize=8.5,
+                          transform=ax_logic.transAxes)
+            pdf.savefig(fig_logic)
+            plt.close(fig_logic)
 
             fig3 = plt.figure(figsize=(8.27, 11.69))
             ax3 = fig3.add_axes([0.06, 0.06, 0.88, 0.86])
