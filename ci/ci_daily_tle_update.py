@@ -167,11 +167,12 @@ def main() -> int:
 
     print(f"[5/5] 保留臨時 DB 供下一步（build slim）使用：{ci_db}")
     if args.restart_maneuver_space:
-        try:
-            api.restart_space("RhynoWu/maneuver-detection")
-            print("      已重啟 maneuver-detection Space")
-        except Exception as exc:  # noqa: BLE001 — 非致命，容器下次自然會拿到新資料
-            print(f"      [warn] 重啟 maneuver-detection Space 失敗（非致命）：{exc}")
+        for space in ("RhynoWu/maneuver-detection", "RhynoWu/maneuver-detection-i18n"):
+            try:
+                api.restart_space(space)
+                print(f"      已重啟 {space} Space")
+            except Exception as exc:  # noqa: BLE001 — 非致命，容器下次自然會拿到新資料
+                print(f"      [warn] 重啟 {space} Space 失敗（非致命）：{exc}")
 
     print("[OK] 每日 TLE 更新完成")
     return 0
