@@ -10664,6 +10664,96 @@ def render_storymap_case21():
         "reflects any \"evasive intent.\"",
     ))
 
+    st.header(T3(
+        "⑥ 意外的意外：這個盲區通道對磁暴特別敏感（2026-09-18 新增）",
+        "⑥予期せぬ発見：この盲点チャネルは磁気嵐に特に敏感である（2026-09-18追加）",
+        "⑥ An unexpected twist: this blind-spot channel is especially sensitive to geomagnetic storms (added 2026-09-18)",
+    ))
+    st.markdown(T3(
+        "把驗證樣本擴大到 FS7/COSMIC-2 星系（8 顆）時，意外發現 7 顆衛星幾乎"
+        "同時（2026-04-17～18 約 6 小時內）觸發候選異常、殘差量級也高度一致"
+        "——這種跨衛星一致性統計上不太可能是巧合。交叉比對 SpaceWeather 專案"
+        "之 OMNI2/CelesTrak 資料，確認 2026-04-18 UTC 確實發生一次真實中度"
+        "地磁暴（Dst -95nT、Kp 5.33，CME/激波驅動訊號），F10.7 太陽通量則"
+        "全程平靜——排除單純太陽 EUV 通量驅動的解釋，指向磁暴造成的熱層"
+        "密度擾動。",
+        "検証サンプルをFS7/COSMIC-2星系（8機）に拡大した際、7機の衛星がほぼ"
+        "同時（2026-04-17～18の約6時間以内）に候補異常をトリガーし、残差の"
+        "大きさも高度に一致していることを偶然発見した——この衛星間の一貫性は"
+        "統計的に偶然とは考えにくい。SpaceWeatherプロジェクトのOMNI2/"
+        "CelesTrakデータと照合した結果、2026-04-18 UTCに実際に中規模の地磁気嵐"
+        "（Dst -95nT、Kp 5.33、CME/衝撃波駆動の兆候）が発生していたことを確認"
+        "した。一方F10.7太陽フラックスは終始平穏——単純な太陽EUVフラックス"
+        "駆動という説明を排除し、磁気嵐による熱圏密度擾乱を示唆する。",
+        "When the validation sample was expanded to the FS7/COSMIC-2 constellation (8 satellites), "
+        "7 of them unexpectedly triggered candidate anomalies almost simultaneously (within about a "
+        "6-hour window on 2026-04-17/18), with highly consistent residual magnitudes — this kind of "
+        "cross-satellite consistency is statistically unlikely to be coincidence. Cross-checking "
+        "OMNI2/CelesTrak data from the SpaceWeather project confirmed a real moderate geomagnetic "
+        "storm occurred on 2026-04-18 UTC (Dst -95nT, Kp 5.33, a CME/shock-driven signature), while "
+        "F10.7 solar flux stayed calm throughout — ruling out a simple solar EUV flux explanation and "
+        "pointing instead to storm-driven thermospheric density disturbance.",
+    ))
+    st.markdown(T3(
+        "**但初步比較方式有瑕疵，須誠實記錄修正過程**：第一次嘗試用「磁暴週"
+        "75.0% 觸發率」對照「另一批非 Starlink 衛星、另一個時間窗口的 83.9% "
+        "基線」，比較對象根本不同，得出「磁暴未明顯提升觸發率」的誤導性負向"
+        "結論。發現此瑕疵後，改用**同一批 140 顆 Starlink 衛星、同一套方法**，"
+        "僅將觀測窗口換成一段經確認的平靜對照週（2026-05-06～05-13）重新"
+        "掃描——這才是有效的對照實驗設計。",
+        "**しかし最初の比較方法には欠陥があり、修正過程を誠実に記録する必要がある**："
+        "最初の試みでは「磁気嵐週の75.0%トリガー率」を「別のStarlink以外の衛星群、別の"
+        "時間窓の83.9%ベースライン」と比較しており、比較対象がそもそも異なっていたため、"
+        "「磁気嵐はトリガー率を明らかに上昇させていない」という誤解を招く否定的な結論に"
+        "至った。この欠陥を発見した後、**同一の140機のStarlink衛星、同一の手法**を用い、"
+        "観測窓のみを確認済みの平穏な対照週（2026-05-06～05-13）に変更して再スキャン"
+        "した——これこそが有効な対照実験の設計である。",
+        "**But the first comparison approach was flawed, and the correction process is honestly "
+        "recorded here**: the first attempt compared a \"75.0% storm-week trigger rate\" against an "
+        "\"83.9% baseline from a different non-Starlink satellite population over a different time "
+        "window\" — the comparison targets were simply not the same, leading to a misleading negative "
+        "conclusion that \"the storm did not clearly raise the trigger rate.\" After spotting this "
+        "flaw, the same 140 Starlink satellites and the same method were reused, only swapping the "
+        "observation window for a confirmed calm control week (2026-05-06 to 2026-05-13) — this is "
+        "the valid control-experiment design.",
+    ))
+    _c21_storm_df = pd.DataFrame([
+        {"觀測窗口": "2026-04-15～04-21（磁暴週）", "地磁狀態": "Dst 最低 -95nT，Kp 最高 5.33", "觸發率": "75.0%（105/140）"},
+        {"觀測窗口": "2026-05-06～05-13（平靜對照週）", "地磁狀態": "Dst -1～-16nT，Kp 多數≤1.5", "觸發率": "6.4%（9/140）"},
+    ])
+    st.dataframe(_c21_storm_df, use_container_width=True, hide_index=True)
+    st.success(T3(
+        "**卡方檢定 χ²=133.5，p=6.9×10⁻³¹，差異極端顯著**——這次乾淨對照"
+        "強烈支持磁暴假說，推翻了初版比較基準錯誤所得的負向結論。**應以此"
+        "對照實驗結果為準**：本通道在磁暴期間對 Starlink 確實會產生大量"
+        "候選觸發，代表使用這個「補充觀察指標」時，若近期有地磁擾動，"
+        "候選數量會系統性大增，絕大多數應為磁暴驅動的熱層密度訊號而非"
+        "真實機動——這進一步強化（而非削弱）本案例一貫的定位：此通道只"
+        "適合當補充參考，不適合當獨立判定通道。仍待後續驗證：本次僅為"
+        "單一磁暴事件與單一平靜週之比較，尚未涵蓋多場磁暴之重複驗證。",
+        "**カイ二乗検定 χ²=133.5、p=6.9×10⁻³¹、差は極めて有意**——この今回の"
+        "クリーンな対照実験は磁気嵐仮説を強く支持しており、当初の比較基準の誤りによる"
+        "否定的な結論を覆した。**この対照実験の結果を正とすべきである**：このチャネルは"
+        "磁気嵐期間中にStarlinkに対して確かに大量の候補トリガーを生み出す——つまりこの"
+        "「補助的観察指標」を使用する際、最近地磁気擾乱があれば候補数は体系的に急増し、"
+        "そのほとんどは真の機動ではなく磁気嵐駆動の熱圏密度信号であるはずだ——これは"
+        "本事例の一貫した位置づけ（このチャネルは補助参考にのみ適し、独立した判定"
+        "チャネルには適さない）をさらに強化する（弱めるのではなく）。今後の検証課題："
+        "今回は単一の磁気嵐イベントと単一の平穏週の比較に過ぎず、複数の磁気嵐にわたる"
+        "反復検証はまだ行っていない。",
+        "**Chi-square test χ²=133.5, p=6.9×10⁻³¹ — an extremely significant difference.** This clean "
+        "control experiment strongly supports the storm hypothesis, overturning the negative "
+        "conclusion that came from the first, flawed comparison baseline. **This control experiment "
+        "should be taken as the authoritative result**: this channel does produce a large surge of "
+        "candidate triggers for Starlink during geomagnetic storms, meaning that when using this "
+        "\"supplementary observation indicator,\" a recent geomagnetic disturbance will systematically "
+        "inflate candidate counts, most of which are likely storm-driven thermospheric density "
+        "signals rather than genuine maneuvers — this further reinforces (rather than weakens) this "
+        "case's consistent positioning: the channel is fit only as supplementary reference, not as an "
+        "independent judgment channel. Still pending: this is only a comparison of one storm event "
+        "against one calm week, not yet replicated across multiple storms.",
+    ))
+
     st.markdown("---")
     st.markdown(T3(
         "**判讀**：這個案例串起了三件事——一次意外發現（案例十一）、一條新偵測"
