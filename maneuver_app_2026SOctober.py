@@ -10819,6 +10819,81 @@ def render_storymap_case21():
         "broadly storm-sensitive.\"",
     ))
 
+    st.header(T3(
+        "⑧ 追加驗證：換 Starlink 大樣本測同一場磁暴，結果與 COSMIC2 完全一致",
+        "⑧追加検証：Starlink大サンプルで同じ磁気嵐を検証——結果はCOSMIC2と完全に一致",
+        "⑧ Follow-up: testing the same storm with a large Starlink sample gives the same answer as COSMIC2",
+    ))
+    st.warning(T3(
+        "⑦節結尾留了一個問題：Starlink 只驗證過原始那一場磁暴，還不知道換一場"
+        "磁暴後 Starlink 是否也一樣沒反應。用完全相同的 140 顆 Starlink 衛星"
+        "清單，補測 **2026-07-04（G2，Kp=7.33、Dst=-150nT，強度明顯高於原始"
+        "事件）**——受限於本地 TLE 資料庫為滾動窗口（目前僅涵蓋 2026-04-29～"
+        "09-17），另外 5 場磁暴（含 Gannon G5）與原始 04-18 事件本身，"
+        "Starlink 端現皆已無資料可查，只能補測這一場。\n\n"
+        "**結果**：磁暴週觸發率從原始事件的 75.0%（105/140）**驟降至 1.4%"
+        "（2/138）**，平靜對照週 0%，卡方檢定 p=0.478，統計上完全不顯著——"
+        "跟平靜週沒有差別。磁暴強度明明更強，觸發率卻幾乎歸零。",
+        "⑦節の最後に一つの疑問を残していた：Starlinkは元の磁気嵐でしか検証しておらず、"
+        "別の磁気嵐に変えてもStarlinkが同様に無反応かどうかは未確認だった。全く同じ"
+        "140機のStarlink衛星リストを用いて、**2026-07-04（G2、Kp=7.33、Dst=-150nT、"
+        "元のイベントより明らかに強い）**を追加検証した——ローカルTLEデータベースが"
+        "ローリングウィンドウ（現在は2026-04-29～09-17のみ）であるため、他の5回の"
+        "磁気嵐（Gannon G5を含む）と元の04-18イベント自体は、Starlink側では既に"
+        "データが参照できず、この1回のみ追加検証できた。\n\n"
+        "**結果**：磁気嵐週のトリガー率は元イベントの75.0%（105/140）から**1.4%"
+        "（2/138）へ急落**し、平静対照週は0%、カイ二乗検定p=0.478で統計的に"
+        "全く有意でなかった——平静週と変わらない。磁気嵐の強度は明らかに強いのに、"
+        "トリガー率はほぼゼロになった。",
+        "Section ⑦ left one question open: Starlink had only been tested against the original storm, "
+        "so it wasn't yet known whether Starlink would also stay quiet for a different storm. Using the "
+        "exact same 140-satellite Starlink list, we tested **2026-07-04 (G2, Kp=7.33, Dst=-150nT — "
+        "clearly stronger than the original event)** — limited by the local TLE database's rolling "
+        "window (currently only 2026-04-29 to 09-17), the other 5 storms (including Gannon G5) and the "
+        "original 04-18 event itself are no longer queryable on the Starlink side, so only this one "
+        "storm could be re-tested.\n\n"
+        "**Result**: the storm-week trigger rate **plunged from the original 75.0% (105/140) to just "
+        "1.4% (2/138)**, versus 0% in the calm control week — a chi-square p=0.478, statistically "
+        "indistinguishable from the calm week. Despite the stronger storm, the trigger rate collapsed "
+        "to near zero.",
+    ))
+    st.error(T3(
+        "**再次修正的誠實結論**：Starlink 跟 COSMIC2 呈現同一種模式——**兩個獨立"
+        "星系、兩種樣本規模（138–140 顆 vs 6 顆），都只對 2026-04-18 那一場特定"
+        "磁暴有反應，換一場磁暴（甚至更強的）就完全沒反應**。這已經很難再用"
+        "「COSMIC2 樣本太小、碰巧巧合」解釋——因為 Starlink 138 顆的大樣本結果"
+        "方向完全一致。本案例對磁暴假說的立場，必須從「⑥節Starlink部分證據依然"
+        "成立」，進一步修正為：**兩個星系的證據合在一起看，更支持「2026-04-18"
+        "當天存在某種資料處理或編目層面的特殊事件」，而非「磁暴會系統性地讓這個"
+        "通道大量誤觸發」**。是否真是共同 TLE 定軌批次處理所致，仍待直接查證"
+        "（尚未執行），在此之前，磁暴敏感性的說法應視為存疑，不應寫入正式結論。",
+        "**再度修正された誠実な結論**：StarlinkはCOSMIC2と同じパターンを示した——"
+        "**2つの独立した星系、2種類のサンプル規模（138～140機 vs 6機）が、いずれも"
+        "2026-04-18のその特定の磁気嵐にだけ反応し、別の（しかもより強い）磁気嵐には"
+        "全く反応しなかった**。これはもはや「COSMIC2のサンプルが小さすぎて偶然"
+        "一致した」では説明しがたい——Starlink 138機という大サンプルの結果も"
+        "全く同じ方向を示しているからである。本事例の磁気嵐仮説に対する立場は、"
+        "「⑥節のStarlink部分の証拠は依然として成立する」から、さらに一歩進めて"
+        "修正する必要がある：**2つの星系の証拠を合わせて見ると、「磁気嵐がこの"
+        "チャネルを系統的に大量誤トリガーさせる」よりも、「2026-04-18当日に何らかの"
+        "データ処理またはカタログ登録上の特殊な出来事があった」という説明のほうが"
+        "支持される**。これが本当に共通のTLE軌道決定バッチ処理によるものかは、"
+        "まだ直接検証されていない。それまでは、磁気嵐感受性という主張は疑わしいもの"
+        "として扱うべきであり、正式な結論には書き込むべきではない。",
+        "**A second, further correction to the honest conclusion**: Starlink shows the exact same "
+        "pattern as COSMIC2 — **two independent constellations, two sample sizes (138–140 vs 6), both "
+        "responding only to the specific 2026-04-18 storm and going completely quiet for a different "
+        "(even stronger) storm**. This is now hard to explain away as \"COSMIC2's sample was too small "
+        "and got a fluke\" — because the large 138-satellite Starlink result points the exact same "
+        "direction. This case's position on the storm hypothesis must move one step further, from "
+        "\"section ⑥'s Starlink evidence still stands\" to: **taken together, the evidence from both "
+        "constellations now favors \"something specific to 2026-04-18 itself — a data-processing or "
+        "cataloging event\" over \"storms systematically cause mass false-triggering in this channel.\"** "
+        "Whether this is truly a shared TLE orbit-determination batch artifact remains to be directly "
+        "verified (not yet done); until then, storm-sensitivity should be treated as an open question, "
+        "not written into a formal conclusion.",
+    ))
+
     st.markdown("---")
     st.markdown(T3(
         "**判讀**：這個案例串起了三件事——一次意外發現（案例十一）、一條新偵測"
