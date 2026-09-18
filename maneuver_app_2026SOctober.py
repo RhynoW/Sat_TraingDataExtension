@@ -2086,17 +2086,21 @@ def render_storymap_case3():
             ))
         sigma_mad_str = f"{sigma_mad*1000:.0f} m" if sigma_mad else "—"
         st.caption(T3(
-            f"本頁測得之穩健雜訊底（σ≈{sigma_mad_str}，若有資料）"
-            "與技術附錄§10.5「Starlink 低軌帶 σ≈24–75 m」之既有結論一致，屬於該範圍偏低（乾淨）的一端；"
-            "不同衛星、不同時期之雜訊底會因追蹤幾何與大氣阻力狀態而異。",
-            f"本頁で実測されたロバストな雑音床（σ≈{sigma_mad_str}、データがある場合）は、"
-            "技術付録§10.5「Starlinkの低軌道帯 σ≈24〜75 m」という既存の結論と一致しており、"
-            "その範囲の中でも低め（クリーンな）側に属する；異なる衛星、異なる時期の雑音床は、"
-            "追跡ジオメトリと大気抵抗の状態によって異なる。",
-            f"The robust noise floor measured on this page (σ≈{sigma_mad_str}, if data is available) is "
-            "consistent with the existing conclusion in Technical Appendix §10.5 (\"Starlink LEO band "
-            "σ≈24–75 m\"), sitting toward the lower (cleaner) end of that range; noise floors vary across "
-            "satellites and time periods depending on tracking geometry and atmospheric-drag conditions.",
+            f"本頁測得之雜訊底（σ≈{sigma_mad_str}，近60天原始逐筆差分MAD、若有資料）"
+            "與技術附錄§10.5「Starlink 低軌帶 σ≈24–75 m」為**不同時間點、可能亦為不同估計量**下的數字，"
+            "兩者不必然落在同一區間內——本頁重新查核發現兩者實際上經常對不上，詳見本案例末尾之"
+            "「誠實更新」段落，不宜逕自解讀為「與既有結論一致」。",
+            f"本頁で実測された雑音床（σ≈{sigma_mad_str}、直近60日間の生の逐次差分MAD、データがある場合）は、"
+            "技術付録§10.5「Starlinkの低軌道帯 σ≈24〜75 m」とは**異なる時点、場合によっては異なる推定量**"
+            "による数字であり、両者は必ずしも同じ範囲に収まらない——本頁を再検証したところ、実際には"
+            "両者が一致しないことが多いと判明した。詳細は本事例末尾の「誠実な更新」の段落を参照のこと。"
+            "「既存の結論と一致している」とそのまま解釈すべきではない。",
+            f"The noise floor measured on this page (σ≈{sigma_mad_str}, raw consecutive-difference MAD over "
+            "the last 60 days, if data is available) is a number from a **different point in time, and "
+            "possibly a different estimator**, than Technical Appendix §10.5's \"Starlink LEO band σ≈24–75 "
+            "m\" — the two don't necessarily fall in the same range. Re-checking this page found they "
+            "frequently don't line up; see the \"honest update\" section at the end of this case. Don't read "
+            "this as \"consistent with the existing conclusion.\"",
         ))
     else:
         st.warning(T3(
@@ -2252,6 +2256,75 @@ def render_storymap_case3():
         "§10.7、§14、§18.2を参照。",
         "Full derivation, synthetic-injection experiments, and responses to committee comments are in "
         "`docs/期末報告_技術附錄_20260909.md` §10.7, §14, §18.2.",
+    ))
+
+    st.markdown("---")
+    st.header(T3(
+        "誠實更新（2026-09-18）：本頁的 σ 跟「技術附錄24–75m」對不上，原因是方法定義不同",
+        "誠実な更新（2026-09-18）：本頁のσと「技術付録24〜75m」が一致しない理由は推定量の定義の違い",
+        "Honest update (2026-09-18): why this page's σ doesn't match the \"24–75 m\" technical appendix figure",
+    ))
+    st.warning(T3(
+        "查核另一支獨立腳本（`fs7_noise_floor_map_v2.py`，繪製全高度帶雜訊底地圖）發現：**同一套方法、"
+        "同一批 30 顆 Starlink 衛星，2026-08-25 測得中位 σ=6.1 m，2026-09-18（3.5 週後）重跑得 9.87 m**，"
+        "漲幅 62%。本地 TLE 資料庫之 Starlink 記錄為滾動窗口（目前僅涵蓋約 4.5 個月），此為波動主因。\n\n"
+        "進一步用**本頁自己的方法**（近 60 天原始逐筆差分 MAD，不排除跳動）對 STARLINK-3005 重新計算，"
+        "得到 **11.6 m**——比上方文字宣稱的「24–75 m 範圍偏低的一端」還要低，對不上。原因：60 天內有 "
+        "9/160 筆差分絕對值 >0.3 km（最大 564 m），這些疑似真實的小型維持機動或阻力擾動被本頁方法一併"
+        "計入。改用另一支腳本「40 筆滑動窗、排除跳動 >0.3 km、去趨勢」的方法，同一顆衛星只得 **3.12 m**"
+        "——同一顆衛星，兩種合理但定義不同的估計量，可以相差將近 4 倍。",
+        "別の独立したスクリプト（`fs7_noise_floor_map_v2.py`、全高度帯の雑音床マップを描画）を検証した"
+        "ところ：**同じ手法、同じ30機のStarlink衛星で、2026-08-25には中央値σ=6.1 mだったが、"
+        "2026-09-18（3.5週間後）に再実行すると9.87 m**となり、62%上昇していた。ローカルTLEデータベースの"
+        "Starlink記録はローリングウィンドウ（現在は約4.5ヶ月分のみ）であることが、この変動の主因である。"
+        "\n\nさらに**本頁自身の手法**（直近60日間の生の逐次差分MAD、跳躍を除外しない）でSTARLINK-3005を"
+        "再計算すると**11.6 m**となり——上記の文章が主張する「24〜75 mの範囲の中でも低め側」よりも"
+        "さらに低く、一致しなかった。原因：60日間のうち9/160件の差分の絶対値が0.3 kmを超えており"
+        "（最大564 m）、これらの真の小規模な維持機動または抵抗擾乱と疑われるものが本頁の手法では"
+        "まとめて計上されてしまっている。別のスクリプトの「40件の移動窓、0.3 kmを超える跳躍を除外、"
+        "トレンド除去」という手法に変えると、同じ衛星でわずか**3.12 m**となった——同一の衛星に対して、"
+        "定義の異なる2つの妥当な推定量が、ほぼ4倍もの差を生み出しうる。",
+        "Checking another independent script (`fs7_noise_floor_map_v2.py`, which maps the noise floor "
+        "across the full altitude range) found that **the same method, on the same 30 Starlink satellites, "
+        "measured a median σ=6.1 m on 2026-08-25 and 9.87 m when rerun on 2026-09-18 (3.5 weeks later)** — "
+        "a 62% jump. The local TLE database's Starlink records are a rolling window (currently only about "
+        "4.5 months), which is the main driver of this drift.\n\n"
+        "Recomputing STARLINK-3005 using **this page's own method** (raw consecutive-difference MAD over "
+        "the last 60 days, no exclusion of jumps) gives **11.6 m** — lower than even the \"low end of the "
+        "24–75 m range\" claimed above, and inconsistent with it. Why: 9 of 160 differences in that 60-day "
+        "window exceed 0.3 km in magnitude (up to 564 m), and this page's method folds these — likely real "
+        "small station-keeping corrections or drag perturbations — straight into the noise estimate. "
+        "Switching to another script's method (\"40-TLE sliding windows, exclude windows with jumps >0.3 "
+        "km, detrend\") on the exact same satellite gives only **3.12 m** — a nearly 4× difference between "
+        "two reasonable but differently-defined estimators, on the same satellite.",
+    ))
+    st.error(T3(
+        "**誠實結論**：專案裡目前同時存在至少四個「Starlink／低軌 TLE 雜訊底」數字——本頁近況 "
+        "6–12 m 量級、另一支腳本之 6–10 m 量級（隨時間漂移）、技術附錄敘述之 24–75 m、以及合成注入"
+        "門檻表設計用的 50 m 假設。**這四者量的不是同一件事**：估計量定義（是否排除跳動、是否去趨勢）、"
+        "觀測時間窗（近60天 vs 全歷史）、以及是否為實測或設計假設，三個維度都不同，不可互相替代或視為"
+        "同一指標的重複驗證。本頁與技術附錄之數字之所以對不上，並非任一方計算錯誤，而是兩者從未在同一"
+        "套定義下直接比較過。完整方法學對照見 `docs/paper_tle_sma_noise_floor.md` §3.2。",
+        "**誠実な結論**：本プロジェクトには現在、少なくとも4つの「Starlink／低軌道TLE雑音床」の数字が"
+        "並存している——本頁の直近の6〜12 m規模、別スクリプトの6〜10 m規模（時間とともに変動）、"
+        "技術付録の記述による24〜75 m、そして合成注入の閾値表設計用の50 mという仮定値である。"
+        "**この4つは同じものを測っているわけではない**：推定量の定義（跳躍を除外するか、トレンド除去を"
+        "するか）、観測時間窓（直近60日 vs 全履歴）、そして実測か設計上の仮定かという3つの次元すべてが"
+        "異なっており、互いに置き換えたり同一指標の重複検証とみなしたりすることはできない。本頁と技術"
+        "付録の数字が一致しないのは、どちらかの計算が間違っているからではなく、両者が同じ定義の下で"
+        "直接比較されたことが一度もなかったからである。完全な方法論対照は `docs/paper_tle_sma_noise_"
+        "floor.md` §3.2を参照。",
+        "**Honest conclusion**: this project currently has at least four different \"Starlink/LEO TLE noise "
+        "floor\" numbers floating around — this page's current 6–12 m range, another script's 6–10 m range "
+        "(drifting over time), the technical appendix's stated 24–75 m, and the 50 m design assumption used "
+        "for synthetic-injection threshold tables. **These four are not measuring the same thing**: "
+        "estimator definition (whether jumps are excluded, whether detrending is applied), observation "
+        "time window (last 60 days vs. full history), and whether the number is measured or assumed, all "
+        "differ across them — they cannot be substituted for one another or treated as repeated "
+        "verifications of the same quantity. This page's number and the technical appendix's number don't "
+        "match not because either side computed wrong, but because the two were never directly compared "
+        "under the same definition. Full methodological comparison: `docs/paper_tle_sma_noise_floor.md` "
+        "§3.2.",
     ))
 
 
