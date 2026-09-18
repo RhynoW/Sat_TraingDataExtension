@@ -10874,9 +10874,81 @@ def render_storymap_case22():
     ))
 
     st.header(T3(
-        "⑤ 結論與可重複展示",
-        "⑤結論と再現可能なデモ",
-        "⑤ Conclusion and a reproducible live demo",
+        "⑤ 三個真實案例：同一套規則，三種完全不同的衛星行為",
+        "⑤3つの実例：同じルールセット、まったく異なる3種類の衛星の振る舞い",
+        "⑤ Three real cases: the same rule set, three very different satellite behaviors",
+    ))
+    st.markdown(T3(
+        "以下三顆衛星皆為即時查詢本專案資料庫所得（2024-01-01～2026-09-16 或其可用區間），"
+        "數字會隨資料庫每日更新而變動，此處記錄查詢當下的結果，供對照 P1–P6 各項策略"
+        "如何依衛星行為差異而有不同反應。",
+        "以下の3機はいずれも本プロジェクトのデータベースをリアルタイムに照会した結果である"
+        "（2024-01-01～2026-09-16またはその利用可能な期間）。数値はデータベースの日次更新に"
+        "伴い変動するため、ここでは照会時点の結果を記録し、P1–P6の各戦略が衛星の挙動の違いに"
+        "応じてどう異なる反応を示すかを対照する。",
+        "The three satellites below were all queried live against this project's database "
+        "(2024-01-01 to 2026-09-16, or the available range). Numbers will drift as the database "
+        "updates daily; what's recorded here is the result at query time, to contrast how P1–P6 "
+        "each respond differently depending on the satellite's actual behavior.",
+    ))
+    _c22_cases = pd.DataFrame([
+        {"衛星": "FORMOSAT-3A（NORAD 29047）", "TLE筆數": 2414, "P1抑制": 2372, "P3抑制": 119,
+         "P2/P4/P5/P6觸發": "0/0/0/0", "最終代理正例": 0,
+         "行為": "純大氣阻力衰減，無主動機動"},
+        {"衛星": "ISS（NORAD 25544）", "TLE筆數": 5068, "P1抑制": 4176, "P3抑制": 0,
+         "P2/P4/P5/P6觸發": "31/87/18/27", "最終代理正例": 87,
+         "行為": "頻繁重升軌，P4多窗口+P6專屬閾值(5.0km)為主力"},
+        {"衛星": "STARLINK-30273（NORAD 57681）", "TLE筆數": 406, "P1抑制": 299, "P3抑制": 31,
+         "P2/P4/P5/P6觸發": "1/7/1/1", "最終代理正例": 4,
+         "行為": "典型星座衛星，偶發 station-keeping 微幅修正"},
+    ])
+    st.dataframe(_c22_cases, use_container_width=True, hide_index=True)
+    st.markdown(T3(
+        "**FORMOSAT-3A**：2,414 筆 TLE 轉換中，P1（單調衰減抑制）就排除了 2,372 筆候選、"
+        "P3（B\\* 輔助）再排除 119 筆，最終沒有任何一筆通過——這正是 P1 設計的目標情境："
+        "一顆長期無主動推進、單純受大氣阻力自然衰減的衛星，不該被系統誤判為機動。\n\n"
+        "**ISS**：同樣有大量負向 Δa（P1 抑制 4,176 筆，反映其軌道在兩次重升軌之間持續"
+        "衰減），但因 ISS 屬於載人任務、配有 P6 專屬閾值（5.0 km），加上 P4 多窗口補充"
+        "（87 筆）、P2 高度自適應（31 筆）、P5 太陽通量調整（18 筆）共同作用，最終仍"
+        "標記出 87 次代理正例——顯示同一套「單調衰減會被抑制」的邏輯，並不會讓真正"
+        "頻繁機動的衛星被連帶埋沒。\n\n"
+        "**STARLINK-30273**：規模介於前兩者之間，406 筆 TLE 中 P1／P3 抑制掉 330 筆"
+        "「看似衰減」的轉換，P2/P4/P5/P6 四項改進共同貢獻找出 4 次代理正例——典型的"
+        "巨型星座衛星，多數時間安靜衰減、偶爾進行小幅軌道維持修正。",
+        "**FORMOSAT-3A**：2,414件のTLE遷移のうち、P1（単調減衰抑制）だけで2,372件の候補を"
+        "除外し、P3（B\\*補助）がさらに119件を除外した結果、最終的に1件も通過しなかった——"
+        "これはまさにP1が設計された想定シナリオである：長期間能動的な推進を行わず、単に"
+        "大気抵抗によって自然減衰しているだけの衛星を、機動と誤判定してはならない。\n\n"
+        "**ISS**：同様に大量の負のΔa（P1が4,176件を抑制、2回のリブースト間で軌道が"
+        "継続的に減衰していることを反映）が見られるが、ISSは有人ミッションでありP6の"
+        "専用閾値（5.0km）が適用され、さらにP4の複数ウィンドウ補完（87件）、P2の高度"
+        "適応（31件）、P5の太陽フラックス調整（18件）が共同で作用し、最終的に87回の"
+        "代理正例が標記された——同じ「単調減衰は抑制される」というロジックが、実際に"
+        "頻繁に機動する衛星を巻き添えにして埋もれさせないことを示している。\n\n"
+        "**STARLINK-30273**：規模は前2者の中間で、406件のTLEのうちP1／P3が「減衰に"
+        "見える」330件の遷移を抑制し、P2/P4/P5/P6の4つの改良が共同で4回の代理正例を"
+        "見つけ出した——典型的な巨大コンステレーション衛星で、ほとんどの時間は静かに"
+        "減衰し、時折小幅な軌道維持修正を行う。",
+        "**FORMOSAT-3A**: of 2,414 TLE transitions, P1 (monotonic-decay suppression) alone "
+        "excluded 2,372 candidates and P3 (B*-assisted) excluded another 119, leaving zero that "
+        "passed through — exactly the scenario P1 was designed for: a satellite with no active "
+        "propulsion, simply decaying naturally under drag, should not be misjudged as maneuvering.\n\n"
+        "**ISS**: also shows a large amount of negative Δa (P1 suppressed 4,176, reflecting "
+        "continuous decay between reboosts), but because ISS is a crewed mission with its own P6 "
+        "threshold (5.0 km), combined with P4's multi-window supplement (87), P2's altitude "
+        "adaptation (31), and P5's solar-flux adjustment (18), the system still flags 87 proxy "
+        "positives — showing that the same \"suppress monotonic decay\" logic doesn't bury a "
+        "genuinely frequently-maneuvering satellite along with it.\n\n"
+        "**STARLINK-30273**: scaled between the two, with P1/P3 suppressing 330 of 406 "
+        "\"decay-looking\" transitions, while P2/P4/P5/P6 jointly surface 4 proxy positives — a "
+        "typical mega-constellation satellite, mostly quietly decaying with occasional small "
+        "station-keeping corrections.",
+    ))
+
+    st.header(T3(
+        "⑥ 結論與可重複展示",
+        "⑥結論と再現可能なデモ",
+        "⑥ Conclusion and a reproducible live demo",
     ))
     st.success(T3(
         "這套構想的價值不在單一數字漂亮，而在於誠實面對「大氣阻力像不像機動」這個"
@@ -11065,9 +11137,86 @@ def render_storymap_case23():
     ))
 
     st.header(T3(
-        "⑤ 結論與可重複展示",
-        "⑤結論と再現可能なデモ",
-        "⑤ Conclusion and a reproducible live demo",
+        "⑤ 三個真實案例：規則與模型什麼時候一致，什麼時候不一致",
+        "⑤3つの実例：ルールとモデルが一致するとき、一致しないとき",
+        "⑤ Three real cases: when the rules and the model agree — and when they don't",
+    ))
+    st.markdown(T3(
+        "以下三顆衛星皆為即時查詢所得（2024 年起、其可用區間），對照 L1 規則式判定次數、"
+        "逐窗 ML 模型（本文分類器）判定次數，以及融合評分器機率（訓練資料為 Starlink，"
+        "與本文分類器架構不同，見④）。三個案例刻意選在「規則與模型一致」到「明顯不一致」"
+        "的光譜上，而非只挑表現最好看的案例。",
+        "以下の3機はいずれもリアルタイム照会の結果である（2024年以降、利用可能な期間）。"
+        "L1ルールベース判定回数、逐次ウィンドウMLモデル（本論文の分類器）判定回数、"
+        "そして融合スコアラーの確率（学習データはStarlink、本論文の分類器とはアーキテクチャが"
+        "異なる、④参照）を対照する。3つの事例は「ルールとモデルが一致する」から「明らかに"
+        "一致しない」までのスペクトル上から意図的に選んでおり、見栄えの良い事例だけを選んで"
+        "いるわけではない。",
+        "The three satellites below were all queried live (from 2024 onward, or the available "
+        "range), contrasting L1 rule-based flag counts, per-window ML model flag counts (this "
+        "paper's classifier), and the fusion scorer's probability (trained on Starlink, an "
+        "architecturally distinct model — see ④). The three were deliberately chosen to span the "
+        "spectrum from \"rules and model agree\" to \"clearly disagree,\" not cherry-picked for the "
+        "best-looking results.",
+    ))
+    _c23_cases = pd.DataFrame([
+        {"衛星": "ISS（NORAD 25544）", "L1判定次數": 87, "逐窗ML模型": 4, "融合機率": "0.994（門檻0.129）",
+         "解讀": "規則與模型高度一致：兩層都判定為活躍機動衛星"},
+        {"衛星": "STARLINK-30273（NORAD 57681）", "L1判定次數": 4, "逐窗ML模型": 9, "融合機率": "0.867（門檻0.129）",
+         "解讀": "ML 找到比規則更多的候選窗口，展現互補而非重複的偵測能力"},
+        {"衛星": "KUIPER-00011（NORAD 63727）", "L1判定次數": 0, "逐窗ML模型": 0, "融合機率": "0.984（門檻0.129）",
+         "解讀": "誠實的不一致案例：融合評分器（Starlink訓練）給出高機率，"
+                "但 L1 與本文分類器皆判定無機動"},
+    ])
+    st.dataframe(_c23_cases, use_container_width=True, hide_index=True)
+    st.markdown(T3(
+        "**ISS**：L1 標記 87 次、逐窗 ML 模型標記 4 次、融合機率高達 0.994——三層方法"
+        "在「這是一顆活躍機動的衛星」這件事上完全一致，是最理想的情況。\n\n"
+        "**STARLINK-30273**：L1 只標記 4 次，但逐窗 ML 模型標記了 9 次候選窗口——這正是"
+        "論文二存在的價值：ML 模型從 20 個聚合特徵中學到的組合條件，能找到規則式門檻"
+        "邏輯遺漏、但仍具備物理合理性的候選窗口，兩者是互補而非重複的關係。\n\n"
+        "**KUIPER-00011**：這是一個**誠實記錄、而非隱藏**的不一致案例——L1 規則與本文"
+        "分類器（逐窗 ML 模型）都判定無機動，但融合評分器給出 0.984 的高機率。由於"
+        "融合評分器是以 284 顆 Starlink 衛星訓練，Kuiper 屬於完全不同的星座與軌道特性，"
+        "這個高機率很可能是**跨域分布外（OOD）推論的不可靠訊號**，而非真正偵測到"
+        "機動——這正是論文二「未用於對比外部標竿、僅作粗略一致性檢查」的設計理由"
+        "在真實資料上的具體體現，而非假設性的警語。",
+        "**ISS**：L1が87回、逐次ウィンドウMLモデルが4回標記し、融合確率は0.994に達した——"
+        "3層の手法すべてが「これは活発に機動している衛星である」という点で完全に一致して"
+        "おり、最も理想的なケースである。\n\n"
+        "**STARLINK-30273**：L1はわずか4回しか標記しなかったが、逐次ウィンドウMLモデルは"
+        "9回の候補ウィンドウを標記した——これこそ論文二の存在価値である：20個の集約"
+        "特徴量からMLモデルが学習した組み合わせ条件は、ルールベースの閾値ロジックが"
+        "見逃すが物理的に合理性のある候補ウィンドウを見つけ出せる。両者は重複ではなく"
+        "補完の関係にある。\n\n"
+        "**KUIPER-00011**：これは**隠すのではなく誠実に記録する**不一致の事例である——"
+        "L1ルールと本論文の分類器（逐次ウィンドウMLモデル）はどちらも機動なしと判定した"
+        "が、融合スコアラーは0.984という高い確率を示した。融合スコアラーは284機の"
+        "Starlink衛星で学習されており、Kuiperはまったく異なるコンステレーションと軌道"
+        "特性を持つため、この高確率は**ドメイン外（OOD）推論による信頼性の低い信号**"
+        "である可能性が高く、実際に機動を検知したわけではない——これはまさに論文二が"
+        "「外部ベンチマークとの比較には使わず、大まかな一貫性チェックにのみ用いる」と"
+        "設計した理由が、実データ上で具体的に現れたものであり、仮定的な警告ではない。",
+        "**ISS**: L1 flags 87, the per-window ML model flags 4, and the fusion probability reaches "
+        "0.994 — all three layers agree this is an actively maneuvering satellite, the ideal case.\n\n"
+        "**STARLINK-30273**: L1 flags only 4, but the per-window ML model flags 9 candidate windows "
+        "— exactly the value this paper's classifier adds: the combination conditions it learns from "
+        "20 aggregated features can surface physically plausible candidate windows that the rule-based "
+        "thresholds miss, a complementary rather than redundant relationship.\n\n"
+        "**KUIPER-00011**: an honestly recorded disagreement, not a hidden one — both L1 and this "
+        "paper's classifier (the per-window ML model) judge no maneuver, but the fusion scorer "
+        "returns a high probability of 0.984. Since the fusion scorer was trained on 284 Starlink "
+        "satellites and Kuiper is an entirely different constellation with different orbital "
+        "characteristics, this high probability is more likely an **unreliable out-of-distribution "
+        "(OOD) inference signal** than a genuine detection — a concrete, real-data instance of "
+        "exactly why Paper 2 states this fusion model is \"not used for external-benchmark "
+        "comparison, only a rough consistency check\" — not a hypothetical caveat.",
+    ))
+
+    st.header(T3(
+        "⑥ 結論與可重複展示",
+        "⑥結論と再現可能なデモ",
+        "⑥ Conclusion and a reproducible live demo",
     ))
     st.success(T3(
         "這個構想最有價值的部分，不是最後的高分表格，而是「發現洩漏、公開承認、"
