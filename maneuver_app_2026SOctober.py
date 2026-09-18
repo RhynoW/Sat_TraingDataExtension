@@ -198,6 +198,12 @@ L: dict[str, dict[str, str]] = {
                                    "ja": "事例二十三：AIを宇宙探偵にする構想——LightGBM融合分類器と、自ら見つけたラベル漏洩", "en": "Case 23: The Concept of Teaching AI to Be a Space Detective — the LightGBM Fusion Classifier and a Self-Caught Data Leak"},
     "storymap_case23_card_desc": {"zh": "20 個 TLE 聚合特徵、14,023 顆衛星——以及訓練途中自己抓到的一項標籤洩漏，修正後模型表現才是可信的。",
                                   "ja": "20個のTLE集約特徴量、14,023機の衛星——そして学習中に自ら発見したラベル漏洩。修正後のモデル性能こそ信頼できる。", "en": "20 aggregated TLE features across 14,023 satellites — and a label-leakage bug the team caught in its own training pipeline; only the post-fix numbers are trustworthy."},
+    "storymap_case24_card_title": {"zh": "案例二十四：TLE 到底能看多細？——跨案例彙整的物理解析度極限總表",
+                                   "ja": "事例二十四：TLEはどこまで細かく見えるのか？——事例横断でまとめた物理分解能限界の総覧",
+                                   "en": "Case 24: How Fine Can TLEs Actually See? — A Cross-Case Summary of TLE's Physical Resolution Limits"},
+    "storymap_case24_card_desc": {"zh": "本專案在四個不同角度都撞上了同一堵牆：雜訊地板、大氣阻力狀態、觀測盲區、反演天花板——七個案例的證據，第一次拼在同一張表上。",
+                                  "ja": "本プロジェクトは4つの異なる角度から同じ壁にぶつかった：雑音床、大気抵抗状態、観測の死角、逆解析の天井——7つの事例の証拠を初めて一つの表にまとめた。",
+                                  "en": "This project hit the same wall from four different angles: the noise floor, atmospheric-drag state, observational blind spots, and an inversion ceiling — evidence from seven cases, assembled into one table for the first time."},
 
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
@@ -1827,7 +1833,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 24):
+    for _n in range(14, 25):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -11402,6 +11408,347 @@ def render_storymap_case23():
     ))
 
 
+def render_storymap_case24():
+    if st.button(t("storymap_back"), key="back_from_case24"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例二十四：TLE 到底能看多細？——跨案例彙整的物理解析度極限總表",
+        "事例二十四：TLEはどこまで細かく見えるのか？——事例横断でまとめた物理分解能限界の総覧",
+        "Case 24: How Fine Can TLEs Actually See? — A Cross-Case Summary of TLE's Physical Resolution Limits",
+    ))
+    st.subheader(T3(
+        "四種獨立成因、七個案例的證據，第一次拼在同一張表上",
+        "4つの独立した原因、7つの事例の証拠——初めて一つの表にまとめた",
+        "Four independent root causes, evidence from seven cases — assembled into one table for the first time",
+    ))
+    st.caption(T3(
+        "本案例不含新實驗，是一篇「索引案例」：把散落在案例 3、10、13、14、15、17、18、21 中，"
+        "各自從不同角度撞見的「TLE 物理極限」證據彙整成一張總表，並逐條連回原始案例的完整推導過程。"
+        "目的是讓讀者不必翻遍全部案例，就能一次看清「TLE 到底哪裡準、哪裡不準」的完整輪廓。",
+        "本事例に新規実験は含まれない——事例3、10、13、14、15、17、18、21で、それぞれ異なる角度から"
+        "遭遇した「TLEの物理限界」の証拠を一つの総覧表にまとめ、各項目から元の事例の完全な導出過程へ"
+        "リンクする「索引事例」である。目的は、読者が全事例を読まなくても「TLEはどこまで正確でどこから"
+        "不正確なのか」の全体像を一度に把握できるようにすることである。",
+        "This case contains no new experiments — it is an index case. Evidence for TLE's physical limits, "
+        "encountered from different angles in Cases 3, 10, 13, 14, 15, 17, 18 and 21, is assembled into one "
+        "summary table with links back to each case's full derivation. The goal is to let a reader see the "
+        "complete picture of \"where TLEs are accurate and where they aren't\" without reading every case.",
+    ))
+
+    st.header(T3(
+        "① 為什麼需要這張總表",
+        "①なぜこの総覧表が必要なのか",
+        "① Why this summary table is needed",
+    ))
+    st.markdown(T3(
+        "這個專案在完全不同的研究動機下（大氣密度反演、噪音地板量測、機動注入實驗、相位殘差新通道……），"
+        "一再從不同方向撞上同一件事：**TLE 是有物理解析度極限的資料產品，不是可以無限逼近真值的量測**。"
+        "每次撞見時，都是獨立的發現、獨立的量化證據，彼此之間過去沒有被整理成一張互相參照的總表。"
+        "隨著案例數量增加到 20 篇以上，這件事本身已經足夠重要、也足夠有跨案例的一致性，值得單獨整理成一篇。",
+        "本プロジェクトは、まったく異なる研究動機（大気密度の逆解析、雑音床の測定、機動注入実験、"
+        "位相残差の新チャンネルなど）のもとで、繰り返し異なる方向から同じ壁——**TLEは物理的な分解能限界を"
+        "持つデータ製品であり、真値に無限に近づける測定ではない**——にぶつかってきた。そのたびに独立した"
+        "発見、独立した定量的証拠が得られたが、これまで互いに参照し合う総覧表としてはまとめられて"
+        "いなかった。事例数が20を超えた今、この事実自体が十分に重要であり、事例を横断する一貫性も"
+        "十分に見られるため、単独の記事としてまとめる価値があると判断した。",
+        "Under completely different research motivations (atmospheric-density inversion, noise-floor "
+        "measurement, maneuver-injection experiments, the new phase-residual channel, and more), this "
+        "project has repeatedly hit the same wall from different directions: **a TLE is a data product with "
+        "a real physical resolution limit, not a measurement that can be made arbitrarily precise.** Each "
+        "encounter was an independent discovery with independent quantitative evidence, never before "
+        "cross-referenced into one table. With over 20 cases now on record, this recurring pattern is "
+        "significant and consistent enough in its own right to warrant a dedicated write-up.",
+    ))
+
+    st.header(T3(
+        "② 極限一：雜訊地板隨軌道高度而變，但變化幅度比想像中溫和",
+        "②限界①：雑音床は軌道高度によって変化するが、想像より緩やか",
+        "② Limit 1: the noise floor varies with orbital altitude — but more mildly than it first appears",
+    ))
+    st.markdown(T3(
+        "案例三對已知靜止衛星做穩健雜訊估計，得到 LEO 帶（如 Starlink 高度）之 σ 約落在數十公尺量級；"
+        "案例十八進一步橫跨 8 顆被動測地球體、800–19,126 公里做全景掃描：LEO 段（800–1,488 km）"
+        "σ = 0.17–0.46 m，中軌 LAGEOS（~5,800 km）σ = 0.34–0.40 m，看似合理的單調上升趨勢。"
+        "但最外側的 Etalon（~19,100 km）初始量測 σ 高達 6.2–7.7 m——差點被誤讀成「MEO 本質上雜訊"
+        "高 30–40 倍」。深入追查後發現，這其實是**月球攝動的週期性訊號被誤算進雜訊裡**：以 27.49–27.59 "
+        "天週期（吻合 27.32 天恆星月）之三體攝動模型扣除後，Etalon 之 σ 修正為 0.35–0.89 m。",
+        "事例3は既知の静止衛星に対してロバストな雑音推定を行い、LEO帯（Starlink相当高度）のσは"
+        "数十メートル程度と得られた。事例18はさらに8個の受動測地球体を用い、800～19,126 kmに"
+        "わたる全景走査を行った：LEO区間（800～1,488 km）ではσ=0.17～0.46 m、中軌道のLAGEOS"
+        "（～5,800 km）ではσ=0.34～0.40 mと、一見妥当な単調増加傾向を示した。しかし最も外側の"
+        "Etalon（～19,100 km）では初期測定でσが6.2～7.7 mにも達し——「MEOは本質的に雑音が"
+        "30～40倍高い」と誤読されかけた。詳しく調べると、これは**月の摂動による周期信号が雑音として"
+        "誤って計上されていた**ことが判明した：27.49～27.59日周期（27.32日の恒星月と一致）の"
+        "三体摂動モデルで差し引いた後、Etalonのσは0.35～0.89 mに修正された。",
+        "Case 3 performs a robust noise estimate on known-stationary satellites, finding σ on the order of "
+        "tens of meters in the LEO band (Starlink-like altitudes). Case 18 goes further, scanning across 8 "
+        "passive geodetic spheres from 800–19,126 km: the LEO band (800–1,488 km) gives σ = 0.17–0.46 m, "
+        "mid-orbit LAGEOS (~5,800 km) gives σ = 0.34–0.40 m — an apparently sensible monotonic rise. But the "
+        "outermost Etalon spheres (~19,100 km) initially measured σ as high as 6.2–7.7 m — nearly "
+        "misread as \"MEO is inherently 30–40× noisier.\" Closer investigation found this was actually "
+        "**a periodic lunar-perturbation signal miscounted as noise**: after modeling and subtracting a "
+        "third-body term with a 27.49–27.59-day period (matching the 27.32-day sidereal month), Etalon's σ "
+        "corrected down to 0.35–0.89 m.",
+    ))
+    st.success(T3(
+        "修正後的誠實結論：TLE 雜訊地板從 LEO（~0.2 公尺）到 MEO（~0.5–1 公尺）**只是溫和上升，"
+        "不是原始數字暗示的 30–40 倍暴增**。教訓與案例十的大氣密度反演如出一轍：宣稱發現「新的雜訊來源」"
+        "之前，先檢查是否有已知的物理效應（月球/太陽攝動、大氣阻力……）沒被扣乾淨。",
+        "修正後の誠実な結論：TLEの雑音床はLEO（～0.2 m）からMEO（～0.5～1 m）へ**緩やかに上昇するだけで"
+        "あり、当初の数字が示唆した30～40倍の急増ではない**。この教訓は事例10の大気密度逆解析と全く"
+        "同じである：「新しい雑音源」を発見したと主張する前に、既知の物理効果（月/太陽の摂動、大気抵抗"
+        "など）が正しく差し引かれているかを確認すべきである。",
+        "The corrected, honest conclusion: the TLE noise floor rises only **mildly** from LEO (~0.2 m) to "
+        "MEO (~0.5–1 m) — **not the 30–40-fold jump the raw numbers seemed to suggest**. The lesson mirrors "
+        "Case 10's atmospheric-density inversion exactly: before claiming a \"new noise source,\" check "
+        "whether a known physical effect (lunar/solar perturbation, atmospheric drag, ...) was cleanly "
+        "subtracted first.",
+    ))
+
+    st.header(T3(
+        "③ 極限二：大氣阻力狀態主宰偵測門檻，同一套系統可以相差 10～70 倍",
+        "③限界②：大気抵抗状態が検知閾値を支配し、同一システムでも10～70倍の差が生じる",
+        "③ Limit 2: atmospheric-drag state dominates the detection threshold — the same system can vary by 10–70×",
+    ))
+    st.markdown(T3(
+        "案例十七以 FORMOSAT-7／COSMIC-2 做了 15,775 次機動注入實驗（478 組衛星×窗口）。核心發現：**低"
+        "阻力狀態下注入 20 公尺已有 50–58% 偵測率、100–150 公尺就逼近 100%；但高阻力狀態下，要達到同樣"
+        "偵測率得注入 1–1.5 公里**——同一套系統的「最小可偵測門檻」可以相差 10～70 倍，完全取決於當下的"
+        "大氣阻力狀態，而非機動量級本身。此外，即使淨位移相同，機動若被拉長分散（如持續半天的低推力"
+        "點火，而非瞬間脈衝），偵測率也會從 55.4% 降到 43.3%——「多快做完」與「做了多少」同樣重要。",
+        "事例17はFORMOSAT-7／COSMIC-2を用いて15,775回の機動注入実験（478組の衛星×ウィンドウ）を"
+        "行った。核心的な発見：**低抵抗状態では20 mの注入で50～58%の検知率、100～150 mでほぼ100%に"
+        "達するが、高抵抗状態では同じ検知率に達するのに1～1.5 kmの注入が必要**——同一システムの"
+        "「最小検知可能閾値」は、機動の大きさそのものではなく、その時点の大気抵抗状態によって"
+        "10～70倍も変わりうる。さらに、正味の変位が同じでも、機動が（瞬間的なパルスではなく半日続く"
+        "低推力噴射のように）引き延ばされて分散していると、検知率は55.4%から43.3%へ低下する——"
+        "「どれだけ速く終えたか」も「どれだけ動いたか」と同じくらい重要である。",
+        "Case 17 ran 15,775 maneuver-injection trials (478 satellite×window combinations) on "
+        "FORMOSAT-7/COSMIC-2. Core finding: **under low drag, a 20 m injection already gives 50–58% "
+        "detection and 100–150 m approaches 100%; under high drag, reaching the same detection rate needs "
+        "a 1–1.5 km injection** — the same system's minimum detectable threshold can differ by a factor of "
+        "10–70×, entirely depending on the atmospheric-drag conditions at the time, not the maneuver's own "
+        "magnitude. On top of that, even with identical net displacement, smearing a maneuver out (e.g. a "
+        "half-day-long low-thrust burn instead of an instantaneous impulse) drops detection from 55.4% to "
+        "43.3% — how fast a maneuver happens matters almost as much as how big it is.",
+    ))
+
+    st.header(T3(
+        "④ 極限三：觀測方向盲區——TLE 監測變量之外的機動，根本不在雷達幕上",
+        "④限界③：観測方向の死角——TLEが監視する変量の外側にある機動は、そもそもレーダー画面に映らない",
+        "④ Limit 3: observational blind spots — maneuvers outside TLE's monitored variables never appear on the radar at all",
+    ))
+    st.markdown(T3(
+        "前兩種極限都是「訊號在，但被噪音蓋住」；第三種完全不同——**訊號根本不在被監測的變量裡**。"
+        "案例二十一在複現文獻方法時，意外發現 STARLINK-5367 執行了一次相位機動（along-track 位置改變，"
+        "但半長軸幾乎不動——軌道週期被短暫改變後又恢復）。因為本專案（以及所複現的 15 種文獻方法）"
+        "監測的核心變量是半長軸，這類機動屬於**結構性盲區**，不是調閾值能解決的問題。案例十五則從另一"
+        "個方向印證同一件事：對凍結太陽同步軌道衛星而言，真實的傾角變化中位數只有 **0.2 mm/s**，"
+        "「遠低於 TLE 自身的傾角雜訊地板」——用 TLE 反演這麼小的訊號在物理上就是不可能的，不是演算法"
+        "不夠好的問題。",
+        "前の2つの限界は「信号は存在するが雑音に埋もれている」場合であるのに対し、3つ目は全く異なる——"
+        "**信号がそもそも監視対象の変量に含まれていない**場合である。事例21では、文献の手法を再現する"
+        "過程でSTARLINK-5367が位相機動（沿トラック方向の位置変化だが、半長軸はほぼ動かない——軌道周期"
+        "が一時的に変えられた後に元に戻る）を行っていたことを偶然発見した。本プロジェクト（および"
+        "再現した15種類の文献手法）が監視する中心変量は半長軸であるため、この種の機動は**構造的な"
+        "死角**であり、閾値の調整で解決できる問題ではない。事例15は別の方向から同じ事実を裏付けている："
+        "凍結太陽同期軌道衛星にとって、実際の傾斜角変化の中央値はわずか**0.2 mm/s**であり、「TLE自身の"
+        "傾斜角雑音床をはるかに下回る」——これほど小さな信号をTLEから逆解析することは物理的に"
+        "不可能であり、アルゴリズムの性能の問題ではない。",
+        "The first two limits are cases where \"the signal exists but is buried in noise\"; the third is "
+        "fundamentally different — **the signal simply isn't among the monitored variables at all**. While "
+        "reproducing a literature method, Case 21 stumbled onto STARLINK-5367 executing a phasing maneuver "
+        "(an along-track position change while sma barely moves — the orbital period is briefly altered "
+        "and then reverted). Because this project (and all 15 reimplemented literature methods) monitor "
+        "semi-major axis as the core variable, this class of maneuver is a **structural blind spot**, not "
+        "something a threshold adjustment can fix. Case 15 confirms the same point from another angle: for "
+        "frozen sun-synchronous satellites, the true median inclination change is only **0.2 mm/s** — "
+        "\"far below the TLE's own inclination noise floor.\" Inverting a signal this small from a TLE is "
+        "physically impossible, not a matter of the algorithm not being good enough.",
+    ))
+
+    st.header(T3(
+        "⑤ 極限四：反演天花板——用 TLE 反推大氣密度，存在無法繞過的方法學上限",
+        "⑤限界④：逆解析の天井——TLEから大気密度を逆算することには回避できない方法論的上限がある",
+        "⑤ Limit 4: the inversion ceiling — inferring atmospheric density from TLEs has an unavoidable methodological cap",
+    ))
+    st.markdown(T3(
+        "案例十嘗試以 TLE 反推大氣密度、重現精密星曆等級的密度斷層，四次嘗試後誠實承認做不到，並定位"
+        "出三個根因：（一）樣本偏誤——只有壽命末期、姿態不受控的衰減衛星符合「乾淨單調衰減」篩選條件，"
+        "反演出的尺度高度是 **−120 km**（物理上不合理，NRLMSIS 應為 ~58 km）；（二）**B\\* 循環論證**——"
+        "TLE 的 B\\* 本身就是從衰減率反推出來的，再拿它去除衰減率求密度，等於「用答案除答案」，尺度"
+        "高度被拉平到 ~212 km；（三）稀疏覆蓋——Starlink 各殼層集中在 ~53° 傾角，緯度×地方時網格"
+        "有大片空白，加上 TLE 位置/速度誤差達百公尺至公里級，最終密度場空間相關性僅 r = 0.42。"
+        "更根本的是後續追加診斷：**即使換成精密 MEME 星曆、逐衛星自校正彈道係數，每段燃燒弧的密度"
+        "估計仍卡在約 0.62 dex 散布（約上下 4 倍）**——真正的天花板是「比能量法」這個反演方法本身，"
+        "不只是 TLE 特有的缺陷。",
+        "事例10はTLEから大気密度を逆算し、精密暦相当の密度不連続を再現しようと試みたが、4回の試行の後"
+        "「できない」ことを誠実に認め、3つの根本原因を特定した：（一）サンプル偏り——「きれいな単調"
+        "減衰」の選別条件を満たすのは、寿命末期で姿勢制御を失った減衰衛星のみであり、逆算されたスケール"
+        "ハイトは**−120 km**（物理的に不合理、NRLMSISでは～58 kmのはず）となった；（二）**B\\*の循環"
+        "論法**——TLEのB\\*自体が減衰率から逆算されたものであり、それを使って減衰率を除して密度を"
+        "求めるのは「答えを答えで割る」ことに等しく、スケールハイトは～212 kmに均されてしまった；"
+        "（三）疎な軌道被覆——Starlinkの各殻は～53°傾斜角に集中しており、緯度×地方時グリッドに大きな"
+        "空白が生じ、さらにTLEの位置・速度誤差が百メートルからキロメートル級に達するため、最終的な"
+        "密度場の空間相関はr=0.42にとどまった。さらに根本的なのは、その後の追加診断である："
+        "**精密MEME暦に切り替え、衛星ごとに弾道係数を自己較正しても、各燃焼弧ごとの密度推定値は依然"
+        "約0.62 dexの散らばり（上下約4倍）にとどまる**——真の天井はTLE特有の欠陥だけではなく、"
+        "「比エネルギー法」という逆解析手法そのものにある。",
+        "Case 10 attempted to invert atmospheric density from TLEs and reproduce precise-ephemeris-grade "
+        "density discontinuities. After four attempts it honestly concluded this wasn't feasible, and "
+        "pinned down three root causes: (1) sample bias — only end-of-life, attitude-uncontrolled decaying "
+        "satellites qualify for the \"clean monotonic decay\" selection, and the inverted scale height comes "
+        "out to **−120 km** (physically nonsensical; NRLMSIS should give ~58 km); (2) a **B\\* circular "
+        "argument** — the TLE's own B\\* is itself derived from the decay rate, so using it to divide out "
+        "the decay rate to get density is dividing the answer by the answer, flattening the scale height to "
+        "~212 km; (3) sparse coverage — Starlink's shells cluster around ~53° inclination, leaving large "
+        "gaps in the latitude×local-time grid, and combined with TLE position/velocity error at the "
+        "hundred-meter-to-km level, the resulting density field's spatial correlation is only r = 0.42. "
+        "More fundamentally, a follow-up diagnosis found that **even switching to precise MEME ephemerides "
+        "with per-satellite ballistic-coefficient self-calibration, density estimates per drag arc are "
+        "still stuck at ~0.62 dex scatter (roughly 4× up or down)** — the real ceiling is the "
+        "specific-energy method itself, not just a TLE-specific defect.",
+    ))
+
+    st.header(T3(
+        "⑥ 四種極限總表",
+        "⑥4つの限界の総覧表",
+        "⑥ Summary table of the four limits",
+    ))
+    _df24 = pd.DataFrame([
+        {
+            T3("極限類型", "限界の種類", "Limit type"):
+                T3("① 雜訊地板隨高度變化", "①雑音床の高度依存性", "① Noise floor vs. altitude"),
+            T3("量化證據", "定量的証拠", "Quantitative evidence"):
+                T3("LEO σ≈0.17–0.46 m；MEO（修正月球攝動後）σ≈0.35–0.89 m",
+                   "LEO σ≈0.17～0.46 m；MEO（月摂動補正後）σ≈0.35～0.89 m",
+                   "LEO σ≈0.17–0.46 m; MEO (after lunar-perturbation correction) σ≈0.35–0.89 m"),
+            T3("起源案例", "出典事例", "Originating case(s)"): "Case 3, 18",
+            T3("能否靠演算法改進解決", "アルゴリズム改良で解決可能か", "Fixable by better algorithms?"):
+                T3("否——資料本身的物理性質", "いいえ——データ自体の物理的性質", "No — intrinsic to the data itself"),
+        },
+        {
+            T3("極限類型", "限界の種類", "Limit type"):
+                T3("② 大氣阻力狀態主宰門檻", "②大気抵抗状態が閾値を支配", "② Drag state dominates the threshold"),
+            T3("量化證據", "定量的証拠", "Quantitative evidence"):
+                T3("同系統最小可偵測門檻依阻力狀態相差 10–70 倍（20 m ↔ 1–1.5 km）",
+                   "同一システムの最小検知閾値は抵抗状態により10～70倍変動（20 m ↔ 1～1.5 km）",
+                   "Same system's minimum detectable threshold varies 10–70× with drag state (20 m ↔ 1–1.5 km)"),
+            T3("起源案例", "出典事例", "Originating case(s)"): "Case 17",
+            T3("能否靠演算法改進解決", "アルゴリズム改良で解決可能か", "Fixable by better algorithms?"):
+                T3("部分——可用自適應閾值（P2/P5/P6）緩解，無法消除",
+                   "部分的——適応閾値（P2/P5/P6）で緩和可能だが解消はできない",
+                   "Partially — adaptive thresholds (P2/P5/P6) mitigate but do not eliminate it"),
+        },
+        {
+            T3("極限類型", "限界の種類", "Limit type"):
+                T3("③ 觀測方向盲區", "③観測方向の死角", "③ Observational blind spots"),
+            T3("量化證據", "定量的証拠", "Quantitative evidence"):
+                T3("相位機動半長軸幾乎不動；凍結軌道傾角變化中位數僅 0.2 mm/s",
+                   "位相機動では半長軸がほぼ不動；凍結軌道の傾斜角変化中央値はわずか0.2 mm/s",
+                   "Phasing maneuvers barely move sma; frozen-orbit median inclination change is only 0.2 mm/s"),
+            T3("起源案例", "出典事例", "Originating case(s)"): "Case 15, 21",
+            T3("能否靠演算法改進解決", "アルゴリズム改良で解決可能か", "Fixable by better algorithms?"):
+                T3("否——需監測不同的變量（如相位殘差新通道）", "いいえ——別の変量（位相残差の新チャンネルなど）の監視が必要",
+                   "No — requires monitoring a different variable (e.g. the phase-residual channel)"),
+        },
+        {
+            T3("極限類型", "限界の種類", "Limit type"):
+                T3("④ 反演天花板", "④逆解析の天井", "④ Inversion ceiling"),
+            T3("量化證據", "定量的証拠", "Quantitative evidence"):
+                T3("精密星曆+自校正下，密度估計仍有 ~0.62 dex 散布（約 4 倍）",
+                   "精密暦＋自己較正でも密度推定は～0.62 dexの散らばり（約4倍）",
+                   "Even with precise ephemerides + self-calibration, density estimates scatter ~0.62 dex (~4×)"),
+            T3("起源案例", "出典事例", "Originating case(s)"): "Case 10",
+            T3("能否靠演算法改進解決", "アルゴリズム改良で解決可能か", "Fixable by better algorithms?"):
+                T3("否——反演方法本身（比能量法）之上限，換資料源亦無法完全消除",
+                   "いいえ——逆解析手法（比エネルギー法）自体の上限であり、データ源を変えても解消しない",
+                   "No — a ceiling of the inversion method itself; switching data sources alone doesn't remove it"),
+        },
+    ])
+    st.dataframe(_df24, hide_index=True, width="stretch")
+
+    st.header(T3(
+        "⑦ 誠實結論：TLE 何時夠用、何時必須換精密星曆",
+        "⑦誠実な結論：TLEはいつ十分で、いつ精密暦に切り替えるべきか",
+        "⑦ The honest conclusion: when TLEs suffice, and when precise ephemerides are required",
+    ))
+    st.info(T3(
+        "把四種極限放在一起看，結論相當一致：**TLE 對「大幅、瞬時、改變半長軸」的機動仍是好用、"
+        "低成本的篩查工具**（本專案案例二十二、二十三之全量統計即建立在此前提上）；但只要落入"
+        "下列任一情境——(a) 機動幅度接近或低於當下軌道高度／阻力狀態的雜訊地板、(b) 機動被拉長"
+        "分散在數小時到數天、(c) 機動方向落在半長軸以外的變量（相位、cross-track）、(d) 目標是"
+        "反推物理量（如大氣密度）而非偵測「有沒有動」——就必須換用精密星曆（如 MEME，靈敏度高"
+        "10–50 倍）或接受該情境下召回率大幅下降的事實，這不是調參數能解決的，而是資料本身的"
+        "物理解析度上限。案例十四在 FORMOSAT-7 上的驗證（4 種方法 F1 僅 0.07–0.24，遠低於 23 星"
+        "標竿的 0.31–0.46）正是此一預期的實測印證，而非演算法失效。",
+        "4つの限界をまとめて見ると、結論はかなり一貫している：**TLEは「大幅で、瞬時的で、半長軸を"
+        "変化させる」機動に対しては依然として有用で低コストなスクリーニングツールである**（本"
+        "プロジェクトの事例22、23の全量統計はこの前提の上に成り立っている）。しかし、以下のいずれか"
+        "の状況——(a) 機動の大きさがその時点の軌道高度／抵抗状態の雑音床に近いか下回る、(b) 機動が"
+        "数時間から数日にわたって引き延ばされている、(c) 機動の方向が半長軸以外の変量（位相、"
+        "cross-track）にある、(d) 目的が「動いたかどうか」の検知ではなく物理量（大気密度など）の"
+        "逆算である——に該当する場合は、精密暦（MEMEなど、感度10～50倍）に切り替えるか、その状況"
+        "では再現率が大幅に低下するという事実を受け入れる必要がある。これはパラメータ調整で解決"
+        "できる問題ではなく、データ自体の物理的分解能の上限である。事例14のFORMOSAT-7での検証"
+        "（4手法のF1がわずか0.07～0.24で、23機標竿の0.31～0.46を大きく下回る）は、まさにこの予測を"
+        "裏付ける実測結果であり、アルゴリズムの失敗ではない。",
+        "Putting all four limits together, the conclusion is fairly consistent: **TLEs remain a useful, "
+        "low-cost screening tool for large, near-instantaneous maneuvers that change semi-major axis** "
+        "(this project's full-population statistics in Cases 22 and 23 are built on exactly this premise). "
+        "But once any of the following applies — (a) the maneuver magnitude is near or below the noise "
+        "floor for the current altitude/drag state, (b) the maneuver is smeared over hours to days, (c) the "
+        "maneuver's signature lies in a variable other than sma (phase, cross-track), or (d) the goal is "
+        "inferring a physical quantity (e.g. atmospheric density) rather than detecting \"did it move\" — "
+        "one must switch to precise ephemerides (e.g. MEME, 10–50× more sensitive) or accept a sharply "
+        "reduced recall in that regime. This is not something parameter tuning can fix; it is the physical "
+        "resolution ceiling of the data itself. Case 14's validation on FORMOSAT-7 (F1 of only 0.07–0.24 "
+        "across four methods, far below the 23-satellite benchmark's 0.31–0.46) is exactly this expectation "
+        "confirmed empirically — not an algorithm failure.",
+    ))
+
+    st.header(T3(
+        "⑧ 案例索引：想看完整推導過程，請回到原始案例",
+        "⑧事例索引：完全な導出過程は元の事例を参照",
+        "⑧ Case index: for the full derivation, see the original cases",
+    ))
+    st.markdown(T3(
+        "- **案例三**：已知靜止衛星之穩健雜訊地板量測（單顆衛星、逐步偵測器視角）\n"
+        "- **案例十**：TLE 反推大氣密度之四次嘗試與三個根因（誠實負向結果）\n"
+        "- **案例十三**：瞬時半長軸之 J2 短週期污染，99.5% 誤判之發現與修正\n"
+        "- **案例十四**：FORMOSAT-7 精密星曆真值下，TLE 方法之召回率驗證\n"
+        "- **案例十五**：機動反演之三個誠實失效邊界（含 cross-track 不可逆問題）\n"
+        "- **案例十七**：FORMOSAT-7 大規模機動注入實驗（15,775 次試驗）\n"
+        "- **案例十八**：8 顆被動測地球體之全景雜訊地板掃描與月球攝動誤讀之修正\n"
+        "- **案例二十一**：半長軸看不到的機動——相位殘差新通道之發現與驗證",
+        "- **事例3**：既知静止衛星に対するロバストな雑音床測定（単一衛星、逐次検知器の視点）\n"
+        "- **事例10**：TLEから大気密度を逆算する4回の試みと3つの根本原因（誠実な負の結果）\n"
+        "- **事例13**：瞬時半長軸におけるJ2短周期汚染——99.5%誤判定の発見と修正\n"
+        "- **事例14**：FORMOSAT-7精密暦の真値によるTLE手法の再現率検証\n"
+        "- **事例15**：機動逆解析における3つの誠実な失効境界（cross-track不可逆問題を含む）\n"
+        "- **事例17**：FORMOSAT-7における大規模機動注入実験（15,775試行）\n"
+        "- **事例18**：8個の受動測地球体による全景雑音床走査と月摂動誤読の修正\n"
+        "- **事例21**：半長軸に見えない機動——位相残差新チャンネルの発見と検証",
+        "- **Case 3**: robust noise-floor measurement on known-stationary satellites (single-satellite, "
+        "step-detector perspective)\n"
+        "- **Case 10**: four attempts and three root causes for inverting atmospheric density from TLEs "
+        "(an honest negative result)\n"
+        "- **Case 13**: J2 short-period contamination of osculating sma — discovery and fix of a 99.5% "
+        "misclassification bug\n"
+        "- **Case 14**: recall validation of TLE-based methods against FORMOSAT-7 precise-ephemeris ground "
+        "truth\n"
+        "- **Case 15**: three honest failure boundaries of maneuver inversion (including the "
+        "cross-track irreversibility problem)\n"
+        "- **Case 17**: a large-scale maneuver-injection experiment on FORMOSAT-7 (15,775 trials)\n"
+        "- **Case 18**: a panoramic noise-floor scan across 8 passive geodetic spheres, and the correction "
+        "of a lunar-perturbation misreading\n"
+        "- **Case 21**: the maneuver invisible to semi-major axis — discovery and validation of the new "
+        "phase-residual channel",
+    ))
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -11412,7 +11759,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
-        "case21", "case22", "case23"):
+        "case21", "case22", "case23", "case24"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -11481,6 +11828,8 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case22()
     elif _case == "case23":
         render_storymap_case23()
+    elif _case == "case24":
+        render_storymap_case24()
     else:
         render_storymap_landing()
     st.stop()
