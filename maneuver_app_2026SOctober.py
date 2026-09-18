@@ -204,6 +204,12 @@ L: dict[str, dict[str, str]] = {
     "storymap_case24_card_desc": {"zh": "本專案在四個不同角度都撞上了同一堵牆：雜訊地板、大氣阻力狀態、觀測盲區、反演天花板——七個案例的證據，第一次拼在同一張表上。",
                                   "ja": "本プロジェクトは4つの異なる角度から同じ壁にぶつかった：雑音床、大気抵抗状態、観測の死角、逆解析の天井——7つの事例の証拠を初めて一つの表にまとめた。",
                                   "en": "This project hit the same wall from four different angles: the noise floor, atmospheric-drag state, observational blind spots, and an inversion ceiling — evidence from seven cases, assembled into one table for the first time."},
+    "storymap_case25_card_title": {"zh": "案例二十五：TLE 誤差底真的隨太陽活動而變——284 顆衛星 × 4.5 個月精密星曆直接驗證",
+                                   "ja": "事例二十五：TLE誤差床は本当に太陽活動で変動する——284機×4.5ヶ月の精密暦による直接検証",
+                                   "en": "Case 25: The TLE Error Floor Really Does Move With Solar Activity — Direct Verification with 284 Satellites × 4.5 Months of Precision Ephemeris"},
+    "storymap_case25_card_desc": {"zh": "不再靠自我差分猜測，直接拿 MEME 精密星曆當真值：3.5 萬筆殘差裡，跟 F10.7 的相關達統計顯著（p=0.008）。",
+                                  "ja": "自己差分による推測に頼らず、MEME精密暦を真値として直接使用：3.5万件の残差の中で、F10.7との相関は統計的に有意（p=0.008）であった。",
+                                  "en": "No more guessing from self-differencing — using MEME precision ephemeris as direct ground truth: across 35,000 residuals, the correlation with F10.7 solar flux is statistically significant (p=0.008)."},
 
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
@@ -1833,7 +1839,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 25):
+    for _n in range(14, 26):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -11897,6 +11903,236 @@ def render_storymap_case24():
     ))
 
 
+def render_storymap_case25():
+    if st.button(t("storymap_back"), key="back_from_case25"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例二十五：TLE 誤差底真的隨太陽活動而變——284 顆衛星 × 4.5 個月精密星曆直接驗證",
+        "事例二十五：TLE誤差床は本当に太陽活動で変動する——284機×4.5ヶ月の精密暦による直接検証",
+        "Case 25: The TLE Error Floor Really Does Move With Solar Activity — Direct Verification with 284 Satellites × 4.5 Months of Precision Ephemeris",
+    ))
+    st.subheader(T3(
+        "不再靠自我差分猜測，直接拿 MEME 精密星曆當真值",
+        "自己差分による推測に頼らず、MEME精密暦を真値として直接使用",
+        "No more guessing from self-differencing — MEME precision ephemeris as direct ground truth",
+    ))
+    st.caption(T3(
+        "案例三與案例二十四發現，本專案裡至少有四個互相對不上的「Starlink雜訊底」數字，根因是估計量"
+        "定義、觀測時間窗、是否為實測皆不同。本案例換一條路：不再從 TLE 自己的逐筆差分猜測雜訊，"
+        "而是拿獨立於 TLE 之外的 MEME 精密星曆真值直接比對，並用手上剛好有的 4.5 個月資料，"
+        "直接檢驗「TLE 誤差底是否隨時間變化」這個問題。",
+        "事例3と事例24では、本プロジェクト内に少なくとも4つの互いに一致しない「Starlink雑音床」の"
+        "数字が存在することが判明した。原因は推定量の定義、観測時間窓、実測か否かがすべて異なる"
+        "ことにあった。本事例では別の道を選ぶ：TLE自身の逐次差分から雑音を推測するのではなく、"
+        "TLEとは独立したMEME精密暦の真値と直接比較し、ちょうど手元にある4.5ヶ月分のデータを用いて"
+        "「TLE誤差床は時間とともに変化するのか」という問いを直接検証する。",
+        "Cases 3 and 24 found at least four mutually inconsistent \"Starlink noise floor\" numbers "
+        "floating around this project, rooted in differing estimator definitions, observation windows, "
+        "and whether a number was measured or assumed. This case takes a different road: instead of "
+        "guessing noise from TLE's own consecutive differences, it compares directly against MEME "
+        "precision ephemeris — ground truth independent of TLE — using the 4.5 months of data already "
+        "on hand, to directly test whether the TLE error floor changes over time.",
+    ))
+
+    st.header(T3(
+        "① 方法：TLE 傳播結果 − MEME 真值，才是真正的「TLE 誤差」",
+        "①手法：TLE伝播結果 − MEME真値こそが真の「TLE誤差」",
+        "① Method: TLE-propagated position minus MEME truth is the real \"TLE error\"",
+    ))
+    st.markdown(T3(
+        "對每顆衛星，取其 MEME 精密星曆序列（真值），用「該時刻之前最近一筆 TLE」以 SGP4 傳播至"
+        "同一時刻——這正是報表 API 與規則式偵測器實際運作的方式：永遠用最近的過去 TLE 外推當下"
+        "狀態。把兩者的狀態向量分別轉換成半長軸，殘差 = a_TLE − a_MEME，就是不依賴任何「安靜期」"
+        "假設、不需要排除跳動或去趨勢前處理的直接誤差量測。抽樣範圍：284 顆有 MEME 資料的 Starlink"
+        "衛星中 283 顆有效、2026-05-02～09-17（4.5 個月）、每日降採樣一筆，共得 **35,460 筆殘差**。",
+        "各衛星について、そのMEME精密暦系列（真値）を取得し、「その時刻より前の直近1筆のTLE」を"
+        "SGP4で同じ時刻まで伝播する——これはレポートAPIとルールベース検知器が実際に動作する"
+        "方式そのものである：常に直近の過去のTLEを使って現在の状態を外挿する。両者の状態ベクトルを"
+        "それぞれ半長軸に変換し、残差＝a_TLE − a_MEMEとすることで、「静穏期」の仮定に依存せず、"
+        "跳躍の除外やトレンド除去といった前処理も不要な、直接的な誤差測定が得られる。抽出範囲："
+        "MEMEデータを持つ284機のStarlink衛星のうち283機が有効、2026-05-02～09-17（4.5ヶ月）、"
+        "毎日1筆にダウンサンプリングし、合計**35,460件の残差**を得た。",
+        "For each satellite, take its MEME precision-ephemeris sequence (ground truth), and propagate "
+        "the most recent prior TLE forward to each MEME epoch via SGP4 — exactly how the report API and "
+        "the rule-based detector actually operate in production: always extrapolating the current state "
+        "from the most recent past TLE. Converting both state vectors to semi-major axis and taking "
+        "residual = a_TLE − a_MEME gives a direct error measurement with no dependence on any \"quiet "
+        "period\" assumption, and no need for jump-exclusion or detrending preprocessing. Sample: 283 of "
+        "284 Starlink satellites with MEME data, 2026-05-02 to 09-17 (4.5 months), downsampled to one "
+        "point per day, giving **35,460 residuals** in total.",
+    ))
+
+    st.header(T3(
+        "② 第一個發現：誤差隨 TLE 外推時長增加，符合物理直覺",
+        "②発見①：誤差はTLEの外挿時間とともに増加し、物理的直感と一致",
+        "② Finding 1: error grows with TLE extrapolation age, exactly as physically expected",
+    ))
+    _df25a = pd.DataFrame([
+        {T3("TLE外推時長","TLE外挿時間","TLE extrapolation age"): lb,
+         T3("樣本數","サンプル数","n"): n,
+         T3("中位|Δa|(m)","中央値|Δa|(m)","Median |Δa| (m)"): v}
+        for lb, n, v in [
+            ("0–6h", 14860, 47.7), ("6–24h", 17832, 64.4),
+            ("24–48h", 2150, 101.2), ("48–72h", 468, 117.4),
+        ]
+    ])
+    st.dataframe(_df25a, hide_index=True, width="stretch")
+    st.markdown(T3(
+        "TLE 曆元越舊，外推誤差累積越多——0-6 小時內中位誤差僅 47.7 公尺，48-72 小時外推則升至"
+        "117.4 公尺，接近 2.5 倍。這與案例二十四§2.4（SGP4 平均根數理論）的預期完全一致：TLE 平均"
+        "根數本身即帶有擬合殘留變異，向前傳播越久，累積的近似誤差就越大。",
+        "TLEの元期が古いほど、外挿誤差の蓄積は大きくなる——0～6時間以内では中央値誤差はわずか"
+        "47.7メートルだが、48～72時間の外挿では117.4メートルまで上昇し、約2.5倍に達する。これは"
+        "事例24の§2.4（SGP4平均根数理論）で予想された内容と完全に一致する：TLE平均根数自体が"
+        "フィッティングの残留変動を内包しており、前方に伝播する時間が長いほど、蓄積される近似誤差も"
+        "大きくなる。",
+        "The older the TLE epoch, the more extrapolation error accumulates — median error is only 47.7 m "
+        "within 0–6 hours, rising to 117.4 m by 48–72 hours of extrapolation, nearly a 2.5× increase. "
+        "This matches exactly what Case 24 §2.4 (SGP4 mean-element theory) predicts: TLE mean elements "
+        "already carry residual fitting variance, and the longer they are propagated forward, the more "
+        "approximation error accumulates.",
+    ))
+
+    st.header(T3(
+        "③ 第二個發現（也是本案例的重點）：沒有簡單的時間漂移，但跟太陽活動顯著相關",
+        "③発見②（本事例の核心）：単純な時間的ドリフトはないが、太陽活動と有意な相関がある",
+        "③ Finding 2 (the main point of this case): no simple time drift, but a significant link to solar activity",
+    ))
+    st.markdown(T3(
+        "只用「新鮮」（外推 <24 小時）的殘差，依日曆週分層，橫跨 21 週：",
+        "「新鮮な」（外挿<24時間）残差のみを用い、暦週ごとに層別化し、21週にわたって分析した：",
+        "Using only \"fresh\" residuals (extrapolation <24h), binned by calendar week across 21 weeks:",
+    ))
+    _df25b = pd.DataFrame([
+        {T3("檢定對象","検定対象","Test"): a, T3("Spearman rho","Spearman rho","Spearman rho"): b,
+         T3("p 值","p値","p-value"): c, T3("結論","結論","Conclusion"): d}
+        for a, b, c, d in [
+            (T3("週序（單純時間）","週順（単純な時間）","Week order (pure time)"), "-0.221", "0.336",
+             T3("不顯著","有意でない","not significant")),
+            ("F10.7", "+0.564", "0.008", T3("顯著","有意","significant")),
+            ("Kp", "+0.410", "0.065", T3("邊緣顯著","境界的に有意","borderline")),
+            ("Dst", "-0.220", "0.381", T3("不顯著","有意でない","not significant")),
+        ]
+    ])
+    st.dataframe(_df25b, hide_index=True, width="stretch")
+    st.success(T3(
+        "**這正是回答「TLE 雜訊底是否有時間因素」最乾淨的答案**：不是隨日曆日期單純漂移（週序本身"
+        "不顯著），而是被**太陽活動強度**驅動——F10.7 太陽通量與誤差之相關性達統計顯著（p=0.008），"
+        "地磁 Kp 指數邊緣顯著。這與案例十七用 FORMOSAT-7 注入實驗發現的「大氣阻力狀態主宰偵測門檻，"
+        "同一系統可差 10-70 倍」完全呼應——這次是用完全不同的方法（獨立 MEME 真值比對而非合成注入）"
+        "獨立得到、互相印證的結論。物理機制一致：太陽活動越強→熱層加熱、大氣密度上升→阻力增加→"
+        "軌道未建模擾動增加→TLE 擬合與外推誤差同步變大。",
+        "**これこそが「TLE雑音床に時間的要因があるか」という問いに対する最も明快な答えである**："
+        "暦日に沿って単純にドリフトするのではなく（週順自体は有意でない）、**太陽活動の強さ**に"
+        "よって駆動されている——F10.7太陽フラックスと誤差の相関は統計的に有意（p=0.008）であり、"
+        "地磁気Kp指数も境界的に有意であった。これは事例17でFORMOSAT-7の注入実験によって発見された"
+        "「大気抵抗状態が検知閾値を支配し、同一システムでも10～70倍の差が生じる」という結果と"
+        "完全に呼応している——今回は全く異なる手法（合成注入ではなく独立したMEME真値比較）によって"
+        "独立に得られ、互いに裏付け合う結論となった。物理的機構も一致している：太陽活動が強いほど"
+        "→熱圏が加熱され大気密度が上昇→抵抗が増加→軌道の未モデル化擾乱が増加→TLEのフィッティング"
+        "と外挿誤差が同時に大きくなる。",
+        "**This is the cleanest possible answer to \"does the TLE noise floor have a time factor\"**: it "
+        "doesn't simply drift with the calendar (week order alone is not significant), but is instead "
+        "driven by **solar-activity strength** — the correlation between F10.7 solar flux and error is "
+        "statistically significant (p=0.008), with the Kp geomagnetic index borderline significant. This "
+        "echoes exactly what Case 17's FORMOSAT-7 injection experiment found — \"atmospheric-drag state "
+        "dominates the detection threshold, the same system can vary by 10–70×\" — now independently "
+        "obtained and cross-confirmed by a completely different method (independent MEME ground-truth "
+        "comparison rather than synthetic injection). The physical mechanism is consistent: stronger "
+        "solar activity → thermosphere heating → higher atmospheric density → more drag → more "
+        "unmodeled orbital perturbation → both TLE fitting and extrapolation error grow in step.",
+    ))
+
+    st.header(T3(
+        "④ 這對案例三／案例二十四的雜訊底爭議意味著什麼",
+        "④これが事例3／事例24の雑音床論争にとって何を意味するのか",
+        "④ What this means for the Case 3 / Case 24 noise-floor controversy",
+    ))
+    st.warning(T3(
+        "本案例用獨立真值量到的中位誤差是 **57 公尺**——比案例三方法（60天原始差分MAD）量到的 "
+        "11.6 公尺高出約 5 倍，也比新圖表方法（40筆滑動窗排除跳動）量到的 6-10 公尺高出更多，"
+        "反而與技術附錄「Starlink 低軌帶 σ≈24–75 m」的既有數字量級更接近，甚至頂到上界。"
+        "**這進一步支持案例二十四的結論**：會主動排除跳動、做去趨勢處理的自我差分估計量，"
+        "系統性地把部分真實變異（可能正是本案例發現的太陽活動驅動之額外擾動）濾除掉了，"
+        "所以量到的數字會偏低；用獨立於 TLE 之外的精密星曆真值直接比對，才捕捉到完整的誤差量級。"
+        "這不代表哪一個方法「錯」，而是再次印證：報告任何 TLE 雜訊底數字時，必須同時說明其"
+        "估計量定義與觀測時間窗，本案例用的是「無前處理、獨立真值、4.5個月全樣本」這一種。",
+        "本事例が独立した真値を用いて測定した中央値誤差は**57メートル**——事例3の手法（60日間の"
+        "生の差分MAD）で測定された11.6メートルの約5倍、新しいグラフの手法（40件移動窓で跳躍を"
+        "除外）で測定された6～10メートルよりもさらに高く、むしろ技術付録の「Starlink低軌道帯 "
+        "σ≈24～75 m」という既存の数字の量級に近く、上限にまで達している。**これは事例24の結論を"
+        "さらに裏付けるものである**：跳躍を積極的に除外し、トレンド除去を行う自己差分推定量は、"
+        "真の変動の一部（おそらく本事例で発見された太陽活動駆動の追加的擾乱そのもの）を系統的に"
+        "濾過してしまうため、測定される数字は低めに出る。TLEとは独立した精密暦の真値と直接比較"
+        "することで初めて、完全な誤差の規模が捉えられる。これはどちらかの手法が「間違っている」"
+        "ということではなく、改めて次のことを裏付けている：TLE雑音床の数字を報告する際は、"
+        "その推定量の定義と観測時間窓を必ず併記すべきであり、本事例が用いたのは「前処理なし、"
+        "独立した真値、4.5ヶ月の全サンプル」という種類のものである。",
+        "The median error this case measures using independent ground truth is **57 m** — about 5× "
+        "higher than Case 3's method (60-day raw-difference MAD, 11.6 m), and higher still than the new "
+        "chart's method (40-TLE sliding window excluding jumps, 6–10 m); it instead sits much closer to "
+        "— even at the upper end of — the technical appendix's existing \"Starlink LEO band σ≈24–75 m\" "
+        "figure. **This further supports Case 24's conclusion**: self-differencing estimators that "
+        "actively exclude jumps and detrend systematically filter out part of the real variance "
+        "(possibly exactly the solar-activity-driven extra perturbation this case just found), so they "
+        "read low; only comparing directly against precision-ephemeris ground truth independent of TLE "
+        "captures the full error magnitude. This doesn't mean either method is \"wrong\" — it reconfirms "
+        "that any TLE noise-floor number must be reported together with its estimator definition and "
+        "observation window; this case used \"no preprocessing, independent ground truth, full 4.5-month "
+        "sample.\"",
+    ))
+
+    st.markdown("---")
+    st.markdown(T3(
+        "**判讀**：本案例是雜訊底爭議系列（案例三→案例二十四→本案例）的第三步，也是目前方法論上"
+        "最嚴謹的一步——不再依賴 TLE 自身的前處理假設，改用獨立真值直接量測，並且是本專案第一次"
+        "以統計顯著性（而非僅描述性趨勢）證實「大氣阻力狀態」這個先前只在合成注入實驗（案例十七）"
+        "中觀察到的效應。三個案例合起來，呈現的是一個誠實的方法論演進過程：發現數字對不上 → "
+        "查出根因是定義不同 → 換用更嚴謹的方法重新量測、並得到可獨立驗證的新發現。",
+        "**判読**：本事例は雑音床論争シリーズ（事例3→事例24→本事例）の第3段階であり、現時点で"
+        "方法論的に最も厳密な段階でもある——TLE自身の前処理上の仮定にもはや依存せず、独立した"
+        "真値を用いて直接測定を行い、しかも本プロジェクトとして初めて、これまで合成注入実験"
+        "（事例17）でしか観察されていなかった「大気抵抗状態」という効果を、統計的有意性（単なる"
+        "記述的傾向ではなく）によって実証した。3つの事例を合わせると、誠実な方法論の進化過程が"
+        "見えてくる：数字が一致しないことを発見する→原因が定義の違いにあることを突き止める→"
+        "より厳密な手法に切り替えて再測定し、独立に検証可能な新たな発見を得る。",
+        "**Verdict**: this case is the third step in the noise-floor controversy series (Case 3 → Case "
+        "24 → this case), and currently the methodologically most rigorous one — no longer relying on "
+        "preprocessing assumptions built into TLE self-differencing, instead measuring directly against "
+        "independent ground truth, and for the first time in this project confirming with statistical "
+        "significance (not just a descriptive trend) an effect — \"atmospheric-drag state\" — previously "
+        "only observed in a synthetic-injection experiment (Case 17). Together, the three cases trace an "
+        "honest methodological progression: notice the numbers don't match → trace the root cause to "
+        "differing definitions → switch to a more rigorous method, remeasure, and arrive at a new, "
+        "independently verifiable finding.",
+    ))
+    st.caption(T3(
+        "重現腳本：`starlink_tle_meme_error_floor.py`；原始逐筆殘差："
+        "`data/benchmark/starlink_tle_meme_error_floor_20260918.csv`（35,460 列）；"
+        "週別彙總與太陽風交叉比對："
+        "`data/benchmark/starlink_tle_meme_error_floor_weekly_swx_20260918.csv`；"
+        "太陽/地磁活動資料來源：`F:\\GitHub\\SpaceWeather\\data\\swx_parquet\\`"
+        "（NASA OMNI2，非本專案自建資料）。相關方法學背景見案例三、案例二十四"
+        "與 `docs/paper_tle_sma_noise_floor.md` §3.2。",
+        "再現スクリプト：`starlink_tle_meme_error_floor.py`；元の逐次残差："
+        "`data/benchmark/starlink_tle_meme_error_floor_20260918.csv`（35,460行）；"
+        "週別集計と太陽風の相互比較："
+        "`data/benchmark/starlink_tle_meme_error_floor_weekly_swx_20260918.csv`；"
+        "太陽・地磁気活動データの出典：`F:\\GitHub\\SpaceWeather\\data\\swx_parquet\\`"
+        "（NASA OMNI2、本プロジェクト独自構築データではない）。関連する方法論的背景は事例3、"
+        "事例24、および`docs/paper_tle_sma_noise_floor.md` §3.2を参照。",
+        "Reproduction script: `starlink_tle_meme_error_floor.py`; raw per-point residuals: "
+        "`data/benchmark/starlink_tle_meme_error_floor_20260918.csv` (35,460 rows); weekly summary "
+        "with space-weather cross-reference: "
+        "`data/benchmark/starlink_tle_meme_error_floor_weekly_swx_20260918.csv`; solar/geomagnetic "
+        "activity data source: `F:\\GitHub\\SpaceWeather\\data\\swx_parquet\\` (NASA OMNI2, not "
+        "self-built by this project). Related methodological background in Cases 3 and 24, and "
+        "`docs/paper_tle_sma_noise_floor.md` §3.2.",
+    ))
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -11907,7 +12143,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
-        "case21", "case22", "case23", "case24"):
+        "case21", "case22", "case23", "case24", "case25"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -11978,6 +12214,8 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case23()
     elif _case == "case24":
         render_storymap_case24()
+    elif _case == "case25":
+        render_storymap_case25()
     else:
         render_storymap_landing()
     st.stop()
