@@ -10754,6 +10754,65 @@ def render_storymap_case21():
         "against one calm week, not yet replicated across multiple storms.",
     ))
 
+    st.header(T3(
+        "⑦ 重大更正：擴大到 6 場磁暴後，劑量效應完全不成立",
+        "⑦重大な訂正：6回の磁気嵐に拡大したところ、用量反応は全く成立しなかった",
+        "⑦ A major correction: across 6 storms, the dose-response effect completely fails to hold",
+    ))
+    st.warning(T3(
+        "上一節的疑慮成真了。用 6 顆 COSMIC2 衛星（TLE 全歷史涵蓋 2024 年起）"
+        "對另外 6 場強度不同的磁暴重新檢驗——包含 2024-05-11 之 Gannon 極端"
+        "磁暴（Dst -406nT、Kp 9.0，近 20 年最強磁暴之一，強度為原案例 4 倍"
+        "以上）。**結果與劑量效應假說完全相反**：6 場更強（甚至強得多）的"
+        "磁暴，COSMIC2 觸發率全數為 0/6；唯獨強度最弱的原始 2026-04-18 "
+        "事件（Dst 僅 -95）觸發全部 6 顆。若真為磁暴因果，不可能對更強的"
+        "磁暴反而完全不敏感。\n\n"
+        "**修正後的誠實結論**：COSMIC2 對 2026-04-18 的全數觸發，較可能是"
+        "該特定日期／該特定星系的個案巧合（例如共同 TLE 定軌批次處理），"
+        "而非磁暴之因果結果。⑥ 節 Starlink 部分（140 顆、p=6.9×10⁻³¹）的"
+        "統計證據本身仍然成立，不受本節結果推翻；但兩個星系呈現截然不同"
+        "的行為模式——顯示這個通道的候選觸發，可能高度依賴特定衛星族群"
+        "或特定時間點的未知因素，而不是磁暴強度本身的穩定函數。⑥ 節"
+        "「應以對照實驗為準」之結論，範圍應限縮為「該特定磁暴對 Starlink "
+        "的影響」，不可推廣為「本通道普遍對磁暴敏感」的通則。",
+        "前節の懸念が現実になった。6機のCOSMIC2衛星（TLEの全履歴は2024年から）を"
+        "用いて、強度の異なる別の6回の磁気嵐を再検証した——2024-05-11のガノン極端"
+        "磁気嵐（Dst -406nT、Kp 9.0、過去20年で最強クラスの磁気嵐の一つ、元の事例の"
+        "4倍以上の強度）を含む。**結果は用量反応仮説と正反対だった**：より強い"
+        "（はるかに強いものも含む）6回の磁気嵐で、COSMIC2のトリガー率は全て0/6"
+        "だったが、強度が最も弱かった元の2026-04-18のイベント（Dstはわずか-95）だけ"
+        "が6機全てをトリガーした。もし本当に磁気嵐が原因であれば、より強い磁気嵐に"
+        "対してかえって全く反応しないということはあり得ない。\n\n"
+        "**修正後の誠実な結論**：COSMIC2が2026-04-18に全機トリガーしたのは、その"
+        "特定の日付／特定の星系固有の偶然（例えば共通のTLE軌道決定バッチ処理）である"
+        "可能性が高く、磁気嵐による因果結果ではない。⑥節のStarlink部分（140機、"
+        "p=6.9×10⁻³¹）の統計的証拠自体は本節の結果によって覆されるものではないが、"
+        "2つの星系がまったく異なる挙動パターンを示している——このチャネルの候補"
+        "トリガーは、磁気嵐の強度そのものの安定した関数ではなく、特定の衛星群や"
+        "特定の時点における未知の要因に大きく依存している可能性を示している。⑥節の"
+        "「対照実験の結果を正とすべき」という結論は、「その特定の磁気嵐がStarlinkに"
+        "与えた影響」に範囲を限定すべきであり、「このチャネルは磁気嵐一般に敏感で"
+        "ある」という通則に一般化してはならない。",
+        "The concern flagged in the previous section came true. Re-testing with 6 COSMIC2 satellites "
+        "(whose full TLE history goes back to 2024) against 6 other storms of varying intensity — "
+        "including the 2024-05-11 Gannon extreme storm (Dst -406nT, Kp 9.0, one of the strongest "
+        "storms in two decades, over 4x the intensity of the original case) — **the result is the "
+        "exact opposite of the dose-response hypothesis**: across 6 storms that were stronger (some "
+        "far stronger), COSMIC2's trigger rate was 0/6 every single time; only the weakest storm, the "
+        "original 2026-04-18 event (Dst only -95), triggered all 6 satellites. If this were truly "
+        "storm-causation, it could not possibly be completely insensitive to much stronger storms.\n\n"
+        "**Corrected, honest conclusion**: COSMIC2's all-satellite trigger on 2026-04-18 is more "
+        "likely a one-off coincidence specific to that date/constellation (e.g. a shared TLE orbit-"
+        "determination batch process) than a storm-causation effect. The Starlink evidence in section "
+        "⑥ (140 satellites, p=6.9×10⁻³¹) still stands on its own and isn't overturned by this result; "
+        "but the two constellations show starkly different behavior — suggesting this channel's "
+        "candidate triggering may depend heavily on unknown factors specific to a satellite population "
+        "or a specific point in time, rather than being a stable function of storm intensity itself. "
+        "Section ⑥'s \"take the control experiment as authoritative\" conclusion should be scoped down "
+        "to \"that specific storm's effect on Starlink,\" not generalized into \"this channel is "
+        "broadly storm-sensitive.\"",
+    ))
+
     st.markdown("---")
     st.markdown(T3(
         "**判讀**：這個案例串起了三件事——一次意外發現（案例十一）、一條新偵測"
