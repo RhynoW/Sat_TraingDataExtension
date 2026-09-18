@@ -43,6 +43,7 @@ logger = logging.getLogger(__name__)
 _DEFAULT_DB         = "../space_db.duckdb"
 _DEFAULT_RESIDUALS  = "../data/comparison/residuals_*.csv"
 _DEFAULT_OUT_DIR    = "./models"
+_DEFAULT_F107_CSV   = "../f107_cache.csv"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -93,6 +94,38 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         default="B",
         help="Filter Parquet to plan A, B, or all rows (only used with --parquet, default: B)",
     )
+    parser.add_argument(
+        "--min-severity",
+        choices=["small", "medium", "large"],
+        default="small",
+        help=(
+            "Plan A only: positive-class threshold on MEME da_severity. "
+            "small=|da|>1km (all maneuvers, default), medium=|da|>=5km (significant), "
+            "large=|da|>=10km. Higher = more balanced classes."
+        ),
+    )
+    parser.add_argument(
+        "--task",
+        choices=["window", "forecast"],
+        default="window",
+        help=(
+            "Plan A only. window=predict if THIS 8h window is a maneuver (default). "
+            "forecast=predict if the satellite maneuvers within --horizon-days "
+            "(early-warning; matches TLE resolution better)."
+        ),
+    )
+    parser.add_argument(
+        "--horizon-days",
+        type=float,
+        default=3.0,
+        help="Forecast horizon in days (only used with --task forecast, default 3).",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for satellite-level split and LightGBM (default: 42).",
+    )
     return parser.parse_args(argv)
 
 
@@ -120,6 +153,7 @@ def _build_combined_df(
     norad_ids: list[int] | None,
     db_path: str,
     residuals_glob: str,
+    f107_lookup: dict | None = None,
 ) -> pd.DataFrame:
     """Build feature + label DataFrame for all requested satellites.
 
@@ -131,6 +165,8 @@ def _build_combined_df(
         Path to the DuckDB database.
     residuals_glob:
         Glob pattern pointing to residual CSV files.
+    f107_lookup:
+        Optional {YYYY-MM-DD: f107} dict; enables ``bstar_f107_normalized``.
 
     Returns
     -------
@@ -160,7 +196,9 @@ def _build_combined_df(
     for norad_id in norad_ids:
         logger.info("Building features for NORAD %d …", norad_id)
         try:
-            feat_df = data_loader.build_feature_matrix(norad_id, db_path)
+            feat_df = data_loader.build_feature_matrix(
+                norad_id, db_path, f107_lookup=f107_lookup
+            )
         except Exception as exc:
             logger.warning("Skipping NORAD %d — feature build failed: %s", norad_id, exc)
             continue
@@ -208,9 +246,16 @@ def _print_summary(
     print()
 
 
+_SEV_RANK = {"none": 0, "small": 1, "medium": 2, "large": 3}
+
+
 def _build_from_parquet(
     parquet_path: str,
     plan_filter: str,
+    min_severity: str = "small",
+    task: str = "window",
+    horizon_days: float = 3.0,
+    seed: int = 42,
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, list[str]]:
     """Load Plan B (or combined) Parquet and return (train, val, test, feature_cols).
 
@@ -248,14 +293,41 @@ def _build_from_parquet(
             sys.exit(1)
 
     df["label"] = df["label"].astype(int)
+
+    # Plan A relabeling:
+    #   task=forecast → early-warning label: maneuver within next `horizon_days`
+    #                   (matches TLE resolution; recommended for medium+).
+    #   task=window   → this-8h-window label; raise bar via --min-severity.
+    if plan_filter == "A" and task == "forecast" and "label_severity" in df.columns:
+        new_label = ds.forward_maneuver_label(
+            df, epoch_col="center_epoch", severity_col="label_severity",
+            min_severity=(min_severity if min_severity != "small" else "medium"),
+            horizon_days=horizon_days,
+        )
+        logger.info(
+            "task=forecast (horizon=%.1fd, min_sev=%s) → label positives: %d→%d (of %d)",
+            horizon_days, min_severity if min_severity != "small" else "medium",
+            int(df["label"].sum()), int(new_label.sum()), len(df),
+        )
+        df["label"] = new_label.values
+    elif plan_filter == "A" and min_severity != "small" and "label_severity" in df.columns:
+        thr = _SEV_RANK[min_severity]
+        new_label = (df["label_severity"].map(_SEV_RANK).fillna(0) >= thr).astype(int)
+        logger.info(
+            "min-severity=%s → relabel positives: %d→%d (of %d rows)",
+            min_severity, int(df["label"].sum()), int(new_label.sum()), len(df),
+        )
+        df["label"] = new_label
+
     logger.info("label distribution: %s", df["label"].value_counts().to_dict())
 
     # ── feature selection ─────────────────────────────────────────────────
-    # Use PLAN_B_FEATURE_COLS when plan B; fall back to union of available cols
-    if plan_filter in ("B", "all"):
-        candidate_cols = ds.PLAN_B_FEATURE_COLS
+    # Plan A (MEME-truth) → epoch-level PLAN_A_FEATURE_COLS;
+    # Plan B / all        → PLAN_B_FEATURE_COLS (26-day aggregate)
+    if plan_filter == "A":
+        candidate_cols = ds.PLAN_A_FEATURE_COLS
     else:
-        candidate_cols = ds.FEATURE_COLS
+        candidate_cols = ds.PLAN_B_FEATURE_COLS
 
     present  = [c for c in candidate_cols if c in df.columns]
     missing  = [c for c in candidate_cols if c not in df.columns]
@@ -277,11 +349,15 @@ def _build_from_parquet(
     )
 
     # ── split ─────────────────────────────────────────────────────────────
-    # Plan B has no epoch_utc → use satellite-level stratified random split
-    if "epoch_utc" in df.columns and plan_filter == "A":
-        train_df, val_df, test_df = ds.time_split(df)
+    # Plan A (MEME-truth) has center_epoch → chronological quantile split
+    # (decision A: epoch-level sliding windows, leak-free in time).
+    # Plan B has no usable epoch → satellite-level stratified random split.
+    if plan_filter == "A" and "center_epoch" in df.columns and df["center_epoch"].notna().any():
+        df = df[df["center_epoch"].notna()].copy()
+        df = df.rename(columns={"center_epoch": "epoch_utc"})
+        train_df, val_df, test_df = ds.time_split_quantile(df, epoch_col="epoch_utc")
     else:
-        train_df, val_df, test_df = ds.random_split(df)
+        train_df, val_df, test_df = ds.random_split(df, seed=seed)
 
     return train_df, val_df, test_df, present
 
@@ -301,15 +377,26 @@ def main(argv: list[str] | None = None) -> None:
     if Path(parquet_path).exists():
         # Parquet 模式（Plan B / combined）
         train_df, val_df, test_df, present_features = _build_from_parquet(
-            parquet_path, plan_filter=args.plan
+            parquet_path, plan_filter=args.plan, min_severity=args.min_severity,
+            task=args.task, horizon_days=args.horizon_days, seed=args.seed,
         )
     else:
         # 原始 DuckDB + MEME 殘差模式（Plan A）
         logger.info("Parquet not found at %s — falling back to DuckDB/MEME mode", parquet_path)
+        # Load F10.7 solar flux index for bstar_f107_normalized feature
+        data_loader = _load_data_loader()
+        f107_csv = Path(_DEFAULT_F107_CSV)
+        f107_lookup: dict | None = None
+        if f107_csv.exists():
+            f107_lookup = data_loader.load_f107_lookup(str(f107_csv))
+            logger.info("F10.7 loaded: %d daily entries", len(f107_lookup))
+        else:
+            logger.warning("f107_cache.csv not found — bstar_f107_normalized will be omitted")
         merged_df = _build_combined_df(
             norad_ids=args.norad_ids,
             db_path=args.db,
             residuals_glob=args.residuals,
+            f107_lookup=f107_lookup,
         )
         train_df, val_df, test_df = ds.time_split(merged_df)
         present_features = [c for c in ds.FEATURE_COLS if c in train_df.columns]
@@ -345,10 +432,19 @@ def main(argv: list[str] | None = None) -> None:
         min_child_samples=10,
         reg_lambda=1.0,
         class_weight="balanced",    # N_neg/N_pos ≈ 14.4; lowering scale_pos_weight causes premature early stopping
-        random_state=42,
+        random_state=args.seed,
         n_jobs=-1,
     )
 
+    # NOTE: eval_set intentionally kept as val-only (not [train, val]) — adding
+    # the training split as a second monitored set would change early-stopping
+    # semantics (LightGBM's default early_stopping requires ALL monitored sets
+    # to stop improving; train loss rarely plateaus within 50 rounds, so this
+    # would silently disable early stopping and change best_iteration_/model
+    # weights vs. the already-published production model). A real train-loss
+    # curve for Figure 6 is instead captured by a separate, non-production
+    # script (see docs/regenerate_paper2_fig6.py) that does not affect this
+    # model's artifacts.
     eval_set = [(X_val, y_val)] if len(X_val) > 0 else []  # type: ignore[arg-type]
     callbacks = [lgb.early_stopping(50), lgb.log_evaluation(100)]
 
@@ -359,6 +455,15 @@ def main(argv: list[str] | None = None) -> None:
         callbacks=callbacks if eval_set else [lgb.log_evaluation(100)],
     )
     logger.info("Training complete. Best iteration: %s", model.best_iteration_)
+
+    # Persist the real per-tree train/val logloss history (LightGBM already
+    # computes this in memory whenever eval_set is passed) so figures can be
+    # regenerated from measured data instead of illustrative placeholders.
+    if eval_set and getattr(model, "evals_result_", None):
+        evals_path = out_dir / "evals_result.json"
+        with open(evals_path, "w", encoding="utf-8") as fh:
+            json.dump(model.evals_result_, fh)
+        logger.info("Training curve (evals_result_) saved → %s", evals_path)
 
     # ── 4. Evaluate ──────────────────────────────────────────────────────────
 
@@ -425,6 +530,14 @@ def main(argv: list[str] | None = None) -> None:
     with open(threshold_path, "w", encoding="utf-8") as fh:
         json.dump({"threshold": float(best_threshold), "method": "f_beta_0.5"}, fh, indent=2)
     logger.info("Threshold saved → %s  (%.4f)", threshold_path, best_threshold)
+
+    metrics_path = out_dir / "metrics.json"
+    with open(metrics_path, "w", encoding="utf-8") as fh:
+        json.dump(
+            {"seed": args.seed, "best_iteration": int(model.best_iteration_ or 0), "results": results},
+            fh, indent=2,
+        )
+    logger.info("Metrics saved → %s", metrics_path)
 
     # ── 6. Print summary ─────────────────────────────────────────────────────
     _print_summary(results)

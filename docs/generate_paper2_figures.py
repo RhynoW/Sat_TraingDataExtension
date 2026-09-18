@@ -420,62 +420,73 @@ def fig5_roc_comparison():
 # 圖六：LightGBM 早停訓練曲線
 # ─────────────────────────────────────────────────────────────────────────────
 def fig6_training_curve():
-    """早停訓練過程示意曲線（形狀為示意，早停棵數 188 為現況模型實測值，
-    來自 joblib.load 後 booster_.best_iteration_）。"""
-    rng = np.random.default_rng(42)
-    n_trees = 400
-    t = np.arange(1, n_trees + 1)
+    """早停訓練動態與學習率敏感度——真實逐棵記錄與真實掃描結果。
 
-    # 示意訓練/驗證損失（指數衰減 + 輕微過擬合），曲線形狀非實際逐棵記錄
-    train_loss = 0.55 * np.exp(-t / 60) + 0.05 + rng.normal(0, 0.003, n_trees)
-    val_loss   = 0.58 * np.exp(-t / 65) + 0.08 + rng.normal(0, 0.005, n_trees)
-    # 驗證損失在 ~188 棵後微幅上升（過擬合）
-    val_loss[187:] += np.linspace(0, 0.02, n_trees - 187)
+    資料來源：docs/regenerate_paper2_fig6_data.py（與生產模型相同之 Plan B
+    20 特徵資料集、seed=42 切分）；曲線與掃描皆非示意值，見該腳本之
+    docstring 說明「為何不能直接沿用生產模型的 eval_set」。
+    """
+    import json
+    data_path = os.path.join(OUT, "paper2_fig6_real_data.json")
+    with open(data_path, encoding="utf-8") as fh:
+        real = json.load(fh)
 
-    best_iter = 188
-    best_val  = val_loss[best_iter - 1]
+    train_loss = np.array(real["curve"]["train_logloss"])
+    val_loss   = np.array(real["curve"]["val_logloss"])
+    n_trees    = len(val_loss)
+    t          = np.arange(1, n_trees + 1)
+    best_iter  = real["curve"]["best_iter"]
+    best_val   = val_loss[best_iter - 1]
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 
-    # ─ 左：訓練/驗證損失曲線 ──────────────────────────────────
-    axes[0].plot(t, train_loss, color="#2266cc", lw=1.5, alpha=0.8,
-                 label="訓練損失（binary logloss）")
-    axes[0].plot(t, val_loss,   color="#cc2222", lw=1.5,
-                 label="驗證損失")
+    # ─ 左：訓練/驗證損失曲線（真實逐棵記錄，非示意）───────────
+    # 顯示範圍裁切到 best_iter 後 150 棵，避免長尾（跑滿 1000 棵供確認曲線
+    # 形狀、非生產設定）壓縮早停區段的可讀性。
+    plot_end = min(n_trees, best_iter + 150)
+    axes[0].plot(t[:plot_end], train_loss[:plot_end], color="#2266cc", lw=1.5, alpha=0.8,
+                 label="訓練損失（binary logloss，實測）")
+    axes[0].plot(t[:plot_end], val_loss[:plot_end],   color="#cc2222", lw=1.5,
+                 label="驗證損失（實測）")
     axes[0].axvline(x=best_iter, color="#aa5500", lw=2.0, ls="--",
-                    label=f"最佳迭代（第 {best_iter} 棵，實測值）")
-    axes[0].axvspan(best_iter, n_trees, alpha=0.07, color="#ff8800")
+                    label=f"最佳迭代（第 {best_iter} 棵，argmin 驗證損失）")
+    axes[0].axvspan(best_iter, plot_end, alpha=0.07, color="#ff8800")
     axes[0].annotate(
-        f"早停：第 {best_iter} 棵後\n連續 50 棵無改善",
+        f"生產模型早停點：第 {best_iter} 棵\n（本圖為另跑之非早停版本，\n用於觀察完整曲線形狀）",
         xy=(best_iter, best_val),
-        xytext=(best_iter + 60, best_val + 0.02),
-        fontsize=9, color="#aa5500",
+        xytext=(best_iter + 20, best_val + 0.03),
+        fontsize=8.5, color="#aa5500",
         arrowprops=dict(arrowstyle="->", color="#aa5500"))
     axes[0].set_xlabel("樹的棵數（Boosting 輪次）", fontsize=11)
-    axes[0].set_ylabel("Binary Log-Loss（示意曲線形狀）", fontsize=11)
-    axes[0].set_xlim(0, n_trees)
-    axes[0].set_title("(a) 早停機制（Early Stopping）示意\n早停棵數 188 為現況模型實測值，曲線形狀為示意",
+    axes[0].set_ylabel("Binary Log-Loss（實測）", fontsize=11)
+    axes[0].set_xlim(0, plot_end)
+    axes[0].set_title(f"(a) 訓練/驗證損失曲線（真實逐棵記錄）\n第 {best_iter} 棵驗證損失最低，與生產模型早停點一致",
                       fontsize=10.5, fontweight="bold")
-    axes[0].legend(fontsize=9)
+    axes[0].legend(fontsize=8.5)
     axes[0].grid(True, alpha=0.3)
 
-    # ─ 右：超參數設定（現況不變，維持 0.05）────────────────────
-    lr_vals   = [0.2,  0.1,  0.05, 0.02, 0.01]
-    prec_vals = [0.97, 0.98, 0.995, 0.98, 0.96]  # 示意；現況精確峰值在 0.05
+    # ─ 右：學習率敏感度（真實掃描：5 組獨立訓練 + val-only 早停）──
+    sweep = sorted(real["lr_sweep"], key=lambda r: r["lr"])
+    lr_vals   = [r["lr"] for r in sweep]
+    prec_vals = [r["test_precision"] for r in sweep]
+    prod_lr   = real["production_lr"]
 
     axes[1].plot(lr_vals, prec_vals, "o-", color="#228833", lw=2.0, ms=8)
-    axes[1].axvline(x=0.05, color="#cc2222", lw=1.8, ls="--", alpha=0.8)
-    axes[1].text(0.055, prec_vals[2] - 0.01, "現況設定\nlearning_rate=0.05",
-                 fontsize=9, color="#cc2222")
+    for lr, p in zip(lr_vals, prec_vals):
+        axes[1].annotate(f"{p:.1%}", (lr, p), textcoords="offset points",
+                         xytext=(0, 8), ha="center", fontsize=8, color="#226622")
+    axes[1].axvline(x=prod_lr, color="#cc2222", lw=1.8, ls="--", alpha=0.8)
+    axes[1].text(prod_lr * 1.1, min(prec_vals) + 0.005,
+                 f"現況設定\nlearning_rate={prod_lr}", fontsize=9, color="#cc2222")
     axes[1].set_xlabel("學習率（learning_rate）", fontsize=11)
-    axes[1].set_ylabel("測試集 Precision（示意）", fontsize=11)
+    axes[1].set_ylabel("測試集 Precision（實測，F-beta=0.5 最適閾值）", fontsize=10.5)
     axes[1].set_xscale("log")
-    axes[1].set_ylim(0.90, 1.02)
-    axes[1].set_title("(b) 學習率超參數設定示意\n（其他參數固定，敏感性未在現況模型重新掃描）",
+    axes[1].set_ylim(min(prec_vals) - 0.01, max(prec_vals) + 0.01)
+    axes[1].set_title("(b) 學習率敏感度（真實掃描：5 組獨立訓練）\n其他超參數固定，val-only 早停，與生產模型方法一致",
                       fontsize=10.5, fontweight="bold")
     axes[1].grid(True, alpha=0.3)
 
-    fig.suptitle("圖六：LightGBM 早停訓練動態（現況：188 棵樹）與超參數設定",
+    fig.suptitle(f"圖六：LightGBM 早停訓練動態（生產模型：{best_iter} 棵樹）與學習率敏感度（皆為實測值）",
                  fontsize=13, fontweight="bold")
     fig.tight_layout(rect=[0, 0, 1, 0.94])
     out = os.path.join(OUT, "paper2_fig6_training_curve.png")
