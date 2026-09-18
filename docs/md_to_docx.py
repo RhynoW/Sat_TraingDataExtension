@@ -102,6 +102,20 @@ def clean_math(s: str) -> str:
 
 
 # ── 行內樣式解析 ──────────────────────────────────────────────────────────────
+# 跳脫字元佔位符：在粗體/斜體正則解析「之前」先把 \*、\_、\| 換成不會被正則
+# 誤認為 markdown 標記的私用區字元，解析完成、實際寫入 Run 時才還原成原字元。
+# 若在解析前就把 \* 還原成裸露的 *（舊做法），該裸星號會被 *italic* 規則
+# 誤吃，導致配對錯亂並殃及同段落後面所有 **bold** 標記。
+_ESC_MAP = {"\\*": "", "\\_": "", "\\|": ""}
+_UNESC_MAP = {v: k[1] for k, v in _ESC_MAP.items()}
+
+
+def _restore_escapes(s: str) -> str:
+    for ph, ch in _UNESC_MAP.items():
+        s = s.replace(ph, ch)
+    return s
+
+
 def _add_styled_runs(para, text: str):
     """解析 **bold**、*italic*、`code`（不含超連結），依序加入 Run。"""
     pattern = re.compile(
@@ -117,19 +131,19 @@ def _add_styled_runs(para, text: str):
     for m in pattern.finditer(text):
         bold_t, ital_t, code_t, img_t, _, link_t, plain_t, ws_t = m.groups()
         if bold_t:
-            run = para.add_run(bold_t)
+            run = para.add_run(_restore_escapes(bold_t))
             run.bold = True
         elif ital_t:
-            run = para.add_run(ital_t)
+            run = para.add_run(_restore_escapes(ital_t))
             run.italic = True
         elif code_t:
-            run = para.add_run(code_t)
+            run = para.add_run(_restore_escapes(code_t))
             run.font.name = "Courier New"
             run.font.size = Pt(9)
         elif link_t:
-            para.add_run(link_t)
+            para.add_run(_restore_escapes(link_t))
         elif plain_t:
-            para.add_run(plain_t)
+            para.add_run(_restore_escapes(plain_t))
         elif ws_t:
             para.add_run(ws_t)
 
@@ -149,8 +163,9 @@ def add_inline_runs(para, text: str):
 def add_para_text(para, raw: str):
     """先清理 math、再寫入行內樣式。"""
     raw = clean_math(raw)
-    # 清理 Markdown 轉義
-    raw = raw.replace(r"\*", "*").replace(r"\_", "_").replace(r"\|", "|")
+    # 跳脫字元先換成佔位符（見 _ESC_MAP 註解），避免裸露 * 打亂粗體/斜體配對
+    for esc, ph in _ESC_MAP.items():
+        raw = raw.replace(esc, ph)
     add_inline_runs(para, raw)
 
 
@@ -170,7 +185,7 @@ def add_hyperlink(paragraph, text: str, url: str):
     color = OxmlElement("w:color"); color.set(qn("w:val"), "0563C1"); rpr.append(color)
     u = OxmlElement("w:u"); u.set(qn("w:val"), "single"); rpr.append(u)
     r.append(rpr)
-    t = OxmlElement("w:t"); t.text = text; r.append(t)
+    t = OxmlElement("w:t"); t.text = _restore_escapes(text); r.append(t)
     h.append(r)
     paragraph._p.append(h)
 
@@ -246,15 +261,15 @@ def try_insert_image(doc, img_path_str: str):
 
 
 # ── 文件樣式設定 ──────────────────────────────────────────────────────────────
-def setup_doc_styles(doc: Document):
-    """設定中文字體與基本樣式。"""
+def setup_doc_styles(doc: Document, font_name: str = "Microsoft YaHei"):
+    """設定字體與基本樣式。font_name 依語言選擇（zh: Microsoft YaHei / ja: Yu Gothic / en: Calibri）。"""
     from docx.shared import Pt, RGBColor
     from docx.oxml.ns import qn
 
     style_normal = doc.styles["Normal"]
-    style_normal.font.name = "Microsoft YaHei"
+    style_normal.font.name = font_name
     style_normal.font.size = Pt(11)
-    style_normal._element.rPr.rFonts.set(qn("w:eastAsia"), "Microsoft YaHei")
+    style_normal._element.rPr.rFonts.set(qn("w:eastAsia"), font_name)
 
     for heading_name, size, bold_flag in [
         ("Heading 1", 18, True),
@@ -262,18 +277,18 @@ def setup_doc_styles(doc: Document):
         ("Heading 3", 13, True),
     ]:
         sty = doc.styles[heading_name]
-        sty.font.name = "Microsoft YaHei"
+        sty.font.name = font_name
         sty.font.size = Pt(size)
         sty.font.bold = bold_flag
         sty.font.color.rgb = RGBColor(0x1a, 0x3a, 0x5c)
-        sty._element.rPr.rFonts.set(qn("w:eastAsia"), "Microsoft YaHei")
+        sty._element.rPr.rFonts.set(qn("w:eastAsia"), font_name)
 
     # Quote style
     if "Quote" not in [s.name for s in doc.styles]:
         pass
     try:
         q = doc.styles["Quote"]
-        q.font.name  = "Microsoft YaHei"
+        q.font.name  = font_name
         q.font.size  = Pt(10)
         q.font.italic = True
         q.paragraph_format.left_indent  = Cm(1)
@@ -283,9 +298,9 @@ def setup_doc_styles(doc: Document):
 
 
 # ── 主轉換邏輯 ────────────────────────────────────────────────────────────────
-def convert_md_to_docx(md_path: Path, out_path: Path):
+def convert_md_to_docx(md_path: Path, out_path: Path, font_name: str = "Microsoft YaHei"):
     doc = Document()
-    setup_doc_styles(doc)
+    setup_doc_styles(doc, font_name=font_name)
 
     # 頁面邊距
     for section in doc.sections:
@@ -460,9 +475,6 @@ def convert_md_to_docx(md_path: Path, out_path: Path):
                 p = doc.add_paragraph()
                 p.paragraph_format.left_indent = Cm(0.75 + indent_len * 0.25)
             p.clear()
-            if is_ordered:
-                p = doc.add_paragraph(style="List Number")
-                p.clear()
             add_para_text(p, content)
             i += 1
             continue
