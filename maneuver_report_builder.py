@@ -106,7 +106,7 @@ DB_PATH, DATA_BACKEND = _bootstrap_db()
 def load_tle(norad_id: int, start=None, end=None) -> pd.DataFrame:
     con = duckdb.connect(DB_PATH, read_only=True)
     q = ("SELECT epoch_utc AS epoch, sma_km, inclination_deg, eccentricity, "
-         "raan_deg, argp_deg, mean_anomaly_deg, bstar, line1, line2 FROM raw_tle_archive "
+         "raan_deg, argp_deg, mean_anomaly_deg, mean_motion, bstar, line1, line2 FROM raw_tle_archive "
          "WHERE norad_id=? ORDER BY epoch_utc")
     df = con.execute(q, [int(norad_id)]).fetchdf()
     con.close()
@@ -172,6 +172,94 @@ def compute_l2(df: pd.DataFrame) -> dict:
     """回傳 statistical_detectors.run_all() 之原始結果
     （{"cusum":{"scores","events"}, "bocpd":{...}, "ssa":{...}, "mad3sig":{...}}）。"""
     return sd.run_all(df["sma_km"].to_numpy(float))
+
+
+# ── 補充觀察指標（實驗性）：相位殘差通道 ────────────────────────────────────
+# 對應案例二十一之發現：L1/L2/L3 皆作用於半長軸(sma)，對「相位調整(phasing)
+# 機動」——軌道週期暫時改變、事後幾乎完全恢復，sma 幾乎不變但沿軌位置累積
+# 偏移——structurally 看不到。原理與參數（k=6 MAD、3 次迭代）沿用
+# phase_residual_detector.py，但此處僅重算核心訊號，不依賴該檔案匯入之
+# tasa14_compare/tasa23_ext_arena（純屬標竿驗證用，非production相依）。
+#
+# **明確定位為「補充觀察指標」而非新增判定通道**：23 星標竿獨立表現偏弱
+# （macro F1≈0.10，遠低於 L1/L2/L3），且驗證文件本身聲明「應維持候選假說
+# 層級，不宜作為已驗證方法引用」（見
+# docs/相位殘差通道_新增偵測管道實作與驗證_20260913.md）。因此本函式回傳值
+# 僅供報表／App 顯示參考，**不併入 L1/L2/L3 之任何評分、不影響 landing_events
+# 判定**，避免此實驗性訊號拉低整體系統可信度。
+PHASE_RESIDUAL_MERGE_DAYS = 3.0  # 沿用 phase_residual_detector.py 之 MERGE_D
+
+
+def compute_phase_residual_experimental(df: pd.DataFrame, k: float = 6.0, n_iter: int = 3) -> dict:
+    """實驗性相位殘差補充觀察指標。df 須含 epoch/sma_km/argp_deg/mean_anomaly_deg/
+    mean_motion（load_tle 已含全部欄位）。回傳 {"n_flags", "max_abs_residual_km",
+    "flagged_epochs", "status"}；資料不足或無法計算時 status="insufficient_data"。"""
+    if len(df) < 10 or df["mean_motion"].isna().all():
+        return {"status": "insufficient_data", "n_flags": 0,
+                "max_abs_residual_km": None, "flagged_epochs": []}
+
+    d = df.dropna(subset=["mean_anomaly_deg", "argp_deg", "mean_motion", "sma_km"]).reset_index(drop=True)
+    if len(d) < 10:
+        return {"status": "insufficient_data", "n_flags": 0,
+                "max_abs_residual_km": None, "flagged_epochs": []}
+
+    t = d["epoch"]
+    a = d["sma_km"].to_numpy(float)
+    u = (d["argp_deg"].to_numpy(float) + d["mean_anomaly_deg"].to_numpy(float)) % 360.0
+    n = d["mean_motion"].to_numpy(float)
+    tsec = t.astype("int64").to_numpy() / 1e9
+
+    n_pts = len(a)
+    resid = np.full(n_pts, np.nan)
+    for i in range(1, n_pts):
+        dt_days = (tsec[i] - tsec[i - 1]) / 86400.0
+        predicted_orbits = n[i - 1] * dt_days
+        predicted_u = (u[i - 1] + predicted_orbits * 360.0) % 360.0
+        diff_deg = (u[i] - predicted_u + 180.0) % 360.0 - 180.0
+        resid[i] = np.radians(diff_deg) * a[i]
+
+    mask = np.zeros(n_pts, bool)
+    for _ in range(n_iter):
+        s = resid[np.isfinite(resid) & ~mask]
+        if len(s) < 10:
+            break
+        med = np.median(s)
+        mad = 1.4826 * np.median(np.abs(s - med))
+        if not np.isfinite(mad) or mad == 0:
+            break
+        newmask = np.isfinite(resid) & (np.abs(resid - med) > k * mad)
+        if newmask.sum() == mask.sum():
+            mask = newmask
+            break
+        mask = newmask
+
+    valid = resid[np.isfinite(resid)]
+    if len(valid) < 10:
+        return {"status": "insufficient_data", "n_flags": 0,
+                "max_abs_residual_km": None, "flagged_epochs": []}
+    med = np.median(valid)
+    mad = 1.4826 * np.median(np.abs(valid - med))
+    max_abs = float(np.nanmax(np.abs(resid - med))) if np.isfinite(resid).any() else None
+    if not np.isfinite(mad) or mad == 0:
+        return {"status": "ok", "n_flags": 0, "max_abs_residual_km": max_abs, "flagged_epochs": []}
+
+    idx = np.where(np.isfinite(resid) & (np.abs(resid - med) > k * mad))[0]
+    flagged_epochs: list = []
+    if len(idx):
+        grp = [idx[0]]
+        for j in idx[1:]:
+            if tsec[j] - tsec[grp[-1]] <= PHASE_RESIDUAL_MERGE_DAYS * 86400:
+                grp.append(j)
+            else:
+                best = grp[int(np.argmax(np.abs(resid[grp] - med)))]
+                flagged_epochs.append(t.iloc[best])
+                grp = [j]
+        best = grp[int(np.argmax(np.abs(resid[grp] - med)))]
+        flagged_epochs.append(t.iloc[best])
+
+    return {"status": "ok", "n_flags": len(flagged_epochs),
+            "max_abs_residual_km": max_abs,
+            "flagged_epochs": sorted(flagged_epochs)}
 
 
 # ── L3：ML 逐窗機率（models_meme）與融合評分器（models_fusion）──────────────
@@ -413,6 +501,24 @@ def build_pipeline_logic_text(r: dict) -> str:
     }.get(r.get("landing_source", "none"), "")
     lines.append(src_txt)
     lines.append(f"最終列出機動偵測落點共 {len(r['landing_events'])} 筆（詳見摘要頁清單）。")
+
+    pr = r.get("phase_residual_experimental")
+    if pr:
+        lines += ["", "【補充觀察指標（實驗性）：相位殘差通道】"]
+        if pr["status"] != "ok":
+            lines.append("本區間資料不足，無法計算相位殘差補充指標。")
+        else:
+            lines.append(
+                f"針對 L1/L2/L3 皆作用於半長軸、對「相位調整（phasing）機動」"
+                f"（軌道週期暫時改變、事後幾乎完全恢復，半長軸幾乎不變但沿軌位置"
+                f"累積偏移）structurally 看不見的已知盲區，另計算一項相位殘差訊號"
+                f"（緯度幅角實際值 vs. 前一筆外推預測值之差，換算為沿軌弧長 km），"
+                f"本區間標記 {pr['n_flags']} 次候選異常"
+                + (f"、最大絕對殘差 {pr['max_abs_residual_km']:.2f} km" if pr['max_abs_residual_km'] is not None else "")
+                + "。**此指標僅供參考，不併入上述 L1/L2/L3 判定或機動偵測落點清單**："
+                  "獨立驗證顯示其準確度（23 星標竿 macro F1≈0.10）遠低於本報表主要"
+                  "偵測方法，且完整驗證工作尚未完成，結果應視為候選假說而非已驗證"
+                  "結論（詳見 docs/相位殘差通道_新增偵測管道實作與驗證_20260913.md）。")
     return "\n".join(lines)
 
 
@@ -545,6 +651,9 @@ def build_report_data(norad: int, start_date: date, end_date: date, lang: str = 
     l1_strategy_counts = {k: int(np.sum(v)) for k, v in per_strategy.items()}
     l1_n_transitions = len(l1["tr"])
 
+    # 補充觀察指標（實驗性，見案例二十一）：不影響 landing_events／l1/l2/l3 任何判定
+    phase_residual = compute_phase_residual_experimental(df)
+
     alt_km_avg = float(df["sma_km"].mean() - R_E)
     event_df = pd.DataFrame({"epoch": landing_epochs})
     if len(event_df):
@@ -574,6 +683,7 @@ def build_report_data(norad: int, start_date: date, end_date: date, lang: str = 
                "strategy_counts": l1_strategy_counts},
         "l2": l2,
         "l3": l3,
+        "phase_residual_experimental": phase_residual,
         "landing_events": event_df.to_dict("records"),
         "landing_source": landing_source,
         "narrative": narrative_tle,
