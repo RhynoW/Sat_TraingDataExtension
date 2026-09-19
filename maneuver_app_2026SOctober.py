@@ -210,6 +210,12 @@ L: dict[str, dict[str, str]] = {
     "storymap_case25_card_desc": {"zh": "284 顆衛星 × MEME 真值本來看似證實太陽活動會影響 TLE 誤差，直到委員問了一句「MEME 不也該受影響嗎」。",
                                   "ja": "284機×MEME真値は太陽活動がTLE誤差に影響すると裏付けたように見えたが、委員の「MEMEも影響を受けるはずでは」の一言で覆った。",
                                   "en": "284 satellites × MEME ground truth seemed to confirm solar activity drives TLE error — until a committee member asked, \"shouldn't MEME show that too?\""},
+    "storymap_case26_card_title": {"zh": "案例二十六：委員一句話，逼出一台自製軌道傳播器——五次抓錯真凶後，真相藏在第三天",
+                                   "ja": "事例二十六：委員の一言が引き出した自作軌道伝播器——5回の誤認の末、真相は3日目に隠れていた",
+                                   "en": "Case 26: One Committee Question Forced Us to Build Our Own Orbit Propagator — After Five False Leads, the Truth Was Hiding on Day Three"},
+    "storymap_case26_card_desc": {"zh": "SGP4 vs 完整物理模式，誰比較準？答案不是「哪個贏」，而是「各自的地盤在哪裡」——一場3顆衛星到100顆衛星的樣本數翻案記。",
+                                  "ja": "SGP4 vs 完全物理モデル、どちらが正確か？答えは「どちらが勝つか」ではなく「それぞれの得意な時間帯はどこか」——3機から100機へ、サンプル数がひっくり返した結論の記録。",
+                                  "en": "SGP4 vs. a full physics model — which is more accurate? The answer isn't \"which wins\" but \"which time window each owns\" — a record of how sample size flipped the conclusion, from 3 satellites to 100."},
 
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
@@ -1839,7 +1845,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 26):
+    for _n in range(14, 27):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -12250,6 +12256,364 @@ def render_storymap_case25():
     ))
 
 
+def render_storymap_case26():
+    if st.button(t("storymap_back"), key="back_from_case26"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例二十六：委員一句話，逼出一台自製軌道傳播器——五次抓錯真凶後，真相藏在第三天",
+        "事例二十六：委員の一言が引き出した自作軌道伝播器——5回の誤認の末、真相は3日目に隠れていた",
+        "Case 26: One Committee Question Forced Us to Build Our Own Orbit Propagator — After Five False Leads, the Truth Was Hiding on Day Three",
+    ))
+    st.subheader(T3(
+        "SGP4 vs 完整物理模式，誰比較準？答案不是「哪個贏」，而是「各自的地盤在哪裡」",
+        "SGP4 vs 完全物理モデル、どちらが正確か？答えは「どちらが勝つか」ではなく「それぞれの得意な時間帯」",
+        "SGP4 vs. a full physics model — the answer isn't \"which wins,\" it's \"which time window each owns\"",
+    ))
+    st.caption(T3(
+        "案例二十五的結尾留了一個問題：委員問「若要真正回答哪種力模式造成 TLE 誤差，應該直接"
+        "比較不同力模式」。本案例就是那個直接比較——過程中連續走了三次冤枉路，樣本數從 3 顆"
+        "一路翻案到 100 顆，最後浮現一個乾淨、意外地符合直覺的答案。",
+        "事例25の最後に一つの問いが残されていた——委員が「どの力モデルがTLE誤差を生んでいるかを"
+        "本当に答えたいなら、異なる力モデルを直接比較すべきだ」と指摘したのだ。本事例はまさに"
+        "その直接比較である——その過程で3回も回り道をし、サンプル数は3機から100機へと結論を"
+        "ひっくり返しながら、最終的に意外なほど直感に合う、明快な答えが浮かび上がった。",
+        "Case 25 ended with an open question: a committee member pointed out that to really answer "
+        "which force model was causing TLE error, we should directly compare different force models. "
+        "This case is that direct comparison — a journey that took three wrong turns, flipped its "
+        "conclusion as the sample grew from 3 to 100 satellites, and ended with a clean, surprisingly "
+        "intuitive answer.",
+    ))
+
+    st.header(T3(
+        "① 兩種算命方式：一張寫死的月票，還是一份即時天氣預報？",
+        "①二つの占い方：書き換えられない定期券か、リアルタイムの天気予報か？",
+        "① Two ways to predict the future: a fixed transit pass, or a live weather forecast?",
+    ))
+    st.markdown(T3(
+        "衛星在低軌道會被稀薄大氣拖慢、逐漸掉高度，這股拖力大小取決於當下大氣有多「濃」——"
+        "而大氣濃度會隨太陽活動起伏。SGP4（TLE 背後的傳播模型）處理這件事的方法，很像是**辦"
+        "一張月票時把當月的平均折扣寫死在卡片上**：TLE 裡的 B\\* 值，是官方軌道判定當時，用"
+        "最近一段時間的真實追蹤資料反推出的一個固定阻力係數，之後就不再改變，直到下一張新"
+        "TLE 出爐（通常 1-2 天後）。\n\n"
+        "另一種做法，是完全不寫死任何折扣，而是**每次都去查當下的即時天氣**：用 NRLMSISE-00"
+        "（美國海軍實驗室大氣模式）算出衛星此刻實際所在位置、時間下的大氣密度，讓阻力隨著"
+        "太陽/地磁活動的真實變化即時調整。委員的問題本質上是：**這份「即時天氣預報」，會不會"
+        "比「寫死的月票折扣」更準？**",
+        "低軌道の衛星は希薄な大気に引きずられて徐々に高度を落とすが、この抵抗力の大きさは"
+        "その時々の大気の「濃さ」に左右される——そして大気の濃度は太陽活動によって変動する。"
+        "SGP4（TLEの背後にある伝播モデル）はこれを、**定期券を作る際にその月の平均割引率を"
+        "カードに固定で書き込んでしまう**ようなやり方で処理する：TLEに含まれるB\\*値は、公式の"
+        "軌道決定の際に直近の実測追跡データから逆算された固定の抵抗係数であり、次の新しいTLEが"
+        "発行される（通常1～2日後）まで変わらない。\n\n"
+        "もう一つのやり方は、割引率を一切固定せず、**毎回リアルタイムの天気を調べる**ことである："
+        "NRLMSISE-00（米海軍研究所の大気モデル）を使い、衛星が今いる位置・時刻における実際の"
+        "大気密度を計算し、太陽・地磁気活動の実際の変化に応じて抵抗をリアルタイムに調整する。"
+        "委員の問いは本質的にこうだ：**この「リアルタイム天気予報」は、「固定された定期券割引」"
+        "より正確なのか？**",
+        "Satellites in low orbit are slowed by thin atmosphere and gradually lose altitude — how much "
+        "drag they feel depends on how \"thick\" the atmosphere is right now, and atmospheric density "
+        "rises and falls with solar activity. SGP4 (the propagation model behind every TLE) handles "
+        "this like **writing that month's average discount permanently onto a transit pass**: the B\\* "
+        "value in a TLE is a fixed drag coefficient, back-derived from recent real tracking data at the "
+        "moment of official orbit determination, and it never changes until the next TLE comes out "
+        "(usually 1–2 days later).\n\n"
+        "The other approach never fixes any discount at all — it **checks the live weather every single "
+        "time**: using NRLMSISE-00 (a US Naval Research Lab atmospheric model) to compute the actual "
+        "atmospheric density at the satellite's current position and time, letting drag adjust in real "
+        "time as solar/geomagnetic activity genuinely changes. The committee's question was essentially: "
+        "**does this \"live weather forecast\" beat the \"fixed transit-pass discount\"?**",
+    ))
+
+    st.header(T3(
+        "② 造一台傳播器來公平競賽",
+        "②公平に競わせるための伝播器を作る",
+        "② Building a propagator to run a fair race",
+    ))
+    st.markdown(T3(
+        "要公平比較，兩者必須從**同一個起跑點**出發：取同一筆 TLE，讓 SGP4 用它原本的方式"
+        "傳播，同時另外寫一套數值積分器（重力項用到 J2–J5、阻力項即時查詢 NRLMSISE-00"
+        "密度），從完全相同的起始位置與速度出發，兩者各自往前跑數天，看誰更貼近 MEME"
+        "（衛星自己回報的精密星曆，視為真值）。\n\n"
+        "唯一需要「校準」的地方，是數值積分器要用多大的阻力係數——這裡刻意不用 B\\* 的教科書"
+        "換算公式（B\\* 本身已知會吸收其他誤差來源，見案例二十四），改用**第一天的真實 MEME"
+        "觀測資料**反推出一個物理上合理的係數（結果落在 0.0388 m²/kg，正好符合 Starlink 的"
+        "已知量級），確保兩套方法都有公平的起點。",
+        "公平に比較するには、両者が**同じスタートライン**から出発する必要がある：同じTLEを"
+        "取り、SGP4はそのままの方式で伝播させ、同時に別の数値積分器（重力項はJ2～J5、抵抗項は"
+        "NRLMSISE-00の密度をリアルタイムで参照）を用意し、全く同じ初期位置・速度から出発させて、"
+        "それぞれ数日先まで走らせ、どちらがMEME（衛星自身が報告する精密暦、真値とみなす）に"
+        "より近いかを見る。\n\n"
+        "唯一「校正」が必要なのは、数値積分器がどれだけの抵抗係数を使うかという点である——ここで"
+        "はあえてB\\*の教科書的な換算式を使わなかった（B\\*自体が他の誤差要因を吸収していることが"
+        "既に分かっている、事例24参照）。代わりに**初日の実際のMEME観測データ**から物理的に妥当な"
+        "係数を逆算した（結果は0.0388 m²/kgとなり、Starlinkの既知の量級とちょうど一致した）。"
+        "これにより両手法が公平な出発点を持つことを保証した。",
+        "For a fair comparison, both must start from **the exact same line**: take the same TLE, let "
+        "SGP4 propagate it the normal way, and separately build a numerical integrator (gravity out to "
+        "J2–J5, drag querying NRLMSISE-00 density in real time) starting from the identical initial "
+        "position and velocity, then let both run forward several days and see which stays closer to "
+        "MEME (the satellite's own precision ephemeris, treated as ground truth).\n\n"
+        "The one thing that needs \"calibrating\" is how much drag coefficient the numerical integrator "
+        "should use — deliberately not via B\\*'s textbook conversion formula (B\\* is already known to "
+        "absorb other error sources, see Case 24). Instead, a physically reasonable coefficient was "
+        "back-derived from **real MEME observations on the first day** (landing at 0.0388 m²/kg, right "
+        "in Starlink's known range), giving both methods a fair starting point.",
+    ))
+
+    st.header(T3(
+        "③ 第一輪：SGP4完勝2.3倍——但只用了3顆衛星",
+        "③第1ラウンド：SGP4が2.3倍の完勝——だがわずか3機での結果",
+        "③ Round 1: SGP4 wins by 2.3× — but on only 3 satellites",
+    ))
+    st.warning(T3(
+        "架構做好後，先用 3 顆衛星試跑：SGP4 中位誤差 144.6 公尺，Cowell+NRLMSISE-00 卻高達 "
+        "328.3 公尺，誤差還隨著往後外推的天數持續擴大——完整物理模式竟然全面輸給簡化模式，"
+        "且沒有任何一個評估點是 NRLMSISE-00 比較準。",
+        "アーキテクチャが完成した後、まず3機の衛星で試走した：SGP4の中央値誤差は144.6メートル、"
+        "対してCowell+NRLMSISE-00はなんと328.3メートルにも達し、しかも外挿する日数が増えるほど"
+        "誤差が拡大し続けた——完全な物理モデルが簡略化モデルに全面的に負けたのであり、"
+        "NRLMSISE-00の方が正確だった評価点は一つもなかった。",
+        "With the architecture built, a first test on 3 satellites: SGP4's median error was 144.6 "
+        "meters, while Cowell+NRLMSISE-00 came in at a whopping 328.3 meters — and the error kept "
+        "growing the further it extrapolated. The full physics model lost across the board to the "
+        "simplified one, with not a single evaluation point where NRLMSISE-00 did better.",
+    ))
+
+    st.header(T3(
+        "④ 連續五次抓錯真凶的除錯之旅",
+        "④5回連続で誤認した犯人探しの旅",
+        "④ Five straight false leads in the debugging journey",
+    ))
+    st.markdown(T3(
+        "誤差隨天數擴大，第一直覺是「重力模式不夠完整」——於是把原本只有 J2 的重力項補到"
+        "J2–J5（用數值梯度法算勢能微分，避免手動推導高階公式出錯），並用「關掉 J3–J5 應該"
+        "還原成原本的 J2 公式」做自我檢驗。結果：**完全沒有改善**。\n\n"
+        "第二個懷疑是「校準只用一個時間點，容易被雜訊帶偏」——改成用整個第一天的 288 筆 MEME"
+        "觀測做最小平方擬合。結果：**算出來的係數跟原本一模一樣（都是 0.0388 m²/kg）**，說明"
+        "這個係數本來就穩健，不是校準方法的問題。\n\n"
+        "第三個懷疑最有意思：逐日衰減率呈現正負交替的鋸齒狀，這正是**案例十三**已經拆穿過的"
+        "陷阱——瞬時（osculating）半長軸會受地球扁率（J2）造成的短週期擾動污染，必須取多個"
+        "軌道週期的平均值才能看到真正的長期趨勢。改成每天平均約 96-480 個密集取樣點再比較。"
+        "結果：**有些微改善，但 SGP4 仍持續領先**。\n\n"
+        "第四、第五個懷疑分別是「數值積分器是不是半路算失敗了」（檢查後完全正常、成功跑完"
+        "全程）與「查詢的太陽通量 F10.7 是不是卡在某個固定值」（直接印出逐日數字，確認"
+        "127.4、128.3、121.5……是真實變化的歷史資料，不是預設值）——兩者皆排除。最後試著"
+        "把 NRLMSISE-00（2002年版）換成更新的 NRLMSIS 2.1，也只帶來些微改善。",
+        "誤差が日数とともに拡大するのを見て、最初の直感は「重力モデルが不完全だ」というもの"
+        "だった——そこで元々J2のみだった重力項をJ2～J5まで補強した（高次公式を手作業で導出する"
+        "際の誤りを避けるため、数値勾配法でポテンシャルの微分を計算）。「J3～J5を切れば元の"
+        "J2公式に戻るはず」という自己検証も行った。結果：**全く改善しなかった**。\n\n"
+        "2つ目の疑いは「校正が単一時点しか使っておらず、ノイズに引っ張られやすい」という"
+        "ものだった——初日全体の288件のMEME観測を使った最小二乗フィッティングに変更した。"
+        "結果：**算出された係数は元と全く同じ（いずれも0.0388 m²/kg）**であり、この係数は"
+        "そもそも頑健であって、校正方法の問題ではないことが分かった。\n\n"
+        "3つ目の疑いが最も興味深い：日ごとの減衰率が正負交互のジグザグを示していたが、これは"
+        "まさに**事例13**が既に暴いたことのある罠——瞬時（オスキュレーティング）半長軸は地球の"
+        "扁平率（J2）による短周期擾乱で汚染されるため、複数の軌道周期の平均を取らなければ"
+        "本当の長期傾向は見えない。1日ごとに約96～480個の密なサンプル点を平均してから比較する"
+        "方式に変更した。結果：**若干の改善はあったが、SGP4は依然として優位を保った**。\n\n"
+        "4つ目と5つ目の疑いはそれぞれ「数値積分器が途中で計算に失敗していないか」（確認した"
+        "ところ全く正常で、最後まで無事に完走していた）と「参照しているF10.7太陽フラックスが"
+        "何らかの固定値で止まっていないか」（日ごとの数値を直接出力し、127.4、128.3、121.5……"
+        "が実際に変動する履歴データであり、デフォルト値ではないことを確認した）——どちらも"
+        "除外された。最後にNRLMSISE-00（2002年版）をより新しいNRLMSIS 2.1に切り替えてみたが、"
+        "こちらもわずかな改善にとどまった。",
+        "With error growing over days, the first instinct was \"the gravity model must be incomplete\" "
+        "— so the gravity term was upgraded from J2-only to J2–J5 (computing the potential's gradient "
+        "numerically to avoid hand-deriving error-prone higher-order formulas), self-checked by "
+        "confirming it reduces exactly to the original J2 formula when J3–J5 are zeroed out. Result: "
+        "**no improvement at all**.\n\n"
+        "The second suspicion: calibrating against a single time point is vulnerable to noise — switched "
+        "to a least-squares fit using all 288 MEME observations from the entire first day. Result: **the "
+        "fitted coefficient came out exactly the same (0.0388 m²/kg both times)**, showing the "
+        "coefficient itself was already robust — it wasn't a calibration-method problem.\n\n"
+        "The third suspicion was the most interesting: daily decay rates zig-zagged between positive and "
+        "negative — exactly the trap **Case 13** had already exposed. Instantaneous (osculating) "
+        "semi-major axis gets contaminated by short-period oscillations from Earth's oblateness (J2), "
+        "and only averaging over multiple orbital periods reveals the true long-term trend. Switched to "
+        "averaging roughly 96–480 dense sample points per day before comparing. Result: **slight "
+        "improvement, but SGP4 still led**.\n\n"
+        "The fourth and fifth suspicions were \"did the numerical integrator silently fail partway "
+        "through\" (checked — completely fine, ran to full completion) and \"is the queried F10.7 solar "
+        "flux stuck at some fixed value\" (printed the daily numbers directly, confirming 127.4, 128.3, "
+        "121.5... were genuinely varying historical data, not defaults) — both ruled out. Finally, "
+        "swapping NRLMSISE-00 (the 2002 version) for the newer NRLMSIS 2.1 brought only a marginal "
+        "improvement.",
+    ))
+
+    st.header(T3(
+        "⑤ 真正的轉折：樣本數從3顆到14顆，結論整個翻案",
+        "⑤本当の転機：サンプル数が3機から14機へ、結論が完全にひっくり返る",
+        "⑤ The real turning point: from 3 to 14 satellites, the conclusion flips",
+    ))
+    st.success(T3(
+        "五個假設都排除後，換一個角度：會不會根本不是模式的問題，而是**3顆衛星的樣本太小**？"
+        "擴大到 14 顆後，Cowell+NRLMSISE-00 的勝率從 0% 跳到 43.4%，整體誤差落差也從 2.3 倍"
+        "收斂到 1.6 倍——而且在 SGP4 誤差最大的幾顆離群衛星上（例如某顆衛星 SGP4 誤差高達 "
+        "1079 公尺），NRLMSISE-00 反而只有 316 公尺，明顯更穩健。這暗示一個道理：**3顆衛星"
+        "根本不足以代表任何東西，之前五次除錯抓的可能都不是真凶——真凶是樣本數本身**。",
+        "5つの仮説をすべて除外した後、視点を変えてみた：そもそもモデルの問題ではなく、"
+        "**3機のサンプルが小さすぎた**のではないか？14機に拡大したところ、Cowell+"
+        "NRLMSISE-00の勝率は0%から43.4%に跳ね上がり、全体の誤差差も2.3倍から1.6倍に縮まった"
+        "——さらにSGP4の誤差が最大だった外れ値的な衛星（例えばあるSGP4の誤差が1079メートルにも"
+        "達した衛星）では、NRLMSISE-00はわずか316メートルで、明らかに頑健だった。これは一つの"
+        "教訓を示唆している：**3機のサンプルはそもそも何かを代表するには不十分であり、これまでの"
+        "5回の除錯が捕まえていたのは真犯人ではなかった——真犯人はサンプル数そのものだった**。",
+        "With all five hypotheses ruled out, a different angle: maybe it was never about the models at "
+        "all — maybe **the 3-satellite sample was just too small**. Expanding to 14 satellites, Cowell+"
+        "NRLMSISE-00's win rate jumped from 0% to 43.4%, and the overall error gap narrowed from 2.3× "
+        "to 1.6×. And on the satellites where SGP4 had its worst outlier errors (one satellite's SGP4 "
+        "error reached 1079 meters), NRLMSISE-00 was only 316 meters — clearly more robust. This "
+        "suggested something: **3 satellites were never enough to represent anything, and the previous "
+        "five debugging rounds may never have been chasing the real culprit — the real culprit was the "
+        "sample size itself**.",
+    ))
+
+    st.header(T3(
+        "⑥ 100顆衛星揭曉：一個乾淨的時間交叉點",
+        "⑥100機で明らかになった、明快な時間的交差点",
+        "⑥ 100 satellites reveal a clean crossover point in time",
+    ))
+    st.markdown(T3(
+        "擴大到 100 顆衛星（283 顆有 MEME 資料的 Starlink 中隨機抽樣），352 個有效評估點——"
+        "這次不只是勝率再拉近，而是浮現了一個乾淨到意外的模式：**按外推天數分層**看：",
+        "100機（MEMEデータを持つ283機のStarlinkからランダム抽出）に拡大し、352個の有効な"
+        "評価点を得た——今回は勝率が近づいただけでなく、驚くほど明快なパターンが浮かび"
+        "上がった：**外挿日数で層別化**すると：",
+        "Expanding to 100 satellites (randomly sampled from 283 Starlink satellites with MEME data), "
+        "352 valid evaluation points — this time it wasn't just the win rate narrowing further, but a "
+        "surprisingly clean pattern emerging: **stratified by extrapolation day**:",
+    ))
+    _df26 = pd.DataFrame([
+        {T3("距校準天數","校正からの日数","Days since calibration"): d,
+         T3("SGP4誤差(公尺)","SGP4誤差(m)","SGP4 error (m)"): a,
+         T3("Cowell+NRLMSISE-00誤差(公尺)","Cowell+NRLMSISE-00誤差(m)","Cowell+NRLMSISE-00 error (m)"): b,
+         T3("誰較準","どちらが正確","Which is closer"): c}
+        for d, a, b, c in [
+            ("Day 0", 102.7, 155.4, T3("SGP4","SGP4","SGP4")),
+            ("Day 1", 222.6, 231.0, T3("接近打平","ほぼ互角","near tie")),
+            ("Day 2", 448.4, 391.8, T3("Cowell開始領先","Cowellが優位に","Cowell ahead")),
+            ("Day 3", 592.4, 428.4, T3("Cowell明顯領先","Cowellが明確に優位","Cowell clearly ahead")),
+            ("Day 4", 524.3, 541.0, T3("接近打平","ほぼ互角","near tie")),
+        ]
+    ])
+    st.dataframe(_df26, hide_index=True, width="stretch")
+    st.markdown(T3(
+        "整體中位數：SGP4=256.4 公尺、Cowell+NRLMSISE-00=339.3 公尺，Cowell 較準的比例"
+        "47.7%——幾乎是銅板的兩面。但拆開天數看，故事完全不一樣：**SGP4 在校準後第 0-1 天"
+        "最準，但第 2-3 天明顯被 NRLMSISE-00 反超，第 4 天又拉回接近打平**。另外兩顆極端"
+        "案例更說明問題：NORAD 66006 這顆衛星，SGP4 誤差飆到 **13,247 公尺**，Cowell 卻只有"
+        "1,939 公尺；NORAD 68811 也是 SGP4 誤差（2,168 公尺）遠高於 Cowell（618 公尺）——"
+        "這些應該是 SGP4 那張「月票」已經明顯過期（衛星實際阻力狀態或軌道行為已經改變）的"
+        "案例，NRLMSISE-00 的即時查詢反而不會被拖著一起錯。",
+        "全体の中央値：SGP4=256.4メートル、Cowell+NRLMSISE-00=339.3メートル、Cowellの方が"
+        "正確だった割合は47.7%——ほぼコインの表裏である。しかし日数ごとに分解すると、"
+        "物語は全く違って見える：**SGP4は校正後0～1日目に最も正確だが、2～3日目には"
+        "NRLMSISE-00に明確に逆転され、4日目には再びほぼ互角に戻る**。さらに2つの極端な"
+        "事例がこの問題をよく物語っている：NORAD 66006という衛星では、SGP4の誤差が"
+        "**13,247メートル**まで跳ね上がったのに対し、Cowellはわずか1,939メートルだった；"
+        "NORAD 68811でもSGP4の誤差（2,168メートル）はCowell（618メートル）をはるかに"
+        "上回っていた——これらはおそらくSGP4の「定期券」が明らかに期限切れになっていた"
+        "（衛星の実際の抵抗状態や軌道挙動が変化していた）事例であり、NRLMSISE-00のリアル"
+        "タイム参照はその誤りに引きずられずに済んだのである。",
+        "Overall median: SGP4=256.4 m, Cowell+NRLMSISE-00=339.3 m, with Cowell more accurate 47.7% of "
+        "the time — nearly a coin flip. But broken down by day, the story looks completely different: "
+        "**SGP4 is most accurate on days 0–1 right after calibration, gets clearly overtaken by "
+        "NRLMSISE-00 on days 2–3, then pulls back to near-parity on day 4**. Two extreme cases make the "
+        "point even more vividly: for satellite NORAD 66006, SGP4's error spiked to **13,247 meters** "
+        "while Cowell stayed at just 1,939 meters; NORAD 68811 also showed SGP4's error (2,168 m) far "
+        "exceeding Cowell's (618 m) — these are likely cases where SGP4's \"transit pass\" had clearly "
+        "expired (the satellite's real drag state or orbital behavior had shifted), and NRLMSISE-00's "
+        "live lookup wasn't dragged down along with it.",
+    ))
+
+    st.header(T3(
+        "⑦ 委員是對的，只是答案藏在時間尺度裡",
+        "⑦委員は正しかった、ただ答えは時間スケールの中に隠れていた",
+        "⑦ The committee member was right — the answer was just hiding in the time scale",
+    ))
+    st.success(T3(
+        "**誠實結論**：這不是「哪個模式比較好」的問題，而是「各自的地盤在哪個時間窗口」。"
+        "SGP4 的固定係數在剛校準完的短期（1天內）表現最好——因為它本來就是用「最近」的真實"
+        "行為擬合出來的；但正因為它是固定不變的，時間一拉長（2-3天），它開始跟不上真實世界"
+        "的變化，這時候「即時查天氣」的 NRLMSISE-00 反而後來居上。等到第4天，兩者可能都"
+        "累積了各自的誤差來源，又拉回接近打平。\n\n"
+        "委員最初的直覺——「完整的物理模式應該有價值」——**是對的**，只是這個價值沒有大到"
+        "「全面碾壓」，而是精準地體現在中期外推與 SGP4 失準的離群案例上。這也回應了整個系列"
+        "案例（案例三、二十四、二十五）一路走來的教訓：任何單一數字或單一結論，只要換一個"
+        "觀察的維度（估計量定義、樣本數、時間尺度），都可能長出完全不同的臉。",
+        "**誠実な結論**：これは「どちらのモデルが優れているか」という問題ではなく、"
+        "「それぞれの得意な時間帯はどこか」という問題である。SGP4の固定係数は校正直後の"
+        "短期（1日以内）で最も良い成績を出す——なぜならそれはそもそも「直近」の実際の挙動"
+        "から逆算されたものだからだ。しかしまさに固定されているがゆえに、時間が経つ（2～3日）"
+        "につれて実世界の変化に追いつけなくなり、この時点で「リアルタイムで天気を調べる」"
+        "NRLMSISE-00が逆転する。4日目になると、両者ともそれぞれの誤差要因が蓄積し、再び"
+        "ほぼ互角に戻る可能性がある。\n\n"
+        "委員の当初の直感——「完全な物理モデルには価値があるはずだ」——は**正しかった**。"
+        "ただしその価値は「全面的な圧勝」というほど大きくはなく、中期的な外挿とSGP4が"
+        "外れ値的に失敗する事例において、的確に発揮されていたのである。これはまた、この一連の"
+        "事例（事例3、24、25）が積み重ねてきた教訓にも呼応している：どんな単一の数字や単一の"
+        "結論も、観察する次元（推定量の定義、サンプル数、時間スケール）を変えるだけで、"
+        "全く違う顔を見せうるということだ。",
+        "**Honest conclusion**: this isn't a question of \"which model is better,\" but \"which time "
+        "window each one owns.\" SGP4's fixed coefficient performs best in the short term (within a day) "
+        "right after calibration — because it was fit to \"recent\" real behavior in the first place. "
+        "But precisely because it's fixed, as time stretches out (2–3 days) it starts falling behind "
+        "real-world changes, and that's exactly when NRLMSISE-00's \"check the live weather\" approach "
+        "overtakes it. By day 4, both have likely accumulated their own respective error sources and "
+        "pull back toward parity.\n\n"
+        "The committee member's original intuition — \"a full physics model should have value\" — "
+        "**was right**, just not in the form of a total rout; its value shows up precisely in mid-range "
+        "extrapolation and in the outlier cases where SGP4 fails. This also echoes the lesson this whole "
+        "series of cases (Cases 3, 24, 25) has been building toward: any single number or single "
+        "conclusion can wear a completely different face the moment you change the dimension you're "
+        "looking through it from — estimator definition, sample size, or time scale.",
+    ))
+
+    st.markdown("---")
+    st.markdown(T3(
+        "**判讀**：這個案例值得記住的，或許不是「SGP4」或「NRLMSISE-00」誰輸誰贏，而是"
+        "整個過程本身——一個好問題逼出一套新架構、五次誠實的除錯排查（每一次都留下記錄，"
+        "即使是「無效」的檢驗）、以及一次因樣本數過小而完全走偏的初步結論。從 3 顆到 100 顆"
+        "衛星，答案不是被「修正」了一次，而是被**逐步看得更清楚**——這正是本專案貫穿所有"
+        "案例的方法論：任何驚人的發現，第一件事永遠是問「樣本夠大嗎、換個角度還成立嗎」。",
+        "**判読**：この事例で記憶しておくべきなのは、「SGP4」か「NRLMSISE-00」かどちらが"
+        "勝ったかということではなく、おそらくその過程全体である——一つの良い問いが新しい"
+        "アーキテクチャを引き出し、5回の誠実な除錯調査（たとえ「無効」だった検証であっても、"
+        "すべて記録として残された）、そしてサンプル数が小さすぎたために完全に見当違いだった"
+        "当初の結論。3機から100機へと、答えは一度「修正」されたのではなく、**段階的により"
+        "明確に見えるようになった**——これこそ、本プロジェクトのすべての事例を貫く方法論"
+        "である：どんな驚くべき発見も、まず最初に問うべきは「サンプルは十分に大きいか、"
+        "別の角度から見ても成り立つか」ということなのだ。",
+        "**Verdict**: what's worth remembering about this case is probably not whether \"SGP4\" or "
+        "\"NRLMSISE-00\" won, but the process itself — a good question forcing a new architecture into "
+        "existence, five honest rounds of debugging (each one left on the record, even the \"ineffective\" "
+        "checks), and an initial conclusion that was completely skewed by too small a sample. Going from "
+        "3 to 100 satellites, the answer wasn't \"corrected\" once — it was **progressively seen more "
+        "clearly**. That is exactly the methodology running through every case in this project: the "
+        "first question to ask about any striking finding is always \"is the sample big enough, and does "
+        "it still hold from a different angle?\"",
+    ))
+    st.caption(T3(
+        "架構：`nrlmsise00_propagator.py`（J2–J5 重力、NRLMSISE-00/NRLMSIS 2.1 阻力、多點"
+        "最小平方 BC 校準）；比較驅動：`compare_sgp4_vs_nrlmsise00.py`；100 星結果："
+        "`data/benchmark/compare_sgp4_vs_nrlmsise00_20260919.csv`；100 星清單（seed=777）："
+        "`data/benchmark/_compare_100sats_list_20260919.csv`。相關背景見案例三、"
+        "二十四、二十五。",
+        "アーキテクチャ：`nrlmsise00_propagator.py`（J2～J5重力、NRLMSISE-00/NRLMSIS 2.1抵抗、"
+        "多点最小二乗BC校正）；比較ドライバ：`compare_sgp4_vs_nrlmsise00.py`；100機の結果："
+        "`data/benchmark/compare_sgp4_vs_nrlmsise00_20260919.csv`；100機のリスト（seed=777）："
+        "`data/benchmark/_compare_100sats_list_20260919.csv`。関連背景は事例3、24、25を参照。",
+        "Architecture: `nrlmsise00_propagator.py` (J2–J5 gravity, NRLMSISE-00/NRLMSIS 2.1 drag, "
+        "multi-point least-squares BC calibration); comparison driver: "
+        "`compare_sgp4_vs_nrlmsise00.py`; 100-satellite results: "
+        "`data/benchmark/compare_sgp4_vs_nrlmsise00_20260919.csv`; 100-satellite list (seed=777): "
+        "`data/benchmark/_compare_100sats_list_20260919.csv`. Related background in Cases 3, 24, and 25.",
+    ))
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -12260,7 +12624,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
-        "case21", "case22", "case23", "case24", "case25"):
+        "case21", "case22", "case23", "case24", "case25", "case26"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -12333,6 +12697,8 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case24()
     elif _case == "case25":
         render_storymap_case25()
+    elif _case == "case26":
+        render_storymap_case26()
     else:
         render_storymap_landing()
     st.stop()
