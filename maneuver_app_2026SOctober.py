@@ -204,12 +204,12 @@ L: dict[str, dict[str, str]] = {
     "storymap_case24_card_desc": {"zh": "本專案在四個不同角度都撞上了同一堵牆：雜訊地板、大氣阻力狀態、觀測盲區、反演天花板——七個案例的證據，第一次拼在同一張表上。",
                                   "ja": "本プロジェクトは4つの異なる角度から同じ壁にぶつかった：雑音床、大気抵抗状態、観測の死角、逆解析の天井——7つの事例の証拠を初めて一つの表にまとめた。",
                                   "en": "This project hit the same wall from four different angles: the noise floor, atmospheric-drag state, observational blind spots, and an inversion ceiling — evidence from seven cases, assembled into one table for the first time."},
-    "storymap_case25_card_title": {"zh": "案例二十五：TLE 誤差底真的隨太陽活動而變——284 顆衛星 × 4.5 個月精密星曆直接驗證",
-                                   "ja": "事例二十五：TLE誤差床は本当に太陽活動で変動する——284機×4.5ヶ月の精密暦による直接検証",
-                                   "en": "Case 25: The TLE Error Floor Really Does Move With Solar Activity — Direct Verification with 284 Satellites × 4.5 Months of Precision Ephemeris"},
-    "storymap_case25_card_desc": {"zh": "不再靠自我差分猜測，直接拿 MEME 精密星曆當真值：3.5 萬筆殘差裡，跟 F10.7 的相關達統計顯著（p=0.008）。",
-                                  "ja": "自己差分による推測に頼らず、MEME精密暦を真値として直接使用：3.5万件の残差の中で、F10.7との相関は統計的に有意（p=0.008）であった。",
-                                  "en": "No more guessing from self-differencing — using MEME precision ephemeris as direct ground truth: across 35,000 residuals, the correlation with F10.7 solar flux is statistically significant (p=0.008)."},
+    "storymap_case25_card_title": {"zh": "案例二十五：委員一句追問，戳破週別彙總誇大近 10 倍效應量的統計假象",
+                                   "ja": "事例二十五：委員の一言が暴いた、週別集計が効果量を約10倍誇張していた統計的錯覚",
+                                   "en": "Case 25: One Committee Question Exposes a Nearly 10x Inflated Effect from Weekly Aggregation"},
+    "storymap_case25_card_desc": {"zh": "284 顆衛星 × MEME 真值本來看似證實太陽活動會影響 TLE 誤差，直到委員問了一句「MEME 不也該受影響嗎」。",
+                                  "ja": "284機×MEME真値は太陽活動がTLE誤差に影響すると裏付けたように見えたが、委員の「MEMEも影響を受けるはずでは」の一言で覆った。",
+                                  "en": "284 satellites × MEME ground truth seemed to confirm solar activity drives TLE error — until a committee member asked, \"shouldn't MEME show that too?\""},
 
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
@@ -11909,14 +11909,14 @@ def render_storymap_case25():
         st.rerun()
 
     st.title(T3(
-        "案例二十五：TLE 誤差底真的隨太陽活動而變——284 顆衛星 × 4.5 個月精密星曆直接驗證",
-        "事例二十五：TLE誤差床は本当に太陽活動で変動する——284機×4.5ヶ月の精密暦による直接検証",
-        "Case 25: The TLE Error Floor Really Does Move With Solar Activity — Direct Verification with 284 Satellites × 4.5 Months of Precision Ephemeris",
+        "案例二十五：委員一句追問，戳破週別彙總誇大近 10 倍效應量的統計假象",
+        "事例二十五：委員の一言が暴いた、週別集計が効果量を約10倍誇張していた統計的錯覚",
+        "Case 25: One Committee Question Exposes a Nearly 10x Inflated Effect from Weekly Aggregation",
     ))
     st.subheader(T3(
-        "不再靠自我差分猜測，直接拿 MEME 精密星曆當真值",
-        "自己差分による推測に頼らず、MEME精密暦を真値として直接使用",
-        "No more guessing from self-differencing — MEME precision ephemeris as direct ground truth",
+        "不再靠自我差分猜測，直接拿 MEME 精密星曆當真值——但第一版結論被自己人的追問推翻大半",
+        "自己差分による推測に頼らず、MEME精密暦を真値として直接使用——だが第一版の結論は身内の追問で大半が覆された",
+        "No more guessing from self-differencing — MEME precision ephemeris as direct ground truth, but the first-draft conclusion was mostly overturned by a follow-up question",
     ))
     st.caption(T3(
         "案例三與案例二十四發現，本專案裡至少有四個互相對不上的「Starlink雜訊底」數字，根因是估計量"
@@ -12084,51 +12084,168 @@ def render_storymap_case25():
         "sample.\"",
     ))
 
+    st.header(T3(
+        "⑤ 誠實更正：委員一句追問，發現③節的效應量被誇大了近 10 倍",
+        "⑤誠実な訂正：委員の一言の追問により、③節の効果量が約10倍誇張されていたことが判明",
+        "⑤ Honest correction: a committee question revealed section ③'s effect size was inflated nearly 10×",
+    ))
+    st.warning(T3(
+        "審查委員提出一個關鍵問題：**MEME 本身反映的是真實軌道，若太陽活動真的加大大氣阻力，MEME "
+        "自己不也應該看得到嗎？**——③節只檢驗了「TLE-MEME 殘差」跟 F10.7 的關聯，沒有把「真實軌道"
+        "本身受太陽活動影響」跟「TLE 力模式（SGP4）建模缺陷」分開檢驗，這是一個切中要害的方法學漏洞。"
+        "\n\n用手上資料追加三個測試：\n\n"
+        "**測試 A**：MEME 自身逐日半長軸變化率是否跟 F10.7 相關？結果不顯著（p=0.9）。但這個測試本身"
+        "有缺陷——Starlink 幾乎持續在做站位保持機動，公里級的主動機動訊號完全蓋過阻力訊號，對這個"
+        "問題不夠敏感。\n\n"
+        "**測試 B**：MEME 與 TLE 的逐日變化「離散度」是否一致？結果兩者幾乎完全一致（rho=0.93），"
+        "且都與 F10.7 無關——排除了「太陽活動大時 MEME 自己就變吵」這個簡單解釋，但這仍是公里級、"
+        "機動主導的訊號，跟③節討論的 50–200 公尺級殘差不是同一個量級的現象。\n\n"
+        "**測試 C（關鍵）**：改用全部 35,460 筆逐點資料重新檢驗，而非週別彙總後的 21 個資料點。"
+        "結果：|殘差| 與 F10.7 瞬時值之相關為 **rho=0.063**（p=5×10⁻³³，因樣本數龐大，微小效應也會"
+        "顯著）——**比③節報告的 rho=0.564 小了將近 10 倍**。更關鍵的是，直接檢驗委員提出的具體機制"
+        "（「傳播期間 F10.7 上升，SGP4 的靜態 B\\* 來不及反應」，以「MEME 曆元 F10.7 − TLE 曆元 "
+        "F10.7」之變化量檢驗）：相關為 **rho=-0.037**，方向與此機制之預期**相反**，不支持此一具體"
+        "解釋。",
+        "審査委員から重要な指摘があった：**MEMEそのものが真の軌道を反映しているのなら、太陽活動が"
+        "本当に大気抵抗を増大させるならば、MEME自体にもそれが見えるはずではないか？**——③節では"
+        "「TLE-MEME残差」とF10.7の関連しか検証しておらず、「真の軌道自体が太陽活動の影響を受ける」"
+        "ことと「TLEの力モデル（SGP4）のモデル化の欠陥」を分離して検証していなかった。これは核心を"
+        "突いた方法論上の欠陥である。\n\n手元のデータで3つの追加検証を行った：\n\n"
+        "**検証A**：MEME自身の日次半長軸変化率はF10.7と相関するか？結果は有意でなかった（p=0.9）。"
+        "しかしこの検証自体に欠陥がある——Starlinkはほぼ常時ステーションキーピング機動を行っており、"
+        "キロメートル級の主動的機動信号が抵抗信号を完全に覆い隠してしまい、この問題に対して十分な"
+        "感度がない。\n\n"
+        "**検証B**：MEMEとTLEの日次変化の「ばらつき」は一致するか？結果は両者がほぼ完全に一致し"
+        "（rho=0.93）、いずれもF10.7と無関係だった——「太陽活動が強い時にMEME自体がうるさくなる」"
+        "という単純な説明は排除されたが、これも依然としてキロメートル級・機動主導の信号であり、"
+        "③節で論じた50～200メートル級の残差とは同じ規模の現象ではない。\n\n"
+        "**検証C（重要）**：週別集計後の21個のデータ点ではなく、全35,460件の逐点データで再検証した。"
+        "結果：|残差|とF10.7瞬時値の相関は**rho=0.063**（p=5×10⁻³³、サンプル数が膨大なため微小な"
+        "効果でも有意になる）——**③節で報告したrho=0.564より約10倍小さい**。さらに重要なのは、"
+        "委員が提示した具体的機構（「伝播期間中にF10.7が上昇し、SGP4の静的なB\\*が追従できない」）"
+        "を、「MEME元期のF10.7－TLE元期のF10.7」の変化量で直接検証したところ、相関は**rho=-0.037**"
+        "となり、この機構が予測する方向とは**逆**であり、この具体的な説明は支持されなかった。",
+        "A committee member raised a critical question: **MEME itself reflects the real orbit — if solar "
+        "activity truly enhances atmospheric drag, shouldn't MEME itself show that too?** Section ③ only "
+        "tested the correlation between the \"TLE-MEME residual\" and F10.7, without separating \"the "
+        "real orbit itself is affected by solar activity\" from \"TLE's force model (SGP4) has a modeling "
+        "deficiency\" — a methodological gap that goes straight to the heart of the matter.\n\n"
+        "Three follow-up tests using data already on hand:\n\n"
+        "**Test A**: does MEME's own day-to-day sma change rate correlate with F10.7? Not significant "
+        "(p=0.9). But this test itself is flawed — Starlink satellites are almost continuously "
+        "station-keeping, and km-scale active-maneuver signals completely swamp the drag signal, making "
+        "this test insensitive to the question at hand.\n\n"
+        "**Test B**: do MEME's and TLE's day-to-day change *dispersions* agree? They match almost "
+        "perfectly (rho=0.93), and neither correlates with F10.7 — ruling out \"MEME itself just gets "
+        "noisier when the sun is active\" as a simple explanation, but this is still a km-scale, "
+        "maneuver-dominated signal, not the same regime as section ③'s 50–200 m residual.\n\n"
+        "**Test C (the decisive one)**: re-testing with all 35,460 individual points instead of the 21 "
+        "weekly-aggregated ones. Result: the correlation between |residual| and instantaneous F10.7 is "
+        "**rho=0.063** (p=5×10⁻³³ — significant only because the sample size is huge) — **nearly 10× "
+        "smaller than the rho=0.564 reported in section ③**. More importantly, directly testing the "
+        "committee's proposed mechanism (\"F10.7 rises during the propagation window and SGP4's static "
+        "B\\* can't keep up,\" tested via the change in F10.7 between the TLE epoch and the MEME epoch) "
+        "gives **rho=-0.037** — the **opposite** direction from what that mechanism would predict, so it "
+        "is not supported.",
+    ))
+    st.error(T3(
+        "**修正後的誠實結論**：週別彙總平均掉雜訊，把效應強度誇大了近 10 倍——這是統計上常見的"
+        "「聚合膨脹相關性」陷阱，本案例親身示範了一次。用全部逐點資料看，TLE 誤差確實跟當下 F10.7 "
+        "水準有微弱但統計顯著的關聯（大樣本讓極小效應也能顯著，不代表效應量有實務意義），但委員"
+        "提出的具體機制（傳播期間太陽活動上升、B\\* 反應不及）並未獲得支持，真正的物理機制仍未查清。"
+        "誠如委員建議，若要真正回答「哪些擾動力模式的簡化造成 TLE 誤差」，應直接比較不同力模式"
+        "（例如換用完整大氣密度模型如 NRLMSISE-00 重新傳播，量化其相對 SGP4 簡化阻力模型能解釋掉"
+        "多少殘差），而非僅用 F10.7 做間接代理指標——這是本案例目前尚未完成、留待後續的方向。",
+        "**修正後の誠実な結論**：週別集計は雑音を平均化し、効果の強さを約10倍誇張していた——これは"
+        "統計学でよく知られる「集計による相関の膨張」の罠であり、本事例はそれを身をもって示す実例と"
+        "なった。全逐点データで見ると、TLE誤差は現在のF10.7水準と弱いながらも統計的に有意な関連を"
+        "示すが（サンプル数が膨大なため極めて小さな効果でも有意となるのであって、効果量に実務上の"
+        "意味があるとは限らない）、委員が提示した具体的機構（伝播期間中の太陽活動の上昇にB\\*が追従"
+        "できない）は支持されず、真の物理的機構は依然として未解明である。委員の提案どおり、「どの"
+        "擾乱力モデルの簡略化がTLE誤差を生んでいるのか」に本当に答えるには、異なる力モデルを直接"
+        "比較すべきである（例えばNRLMSISE-00のような完全な大気密度モデルに切り替えて再伝播し、"
+        "SGP4の簡略化された抵抗モデルに対してどれだけの残差を説明できるかを定量化する）。F10.7を"
+        "間接的な代理指標として使うだけでは不十分であり、これは本事例では未完了で、今後に残された"
+        "方向性である。",
+        "**Corrected, honest conclusion**: weekly aggregation averaged out the noise and inflated the "
+        "apparent effect strength by nearly 10× — a textbook \"aggregation inflates correlation\" trap, "
+        "which this case now demonstrates on itself. Looking at all individual points, TLE error does "
+        "show a weak but statistically significant association with the current F10.7 level (significant "
+        "only because the sample is huge — not necessarily a practically meaningful effect size), but the "
+        "committee's proposed specific mechanism (solar activity rising during the propagation window "
+        "outrunning a static B\\*) is not supported, and the true physical mechanism remains unresolved. "
+        "As the committee suggested, properly answering \"which simplified perturbation force is causing "
+        "the TLE error\" would require directly comparing different force models (e.g., re-propagating "
+        "with a full atmospheric density model such as NRLMSISE-00 and quantifying how much residual it "
+        "explains relative to SGP4's simplified drag model) rather than using F10.7 as an indirect proxy "
+        "— this remains undone and is left for future work.",
+    ))
+
     st.markdown("---")
     st.markdown(T3(
-        "**判讀**：本案例是雜訊底爭議系列（案例三→案例二十四→本案例）的第三步，也是目前方法論上"
-        "最嚴謹的一步——不再依賴 TLE 自身的前處理假設，改用獨立真值直接量測，並且是本專案第一次"
-        "以統計顯著性（而非僅描述性趨勢）證實「大氣阻力狀態」這個先前只在合成注入實驗（案例十七）"
-        "中觀察到的效應。三個案例合起來，呈現的是一個誠實的方法論演進過程：發現數字對不上 → "
-        "查出根因是定義不同 → 換用更嚴謹的方法重新量測、並得到可獨立驗證的新發現。",
-        "**判読**：本事例は雑音床論争シリーズ（事例3→事例24→本事例）の第3段階であり、現時点で"
-        "方法論的に最も厳密な段階でもある——TLE自身の前処理上の仮定にもはや依存せず、独立した"
-        "真値を用いて直接測定を行い、しかも本プロジェクトとして初めて、これまで合成注入実験"
-        "（事例17）でしか観察されていなかった「大気抵抗状態」という効果を、統計的有意性（単なる"
-        "記述的傾向ではなく）によって実証した。3つの事例を合わせると、誠実な方法論の進化過程が"
-        "見えてくる：数字が一致しないことを発見する→原因が定義の違いにあることを突き止める→"
-        "より厳密な手法に切り替えて再測定し、独立に検証可能な新たな発見を得る。",
+        "**判讀**：本案例是雜訊底爭議系列（案例三→案例二十四→本案例）的第三步，方法論上確實比自我"
+        "差分法更嚴謹——不再依賴 TLE 自身的前處理假設，改用獨立真值直接量測。但本案例最有價值的"
+        "部分，其實是⑤節的自我推翻：一句來自審查委員、切中要害的追問（「MEME 不也該受太陽活動"
+        "影響嗎」），當場戳破了週別彙總把效應量誇大近 10 倍的統計假象，也讓「大氣阻力狀態驅動 TLE "
+        "誤差」這個假說從『統計顯著證實』降級為『微弱關聯、機制未明』。三個案例合起來，呈現的是"
+        "一個誠實的方法論演進過程：發現數字對不上 → 查出根因是定義不同 → 換用更嚴謹的方法重新"
+        "量測 → 被更犀利的問題進一步糾正——每一步都留下記錄，不回頭美化前一步。",
+        "**判読**：本事例は雑音床論争シリーズ（事例3→事例24→本事例）の第3段階であり、方法論的には"
+        "確かに自己差分法より厳密である——TLE自身の前処理上の仮定にもはや依存せず、独立した真値を"
+        "用いて直接測定を行った。しかし本事例で最も価値があるのは、実は⑤節の自己修正である："
+        "審査委員からの核心を突いた一言の追問（「MEMEも太陽活動の影響を受けるはずでは」）が、"
+        "その場で週別集計が効果量を約10倍誇張していたという統計的錯覚を暴き、「大気抵抗状態が"
+        "TLE誤差を駆動する」という仮説を『統計的に有意に実証された』から『弱い関連、機構不明』へと"
+        "格下げした。3つの事例を合わせると、誠実な方法論の進化過程が見えてくる：数字が一致しない"
+        "ことを発見する→原因が定義の違いにあることを突き止める→より厳密な手法に切り替えて再測定"
+        "する→さらに鋭い問いによって修正される——どの段階も記録として残し、前の段階を美化して"
+        "書き直すことはしない。",
         "**Verdict**: this case is the third step in the noise-floor controversy series (Case 3 → Case "
-        "24 → this case), and currently the methodologically most rigorous one — no longer relying on "
-        "preprocessing assumptions built into TLE self-differencing, instead measuring directly against "
-        "independent ground truth, and for the first time in this project confirming with statistical "
-        "significance (not just a descriptive trend) an effect — \"atmospheric-drag state\" — previously "
-        "only observed in a synthetic-injection experiment (Case 17). Together, the three cases trace an "
-        "honest methodological progression: notice the numbers don't match → trace the root cause to "
-        "differing definitions → switch to a more rigorous method, remeasure, and arrive at a new, "
-        "independently verifiable finding.",
+        "24 → this case), and methodologically it is indeed more rigorous than self-differencing — no "
+        "longer relying on preprocessing assumptions built into TLE self-differencing, instead measuring "
+        "directly against independent ground truth. But the most valuable part of this case is actually "
+        "its own self-correction in section ⑤: one sharp, on-target question from a review committee "
+        "member (\"shouldn't MEME be affected by solar activity too?\") exposed, on the spot, a nearly "
+        "10× inflation of the effect size caused by weekly aggregation, downgrading the \"atmospheric-"
+        "drag state drives TLE error\" hypothesis from \"confirmed with statistical significance\" to "
+        "\"a weak association with an unresolved mechanism.\" Together, the three cases trace an honest "
+        "methodological progression: notice the numbers don't match → trace the root cause to differing "
+        "definitions → switch to a more rigorous method and remeasure → get corrected again by a sharper "
+        "question — each step left on the record, with no retroactive polishing of the one before it.",
     ))
     st.caption(T3(
-        "重現腳本：`starlink_tle_meme_error_floor.py`；原始逐筆殘差："
+        "重現腳本：`starlink_tle_meme_error_floor.py`（①-④節）；原始逐筆殘差："
         "`data/benchmark/starlink_tle_meme_error_floor_20260918.csv`（35,460 列）；"
         "週別彙總與太陽風交叉比對："
-        "`data/benchmark/starlink_tle_meme_error_floor_weekly_swx_20260918.csv`；"
+        "`data/benchmark/starlink_tle_meme_error_floor_weekly_swx_20260918.csv`。"
+        "⑤節誠實更正之逐點分析：MEME/TLE 逐日衰減率與離散度見 "
+        "`data/benchmark/starlink_meme_tle_decay_rate_20260919.csv`、"
+        "`starlink_meme_tle_decay_dispersion_vs_f107_20260919.csv`；"
+        "逐點 ΔF10.7 對照見 `starlink_tle_meme_error_vs_deltaf107_20260919.csv`。"
         "太陽/地磁活動資料來源：`F:\\GitHub\\SpaceWeather\\data\\swx_parquet\\`"
         "（NASA OMNI2，非本專案自建資料）。相關方法學背景見案例三、案例二十四"
         "與 `docs/paper_tle_sma_noise_floor.md` §3.2。",
-        "再現スクリプト：`starlink_tle_meme_error_floor.py`；元の逐次残差："
+        "再現スクリプト：`starlink_tle_meme_error_floor.py`（①～④節）；元の逐次残差："
         "`data/benchmark/starlink_tle_meme_error_floor_20260918.csv`（35,460行）；"
         "週別集計と太陽風の相互比較："
-        "`data/benchmark/starlink_tle_meme_error_floor_weekly_swx_20260918.csv`；"
+        "`data/benchmark/starlink_tle_meme_error_floor_weekly_swx_20260918.csv`。"
+        "⑤節の誠実な訂正における逐点分析：MEME/TLEの日次減衰率とばらつきは "
+        "`data/benchmark/starlink_meme_tle_decay_rate_20260919.csv`、"
+        "`starlink_meme_tle_decay_dispersion_vs_f107_20260919.csv`を参照；"
+        "逐点ΔF10.7比較は`starlink_tle_meme_error_vs_deltaf107_20260919.csv`を参照。"
         "太陽・地磁気活動データの出典：`F:\\GitHub\\SpaceWeather\\data\\swx_parquet\\`"
         "（NASA OMNI2、本プロジェクト独自構築データではない）。関連する方法論的背景は事例3、"
         "事例24、および`docs/paper_tle_sma_noise_floor.md` §3.2を参照。",
-        "Reproduction script: `starlink_tle_meme_error_floor.py`; raw per-point residuals: "
-        "`data/benchmark/starlink_tle_meme_error_floor_20260918.csv` (35,460 rows); weekly summary "
-        "with space-weather cross-reference: "
-        "`data/benchmark/starlink_tle_meme_error_floor_weekly_swx_20260918.csv`; solar/geomagnetic "
-        "activity data source: `F:\\GitHub\\SpaceWeather\\data\\swx_parquet\\` (NASA OMNI2, not "
-        "self-built by this project). Related methodological background in Cases 3 and 24, and "
+        "Reproduction script: `starlink_tle_meme_error_floor.py` (sections ①-④); raw per-point "
+        "residuals: `data/benchmark/starlink_tle_meme_error_floor_20260918.csv` (35,460 rows); weekly "
+        "summary with space-weather cross-reference: "
+        "`data/benchmark/starlink_tle_meme_error_floor_weekly_swx_20260918.csv`. Section ⑤'s "
+        "point-level correction analysis: MEME/TLE daily decay rate and dispersion in "
+        "`data/benchmark/starlink_meme_tle_decay_rate_20260919.csv` and "
+        "`starlink_meme_tle_decay_dispersion_vs_f107_20260919.csv`; per-point ΔF10.7 comparison in "
+        "`starlink_tle_meme_error_vs_deltaf107_20260919.csv`. Solar/geomagnetic activity data source: "
+        "`F:\\GitHub\\SpaceWeather\\data\\swx_parquet\\` (NASA OMNI2, not self-built by this project). "
+        "Related methodological background in Cases 3 and 24, and "
         "`docs/paper_tle_sma_noise_floor.md` §3.2.",
     ))
 
