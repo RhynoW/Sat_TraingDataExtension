@@ -216,9 +216,9 @@ L: dict[str, dict[str, str]] = {
     "storymap_case26_card_desc": {"zh": "SGP4 vs 完整物理模式，誰比較準？答案不是「哪個贏」，而是「各自的地盤在哪裡」——一場3顆衛星到100顆衛星的樣本數翻案記。",
                                   "ja": "SGP4 vs 完全物理モデル、どちらが正確か？答えは「どちらが勝つか」ではなく「それぞれの得意な時間帯はどこか」——3機から100機へ、サンプル数がひっくり返した結論の記録。",
                                   "en": "SGP4 vs. a full physics model — which is more accurate? The answer isn't \"which wins\" but \"which time window each owns\" — a record of how sample size flipped the conclusion, from 3 satellites to 100."},
-    "storymap_case27_card_title": {"zh": "案例二十七：讓偵測法動起來——L1 規則閘門與 L2 統計通道的逐筆動畫",
-                                   "ja": "事例二十七：検出法を動かして見る——L1ルールゲートとL2統計チャネルのTLE逐次アニメーション",
-                                   "en": "Case 27: Watch the Detectors Run — Frame-by-Frame Animation of the L1 Rule Gates and L2 Statistical Channels"},
+    "storymap_case27_card_title": {"zh": "案例二十七：讓偵測法動起來——L1 規則閘門、L2 統計通道與 L3 融合決策的動畫",
+                                   "ja": "事例二十七：検出法を動かして見る——L1ルールゲート・L2統計チャネル・L3融合判定のアニメーション",
+                                   "en": "Case 27: Watch the Detectors Run — Animations of the L1 Rule Gates, L2 Statistical Channels and L3 Fusion Decision"},
     "storymap_case27_card_desc": {"zh": "輸入任何 NORAD ID（留空則用福衛五號＋一顆 Starlink），看 TLE 一筆筆進來時，P1–P6 規則與 CUSUM／BOCPD／SSA／MAD 如何各自亮燈。",
                                   "ja": "任意のNORAD IDを入力（空欄ならFORMOSAT-5＋Starlink1機）。TLEが1件ずつ届くとき、P1–P6ルールとCUSUM／BOCPD／SSA／MADがどう点灯するかを見る。",
                                   "en": "Enter any NORAD ID (blank = FORMOSAT-5 + one Starlink) and watch how the P1–P6 rules and CUSUM / BOCPD / SSA / MAD light up as TLEs arrive one by one."},
@@ -12627,6 +12627,23 @@ def _c27_prepare(nid: int, days: int, p2_scale: float):
     return X.prepare(df, load_f107(), p2_scale=p2_scale, days=days)
 
 
+@st.cache_data(show_spinner=False)
+def _c27_l3(nid: int, days: int, p2_scale: float):
+    """L3 推論（含阻力通道：僅本機有 data/drag 且該星在 284 顆 Starlink 內才計入）。"""
+    import l1l2_explainer as X
+    P = _c27_prepare(nid, days, p2_scale)
+    if P is None:
+        return None, None
+    drag = None
+    try:
+        from satdet import load_drag_map
+        drag = load_drag_map().get(int(nid))
+    except Exception:
+        drag = None
+    L3 = X.compute_l3(P, drag)
+    return P, L3
+
+
 def render_storymap_case27():
     import l1l2_explainer as X
     if st.button(t("storymap_back"), key="back_from_case27"):
@@ -12744,7 +12761,70 @@ def render_storymap_case27():
                 "(common-arena result: L3 0.981 > L2 0.892 > L1)."))
             st.plotly_chart(X.fig_l2(P, T3), use_container_width=True, key=f"c27_l2_{nid}")
 
-    st.header(T3("④ 用預設對照組看什麼", "④ 既定ペアで何を見るか", "④ What to look for in the default pair"))
+            st.header(T3("④ L3：把 L2 的通道輸出融合成一個機動分數",
+                         "④ L3：L2のチャネル出力を1つの機動スコアに融合する",
+                         "④ L3: fusing the L2 channel outputs into one maneuver score"))
+            P3, L3 = _c27_l3(nid, days, scale)
+            if L3 is None:
+                st.warning(T3("找不到 L3 模型檔（models_fusion/l3_common_arena.pkl），略過此節。",
+                              "L3モデルファイル（models_fusion/l3_common_arena.pkl）が見つからないため、この節を省略する。",
+                              "L3 model file (models_fusion/l3_common_arena.pkl) not found; skipping this section."))
+            else:
+                mm = L3["model"]
+                l3s = X.l3_summary(L3)
+                st.markdown(T3(
+                    "**L3 實際吃什麼**：不是 L1 的 P1–P6 旗標，而是 **L2 的四個統計通道分數＋NRLMSIS 阻力殘差通道**。"
+                    "流程：以某個時刻為中心取 **±24 h** 的窗 → 每個通道取窗內 **max／mean／p90**（5 × 3 = **15 個特徵**）→ "
+                    "梯度提升分類器（HistGradientBoosting）輸出機動分數 → 與門檻比較（門檻定在「安靜窗誤報率 ≤ 5%」）。"
+                    "L1 是**並列**的另一路：本頁第⑤格把 L1、L2、L3 在同一個窗內是否亮燈並排，方便比較，但 L1 並不是 L3 的輸入。\n\n"
+                    "**怎麼看**：② 是目前窗的 15 個特徵（顏色越深＝越接近整段序列的最大值）；③ 是「若把該通道特徵歸零，分數掉多少」，"
+                    "紅色＝該通道在推高這個分數，灰色＝把它拿掉反而分數更高；④ 是分數隨時間的曲線，越過虛線就判為機動。"
+                    "**注意 L3 需要事件後 24 h 的資料才能評分**，所以動畫中的判定會比事件晚約一天，這也是擂台中 latency 的定義。",
+                    "**L3が実際に読むもの**：L1のP1–P6フラグではなく、**L2の4つの統計チャネルスコア＋NRLMSIS抵抗残差チャネル**。"
+                    "流れ：ある時刻を中心に**±24 h**の窓を取る → 各チャネルの窓内**max／mean／p90**（5×3＝**15特徴**）→ "
+                    "勾配ブースティング分類器（HistGradientBoosting）が機動スコアを出力 → しきい値と比較（しきい値は「静穏窓の誤報率≤5%」に設定）。"
+                    "L1は**並列**の別経路：第⑤パネルでL1・L2・L3が同じ窓で点灯したかを並べるが、L1はL3の入力ではない。\n\n"
+                    "**見方**：②は現在の窓の15特徴（色が濃いほど系列全体の最大値に近い）；③は「そのチャネルの特徴を0にするとスコアがどれだけ下がるか」で、"
+                    "赤＝そのチャネルがスコアを押し上げている、灰＝外すとむしろスコアが上がる；④はスコアの時系列で、点線を超えると機動と判定。"
+                    "**L3は事後24 hのデータがないと採点できない**ため、アニメーション上の判定は事象より約1日遅れる。これが土俵でのlatencyの定義である。",
+                    "**What L3 actually reads**: not L1's P1–P6 flags, but **L2's four statistical channel scores plus the NRLMSIS drag-residual channel**. "
+                    "Pipeline: take a window of **±24 h** around a moment → for each channel take the window's **max / mean / p90** (5 × 3 = **15 features**) → "
+                    "a gradient-boosting classifier (HistGradientBoosting) outputs a maneuver score → compare with a threshold (set so quiet windows false-alarm ≤ 5%). "
+                    "L1 is a **parallel** route: panel ⑤ lines up whether L1, L2 and L3 lit up in the same window, but L1 is not an input to L3.\n\n"
+                    "**How to read**: ② shows the 15 features of the current window (darker = closer to the series maximum); ③ shows how much the score drops "
+                    "if that channel's features are zeroed — red = the channel is pushing the score up, grey = removing it would actually raise the score; "
+                    "④ is the score over time, and crossing the dotted line means \"maneuver\". "
+                    "**L3 needs 24 h of data after the event before it can score**, so in the animation its verdict lags the event by about a day — this is the arena's definition of latency."))
+                st.plotly_chart(X.fig_l3(P3, L3, T3), use_container_width=True, key=f"c27_l3_{nid}")
+                st.markdown(T3(
+                    f"**此衛星（{l3s['n']} 個時刻）**：L1 亮 {l3s['n_l1']}、L2 亮 {l3s['n_l2']}、L3 亮 {l3s['n_l3']}；L3 最高分 {l3s['max']:.2f}（門檻 {l3s['thr']:.2f}）。"
+                    + ("" if l3s["has_drag"] else " 本頁**此衛星的阻力通道為 0**（NRLMSIS 阻力殘差僅對 284 顆 Starlink、且僅在本機資料存在時計入），L3 因此少一路證據。"),
+                    f"**この衛星（{l3s['n']}時点）**：L1点灯 {l3s['n_l1']}、L2点灯 {l3s['n_l2']}、L3点灯 {l3s['n_l3']}；L3最高スコア {l3s['max']:.2f}（しきい値 {l3s['thr']:.2f}）。"
+                    + ("" if l3s["has_drag"] else " このページでは**この衛星の抵抗チャネルは0**（NRLMSIS抵抗残差は284機のStarlinkかつローカルにデータがある場合のみ）で、L3は証拠が1系統少ない。"),
+                    f"**This satellite ({l3s['n']} moments)**: L1 lit {l3s['n_l1']}, L2 lit {l3s['n_l2']}, L3 lit {l3s['n_l3']}; L3 peak score {l3s['max']:.2f} (threshold {l3s['thr']:.2f})."
+                    + ("" if l3s["has_drag"] else " On this page **the drag channel is 0 for this satellite** (NRLMSIS drag residuals exist only for the 284 Starlinks and only when the local data file is present), so L3 is missing one line of evidence.")))
+                st.warning(T3(
+                    f"**誠實說明這個 L3 有多準**：此 L3 是為本頁**離線重新訓練**的「逐時刻滑動窗」版（同樣 15 特徵與超參數，"
+                    f"{mm['n_units']:,} 個窗、284 顆 Starlink、衛星分組交叉驗證）。在今天的資料庫上，它的 OOF AUC 為 **{mm['oof_auc']:.2f}**，"
+                    f"誤報率 5% 時召回僅 **{mm['recall_at_thr']*100:.0f}%**；同一設定下 L2 最佳單通道（{mm['l2_best']}）AUC 約 {mm['l2_auc']:.2f}、"
+                    f"L1 召回 {mm['l1_recall']*100:.1f}%（誤報率 {mm['l1_fpr']*100:.1f}%），三層在「逐時刻串流偵測」這個較嚴苛的設定下都很弱。"
+                    "這和報告 §13.2 的「三層同一擂台」（L3 0.981 > L2 0.892 > L1）**不矛盾也不可互換**：擂台的評分單位是「整個機動事件 ±24 h」對「刻意挑出的安靜窗」，"
+                    "是已知事件位置時的評分；本頁是每個時刻都要打分。另外此 L3 只用 Starlink 訓練，對福衛五號等其他族群屬分布外。",
+                    f"**このL3の精度を正直に**：このL3は本ページ用に**オフラインで再学習**した「時刻ごとのスライド窓」版（同じ15特徴・ハイパーパラメータ、"
+                    f"{mm['n_units']:,}窓、284機のStarlink、衛星単位の交差検証）。今日のDBでのOOF AUCは**{mm['oof_auc']:.2f}**、"
+                    f"誤報率5%での再現率は**{mm['recall_at_thr']*100:.0f}%**。同条件でL2の最良単一チャネル（{mm['l2_best']}）のAUCは約{mm['l2_auc']:.2f}、"
+                    f"L1の再現率は{mm['l1_recall']*100:.1f}%（誤報率{mm['l1_fpr']*100:.1f}%）で、「時刻ごとのストリーミング検出」という厳しい設定では三層とも弱い。"
+                    "これは報告§13.2の「三層同一土俵」（L3 0.981 > L2 0.892 > L1）と**矛盾せず、また互換でもない**：土俵の採点単位は「機動イベント全体±24 h」対「意図的に選んだ静穏窓」で、"
+                    "事象位置が既知の場合の評価。本ページは各時刻を採点する。またこのL3はStarlinkのみで学習しており、FORMOSAT-5など他の族群は分布外。",
+                    f"**Honest note on how accurate this L3 is**: this L3 was **retrained offline for this page** as a per-moment sliding-window model "
+                    f"(same 15 features and hyper-parameters; {mm['n_units']:,} windows, 284 Starlinks, satellite-grouped cross-validation). On today's database its OOF AUC is "
+                    f"**{mm['oof_auc']:.2f}** and recall at a 5% false-alarm rate is only **{mm['recall_at_thr']*100:.0f}%**; under the same setup the best single L2 channel "
+                    f"({mm['l2_best']}) has AUC ≈ {mm['l2_auc']:.2f} and L1 recalls {mm['l1_recall']*100:.1f}% (false-alarm rate {mm['l1_fpr']*100:.1f}%) — all three layers are weak in "
+                    "this harsher \"score every moment as a stream\" setting. This neither contradicts nor is interchangeable with the report's §13.2 common arena (L3 0.981 > L2 0.892 > L1): "
+                    "the arena scores \"a whole maneuver event ±24 h\" against \"deliberately chosen quiet windows\", i.e. with the event location already known, whereas this page must score every moment. "
+                    "This L3 is also trained on Starlink only, so other families such as FORMOSAT-5 are out of distribution."))
+
+    st.header(T3("⑤ 用預設對照組看什麼", "⑤ 既定ペアで何を見るか", "⑤ What to look for in the default pair"))
     st.markdown(T3(
         "- **福衛五號（723 km）**：高軌、大氣擾動小，雜訊底約公尺級，機動的 |Δa| 遠高於門檻，L1 的柱子清楚越線；"
         "大量緩降的點被 P1 抑制（灰叉），不會被當成機動。\n"
@@ -12762,23 +12842,27 @@ def render_storymap_case27():
         "so L1 and L2 disagree more easily — this is the \"hard low-orbit case\".\n"
         "- With your own NORAD ID, look for moments where L1 fires but L2 does not, or vice versa — those are each layer's blind spots."))
 
-    st.header(T3("⑤ 誠實限制", "⑤ 正直な限界", "⑤ Honest limitations"))
+    st.header(T3("⑥ 誠實限制", "⑥ 正直な限界", "⑥ Honest limitations"))
     st.markdown(T3(
         "1. 這裡展示的是**偵測法的行為**，不是準確度：頁面沒有疊上機動真值，因此**不能**由紅星數量判斷誰比較準。準確度請見報告 §13.2 三層同一擂台。\n"
         "2. L1 逐筆只依賴相鄰兩筆與短窗，可線上運作；L2 的 SSA、MAD 使用整段序列統計量，動畫的「逐步揭露」是把已算好的分數依時間顯示，並非嚴格的逐筆重算。\n"
         "3. 為控制網頁大小，序列已稀釋近重複 epoch（最小間隔 12 h）並最多取最近 450 筆；資料庫為滾動視窗，觀察窗實際長度依衛星而異。\n"
-        "4. 各通道的「事件」採用 statistical_detectors.py 之內建判定，未針對單一衛星調參；亮燈數量多不代表較好。",
+        "4. 各通道的「事件」採用 statistical_detectors.py 之內建判定，未針對單一衛星調參；亮燈數量多不代表較好。\n"
+        "5. L3 為本頁離線重訓的滑動窗版，僅用 284 顆 Starlink 訓練；對福衛五號等其他族群屬分布外，且線上版無阻力通道。預設對照組中，你可能看到 L1 亮而 L3 不亮——這是如實的結果，不是程式忽略了 L3。",
         "1. ここで示すのは**検出法の挙動**であって精度ではない：機動の真値を重ねていないので、赤い星の数から優劣を**判断できない**。精度は報告§13.2の三層同一土俵を参照。\n"
         "2. L1は隣接2件と短窓のみに依存しオンライン動作できる。L2のSSA・MADは系列全体の統計量を使うため、アニメの「逐次表示」は計算済みスコアを時間順に見せるもので、厳密な逐次再計算ではない。\n"
         "3. ページサイズを抑えるため、近重複epochを間引き（最小間隔12 h）、直近最大450件に限定。DBはローリング窓のため観測窓の実長は衛星により異なる。\n"
-        "4. 各チャネルの「イベント」はstatistical_detectors.py組み込みの判定で、個別衛星向けの調整はしていない。点灯数が多い＝優れている、ではない。",
+        "4. 各チャネルの「イベント」はstatistical_detectors.py組み込みの判定で、個別衛星向けの調整はしていない。点灯数が多い＝優れている、ではない。\n"
+        "5. L3は本ページ用にオフライン再学習したスライド窓版で、284機のStarlinkのみで学習。FORMOSAT-5など他の族群は分布外で、オンライン版には抵抗チャネルもない。既定ペアでは「L1は点灯しL3は点灯しない」場面が見られる可能性があるが、これは実際の結果でありL3の無視ではない。",
         "1. This shows **how the detectors behave**, not how accurate they are: no maneuver ground truth is overlaid, so the number of red stars **cannot** tell you which is better. "
         "For accuracy see the report's §13.2 common-arena comparison.\n"
         "2. L1 depends only on adjacent TLE pairs and a short window, so it can run online; L2's SSA and MAD use whole-series statistics, so the animation's "
         "\"progressive reveal\" shows precomputed scores in time order, not a strict per-TLE recomputation.\n"
         "3. To keep the page light, near-duplicate epochs are thinned (min gap 12 h) and at most the latest 450 points are used; the database is a rolling window, "
         "so the actual window length varies by satellite.\n"
-        "4. Each channel's \"events\" use statistical_detectors.py's built-in rule with no per-satellite tuning; more lights does not mean better."))
+        "4. Each channel's \"events\" use statistical_detectors.py's built-in rule with no per-satellite tuning; more lights does not mean better.\n"
+        "5. The L3 here is the sliding-window version retrained offline for this page, trained on 284 Starlinks only; other families such as FORMOSAT-5 are out of distribution, and the online build has no drag channel. "
+        "In the default pair you may see L1 light up while L3 stays silent — that is the real result, not L3 being ignored."))
     st.caption("Code: `l1l2_explainer.py`, `maneuver_strategies_july.py`, `statistical_detectors.py`; "
                "common-arena numbers: `three_layer_common_eval.py`.")
 

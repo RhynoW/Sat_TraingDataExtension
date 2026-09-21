@@ -19,10 +19,15 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from pathlib import Path
+
 import maneuver_strategies_july as ms
 from statistical_detectors import run_all
 
 MAX_FRAMES = 70
+L3_CH = ["cusum", "bocpd", "ssa", "mad3sig", "drag"]     # 與 fusion_scorer.py 一致
+L3_HALF_H = 24.0                                         # 與擂台 TOL 一致：以該 epoch 為中心 ±24 h（共 48 h）
+L3_MODEL = Path(__file__).with_name("models_fusion") / "l3_common_arena.pkl"
 COL_OK, COL_FLAG, COL_SUP, COL_MUTED = "#5b8def", "#e5484d", "#9aa0a6", "#c7cbd1"
 
 
@@ -44,6 +49,7 @@ def prepare(df: pd.DataFrame, f107: dict | None = None, p2_scale: float = 1.0,
     d = df.sort_values("epoch").reset_index(drop=True)
     if days:
         d = d[d["epoch"] >= d["epoch"].max() - pd.Timedelta(days=days)].reset_index(drop=True)
+    raw = d[["epoch", "sma_km"]].copy()          # 原始取樣（L3 通道分數需與訓練同尺度，不稀釋）
     d = _thin(d, min_gap_h, max_pts)
     if len(d) < 12:
         return None
@@ -57,7 +63,7 @@ def prepare(df: pd.DataFrame, f107: dict | None = None, p2_scale: float = 1.0,
         return None
     st_ = ms.apply_strategies(tr, orbit, p2=p2)
     det = run_all(d["sma_km"].to_numpy(float))
-    return {"d": d, "tr": tr, "strat": st_, "det": det, "orbit": orbit,
+    return {"d": d, "raw": raw, "tr": tr, "strat": st_, "det": det, "orbit": orbit,
             "alt_km": float(d["sma_km"].mean() - ms.R_E), "n_tle": len(d)}
 
 
@@ -199,6 +205,158 @@ def fig_l2(P: dict, T) -> go.Figure:
         fig.update_yaxes(range=[0, max(float(sc[key].max()) * 1.15, 1e-6)], row=r, col=1)
     _play_layout(fig, ks, [str(k) for k in ks], T, 860)
     return fig
+
+
+# ── L3：把 L2 通道輸出融合成一個機動分數 ──────────────────────────────────────
+_L3_CACHE: dict = {}
+
+
+def load_l3():
+    """讀 models_fusion/l3_common_arena.pkl（train_l3_common_arena.py 產生，HistGradientBoosting，15 特徵）；缺檔或版本不符回 None。"""
+    if "m" not in _L3_CACHE:
+        try:
+            import joblib
+            _L3_CACHE["m"] = joblib.load(L3_MODEL)
+        except Exception:
+            _L3_CACHE["m"] = None
+    return _L3_CACHE["m"]
+
+
+def _epoch_ns(d: pd.DataFrame) -> np.ndarray:
+    return pd.DatetimeIndex(pd.to_datetime(d["epoch"], utc=True)).tz_convert(None).astype("datetime64[ns]").astype("int64")
+
+
+def compute_l3(P: dict, drag: dict | None = None) -> dict | None:
+    """在**原始取樣**序列上算 5 通道分數，對每個原始 TLE 取其置中 ±24 h 窗算 5 通道 ×
+    (max, mean, p90) 共 15 特徵餵 L3（與擂台訓練同定義），再取樣到動畫顯示的 epoch。
+    另算「把某通道特徵歸零」後的分數，估該通道對此刻決策的貢獻。
+
+    drag：{epoch_ns: |drag_resid_da|}（僅 284 顆 Starlink 有）；None → 阻力通道全 0。
+    """
+    M = load_l3()
+    if M is None:
+        return None
+    raw = P["raw"].reset_index(drop=True)
+    r_ns = _epoch_ns(raw)
+    sma = raw["sma_km"].to_numpy(float)
+    det = run_all(sma)
+    nr = len(raw)
+    C = np.zeros((nr, 5))
+    for j, c in enumerate(L3_CH[:4]):
+        C[:, j] = np.abs(np.nan_to_num(np.asarray(det[c]["scores"], float)))
+    has_drag = bool(drag)
+    if has_drag:
+        C[:, 4] = np.array([drag.get(int(e), 0.0) for e in r_ns]) / 0.10
+    half = int(L3_HALF_H * 3.6e12)
+    lo_i = np.searchsorted(r_ns, r_ns - half, side="left")
+    hi_i = np.searchsorted(r_ns, r_ns + half, side="right")
+    F = np.zeros((nr, 15))
+    for j in range(nr):
+        sub = C[lo_i[j]:hi_i[j]]
+        for i in range(5):
+            col = sub[:, i]
+            F[j, 3 * i:3 * i + 3] = (col.max(), col.mean(), np.percentile(col, 90))
+    clf, thr = M["clf"], float(M["thr"])
+    score = clf.predict_proba(F)[:, 1]
+    drop = np.zeros((nr, 5))
+    for i in range(5):
+        Fm = F.copy()
+        Fm[:, 3 * i:3 * i + 3] = 0.0
+        drop[:, i] = score - clf.predict_proba(Fm)[:, 1]
+    # 並排對照：同一窗內 L1 是否有旗標、L2 任一通道是否有事件（L2 以原始序列事件，與 L3 同源）
+    comb = np.asarray(P["strat"]["combined"], bool)
+    l1_pt = np.isin(r_ns, _epoch_ns(P["tr"])[comb])
+    # L2 二值化沿用擂台：AUC 最佳單通道、門檻為安靜窗上 FPR≤0.05（存於模型檔）
+    l2_best = M.get("l2_best") or "cusum"
+    l2_thr = float(M.get("l2_thr") or 4.0)
+    l2_col = C[:, L3_CH.index(l2_best)]
+    l1w = np.array([l1_pt[lo_i[j]:hi_i[j]].any() for j in range(nr)])
+    l2w = np.array([l2_col[lo_i[j]:hi_i[j]].max() >= l2_thr for j in range(nr)])
+    # 取樣到顯示 epoch（顯示序列為原始序列之子集）
+    d_ns = _epoch_ns(P["d"])
+    idx = np.clip(np.searchsorted(r_ns, d_ns), 0, nr - 1)
+    return {"F": F[idx], "C": C[idx], "score": score[idx], "thr": thr, "drop": drop[idx],
+            "has_drag": has_drag, "l1": l1w[idx], "l2": l2w[idx], "l3": (score >= thr)[idx],
+            "model": {k: M.get(k) for k in ("oof_auc", "recall_at_thr", "n_units", "fpr_budget", "l2_best", "l2_thr", "l2_auc", "l2_recall", "l1_recall", "l1_fpr")}}
+
+
+def fig_l3(P: dict, L3: dict, T) -> go.Figure:
+    d = P["d"]
+    t = _naive(d["epoch"])
+    sma = d["sma_km"].to_numpy(float)
+    n = len(d)
+    ep_ns = _epoch_ns(d)
+    F, score, thr, drop = L3["F"], L3["score"], L3["thr"], L3["drop"]
+    names = ["CUSUM", "BOCPD", "SSA", "MAD 3σ", T("NRLMSIS 阻力", "NRLMSIS 抵抗", "NRLMSIS drag")]
+    stats = ["max", "mean", "p90"]
+    gmax = np.maximum(F.max(axis=0), 1e-9)                      # 每個特徵欄的全域最大，供熱圖上色
+    dlim = max(float(np.abs(drop).max()), 0.05) * 1.1
+    half = int(L3_HALF_H * 3.6e12)
+
+    fig = make_subplots(
+        rows=4, cols=2, vertical_spacing=0.075, horizontal_spacing=0.16,
+        row_heights=[0.22, 0.30, 0.24, 0.20],
+        specs=[[{"colspan": 2}, None], [{}, {}], [{"colspan": 2}, None], [{"colspan": 2}, None]],
+        subplot_titles=(
+            T("① 半長軸 a（橘點＝L3 正在評分的窗：以該時刻為中心 ±24 h）", "① 長半径 a（橙＝L3が採点中の窓：その時刻を中心に±24 h）", "① Semi-major axis a (orange = the window L3 is scoring: ±24 h around that moment)"),
+            T("② 窗內 15 個特徵（顏色＝相對全序列最大）", "② 窓内の15特徴（色＝系列全体最大比）", "② The 15 features in the window (colour = share of series max)"),
+            T("③ 靜音該通道後分數掉多少（＝貢獻）", "③ そのチャネルを無音にした時のスコア低下（＝寄与）", "③ Score drop if the channel is silenced (= contribution)"),
+            T("④ L3 融合分數 vs 決策門檻（虛線）", "④ L3融合スコア vs 判定しきい値（点線）", "④ L3 fused score vs decision threshold (dotted)"),
+            T("⑤ 三層並排：同一 48 h 窗內誰亮燈", "⑤ 三層の並置：同じ48 h窓で誰が点灯したか", "⑤ Side by side: who lights up in the same 48 h window")))
+
+    def traces(k):
+        # 置中窗需要「事件後 24 h」的資料才能算完，所以到第 k 筆時，只有中心時刻 ≤ t_k − 24 h 的窗已可評分
+        m = int(np.searchsorted(ep_ns, ep_ns[k - 1] - half, side="right"))
+        m = max(m, 1)
+        j = m - 1
+        inwin = (ep_ns >= ep_ns[j] - half) & (ep_ns <= ep_ns[j] + half) & (np.arange(n) < k)
+        z = (F[j] / gmax).reshape(5, 3)
+        txt = np.array([[f"{v:.3g}" for v in row] for row in F[j].reshape(5, 3)])
+        sc = score[:m]
+        out = [
+            go.Scatter(x=t[:k], y=sma[:k], mode="lines+markers", line=dict(color=COL_OK, width=1.3), marker=dict(size=3)),
+            go.Scatter(x=t[inwin], y=sma[inwin], mode="markers", marker=dict(size=9, color="#f59f00", line=dict(width=1, color="#fff"))),
+            go.Heatmap(z=z, x=stats, y=names, zmin=0, zmax=1, colorscale="Purples", showscale=False,
+                       text=txt, texttemplate="%{text}", hoverinfo="skip"),
+            go.Bar(x=drop[j], y=names, orientation="h",
+                   marker_color=[COL_FLAG if v > 0 else COL_MUTED for v in drop[j]]),
+            go.Scatter(x=t[:m], y=sc, mode="lines", line=dict(color="#7a5af8", width=1.6)),
+            go.Scatter(x=t[:m][sc >= thr], y=sc[sc >= thr], mode="markers",
+                       marker=dict(size=10, color=COL_FLAG, symbol="star")),
+        ]
+        for name, arr in (("L1", L3["l1"]), ("L2", L3["l2"]), ("L3", L3["l3"])):
+            mm = arr[:m]
+            out.append(go.Scatter(x=t[:m][mm], y=[name] * int(mm.sum()), mode="markers",
+                                  marker=dict(size=9, symbol="square", color=COL_FLAG)))
+        return out
+
+    ks = _steps(n)
+    first = traces(ks[0])
+    pos = [(1, 1), (1, 1), (2, 1), (2, 2), (3, 1), (3, 1), (4, 1), (4, 1), (4, 1)]
+    for tr_, (r, c) in zip(first, pos):
+        fig.add_trace(tr_, row=r, col=c)
+    # 靜態：決策門檻線（不隨影格更新）
+    fig.add_trace(go.Scatter(x=[t.iloc[0], t.iloc[-1]], y=[thr, thr], mode="lines",
+                             line=dict(color="#111", width=2, dash="dot")), row=3, col=1)
+    fig.frames = [go.Frame(data=traces(k), traces=list(range(9)), name=str(k)) for k in ks]
+
+    for r in (1, 3, 4):
+        fig.update_xaxes(range=[t.iloc[0], t.iloc[-1]], autorange=False, row=r, col=1)
+    pad = 0.02 * (np.ptp(sma) + 1e-3)
+    fig.update_yaxes(range=[sma.min() - pad, sma.max() + pad], row=1, col=1)
+    fig.update_yaxes(autorange="reversed", row=2, col=1)
+    fig.update_yaxes(autorange="reversed", row=2, col=2)
+    fig.update_xaxes(range=[-dlim, dlim], zeroline=True, row=2, col=2)
+    fig.update_yaxes(range=[-0.02, 1.02], row=3, col=1)
+    fig.update_yaxes(categoryorder="array", categoryarray=["L3", "L2", "L1"], row=4, col=1)
+    _play_layout(fig, ks, [str(k) for k in ks], T, 1000)
+    return fig
+
+
+def l3_summary(L3: dict) -> dict:
+    return {"thr": L3["thr"], "n_l3": int(L3["l3"].sum()), "n_l1": int(L3["l1"].sum()),
+            "n_l2": int(L3["l2"].sum()), "has_drag": L3["has_drag"],
+            "n": len(L3["score"]), "max": float(L3["score"].max())}
 
 
 def summary(P: dict) -> dict:
