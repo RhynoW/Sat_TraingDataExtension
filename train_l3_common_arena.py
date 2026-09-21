@@ -7,7 +7,7 @@ train_l3_common_arena.py
 為何不直接用擂台的 L3：擂台（three_layer_common_eval.py）的 unit 是「整個機動 episode ±24 h」，
 是「已知這裡有事件時」的評分（AUC 0.98 見報告 §13.2），並非逐 epoch 的串流偵測器；models_fusion/
 fusion_scorer.pkl 為 2026-07-15 舊版，餵入現行特徵時在安靜窗上 94.5% 亮燈，亦不可用。
-故此處以**同樣的 15 維特徵與 HGB 超參數**（5 通道 × max/mean/p90，窗＝該 epoch 置中 ±24 h），
+故此處以 15 維通道特徵（5 通道 × max/mean/p90，窗＝該 epoch 置中 ±24 h）＋ 2 維階躍特徵（窗內最大 |Δa|、σ-SNR），HGB 超參數同擂台，
 改成對每個原始 TLE epoch 都打分；標籤＝該 epoch ±24 h 內有無 MEME medium+ 機動轉移。
 衛星分組 GroupKFold(5) 取 OOF；門檻＝負窗上 FPR≤0.05（與擂台操作點相同）。
 
@@ -74,12 +74,20 @@ def main():
             np.array([drg.get(e, 0.0) for e in ep]) / 0.10]))
         lo = np.searchsorted(ep, ep - HALF_NS, side="left")
         hi = np.searchsorted(ep, ep + HALF_NS, side="right")
-        F = np.zeros((len(ep), 15))
+        # 階躍特徵（擂台基線「σ 正規化 |Δa|」AUC 0.878）：窗內最大 |Δa|（m）與其相對該星雜訊 σ 的 SNR
+        dsma = np.diff(sma)
+        sig_m = 1.4826 * float(np.median(np.abs(dsma - np.median(dsma)))) * 1000.0
+        ad = np.r_[0.0, np.abs(dsma)] * 1000.0
+        F = np.zeros((len(ep), 17))
         for j in range(len(ep)):
             sub = C[lo[j]:hi[j]]
             for i in range(5):
                 col = sub[:, i]
                 F[j, 3 * i:3 * i + 3] = (col.max(), col.mean(), np.percentile(col, 90))
+            seg = ad[lo[j] + 1:hi[j]]
+            dm_ = float(seg.max()) if len(seg) else 0.0
+            F[j, 15] = dm_
+            F[j, 16] = dm_ / sig_m if sig_m > 0 else 0.0
         # 標籤：±24 h 內有 medium+ 機動轉移
         y = np.zeros(len(ep), bool)
         for times, rk in eps_by.get(int(nid), []):
@@ -106,7 +114,7 @@ def main():
     groups = np.concatenate(rows_g)
     l1 = np.concatenate(rows_l1)
     neg = ~y
-    feats = [f"f_{c}_{st}" for c in T3E.CH for st in ("max", "mean", "p90")]
+    feats = [f"f_{c}_{st}" for c in T3E.CH for st in ("max", "mean", "p90")] + ["da_max_m", "snr_window"]
     print(f"窗 {len(y)}：正 {int(y.sum())}、負 {int(neg.sum())}、衛星 {len(set(groups))}", flush=True)
 
     oof = np.zeros(len(y))
@@ -125,13 +133,15 @@ def main():
     l2_rec = float((col[y] >= l2_thr).mean())
     print(f"L2 最佳單通道 {l2_best}（AUC {l2_aucs[l2_best]:.3f}），thr={l2_thr:.3f}，recall={l2_rec:.3f}", flush=True)
     l1_rec, l1_fpr = float(l1[y].mean()), float(l1[neg].mean())
+    print(f"單特徵 σ-SNR AUC={roc_auc_score(y, F[:, 16]):.3f}", flush=True)
     print(f"L1 規則：recall={l1_rec:.3f}  FPR={l1_fpr:.3f}", flush=True)
 
     clf = HistGradientBoostingClassifier(**T3E.HGB).fit(F, y)
     joblib.dump({"clf": clf, "feats": feats, "channels": T3E.CH, "thr": thr, "oof_auc": auc,
                  "recall_at_thr": rec, "n_units": int(len(y)), "fpr_budget": 0.05,
                  "l2_best": l2_best, "l2_thr": l2_thr, "l2_auc": l2_aucs[l2_best], "l2_recall": l2_rec,
-                 "l1_recall": l1_rec, "l1_fpr": l1_fpr, "mode": "sliding_epoch_centered_pm24h"}, OUT)
+                 "l1_recall": l1_rec, "l1_fpr": l1_fpr, "mode": "sliding_epoch_centered_pm24h", "n_feat": 17,
+                 "auc_snr_only": float(roc_auc_score(y, F[:, 16]))}, OUT)
     print("saved →", OUT)
 
 

@@ -250,18 +250,27 @@ def compute_l3(P: dict, drag: dict | None = None) -> dict | None:
     half = int(L3_HALF_H * 3.6e12)
     lo_i = np.searchsorted(r_ns, r_ns - half, side="left")
     hi_i = np.searchsorted(r_ns, r_ns + half, side="right")
-    F = np.zeros((nr, 15))
+    dsma = np.diff(sma)
+    sig_m = 1.4826 * float(np.median(np.abs(dsma - np.median(dsma)))) * 1000.0
+    ad = np.r_[0.0, np.abs(dsma)] * 1000.0
+    F = np.zeros((nr, 17))
     for j in range(nr):
         sub = C[lo_i[j]:hi_i[j]]
         for i in range(5):
             col = sub[:, i]
             F[j, 3 * i:3 * i + 3] = (col.max(), col.mean(), np.percentile(col, 90))
+        seg = ad[lo_i[j] + 1:hi_i[j]]
+        F[j, 15] = float(seg.max()) if len(seg) else 0.0
+        F[j, 16] = F[j, 15] / sig_m if sig_m > 0 else 0.0
     clf, thr = M["clf"], float(M["thr"])
     score = clf.predict_proba(F)[:, 1]
-    drop = np.zeros((nr, 5))
-    for i in range(5):
+    drop = np.zeros((nr, 6))
+    for i in range(6):
         Fm = F.copy()
-        Fm[:, 3 * i:3 * i + 3] = 0.0
+        if i < 5:
+            Fm[:, 3 * i:3 * i + 3] = 0.0
+        else:
+            Fm[:, 15:17] = 0.0            # 階躍特徵（窗內最大 |Δa| 與 σ-SNR）
         drop[:, i] = score - clf.predict_proba(Fm)[:, 1]
     # 並排對照：同一窗內 L1 是否有旗標、L2 任一通道是否有事件（L2 以原始序列事件，與 L3 同源）
     comb = np.asarray(P["strat"]["combined"], bool)
@@ -275,9 +284,9 @@ def compute_l3(P: dict, drag: dict | None = None) -> dict | None:
     # 取樣到顯示 epoch（顯示序列為原始序列之子集）
     d_ns = _epoch_ns(P["d"])
     idx = np.clip(np.searchsorted(r_ns, d_ns), 0, nr - 1)
-    return {"F": F[idx], "C": C[idx], "score": score[idx], "thr": thr, "drop": drop[idx],
+    return {"F": F[idx], "C": C[idx], "sigma_m": sig_m, "score": score[idx], "thr": thr, "drop": drop[idx],
             "has_drag": has_drag, "l1": l1w[idx], "l2": l2w[idx], "l3": (score >= thr)[idx],
-            "model": {k: M.get(k) for k in ("oof_auc", "recall_at_thr", "n_units", "fpr_budget", "l2_best", "l2_thr", "l2_auc", "l2_recall", "l1_recall", "l1_fpr")}}
+            "model": {k: M.get(k) for k in ("oof_auc", "recall_at_thr", "n_units", "fpr_budget", "l2_best", "l2_thr", "l2_auc", "l2_recall", "l1_recall", "l1_fpr", "auc_snr_only")}}
 
 
 def fig_l3(P: dict, L3: dict, T) -> go.Figure:
@@ -287,9 +296,11 @@ def fig_l3(P: dict, L3: dict, T) -> go.Figure:
     n = len(d)
     ep_ns = _epoch_ns(d)
     F, score, thr, drop = L3["F"], L3["score"], L3["thr"], L3["drop"]
-    names = ["CUSUM", "BOCPD", "SSA", "MAD 3σ", T("NRLMSIS 阻力", "NRLMSIS 抵抗", "NRLMSIS drag")]
+    names = ["CUSUM", "BOCPD", "SSA", "MAD 3σ", T("NRLMSIS 阻力", "NRLMSIS 抵抗", "NRLMSIS drag"),
+             T("階躍 |Δa|／SNR", "ステップ |Δa|／SNR", "Step |Δa| / SNR")]
     stats = ["max", "mean", "p90"]
     gmax = np.maximum(F.max(axis=0), 1e-9)                      # 每個特徵欄的全域最大，供熱圖上色
+    gmax_step = np.maximum(np.log1p(F[:, 15:17]).max(axis=0), 1e-9)
     dlim = max(float(np.abs(drop).max()), 0.05) * 1.1
     half = int(L3_HALF_H * 3.6e12)
 
@@ -310,8 +321,13 @@ def fig_l3(P: dict, L3: dict, T) -> go.Figure:
         m = max(m, 1)
         j = m - 1
         inwin = (ep_ns >= ep_ns[j] - half) & (ep_ns <= ep_ns[j] + half) & (np.arange(n) < k)
-        z = (F[j] / gmax).reshape(5, 3)
-        txt = np.array([[f"{v:.3g}" for v in row] for row in F[j].reshape(5, 3)])
+        z = np.full((6, 3), np.nan)
+        z[:5] = (F[j, :15] / gmax[:15]).reshape(5, 3)
+        z[5, :2] = np.log1p(F[j, 15:17]) / gmax_step          # 階躍列以 log 上色（跨數量級）
+        txt = np.full((6, 3), "", dtype=object)
+        txt[:5] = np.array([[f"{v:.3g}" for v in row] for row in F[j, :15].reshape(5, 3)])
+        txt[5, 0] = f"{F[j, 15]:.3g} m"
+        txt[5, 1] = f"SNR {F[j, 16]:.3g}"
         sc = score[:m]
         out = [
             go.Scatter(x=t[:k], y=sma[:k], mode="lines+markers", line=dict(color=COL_OK, width=1.3), marker=dict(size=3)),
