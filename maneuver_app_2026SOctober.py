@@ -216,6 +216,12 @@ L: dict[str, dict[str, str]] = {
     "storymap_case26_card_desc": {"zh": "SGP4 vs 完整物理模式，誰比較準？答案不是「哪個贏」，而是「各自的地盤在哪裡」——一場3顆衛星到100顆衛星的樣本數翻案記。",
                                   "ja": "SGP4 vs 完全物理モデル、どちらが正確か？答えは「どちらが勝つか」ではなく「それぞれの得意な時間帯はどこか」——3機から100機へ、サンプル数がひっくり返した結論の記録。",
                                   "en": "SGP4 vs. a full physics model — which is more accurate? The answer isn't \"which wins\" but \"which time window each owns\" — a record of how sample size flipped the conclusion, from 3 satellites to 100."},
+    "storymap_case27_card_title": {"zh": "案例二十七：讓偵測法動起來——L1 規則閘門與 L2 統計通道的逐筆動畫",
+                                   "ja": "事例二十七：検出法を動かして見る——L1ルールゲートとL2統計チャネルのTLE逐次アニメーション",
+                                   "en": "Case 27: Watch the Detectors Run — Frame-by-Frame Animation of the L1 Rule Gates and L2 Statistical Channels"},
+    "storymap_case27_card_desc": {"zh": "輸入任何 NORAD ID（留空則用福衛五號＋一顆 Starlink），看 TLE 一筆筆進來時，P1–P6 規則與 CUSUM／BOCPD／SSA／MAD 如何各自亮燈。",
+                                  "ja": "任意のNORAD IDを入力（空欄ならFORMOSAT-5＋Starlink1機）。TLEが1件ずつ届くとき、P1–P6ルールとCUSUM／BOCPD／SSA／MADがどう点灯するかを見る。",
+                                  "en": "Enter any NORAD ID (blank = FORMOSAT-5 + one Starlink) and watch how the P1–P6 rules and CUSUM / BOCPD / SSA / MAD light up as TLEs arrive one by one."},
 
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
@@ -1845,7 +1851,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 27):
+    for _n in range(14, 28):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -12614,6 +12620,169 @@ def render_storymap_case26():
     ))
 
 
+@st.cache_data(show_spinner=False)
+def _c27_prepare(nid: int, days: int, p2_scale: float):
+    import l1l2_explainer as X
+    df = load_tle(nid)
+    return X.prepare(df, load_f107(), p2_scale=p2_scale, days=days)
+
+
+def render_storymap_case27():
+    import l1l2_explainer as X
+    if st.button(t("storymap_back"), key="back_from_case27"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例二十七：讓偵測法動起來——L1 規則閘門與 L2 統計通道的逐筆動畫",
+        "事例二十七：検出法を動かして見る——L1ルールゲートとL2統計チャネルのTLE逐次アニメーション",
+        "Case 27: Watch the Detectors Run — Frame-by-Frame Animation of the L1 Rule Gates and L2 Statistical Channels",
+    ))
+    st.caption(T3(
+        "L1、L2 的原理過去都以文字說明。本案例把它們畫成動畫：按下播放，TLE 一筆一筆到來，"
+        "你可以親眼看到每一道規則、每一個統計通道在什麼時候、為什麼亮燈。所有曲線都是用本專案"
+        "實際的偵測程式（maneuver_strategies_july.py、statistical_detectors.py）對真實 TLE 算出來的，不是示意圖。",
+        "L1・L2の原理はこれまで文章で説明してきた。本事例はそれをアニメーションにした。再生を押すとTLEが1件ずつ届き、"
+        "各ルール・各統計チャネルがいつ、なぜ点灯するかを目で確かめられる。曲線はすべて本プロジェクトの実際の検出コード"
+        "（maneuver_strategies_july.py、statistical_detectors.py）が実TLEから計算したもので、模式図ではない。",
+        "L1 and L2 have so far been explained in words. This case draws them as animations: press play, TLEs "
+        "arrive one by one, and you can watch when — and why — each rule and each statistical channel lights up. "
+        "Every curve is computed by the project's actual detection code (maneuver_strategies_july.py, "
+        "statistical_detectors.py) on real TLEs; nothing is a mock-up.",
+    ))
+
+    st.header(T3("① 選擇衛星", "① 衛星を選ぶ", "① Choose satellites"))
+    raw = st.text_input(
+        T3("輸入 NORAD ID（可輸入 1–2 顆，以逗號或空白分隔；留空＝使用預設）",
+           "NORAD IDを入力（1〜2機、カンマまたは空白区切り。空欄＝既定を使用）",
+           "Enter NORAD ID(s) (1–2, comma or space separated; blank = use defaults)"),
+        value="", placeholder="42920, 48881", key="c27_norad")
+    ids = []
+    for tok in raw.replace(",", " ").split():
+        if tok.isdigit() and int(tok) not in ids:
+            ids.append(int(tok))
+    if not ids:
+        ids = [42920, 48881]
+        st.info(T3(
+            "未輸入 → 使用預設對照組：**福衛五號（NORAD 42920，約 723 km，訊噪比高、機動一目了然）** "
+            "與 **STARLINK-3005（NORAD 48881，約 563 km，低軌難例，雜訊底高）**。",
+            "未入力 → 既定の比較ペアを使用：**FORMOSAT-5（NORAD 42920、約723 km、S/N高く機動が明瞭）** と "
+            "**STARLINK-3005（NORAD 48881、約563 km、低軌道の難例でノイズ床が高い）**。",
+            "Nothing entered → using the default contrast pair: **FORMOSAT-5 (NORAD 42920, ~723 km, high SNR, "
+            "maneuvers stand out)** and **STARLINK-3005 (NORAD 48881, ~563 km, a hard low-orbit case with a high noise floor)**."))
+    if len(ids) > 2:
+        st.warning(T3("最多顯示 2 顆，僅取前 2 個。", "表示は最大2機。先頭の2つのみ使用。",
+                      "At most 2 satellites; using the first two."))
+        ids = ids[:2]
+
+    c1, c2 = st.columns(2)
+    days = c1.slider(T3("觀察窗（天）", "観測窓（日）", "Observation window (days)"),
+                     60, 365, 365, 15, key="c27_days")
+    scale = c2.slider(T3("L1 門檻倍率（1.0＝專案預設）", "L1しきい値倍率（1.0＝既定）",
+                         "L1 threshold scale (1.0 = project default)"),
+                      0.25, 4.0, 1.0, 0.25, key="c27_scale")
+    st.caption(T3(
+        "拖動 L1 門檻倍率，再播放一次：門檻降低會抓到更多、也更容易把雜訊當機動；升高則相反——這就是 L1「只有單一操作點」的直觀意義。",
+        "L1しきい値倍率を動かして再度再生：下げると検出は増えるが雑音も拾いやすく、上げるとその逆になる——L1が「単一の動作点しか持たない」ことの直感的な意味である。",
+        "Drag the L1 threshold scale and play again: lowering it catches more but mistakes more noise for maneuvers; "
+        "raising it does the opposite — this is what \"L1 has only a single operating point\" means in practice."))
+
+    names = load_registry_names()
+    tabs = st.tabs([f"{names.get(n, 'NORAD ' + str(n))} · {n}" for n in ids])
+    for tab, nid in zip(tabs, ids):
+        with tab:
+            P = _c27_prepare(nid, days, scale)
+            if P is None:
+                st.error(T3(f"NORAD {nid} 在此觀察窗內 TLE 不足（需 ≥12 筆）或不在資料庫。",
+                            f"NORAD {nid} は観測窓内のTLEが不足（12件以上必要）またはDBに存在しない。",
+                            f"NORAD {nid} has too few TLEs in this window (need ≥12) or is not in the database."))
+                continue
+            sm = X.summary(P)
+            ev = sm["l2_events"]
+            st.markdown(T3(
+                f"共 **{sm['n_tle']}** 筆 TLE（已稀釋近重複 epoch，最小間隔 12 h）；平均高度 **{sm['alt_km']:.0f} km**。"
+                f"L1 最終旗標 **{sm['l1_flags']}** / {sm['l1_transitions']} 個轉換（被 P1/P3 抑制 {sm['l1_suppressed']} 個）；"
+                f"L2 各通道事件數：CUSUM {ev['cusum']}、BOCPD {ev['bocpd']}、SSA {ev['ssa']}、MAD 3σ {ev['mad3sig']}。",
+                f"TLE **{sm['n_tle']}** 件（近重複epochを間引き、最小間隔12 h）；平均高度 **{sm['alt_km']:.0f} km**。"
+                f"L1最終フラグ **{sm['l1_flags']}** / {sm['l1_transitions']} 遷移（P1/P3が抑制 {sm['l1_suppressed']}）；"
+                f"L2各チャネルのイベント数：CUSUM {ev['cusum']}、BOCPD {ev['bocpd']}、SSA {ev['ssa']}、MAD 3σ {ev['mad3sig']}。",
+                f"**{sm['n_tle']}** TLEs (near-duplicate epochs thinned, min gap 12 h); mean altitude **{sm['alt_km']:.0f} km**. "
+                f"L1 final flags **{sm['l1_flags']}** of {sm['l1_transitions']} transitions ({sm['l1_suppressed']} suppressed by P1/P3); "
+                f"L2 events per channel: CUSUM {ev['cusum']}, BOCPD {ev['bocpd']}, SSA {ev['ssa']}, MAD 3σ {ev['mad3sig']}."))
+
+            st.header(T3("② L1：規則閘門——一道道關卡，全部通過才算機動",
+                         "② L1：ルールゲート——関門をすべて通過して初めて機動",
+                         "② L1: Rule gates — a maneuver only if it passes every gate"))
+            st.markdown(T3(
+                "**怎麼看**：上圖是半長軸；中圖每根柱子是「相鄰兩筆 TLE 的 |Δa|」，黑色虛線是**該高度、該太陽活動下的門檻**"
+                "（P2 依高度、P5 依 F10.7、P6 依星座族群調整）；柱子**越過虛線、且沒被抑制規則擋下**就變紅並在上圖打星號。"
+                "下圖是各規則的亮燈紀錄：紅方塊＝偵測型規則（P2/P4/P5/P6/其他）觸發，灰叉＝抑制型規則（P1 純大氣衰減、P3 高 B\\* 阻力）把誤報擋掉。",
+                "**見方**：上図は長半径。中図の各棒は「隣接する2件のTLEの|Δa|」、黒の点線は**その高度・太陽活動でのしきい値**"
+                "（P2は高度、P5はF10.7、P6は星座群で調整）。棒が**点線を超え、かつ抑制ルールに止められなければ**赤くなり、上図に星印が付く。"
+                "下図は各ルールの点灯記録：赤い四角＝検出型（P2/P4/P5/P6/その他）が発火、灰の×＝抑制型（P1 純粋な大気減衰、P3 高B*抵抗）が誤報を止めた。",
+                "**How to read**: the top panel is the semi-major axis. In the middle panel each bar is |Δa| between two adjacent TLEs; "
+                "the dotted black line is the **threshold for that altitude and solar-activity level** (P2 scales with altitude, P5 with F10.7, "
+                "P6 with constellation family). A bar that **crosses the line and is not vetoed by a suppressor** turns red and gets a star on top. "
+                "The bottom panel logs rule activity: red squares = detector rules (P2/P4/P5/P6/other) firing; grey crosses = suppressor rules "
+                "(P1 pure atmospheric decay, P3 high-B* drag) blocking a false alarm."))
+            st.plotly_chart(X.fig_l1(P, T3), use_container_width=True, key=f"c27_l1_{nid}")
+
+            st.header(T3("③ L2：統計通道——不看物理，只問「這條曲線的行為變了嗎」",
+                         "③ L2：統計チャネル——物理は見ず「この曲線の挙動が変わったか」だけを問う",
+                         "③ L2: Statistical channels — no physics, only \"did this curve's behaviour change?\""))
+            st.markdown(T3(
+                "四個通道各自獨立讀同一條半長軸序列：**CUSUM** 累積偏離量，均值悄悄偏移時緩緩爬升；**BOCPD** 給出「現在已進入新狀態」的機率；"
+                "**SSA** 先扣掉阻力趨勢與週期成分，看殘差尖峰；**MAD 3σ** 單看這一步是否離群。紅星是該通道自己判定的事件。"
+                "**各通道不必同時亮**——它們對不同型態的變化敏感，這正是後續 L3 要把它們融合的理由（三層同一擂台 L3 0.981 > L2 0.892 > L1）。",
+                "4つのチャネルが同じ長半径系列を独立に読む：**CUSUM**は累積偏差で、平均が静かにずれると緩やかに上昇；**BOCPD**は「今は新しい状態に入った」確率；"
+                "**SSA**は抵抗トレンドと周期成分を除いた残差スパイク；**MAD 3σ**はこの一歩が外れ値かだけを見る。赤い星は各チャネル自身が判定したイベント。"
+                "**各チャネルが同時に点灯するとは限らない**——変化の型により感度が違い、これがL3で融合する理由である（三層同一土俵 L3 0.981 > L2 0.892 > L1）。",
+                "Four channels read the same semi-major-axis series independently: **CUSUM** accumulates deviation and creeps up when the mean quietly shifts; "
+                "**BOCPD** outputs the probability that we are now in a new regime; **SSA** strips out the drag trend and oscillations and looks at residual spikes; "
+                "**MAD 3σ** asks only whether this single step is an outlier. Red stars are events each channel declared itself. "
+                "**The channels need not light up together** — each is sensitive to a different kind of change, which is why L3 fuses them "
+                "(common-arena result: L3 0.981 > L2 0.892 > L1)."))
+            st.plotly_chart(X.fig_l2(P, T3), use_container_width=True, key=f"c27_l2_{nid}")
+
+    st.header(T3("④ 用預設對照組看什麼", "④ 既定ペアで何を見るか", "④ What to look for in the default pair"))
+    st.markdown(T3(
+        "- **福衛五號（723 km）**：高軌、大氣擾動小，雜訊底約公尺級，機動的 |Δa| 遠高於門檻，L1 的柱子清楚越線；"
+        "大量緩降的點被 P1 抑制（灰叉），不會被當成機動。\n"
+        "- **STARLINK-3005（563 km）**：低軌、電推與大氣阻力並存，雜訊底高（見案例三、二十四、二十五），|Δa| 常態性貼近門檻，"
+        "L1 與 L2 的判定更容易分歧——這就是「低軌難例」。\n"
+        "- 若你輸入自己的 NORAD ID，可試著找出「L1 亮而 L2 不亮」或「L2 亮而 L1 不亮」的時刻，那正是各層的盲區。",
+        "- **FORMOSAT-5（723 km）**：高めの軌道で大気擾乱が小さく、ノイズ床はメートル級。機動の|Δa|はしきい値を大きく超え、L1の棒が明瞭に線を越える。"
+        "緩やかな降下の多くの点はP1が抑制する（灰の×）ので機動とは扱われない。\n"
+        "- **STARLINK-3005（563 km）**：低軌道で電気推進と大気抵抗が併存し、ノイズ床が高い（事例3・24・25参照）。|Δa|が常にしきい値近傍にあり、"
+        "L1とL2の判定が割れやすい——これが「低軌道の難例」。\n"
+        "- 自分のNORAD IDを入れるなら、「L1は点灯しL2は点灯しない」またはその逆の瞬間を探してみよう。それが各層の死角である。",
+        "- **FORMOSAT-5 (723 km)**: higher orbit, small atmospheric perturbation, noise floor at the metre level. Maneuver |Δa| sits far above the threshold, "
+        "so the L1 bars clearly cross the line; the many slow-decay points are suppressed by P1 (grey crosses) and never mistaken for maneuvers.\n"
+        "- **STARLINK-3005 (563 km)**: low orbit where electric propulsion and drag coexist, with a high noise floor (see Cases 3, 24, 25). |Δa| habitually hugs the threshold, "
+        "so L1 and L2 disagree more easily — this is the \"hard low-orbit case\".\n"
+        "- With your own NORAD ID, look for moments where L1 fires but L2 does not, or vice versa — those are each layer's blind spots."))
+
+    st.header(T3("⑤ 誠實限制", "⑤ 正直な限界", "⑤ Honest limitations"))
+    st.markdown(T3(
+        "1. 這裡展示的是**偵測法的行為**，不是準確度：頁面沒有疊上機動真值，因此**不能**由紅星數量判斷誰比較準。準確度請見報告 §13.2 三層同一擂台。\n"
+        "2. L1 逐筆只依賴相鄰兩筆與短窗，可線上運作；L2 的 SSA、MAD 使用整段序列統計量，動畫的「逐步揭露」是把已算好的分數依時間顯示，並非嚴格的逐筆重算。\n"
+        "3. 為控制網頁大小，序列已稀釋近重複 epoch（最小間隔 12 h）並最多取最近 450 筆；資料庫為滾動視窗，觀察窗實際長度依衛星而異。\n"
+        "4. 各通道的「事件」採用 statistical_detectors.py 之內建判定，未針對單一衛星調參；亮燈數量多不代表較好。",
+        "1. ここで示すのは**検出法の挙動**であって精度ではない：機動の真値を重ねていないので、赤い星の数から優劣を**判断できない**。精度は報告§13.2の三層同一土俵を参照。\n"
+        "2. L1は隣接2件と短窓のみに依存しオンライン動作できる。L2のSSA・MADは系列全体の統計量を使うため、アニメの「逐次表示」は計算済みスコアを時間順に見せるもので、厳密な逐次再計算ではない。\n"
+        "3. ページサイズを抑えるため、近重複epochを間引き（最小間隔12 h）、直近最大450件に限定。DBはローリング窓のため観測窓の実長は衛星により異なる。\n"
+        "4. 各チャネルの「イベント」はstatistical_detectors.py組み込みの判定で、個別衛星向けの調整はしていない。点灯数が多い＝優れている、ではない。",
+        "1. This shows **how the detectors behave**, not how accurate they are: no maneuver ground truth is overlaid, so the number of red stars **cannot** tell you which is better. "
+        "For accuracy see the report's §13.2 common-arena comparison.\n"
+        "2. L1 depends only on adjacent TLE pairs and a short window, so it can run online; L2's SSA and MAD use whole-series statistics, so the animation's "
+        "\"progressive reveal\" shows precomputed scores in time order, not a strict per-TLE recomputation.\n"
+        "3. To keep the page light, near-duplicate epochs are thinned (min gap 12 h) and at most the latest 450 points are used; the database is a rolling window, "
+        "so the actual window length varies by satellite.\n"
+        "4. Each channel's \"events\" use statistical_detectors.py's built-in rule with no per-satellite tuning; more lights does not mean better."))
+    st.caption("Code: `l1l2_explainer.py`, `maneuver_strategies_july.py`, `statistical_detectors.py`; "
+               "common-arena numbers: `three_layer_common_eval.py`.")
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -12624,7 +12793,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
-        "case21", "case22", "case23", "case24", "case25", "case26"):
+        "case21", "case22", "case23", "case24", "case25", "case26", "case27"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -12699,6 +12868,8 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case25()
     elif _case == "case26":
         render_storymap_case26()
+    elif _case == "case27":
+        render_storymap_case27()
     else:
         render_storymap_landing()
     st.stop()
