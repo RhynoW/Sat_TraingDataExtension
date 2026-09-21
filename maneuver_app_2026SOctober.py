@@ -57,12 +57,12 @@ R_E = 6378.137
 LANG_LABELS = {"zh": "中文", "ja": "日本語", "en": "English"}
 L: dict[str, dict[str, str]] = {
     # ── 頁面 / 標題 ──────────────────────────────────────────────────────────
-    "page_title": {"zh": "機動偵測儀表板 2026-09",
-                   "ja": "マヌーバ検知ダッシュボード 2026-09",
-                   "en": "Maneuver Detection Dashboard 2026-09"},
-    "app_title": {"zh": "🛰️ 機動偵測儀表板（2026 年 9 月版）",
-                  "ja": "🛰️ マヌーバ検知ダッシュボード（2026年9月版）",
-                  "en": "🛰️ Maneuver Detection Dashboard (September 2026)"},
+    "page_title": {"zh": "機動偵測儀表板（2026 年 10 月版）",
+                   "ja": "マヌーバ検知ダッシュボード（2026年10月版）",
+                   "en": "Maneuver Detection Dashboard (October 2026)"},
+    "app_title": {"zh": "🛰️ 機動偵測儀表板（2026 年 10 月版）",
+                  "ja": "🛰️ マヌーバ検知ダッシュボード（2026年10月版）",
+                  "en": "🛰️ Maneuver Detection Dashboard (October 2026)"},
     "app_caption": {"zh": "整合 P1–P6 規則、CUSUM/BOCPD/SSA"
                           "（Singular Spectrum Analysis，奇異譜分析）統計層、"
                           "MEME-tuned ML forecast 模型",
