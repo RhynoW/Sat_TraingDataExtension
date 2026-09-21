@@ -25,9 +25,6 @@ import maneuver_strategies_july as ms
 from statistical_detectors import run_all
 
 MAX_FRAMES = 70
-L3_CH = ["cusum", "bocpd", "ssa", "mad3sig", "drag"]     # 與 fusion_scorer.py 一致
-L3_HALF_H = 24.0                                         # 與擂台 TOL 一致：以該 epoch 為中心 ±24 h（共 48 h）
-L3_MODEL = Path(__file__).with_name("models_fusion") / "l3_common_arena.pkl"
 COL_OK, COL_FLAG, COL_SUP, COL_MUTED = "#5b8def", "#e5484d", "#9aa0a6", "#c7cbd1"
 
 
@@ -80,7 +77,7 @@ def _steps(n: int) -> list[int]:
     return ks
 
 
-def _play_layout(fig: go.Figure, ks: list[int], labels: list[str], T, height: int) -> None:
+def _play_layout(fig: go.Figure, ks: list[int], labels: list[str], T, height: int, prefix: str | None = None) -> None:
     fig.update_layout(
         height=height, margin=dict(l=50, r=20, t=30, b=40), showlegend=False,
         updatemenus=[dict(
@@ -95,7 +92,7 @@ def _play_layout(fig: go.Figure, ks: list[int], labels: list[str], T, height: in
             ])],
         sliders=[dict(
             x=0.18, len=0.8, y=-0.04, pad=dict(t=0, b=0),
-            currentvalue=dict(prefix=T("已到達 TLE：", "到達TLE：", "TLEs received: ")),
+            currentvalue=dict(prefix=prefix or T("已到達 TLE：", "到達TLE：", "TLEs received: ")),
             steps=[dict(method="animate", label=lb,
                         args=[[str(k)], dict(mode="immediate", frame=dict(duration=0, redraw=True),
                                              transition=dict(duration=0))])
@@ -207,172 +204,152 @@ def fig_l2(P: dict, T) -> go.Figure:
     return fig
 
 
-# ── L3：把 L2 通道輸出融合成一個機動分數 ──────────────────────────────────────
+# ── L3：候選確認式（L1／L2 類偵測器提出候選 → L3 逐一確認或否決）──────────────────
 _L3_CACHE: dict = {}
+L3_MODELS = {"leo_altimetry": "l3_altimetry.pkl", "starlink": "l3_starlink.pkl"}
+L3_ABLATE = ["z_ls", "z_pe", "z_step", "s_cusum", "s_bocpd", "s_ssa", "s_mad", "det_it2", "det_pr"]
 
 
-def load_l3():
-    """讀 models_fusion/l3_common_arena.pkl（train_l3_common_arena.py 產生，HistGradientBoosting，15 特徵）；缺檔或版本不符回 None。"""
-    if "m" not in _L3_CACHE:
+def load_l3(family: str):
+    """讀 models_fusion/l3_altimetry.pkl（非 Starlink）或 l3_starlink.pkl；缺檔或版本不符回 None。"""
+    if family not in _L3_CACHE:
         try:
             import joblib
-            _L3_CACHE["m"] = joblib.load(L3_MODEL)
+            _L3_CACHE[family] = joblib.load(Path(__file__).with_name("models_fusion") / L3_MODELS[family])
         except Exception:
-            _L3_CACHE["m"] = None
-    return _L3_CACHE["m"]
+            _L3_CACHE[family] = None
+    return _L3_CACHE[family]
 
 
-def _epoch_ns(d: pd.DataFrame) -> np.ndarray:
-    return pd.DatetimeIndex(pd.to_datetime(d["epoch"], utc=True)).tz_convert(None).astype("datetime64[ns]").astype("int64")
+def compute_l3c(tle_df: pd.DataFrame, P: dict, family: str) -> dict | None:
+    """以 l3_candidate 對完整 TLE 序列產生候選與特徵，L3 逐一給機率並依 θ 確認／否決。
 
-
-def compute_l3(P: dict, drag: dict | None = None) -> dict | None:
-    """在**原始取樣**序列上算 5 通道分數，對每個原始 TLE 取其置中 ±24 h 窗算 5 通道 ×
-    (max, mean, p90) 共 15 特徵餵 L3（與擂台訓練同定義），再取樣到動畫顯示的 epoch。
-    另算「把某通道特徵歸零」後的分數，估該通道對此刻決策的貢獻。
-
-    drag：{epoch_ns: |drag_resid_da|}（僅 284 顆 Starlink 有）；None → 阻力通道全 0。
+    tle_df：完整歷史（epoch, sma_km）——σ 正規化特徵需要足夠長的序列；顯示時再截到 P 的觀察窗。
+    ablation：把單一特徵歸零後機率掉多少（＝該特徵對此候選決策的貢獻）。
     """
-    M = load_l3()
+    M = load_l3(family)
     if M is None:
         return None
-    raw = P["raw"].reset_index(drop=True)
-    r_ns = _epoch_ns(raw)
-    sma = raw["sma_km"].to_numpy(float)
-    det = run_all(sma)
-    nr = len(raw)
-    C = np.zeros((nr, 5))
-    for j, c in enumerate(L3_CH[:4]):
-        C[:, j] = np.abs(np.nan_to_num(np.asarray(det[c]["scores"], float)))
-    has_drag = bool(drag)
-    if has_drag:
-        C[:, 4] = np.array([drag.get(int(e), 0.0) for e in r_ns]) / 0.10
-    half = int(L3_HALF_H * 3.6e12)
-    lo_i = np.searchsorted(r_ns, r_ns - half, side="left")
-    hi_i = np.searchsorted(r_ns, r_ns + half, side="right")
-    dsma = np.diff(sma)
-    sig_m = 1.4826 * float(np.median(np.abs(dsma - np.median(dsma)))) * 1000.0
-    ad = np.r_[0.0, np.abs(dsma)] * 1000.0
-    F = np.zeros((nr, 17))
-    for j in range(nr):
-        sub = C[lo_i[j]:hi_i[j]]
-        for i in range(5):
-            col = sub[:, i]
-            F[j, 3 * i:3 * i + 3] = (col.max(), col.mean(), np.percentile(col, 90))
-        seg = ad[lo_i[j] + 1:hi_i[j]]
-        F[j, 15] = float(seg.max()) if len(seg) else 0.0
-        F[j, 16] = F[j, 15] / sig_m if sig_m > 0 else 0.0
-    clf, thr = M["clf"], float(M["thr"])
-    score = clf.predict_proba(F)[:, 1]
-    drop = np.zeros((nr, 6))
-    for i in range(6):
-        Fm = F.copy()
-        if i < 5:
-            Fm[:, 3 * i:3 * i + 3] = 0.0
-        else:
-            Fm[:, 15:17] = 0.0            # 階躍特徵（窗內最大 |Δa| 與 σ-SNR）
-        drop[:, i] = score - clf.predict_proba(Fm)[:, 1]
-    # 並排對照：同一窗內 L1 是否有旗標、L2 任一通道是否有事件（L2 以原始序列事件，與 L3 同源）
-    comb = np.asarray(P["strat"]["combined"], bool)
-    l1_pt = np.isin(r_ns, _epoch_ns(P["tr"])[comb])
-    # L2 二值化沿用擂台：AUC 最佳單通道、門檻為安靜窗上 FPR≤0.05（存於模型檔）
-    l2_best = M.get("l2_best") or "cusum"
-    l2_thr = float(M.get("l2_thr") or 4.0)
-    l2_col = C[:, L3_CH.index(l2_best)]
-    l1w = np.array([l1_pt[lo_i[j]:hi_i[j]].any() for j in range(nr)])
-    l2w = np.array([l2_col[lo_i[j]:hi_i[j]].max() >= l2_thr for j in range(nr)])
-    # 取樣到顯示 epoch（顯示序列為原始序列之子集）
-    d_ns = _epoch_ns(P["d"])
-    idx = np.clip(np.searchsorted(r_ns, d_ns), 0, nr - 1)
-    return {"F": F[idx], "C": C[idx], "sigma_m": sig_m, "score": score[idx], "thr": thr, "drop": drop[idx],
-            "has_drag": has_drag, "l1": l1w[idx], "l2": l2w[idx], "l3": (score >= thr)[idx],
-            "model": {k: M.get(k) for k in ("oof_auc", "recall_at_thr", "n_units", "fpr_budget", "l2_best", "l2_thr", "l2_auc", "l2_recall", "l1_recall", "l1_fpr", "auc_snr_only")}}
+    import l3_candidate as C
+    t, a = C.to_series(tle_df)
+    cand = C.build_candidates(t, a)
+    if cand.empty:
+        return None
+    clf, feats = M["clf"], M["feats"]
+    cls = C.cadence_class(float(cand["cadence_d"].iloc[0]))
+    theta = float(M["theta"][cls])
+    X = cand[feats].astype(float)                 # 保留欄名（模型以 DataFrame 訓練）
+    p = clf.predict_proba(X)[:, 1]
+    drop = np.zeros((len(cand), len(L3_ABLATE)))
+    for j, f in enumerate(L3_ABLATE):
+        Xm = X.copy()
+        Xm[f] = 0.0
+        drop[:, j] = p - clf.predict_proba(Xm)[:, 1]
+    # 顯示窗：與 L1／L2 動畫同一觀察範圍
+    t0, t1 = P["d"]["epoch"].min(), P["d"]["epoch"].max()
+    ep = pd.to_datetime(cand["epoch"], utc=True)
+    show = ((ep >= t0) & (ep <= t1)).to_numpy()
+    # L1：P1–P6 combined 旗標在候選 ±1 天內？
+    tr_ep = pd.to_datetime(P["tr"]["epoch"], utc=True)[np.asarray(P["strat"]["combined"], bool)]
+    en = pd.DatetimeIndex(ep).as_unit("ns").astype("int64").to_numpy()
+    l1n = pd.DatetimeIndex(tr_ep).as_unit("ns").astype("int64").to_numpy() if len(tr_ep) else np.array([], dtype="int64")
+    day = int(86400e9)
+    l1 = np.array([bool(len(l1n)) and bool(np.min(np.abs(l1n - c)) <= day) for c in en])
+    l2 = (cand[["src_cusum", "src_bocpd", "src_ssa", "src_mad3sig"]].sum(axis=1) > 0).to_numpy()
+    return {"cand": cand[show].reset_index(drop=True), "proba": p[show], "acc": (p >= theta)[show],
+            "drop": drop[show], "theta": theta, "cls": cls, "l1": l1[show], "l2": l2[show],
+            "family": family, "n_all": int(len(cand)),
+            "model": {k: M.get(k) for k in ("loso", "n_sats", "n_candidates", "trained_on", "family")}}
 
 
-def fig_l3(P: dict, L3: dict, T) -> go.Figure:
+def fig_l3c(P: dict, L: dict, T) -> go.Figure:
     d = P["d"]
-    t = _naive(d["epoch"])
+    t_sma = _naive(d["epoch"])
     sma = d["sma_km"].to_numpy(float)
-    n = len(d)
-    ep_ns = _epoch_ns(d)
-    F, score, thr, drop = L3["F"], L3["score"], L3["thr"], L3["drop"]
-    names = ["CUSUM", "BOCPD", "SSA", "MAD 3σ", T("NRLMSIS 阻力", "NRLMSIS 抵抗", "NRLMSIS drag"),
-             T("階躍 |Δa|／SNR", "ステップ |Δa|／SNR", "Step |Δa| / SNR")]
-    stats = ["max", "mean", "p90"]
-    gmax = np.maximum(F.max(axis=0), 1e-9)                      # 每個特徵欄的全域最大，供熱圖上色
-    gmax_step = np.maximum(np.log1p(F[:, 15:17]).max(axis=0), 1e-9)
-    dlim = max(float(np.abs(drop).max()), 0.05) * 1.1
-    half = int(L3_HALF_H * 3.6e12)
-
+    cand, p, acc, drop, thr = L["cand"], L["proba"], L["acc"], L["drop"], L["theta"]
+    n = len(cand)
+    tc = _naive(cand["epoch"])
+    a_at = np.interp(pd.DatetimeIndex(tc).as_unit("ns").asi8.astype("float64"), pd.DatetimeIndex(t_sma).as_unit("ns").asi8.astype("float64"), sma)
+    lab = [T(*C_LABELS[f]) for f in L3_ABLATE]
+    src_names = [("src_iter2", "iter2"), ("src_pred", "pred"), ("src_cusum", "CUSUM"), ("src_bocpd", "BOCPD"),
+                 ("src_ssa", "SSA"), ("src_mad3sig", "MAD3σ")]
     fig = make_subplots(
-        rows=4, cols=2, vertical_spacing=0.075, horizontal_spacing=0.16,
-        row_heights=[0.22, 0.30, 0.24, 0.20],
+        rows=4, cols=2, vertical_spacing=0.075, horizontal_spacing=0.2,
+        row_heights=[0.24, 0.30, 0.24, 0.16],
         specs=[[{"colspan": 2}, None], [{}, {}], [{"colspan": 2}, None], [{"colspan": 2}, None]],
         subplot_titles=(
-            T("① 半長軸 a（橘點＝L3 正在評分的窗：以該時刻為中心 ±24 h）", "① 長半径 a（橙＝L3が採点中の窓：その時刻を中心に±24 h）", "① Semi-major axis a (orange = the window L3 is scoring: ±24 h around that moment)"),
-            T("② 窗內 15 個特徵（顏色＝相對全序列最大）", "② 窓内の15特徴（色＝系列全体最大比）", "② The 15 features in the window (colour = share of series max)"),
-            T("③ 靜音該通道後分數掉多少（＝貢獻）", "③ そのチャネルを無音にした時のスコア低下（＝寄与）", "③ Score drop if the channel is silenced (= contribution)"),
-            T("④ L3 融合分數 vs 決策門檻（虛線）", "④ L3融合スコア vs 判定しきい値（点線）", "④ L3 fused score vs decision threshold (dotted)"),
-            T("⑤ 三層並排：同一 48 h 窗內誰亮燈", "⑤ 三層の並置：同じ48 h窓で誰が点灯したか", "⑤ Side by side: who lights up in the same 48 h window")))
+            T("① 半長軸 a：偵測器提出的候選（灰）→ L3 確認（紅星）／否決（灰叉）；橘＝目前這一個",
+              "① 長半径 a：検出器が挙げた候補（灰）→ L3が確認（赤星）／却下（灰×）；橙＝現在の候補",
+              "① Semi-major axis a: candidates proposed by detectors (grey) → confirmed (red star) / rejected (grey ×) by L3; orange = current"),
+            T("② 目前候選的特徵（長度＝log(1+值)，文字＝原值）", "② 現在の候補の特徴（長さ＝log(1+値)、文字＝元の値）",
+              "② Features of the current candidate (length = log(1+value), text = raw value)"),
+            T("③ 把該特徵歸零後機率掉多少（＝貢獻）", "③ その特徴を0にした時の確率低下（＝寄与）",
+              "③ Probability drop if the feature is zeroed (= contribution)"),
+            T("④ L3 對每個候選的確認機率 vs 門檻（虛線）", "④ 各候補に対するL3の確認確率 vs しきい値（点線）",
+              "④ L3's confirmation probability per candidate vs threshold (dotted)"),
+            T("⑤ 同一候選：L1、L2、L3 各自是否成立", "⑤ 同じ候補：L1・L2・L3がそれぞれ成立したか",
+              "⑤ Same candidates: did L1, L2, L3 each fire?")))
 
     def traces(k):
-        # 置中窗需要「事件後 24 h」的資料才能算完，所以到第 k 筆時，只有中心時刻 ≤ t_k − 24 h 的窗已可評分
-        m = int(np.searchsorted(ep_ns, ep_ns[k - 1] - half, side="right"))
-        m = max(m, 1)
-        j = m - 1
-        inwin = (ep_ns >= ep_ns[j] - half) & (ep_ns <= ep_ns[j] + half) & (np.arange(n) < k)
-        z = np.full((6, 3), np.nan)
-        z[:5] = (F[j, :15] / gmax[:15]).reshape(5, 3)
-        z[5, :2] = np.log1p(F[j, 15:17]) / gmax_step          # 階躍列以 log 上色（跨數量級）
-        txt = np.full((6, 3), "", dtype=object)
-        txt[:5] = np.array([[f"{v:.3g}" for v in row] for row in F[j, :15].reshape(5, 3)])
-        txt[5, 0] = f"{F[j, 15]:.3g} m"
-        txt[5, 1] = f"SNR {F[j, 16]:.3g}"
-        sc = score[:m]
+        j = k - 1
+        f = cand.loc[j, L3_ABLATE].to_numpy(float)
+        srcs = ", ".join(nm for col, nm in src_names if cand.loc[j, col] == 1) or "—"
+        tsel = tc[:k]
         out = [
-            go.Scatter(x=t[:k], y=sma[:k], mode="lines+markers", line=dict(color=COL_OK, width=1.3), marker=dict(size=3)),
-            go.Scatter(x=t[inwin], y=sma[inwin], mode="markers", marker=dict(size=9, color="#f59f00", line=dict(width=1, color="#fff"))),
-            go.Heatmap(z=z, x=stats, y=names, zmin=0, zmax=1, colorscale="Purples", showscale=False,
-                       text=txt, texttemplate="%{text}", hoverinfo="skip"),
-            go.Bar(x=drop[j], y=names, orientation="h",
-                   marker_color=[COL_FLAG if v > 0 else COL_MUTED for v in drop[j]]),
-            go.Scatter(x=t[:m], y=sc, mode="lines", line=dict(color="#7a5af8", width=1.6)),
-            go.Scatter(x=t[:m][sc >= thr], y=sc[sc >= thr], mode="markers",
-                       marker=dict(size=10, color=COL_FLAG, symbol="star")),
+            go.Scatter(x=t_sma, y=sma, mode="lines", line=dict(color=COL_OK, width=1.2)),
+            go.Scatter(x=tsel[~acc[:k]], y=a_at[:k][~acc[:k]], mode="markers", marker=dict(size=8, symbol="x", color=COL_SUP)),
+            go.Scatter(x=tsel[acc[:k]], y=a_at[:k][acc[:k]], mode="markers", marker=dict(size=13, symbol="star", color=COL_FLAG)),
+            go.Scatter(x=[tc.iloc[j]], y=[a_at[j]], mode="markers", marker=dict(size=17, color="rgba(245,159,0,0)", line=dict(width=3, color="#f59f00")),
+                       hovertext=[T("提出者：", "提案元：", "Proposed by: ") + srcs], hoverinfo="text"),
+            go.Bar(x=np.log1p(f), y=lab, orientation="h", marker_color=COL_OK, text=[f"{v:.3g}" for v in f], textposition="outside"),
+            go.Bar(x=drop[j], y=lab, orientation="h", marker_color=[COL_FLAG if v > 0 else COL_MUTED for v in drop[j]]),
+            go.Scatter(x=tsel, y=p[:k], mode="markers", marker=dict(size=8, color=np.where(acc[:k], COL_FLAG, COL_SUP))),
         ]
-        for name, arr in (("L1", L3["l1"]), ("L2", L3["l2"]), ("L3", L3["l3"])):
-            mm = arr[:m]
-            out.append(go.Scatter(x=t[:m][mm], y=[name] * int(mm.sum()), mode="markers",
-                                  marker=dict(size=9, symbol="square", color=COL_FLAG)))
+        for name, arr in (("L1", L["l1"]), ("L2", L["l2"]), ("L3", acc)):
+            m = arr[:k]
+            out.append(go.Scatter(x=tsel[m], y=[name] * int(m.sum()), mode="markers", marker=dict(size=9, symbol="square", color=COL_FLAG)))
         return out
 
     ks = _steps(n)
     first = traces(ks[0])
-    pos = [(1, 1), (1, 1), (2, 1), (2, 2), (3, 1), (3, 1), (4, 1), (4, 1), (4, 1)]
+    pos = [(1, 1), (1, 1), (1, 1), (1, 1), (2, 1), (2, 2), (3, 1), (4, 1), (4, 1), (4, 1)]
     for tr_, (r, c) in zip(first, pos):
         fig.add_trace(tr_, row=r, col=c)
-    # 靜態：決策門檻線（不隨影格更新）
-    fig.add_trace(go.Scatter(x=[t.iloc[0], t.iloc[-1]], y=[thr, thr], mode="lines",
-                             line=dict(color="#111", width=2, dash="dot")), row=3, col=1)
-    fig.frames = [go.Frame(data=traces(k), traces=list(range(9)), name=str(k)) for k in ks]
-
+    fig.add_trace(go.Scatter(x=[tc.iloc[0], tc.iloc[-1]], y=[thr, thr], mode="lines", line=dict(color="#111", width=2, dash="dot")), row=3, col=1)
+    fig.frames = [go.Frame(data=traces(k), traces=list(range(len(first))), name=str(k)) for k in ks]
+    x0, x1 = _naive(d["epoch"]).iloc[0], _naive(d["epoch"]).iloc[-1]
     for r in (1, 3, 4):
-        fig.update_xaxes(range=[t.iloc[0], t.iloc[-1]], autorange=False, row=r, col=1)
+        fig.update_xaxes(range=[x0, x1], autorange=False, row=r, col=1)
     pad = 0.02 * (np.ptp(sma) + 1e-3)
     fig.update_yaxes(range=[sma.min() - pad, sma.max() + pad], row=1, col=1)
     fig.update_yaxes(autorange="reversed", row=2, col=1)
     fig.update_yaxes(autorange="reversed", row=2, col=2)
-    fig.update_xaxes(range=[-dlim, dlim], zeroline=True, row=2, col=2)
+    fmax = float(np.log1p(cand[L3_ABLATE].to_numpy(float)).max()) * 1.35 + 1e-6
+    fig.update_xaxes(range=[0, fmax], row=2, col=1)
+    dl = max(float(np.abs(drop).max()), 0.05) * 1.1
+    fig.update_xaxes(range=[-dl, dl], zeroline=True, row=2, col=2)
     fig.update_yaxes(range=[-0.02, 1.02], row=3, col=1)
     fig.update_yaxes(categoryorder="array", categoryarray=["L3", "L2", "L1"], row=4, col=1)
-    _play_layout(fig, ks, [str(k) for k in ks], T, 1000)
+    _play_layout(fig, ks, [str(k) for k in ks], T, 1020, prefix=T("已處理候選：", "処理した候補：", "Candidates processed: "))
     return fig
 
 
-def l3_summary(L3: dict) -> dict:
-    return {"thr": L3["thr"], "n_l3": int(L3["l3"].sum()), "n_l1": int(L3["l1"].sum()),
-            "n_l2": int(L3["l2"].sum()), "has_drag": L3["has_drag"],
-            "n": len(L3["score"]), "max": float(L3["score"].max())}
+C_LABELS = {
+    "z_ls": ("位準位移 SNR", "レベルシフトSNR", "Level-shift SNR"),
+    "z_pe": ("預測誤差 SNR", "予測誤差SNR", "Prediction-error SNR"),
+    "z_step": ("單步 |Δa| SNR", "1ステップ|Δa| SNR", "Single-step |Δa| SNR"),
+    "s_cusum": ("CUSUM 分數", "CUSUMスコア", "CUSUM score"),
+    "s_bocpd": ("BOCPD 分數", "BOCPDスコア", "BOCPD score"),
+    "s_ssa": ("SSA 分數", "SSAスコア", "SSA score"),
+    "s_mad": ("MAD 3σ 分數", "MAD 3σスコア", "MAD 3σ score"),
+    "det_it2": ("強偵測器 iter2 同意", "強検出器iter2一致", "Strong detector iter2"),
+    "det_pr": ("強偵測器 pred 同意", "強検出器pred一致", "Strong detector pred"),
+}
+
+
+def l3c_summary(L: dict) -> dict:
+    return {"n": len(L["cand"]), "n_acc": int(L["acc"].sum()), "n_l1": int(L["l1"].sum()),
+            "n_l2": int(L["l2"].sum()), "theta": L["theta"], "cls": L["cls"], "max": float(L["proba"].max()) if len(L["proba"]) else 0.0}
 
 
 def summary(P: dict) -> dict:

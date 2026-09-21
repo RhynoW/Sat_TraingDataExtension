@@ -12628,20 +12628,26 @@ def _c27_prepare(nid: int, days: int, p2_scale: float):
 
 
 @st.cache_data(show_spinner=False)
-def _c27_l3(nid: int, days: int, p2_scale: float):
-    """L3 推論（含阻力通道：僅本機有 data/drag 且該星在 284 顆 Starlink 內才計入）。"""
+def _c27_l3(nid: int, days: int, p2_scale: float, family: str):
+    """候選確認式 L3：σ 正規化特徵需要完整歷史，故以完整 TLE 序列產生候選，再截到觀察窗顯示。"""
     import l1l2_explainer as X
     P = _c27_prepare(nid, days, p2_scale)
     if P is None:
         return None, None
-    drag = None
+    full = load_tle(nid)[["epoch", "sma_km"]]
+    return P, X.compute_l3c(full, P, family)
+
+
+@st.cache_data(show_spinner=False)
+def _c27_eval_table():
+    """三層並排評估（three_layer_candidate_eval.py 輸出）；缺檔回 None。"""
     try:
-        from satdet import load_drag_map
-        drag = load_drag_map().get(int(nid))
+        import glob
+        f = sorted(glob.glob("data/benchmark/three_layer_candidate_eval_2*.csv"))
+        f = [x for x in f if "persat" not in x]
+        return pd.read_csv(f[-1]) if f else None
     except Exception:
-        drag = None
-    L3 = X.compute_l3(P, drag)
-    return P, L3
+        return None
 
 
 def render_storymap_case27():
@@ -12761,68 +12767,87 @@ def render_storymap_case27():
                 "(common-arena result: L3 0.981 > L2 0.892 > L1)."))
             st.plotly_chart(X.fig_l2(P, T3), use_container_width=True, key=f"c27_l2_{nid}")
 
-            st.header(T3("④ L3：把 L2 的通道輸出融合成一個機動分數",
-                         "④ L3：L2のチャネル出力を1つの機動スコアに融合する",
-                         "④ L3: fusing the L2 channel outputs into one maneuver score"))
-            P3, L3 = _c27_l3(nid, days, scale)
+            st.header(T3("④ L3：對 L1／L2 類偵測器提出的候選，逐一「確認或否決」",
+                         "④ L3：L1／L2系の検出器が挙げた候補を1件ずつ「確認または却下」",
+                         "④ L3: confirming or rejecting each candidate proposed by the L1/L2-type detectors"))
+            fam = "starlink" if names.get(nid, "").upper().startswith("STARLINK") else "leo_altimetry"
+            with st.spinner(T3("計算候選與特徵中（首次約需數十秒）…", "候補と特徴を計算中（初回は数十秒）…", "Computing candidates and features (tens of seconds the first time)…")):
+                P3, L3 = _c27_l3(nid, days, scale, fam)
             if L3 is None:
-                st.warning(T3("找不到 L3 模型檔（models_fusion/l3_common_arena.pkl），略過此節。",
-                              "L3モデルファイル（models_fusion/l3_common_arena.pkl）が見つからないため、この節を省略する。",
-                              "L3 model file (models_fusion/l3_common_arena.pkl) not found; skipping this section."))
+                st.warning(T3("此衛星在觀察窗內沒有足夠資料產生候選，或找不到 L3 模型檔，略過此節。",
+                              "この衛星は観測窓内で候補を作るデータが不足、またはL3モデルファイルが無いため、この節を省略する。",
+                              "Not enough data in this window to form candidates, or the L3 model file is missing; skipping this section."))
             else:
-                mm = L3["model"]
-                l3s = X.l3_summary(L3)
+                l3s = X.l3c_summary(L3)
+                fam_txt = T3("Starlink 族群模型（MEME 真值訓練）", "Starlink族モデル（MEME真値で学習）", "Starlink-family model (trained on MEME truth)") if fam == "starlink" else \
+                    T3("非 Starlink 低軌模型（NASA/ILRS 認證機動窗，23 顆衛星訓練）", "非Starlink低軌道モデル（NASA/ILRS認証機動窓、23機で学習）", "non-Starlink LEO model (NASA/ILRS certified maneuver windows, trained on 23 satellites)")
                 st.markdown(T3(
-                    "**L3 實際吃什麼**：不是 L1 的 P1–P6 旗標，而是 **L2 的四個統計通道分數＋NRLMSIS 阻力殘差通道**。"
-                    "流程：以某個時刻為中心取 **±24 h** 的窗 → 每個通道取窗內 **max／mean／p90**（5 × 3 = **15 個特徵**）→ "
-                    "梯度提升分類器（HistGradientBoosting）輸出機動分數 → 與門檻比較（門檻定在「安靜窗誤報率 ≤ 5%」）。"
-                    "L1 是**並列**的另一路：本頁第⑤格把 L1、L2、L3 在同一個窗內是否亮燈並排，方便比較，但 L1 並不是 L3 的輸入。\n\n"
-                    "**怎麼看**：② 是目前窗的 15 個特徵（顏色越深＝越接近整段序列的最大值）；③ 是「若把該通道特徵歸零，分數掉多少」，"
-                    "紅色＝該通道在推高這個分數，灰色＝把它拿掉反而分數更高；④ 是分數隨時間的曲線，越過虛線就判為機動。"
-                    "**注意 L3 需要事件後 24 h 的資料才能評分**，所以動畫中的判定會比事件晚約一天，這也是擂台中 latency 的定義。",
-                    "**L3が実際に読むもの**：L1のP1–P6フラグではなく、**L2の4つの統計チャネルスコア＋NRLMSIS抵抗残差チャネル**。"
-                    "流れ：ある時刻を中心に**±24 h**の窓を取る → 各チャネルの窓内**max／mean／p90**（5×3＝**15特徴**）→ "
-                    "勾配ブースティング分類器（HistGradientBoosting）が機動スコアを出力 → しきい値と比較（しきい値は「静穏窓の誤報率≤5%」に設定）。"
-                    "L1は**並列**の別経路：第⑤パネルでL1・L2・L3が同じ窓で点灯したかを並べるが、L1はL3の入力ではない。\n\n"
-                    "**見方**：②は現在の窓の15特徴（色が濃いほど系列全体の最大値に近い）；③は「そのチャネルの特徴を0にするとスコアがどれだけ下がるか」で、"
-                    "赤＝そのチャネルがスコアを押し上げている、灰＝外すとむしろスコアが上がる；④はスコアの時系列で、点線を超えると機動と判定。"
-                    "**L3は事後24 hのデータがないと採点できない**ため、アニメーション上の判定は事象より約1日遅れる。これが土俵でのlatencyの定義である。",
-                    "**What L3 actually reads**: not L1's P1–P6 flags, but **L2's four statistical channel scores plus the NRLMSIS drag-residual channel**. "
-                    "Pipeline: take a window of **±24 h** around a moment → for each channel take the window's **max / mean / p90** (5 × 3 = **15 features**) → "
-                    "a gradient-boosting classifier (HistGradientBoosting) outputs a maneuver score → compare with a threshold (set so quiet windows false-alarm ≤ 5%). "
-                    "L1 is a **parallel** route: panel ⑤ lines up whether L1, L2 and L3 lit up in the same window, but L1 is not an input to L3.\n\n"
-                    "**How to read**: ② shows the 15 features of the current window (darker = closer to the series maximum); ③ shows how much the score drops "
-                    "if that channel's features are zeroed — red = the channel is pushing the score up, grey = removing it would actually raise the score; "
-                    "④ is the score over time, and crossing the dotted line means \"maneuver\". "
-                    "**L3 needs 24 h of data after the event before it can score**, so in the animation its verdict lags the event by about a day — this is the arena's definition of latency."))
-                st.plotly_chart(X.fig_l3(P3, L3, T3), use_container_width=True, key=f"c27_l3_{nid}")
+                    "**L3 怎麼運作**：L3 不是另一個偵測器，而是「確認者」。① 先由前段偵測器（iter2、pred 兩種曲線偵測，加上 L2 的 CUSUM／BOCPD／SSA／MAD 3σ）"
+                    "各自提出**候選機動時刻**，1 天內合併；② 對每個候選算 **10 個 σ 正規化特徵**（位準位移 SNR、預測誤差 SNR、單步 |Δa| SNR、L2 四通道分數、更新間隔、兩個強偵測器是否同意）；"
+                    "③ 分類器（HistGradientBoosting）輸出「這是真機動」的機率；④ 機率 ≥ 門檻 θ 就**確認**，否則**否決**（θ 依更新頻率分 dense／sparse 兩類事前設定，並在訓練衛星上以 F1 選定）。"
+                    "特徵都以該星自身的雜訊 σ 正規化，所以不同高度、不同雜訊底的衛星可以共用一個模型——這正是先前「Starlink 滑動窗 L3」對福衛五號失效的關鍵差別。"
+                    "L1 的 P1–P6 旗標**不是 L3 的輸入**，第⑤格只是把三者是否成立並排比較。\n\n"
+                    f"**依族群自動選模型**：本衛星使用 **{fam_txt}**。\n\n"
+                    "**怎麼看**：① 半長軸上，灰點是候選、紅星是 L3 確認、灰叉是否決，橘圈是目前正在處理的候選；② 該候選的 10 個特徵（長度取 log(1+值)，文字為原值）；"
+                    "③ 把某特徵歸零後機率掉多少，紅色＝該特徵在推高機率；④ 每個候選的機率與門檻；⑤ 同一候選 L1、L2、L3 是否成立。",
+                    "**L3の仕組み**：L3は別の検出器ではなく「確認者」である。① 前段の検出器（iter2・predの2種の曲線検出と、L2のCUSUM／BOCPD／SSA／MAD 3σ）が"
+                    "それぞれ**候補となる機動時刻**を挙げ、1日以内で統合；② 各候補について**10個のσ正規化特徴**（レベルシフトSNR、予測誤差SNR、1ステップ|Δa| SNR、L2の4チャネルスコア、更新間隔、2つの強検出器の一致）を計算；"
+                    "③ 分類器（HistGradientBoosting）が「本物の機動である」確率を出力；④ 確率≥しきい値θなら**確認**、そうでなければ**却下**（θは更新頻度でdense／sparseの2類に事前分類し、学習衛星でF1により選定）。"
+                    "特徴はすべてその衛星自身のノイズσで正規化されるため、高度やノイズ床の異なる衛星でも1つのモデルを共有できる——これが従来の「Starlinkスライド窓L3」がFORMOSAT-5で機能しなかったこととの決定的な違いである。"
+                    "L1のP1–P6フラグは**L3の入力ではない**。第⑤パネルは三者が成立したかを並べて比べるだけである。\n\n"
+                    f"**族群による自動モデル選択**：この衛星は**{fam_txt}**を使用。\n\n"
+                    "**見方**：①長半径上で、灰の点が候補、赤い星がL3の確認、灰の×が却下、橙の輪が現在処理中の候補；②その候補の10特徴（長さはlog(1+値)、文字は元の値）；"
+                    "③ある特徴を0にした時の確率低下で、赤＝その特徴が確率を押し上げている；④各候補の確率としきい値；⑤同じ候補でL1・L2・L3が成立したか。",
+                    "**How L3 works**: L3 is not another detector but a *confirmer*. ① The earlier detectors (two curve-based detectors, iter2 and pred, plus L2's CUSUM / BOCPD / SSA / MAD 3σ) each propose "
+                    "**candidate maneuver times**, merged within one day; ② for each candidate we compute **10 σ-normalised features** (level-shift SNR, prediction-error SNR, single-step |Δa| SNR, the four L2 channel scores, update interval, and whether two strong detectors agree); "
+                    "③ a classifier (HistGradientBoosting) outputs the probability that it is a real maneuver; ④ probability ≥ threshold θ → **confirm**, otherwise **reject** (θ is pre-set per update-rate class, dense / sparse, and chosen by F1 on the training satellites). "
+                    "Because every feature is normalised by that satellite's own noise σ, satellites with different altitudes and noise floors can share one model — the key difference from the earlier \"Starlink sliding-window L3\" that failed on FORMOSAT-5. "
+                    "L1's P1–P6 flags are **not an input to L3**; panel ⑤ only lines up whether the three fired.\n\n"
+                    f"**Automatic model selection by family**: this satellite uses the **{fam_txt}**.\n\n"
+                    "**How to read**: in ① grey dots are candidates, red stars are L3-confirmed, grey × are rejected, and the orange ring is the candidate being processed; ② its 10 features (length = log(1+value), text = raw value); "
+                    "③ how much the probability drops if a feature is zeroed, red = that feature is pushing the probability up; ④ the probability of each candidate vs the threshold; ⑤ whether L1, L2, L3 each fired on the same candidate."))
+                st.plotly_chart(X.fig_l3c(P3, L3, T3), use_container_width=True, key=f"c27_l3_{nid}")
                 st.markdown(T3(
-                    f"**此衛星（{l3s['n']} 個時刻）**：L1 亮 {l3s['n_l1']}、L2 亮 {l3s['n_l2']}、L3 亮 {l3s['n_l3']}；L3 最高分 {l3s['max']:.2f}（門檻 {l3s['thr']:.2f}）。"
-                    + ("" if l3s["has_drag"] else " 本頁**此衛星的阻力通道為 0**（NRLMSIS 阻力殘差僅對 284 顆 Starlink、且僅在本機資料存在時計入），L3 因此少一路證據。"),
-                    f"**この衛星（{l3s['n']}時点）**：L1点灯 {l3s['n_l1']}、L2点灯 {l3s['n_l2']}、L3点灯 {l3s['n_l3']}；L3最高スコア {l3s['max']:.2f}（しきい値 {l3s['thr']:.2f}）。"
-                    + ("" if l3s["has_drag"] else " このページでは**この衛星の抵抗チャネルは0**（NRLMSIS抵抗残差は284機のStarlinkかつローカルにデータがある場合のみ）で、L3は証拠が1系統少ない。"),
-                    f"**This satellite ({l3s['n']} moments)**: L1 lit {l3s['n_l1']}, L2 lit {l3s['n_l2']}, L3 lit {l3s['n_l3']}; L3 peak score {l3s['max']:.2f} (threshold {l3s['thr']:.2f})."
-                    + ("" if l3s["has_drag"] else " On this page **the drag channel is 0 for this satellite** (NRLMSIS drag residuals exist only for the 284 Starlinks and only when the local data file is present), so L3 is missing one line of evidence.")))
-                st.warning(T3(
-                    f"**誠實說明這個 L3 有多準**：此 L3 是為本頁**離線重新訓練**的「逐時刻滑動窗」版（同樣 15 特徵與超參數，"
-                    f"{mm['n_units']:,} 個窗、284 顆 Starlink、衛星分組交叉驗證）。在今天的資料庫上，它的 OOF AUC 為 **{mm['oof_auc']:.2f}**，"
-                    f"誤報率 5% 時召回僅 **{mm['recall_at_thr']*100:.0f}%**；同一設定下 L2 最佳單通道（{mm['l2_best']}）AUC 約 {mm['l2_auc']:.2f}、"
-                    f"L1 召回 {mm['l1_recall']*100:.1f}%（誤報率 {mm['l1_fpr']*100:.1f}%），三層在「逐時刻串流偵測」這個較嚴苛的設定下都很弱。"
-                    "這和報告 §13.2 的「三層同一擂台」（L3 0.981 > L2 0.892 > L1）**不矛盾也不可互換**：擂台的評分單位是「整個機動事件 ±24 h」對「刻意挑出的安靜窗」，"
-                    "是已知事件位置時的評分；本頁是每個時刻都要打分。另外此 L3 只用 Starlink 訓練，對福衛五號等其他族群屬分布外。",
-                    f"**このL3の精度を正直に**：このL3は本ページ用に**オフラインで再学習**した「時刻ごとのスライド窓」版（同じ15特徴・ハイパーパラメータ、"
-                    f"{mm['n_units']:,}窓、284機のStarlink、衛星単位の交差検証）。今日のDBでのOOF AUCは**{mm['oof_auc']:.2f}**、"
-                    f"誤報率5%での再現率は**{mm['recall_at_thr']*100:.0f}%**。同条件でL2の最良単一チャネル（{mm['l2_best']}）のAUCは約{mm['l2_auc']:.2f}、"
-                    f"L1の再現率は{mm['l1_recall']*100:.1f}%（誤報率{mm['l1_fpr']*100:.1f}%）で、「時刻ごとのストリーミング検出」という厳しい設定では三層とも弱い。"
-                    "これは報告§13.2の「三層同一土俵」（L3 0.981 > L2 0.892 > L1）と**矛盾せず、また互換でもない**：土俵の採点単位は「機動イベント全体±24 h」対「意図的に選んだ静穏窓」で、"
-                    "事象位置が既知の場合の評価。本ページは各時刻を採点する。またこのL3はStarlinkのみで学習しており、FORMOSAT-5など他の族群は分布外。",
-                    f"**Honest note on how accurate this L3 is**: this L3 was **retrained offline for this page** as a per-moment sliding-window model "
-                    f"(same 15 features and hyper-parameters; {mm['n_units']:,} windows, 284 Starlinks, satellite-grouped cross-validation). On today's database its OOF AUC is "
-                    f"**{mm['oof_auc']:.2f}** and recall at a 5% false-alarm rate is only **{mm['recall_at_thr']*100:.0f}%**; under the same setup the best single L2 channel "
-                    f"({mm['l2_best']}) has AUC ≈ {mm['l2_auc']:.2f} and L1 recalls {mm['l1_recall']*100:.1f}% (false-alarm rate {mm['l1_fpr']*100:.1f}%) — all three layers are weak in "
-                    "this harsher \"score every moment as a stream\" setting. This neither contradicts nor is interchangeable with the report's §13.2 common arena (L3 0.981 > L2 0.892 > L1): "
-                    "the arena scores \"a whole maneuver event ±24 h\" against \"deliberately chosen quiet windows\", i.e. with the event location already known, whereas this page must score every moment. "
-                    "This L3 is also trained on Starlink only, so other families such as FORMOSAT-5 are out of distribution."))
+                    f"**此衛星（觀察窗內）**：候選 {l3s['n']} 個；L3 確認 **{l3s['n_acc']}** 個（門檻 θ={l3s['theta']:.2f}，{l3s['cls']} 類）；"
+                    f"其中 L1 成立 {l3s['n_l1']} 個、L2 成立 {l3s['n_l2']} 個；最高機率 {l3s['max']:.2f}。",
+                    f"**この衛星（観測窓内）**：候補 {l3s['n']} 件；L3が確認 **{l3s['n_acc']}** 件（しきい値θ={l3s['theta']:.2f}、{l3s['cls']}類）；"
+                    f"うちL1成立 {l3s['n_l1']} 件、L2成立 {l3s['n_l2']} 件；最高確率 {l3s['max']:.2f}。",
+                    f"**This satellite (in the window)**: {l3s['n']} candidates; L3 confirms **{l3s['n_acc']}** (threshold θ={l3s['theta']:.2f}, {l3s['cls']} class); "
+                    f"L1 fires on {l3s['n_l1']}, L2 on {l3s['n_l2']}; peak probability {l3s['max']:.2f}."))
+                ev_df = _c27_eval_table()
+                if ev_df is not None:
+                    key = "Starlink 283" if fam == "starlink" else "非Starlink 23"
+                    sub = ev_df[ev_df["family"].str.contains(key)][["method", "precision", "recall", "f1"]].copy()
+                    sub.columns = [T3("方法", "手法", "Method"), T3("精確率", "適合率", "Precision"), T3("召回率", "再現率", "Recall"), "F1"]
+                    st.markdown(T3("**如實成績**（事件級 P/R/F1，各衛星平均；同一批候選、同一套真值與容差）：",
+                                   "**実測成績**（イベント級P/R/F1、衛星平均；同じ候補・同じ真値・同じ許容）：",
+                                   "**Measured performance** (event-level P/R/F1, averaged over satellites; same candidates, same truth and tolerance):"))
+                    st.dataframe(sub.round(3), hide_index=True, use_container_width=True)
+                    f3 = ev_df[ev_df["method"].str.contains("L3")]
+                    fs7 = f3[f3["family"].str.contains("福衛七號")]
+                    l1_fs7 = ev_df[ev_df["family"].str.contains("福衛七號") & ev_df["method"].str.contains("L1")]
+                    if fam == "starlink":
+                        st.warning(T3(
+                            "**Starlink：L3 的「確認」幾乎沒有增益**——L3 的 F1 與「候選全接受」相當。原因是 MEME 真值裡 medium 以上的機動幾乎每天都有，"
+                            "候選中約 69% 本來就是正例，沒有多少可以否決的空間；三層在 Starlink 上都只能抓到少數（召回都低）。這是 Starlink 站位保持機動高頻的結果，不是模型故障。",
+                            "**Starlink：L3の「確認」はほとんど利得がない**——L3のF1は「候補すべて受理」と同程度。MEME真値ではmedium以上の機動がほぼ毎日あり、"
+                            "候補の約69%がもともと正例で、却下の余地が小さい。三層ともStarlinkでは少数しか捉えられない（再現率が低い）。Starlinkの軌道維持機動が高頻度であることの帰結で、モデルの故障ではない。",
+                            "**Starlink: L3's \"confirmation\" adds almost nothing** — its F1 is about the same as \"accept every candidate\". In the MEME truth, medium-or-larger maneuvers occur almost every day, "
+                            "so ~69% of candidates are positives already and there is little to reject; all three layers catch only a small share on Starlink (low recall). This reflects the high frequency of Starlink station-keeping, not a model fault."))
+                    else:
+                        extra = ""
+                        if len(fs7) and len(l1_fs7):
+                            extra = T3(
+                                f" **樣本外檢驗（福衛七號 6 顆，弱真值）**：L3 F1 = {fs7['f1'].iloc[0]:.2f}，但 **L1 規則反而較高（{l1_fs7['f1'].iloc[0]:.2f}）**——低軌約 550 km 的福衛七號比較接近 Starlink 的情境，泛化不如高軌測高衛星。",
+                                f" **サンプル外検証（FORMOSAT-7 6機、弱い真値）**：L3のF1={fs7['f1'].iloc[0]:.2f}だが、**L1ルールの方が高い（{l1_fs7['f1'].iloc[0]:.2f}）**——約550 kmの低軌道のFORMOSAT-7はStarlinkの状況に近く、高軌道の測高衛星ほど汎化しない。",
+                                f" **Out-of-sample check (FORMOSAT-7, 6 satellites, weak truth)**: L3 F1 = {fs7['f1'].iloc[0]:.2f}, but **the L1 rules score higher ({l1_fs7['f1'].iloc[0]:.2f})** — FORMOSAT-7 at ~550 km is closer to the Starlink situation and generalises less well than the higher altimetry satellites.")
+                        st.warning(T3(
+                            "**非 Starlink：L3 的確認有實質增益，但整體仍不算高**——相對於「候選全接受」，精確率大幅提高（約 0.09→0.41）、F1 由約 0.17 升到 0.43，也高於 L2 最佳單通道與 L1。"
+                            "逐星留一（LOSO）平均 F1 約 0.43，即使在同分布的測高衛星上，仍有相當比例的誤報與漏報。" + extra,
+                            "**非Starlink：L3の確認には実質的な利得があるが、全体としては高くない**——「候補すべて受理」に比べ適合率が大きく上がり（約0.09→0.41）、F1は約0.17から0.43へ上昇し、L2の最良単一チャネルやL1も上回る。"
+                            "衛星単位の留一（LOSO）平均F1は約0.43で、同分布の測高衛星でも誤報・見逃しがかなり残る。" + extra,
+                            "**Non-Starlink: L3's confirmation gives a real gain, but overall performance is still modest** — versus \"accept every candidate\", precision jumps (about 0.09 → 0.41) and F1 rises from about 0.17 to 0.43, above the best single L2 channel and L1. "
+                            "Leave-one-satellite-out (LOSO) mean F1 is about 0.43, so even on in-distribution altimetry satellites a sizeable share of false alarms and misses remains." + extra))
 
     st.header(T3("⑤ 用預設對照組看什麼", "⑤ 既定ペアで何を見るか", "⑤ What to look for in the default pair"))
     st.markdown(T3(
@@ -12831,19 +12856,19 @@ def render_storymap_case27():
         "- **STARLINK-3005（563 km）**：低軌、電推與大氣阻力並存，雜訊底高（見案例三、二十四、二十五），|Δa| 常態性貼近門檻，"
         "L1 與 L2 的判定更容易分歧——這就是「低軌難例」。\n"
         "- 若你輸入自己的 NORAD ID，可試著找出「L1 亮而 L2 不亮」或「L2 亮而 L1 不亮」的時刻，那正是各層的盲區。\n"
-        "- **已知案例：福衛五號 2026-04-14 的 −519 m 降軌**（查核於 2026-09-21）。當時 L2 有偵測，但 L1 與 L3 都沒有確認，這不是畫圖錯誤，而是兩個真實問題：(1) **L1 的抑制規則誤擋（已於 2026-09-21 修正）**——P1「衰減抑制」與 P3「B* 抑制」以「小幅負 Δa」判斷衰減，容許值（2 km／1.5 km）遠大於 P2 高度門檻，把向下的降軌機動當成大氣衰減擋掉；福衛五號超過門檻的 8 次轉換中被擋的正是這一次，Starlink 也有 3/9 個 −760～−930 m 的大幅下降被 P3 擋掉。修正為「本身已超過 P2 門檻的步階不得被 P1／P3 抑制」，現在 L1 會標記這一筆；擂台上整體 L1 召回 8.3%→8.6%、誤報率 5.4%→5.6%、精確率不變。(2) **L3 分數僅約 0.10（未修正，屬模型限制）**：動畫第③格的「階躍 |Δa|／SNR」列顯示，把階躍特徵拿掉分數反而**上升**（約 −0.14），因為 L3 只用 Starlink 訓練，學到的是 Starlink 上「大階躍不代表機動」的關係，對福衛五號屬分布外。",
+        "- **已知案例：福衛五號 2026-04-14 的 −519 m 降軌**（查核於 2026-09-21）。當時 L2 有偵測，但 L1 與 L3 都沒有確認，這不是畫圖錯誤，而是兩個真實問題：(1) **L1 的抑制規則誤擋（已於 2026-09-21 修正）**——P1「衰減抑制」與 P3「B* 抑制」以「小幅負 Δa」判斷衰減，容許值（2 km／1.5 km）遠大於 P2 高度門檻，把向下的降軌機動當成大氣衰減擋掉；福衛五號超過門檻的 8 次轉換中被擋的正是這一次，Starlink 也有 3/9 個 −760～−930 m 的大幅下降被 P3 擋掉。修正為「本身已超過 P2 門檻的步階不得被 P1／P3 抑制」，現在 L1 會標記這一筆；擂台上整體 L1 召回 8.3%→8.6%、誤報率 5.4%→5.6%、精確率不變。(2) **L3 由「Starlink 滑動窗」改為「候選確認式、依族群選模型」後，這一筆被確認**——舊模型分數僅約 0.10（因為只用 Starlink 訓練，學到「大階躍不代表機動」），新的非 Starlink 模型以 σ 正規化特徵，這一筆機率約 0.84，被 L3 確認。",
         "- **FORMOSAT-5（723 km）**：高めの軌道で大気擾乱が小さく、ノイズ床はメートル級。機動の|Δa|はしきい値を大きく超え、L1の棒が明瞭に線を越える。"
         "緩やかな降下の多くの点はP1が抑制する（灰の×）ので機動とは扱われない。\n"
         "- **STARLINK-3005（563 km）**：低軌道で電気推進と大気抵抗が併存し、ノイズ床が高い（事例3・24・25参照）。|Δa|が常にしきい値近傍にあり、"
         "L1とL2の判定が割れやすい——これが「低軌道の難例」。\n"
         "- 自分のNORAD IDを入れるなら、「L1は点灯しL2は点灯しない」またはその逆の瞬間を探してみよう。それが各層の死角である。\n"
-        "- **既知の事例：FORMOSAT-5 の 2026-04-14 の −519 m 降下**（2026-09-21 確認）。当時、L2は検出したがL1もL3も確認しなかった。これは描画の誤りではなく実際の2つの問題である：(1) **L1の抑制ルールによる誤遮断（2026-09-21 修正済み）**——P1「減衰抑制」とP3「B*抑制」は「小さな負のΔa」で減衰を判定し、許容値（2 km／1.5 km）がP2高度しきい値よりはるかに大きく、下向きの降軌機動を大気減衰として止めていた。FORMOSAT-5でしきい値を超えた8遷移のうち止められたのはこの1件で、Starlinkでも−760〜−930 mの大きな降下の3/9がP3に止められていた。「P2しきい値を超えるステップはP1／P3で抑制しない」に修正し、現在はL1がこの1件を検出する。土俵全体ではL1再現率8.3%→8.6%、誤報率5.4%→5.6%、精度は不変。(2) **L3スコアは約0.10（未修正、モデルの限界）**：動画の第③パネルの「ステップ |Δa|／SNR」行は、ステップ特徴を外すとスコアがむしろ**上がる**（約−0.14）ことを示す。L3はStarlinkのみで学習したため「大きなステップは機動を意味しない」という関係を学んでおり、FORMOSAT-5は分布外である。",
+        "- **既知の事例：FORMOSAT-5 の 2026-04-14 の −519 m 降下**（2026-09-21 確認）。当時、L2は検出したがL1もL3も確認しなかった。これは描画の誤りではなく実際の2つの問題である：(1) **L1の抑制ルールによる誤遮断（2026-09-21 修正済み）**——P1「減衰抑制」とP3「B*抑制」は「小さな負のΔa」で減衰を判定し、許容値（2 km／1.5 km）がP2高度しきい値よりはるかに大きく、下向きの降軌機動を大気減衰として止めていた。FORMOSAT-5でしきい値を超えた8遷移のうち止められたのはこの1件で、Starlinkでも−760〜−930 mの大きな降下の3/9がP3に止められていた。「P2しきい値を超えるステップはP1／P3で抑制しない」に修正し、現在はL1がこの1件を検出する。土俵全体ではL1再現率8.3%→8.6%、誤報率5.4%→5.6%、精度は不変。(2) **L3を「Starlinkスライド窓」から「候補確認式・族群別モデル」に変えた結果、この1件は確認された**——旧モデルのスコアは約0.10（Starlinkのみで学習し「大きなステップは機動を意味しない」と学んでいた）だったが、新しい非Starlinkモデルはσ正規化特徴を使い、この1件の確率は約0.84でL3が確認した。",
         "- **FORMOSAT-5 (723 km)**: higher orbit, small atmospheric perturbation, noise floor at the metre level. Maneuver |Δa| sits far above the threshold, "
         "so the L1 bars clearly cross the line; the many slow-decay points are suppressed by P1 (grey crosses) and never mistaken for maneuvers.\n"
         "- **STARLINK-3005 (563 km)**: low orbit where electric propulsion and drag coexist, with a high noise floor (see Cases 3, 24, 25). |Δa| habitually hugs the threshold, "
         "so L1 and L2 disagree more easily — this is the \"hard low-orbit case\".\n"
         "- With your own NORAD ID, look for moments where L1 fires but L2 does not, or vice versa — those are each layer's blind spots.\n"
-        "- **A known case: FORMOSAT-5's −519 m lowering on 2026-04-14** (checked 2026-09-21). At the time L2 detected it but neither L1 nor L3 confirmed it. This was not a plotting bug but two real problems: (1) **L1's suppressors wrongly blocked it (fixed on 2026-09-21)** — P1 \"decay suppressor\" and P3 \"B* suppressor\" judge decay from a \"small negative Δa\", with tolerances (2 km / 1.5 km) far above the P2 altitude threshold, so a downward lowering maneuver was treated as atmospheric decay; of FORMOSAT-5's 8 above-threshold transitions this was the one blocked, and 3 of 9 large −760 to −930 m drops on the Starlink were blocked by P3. The rule now says \"a step that already exceeds the P2 threshold cannot be suppressed by P1/P3\", so L1 flags it; on the arena overall, L1 recall goes 8.3%→8.6%, false-alarm rate 5.4%→5.6%, precision unchanged. (2) **L3 still scores only ~0.10 (not fixed — a model limitation)**: the \"Step |Δa| / SNR\" row in panel ③ shows that removing the step feature actually **raises** the score (about −0.14), because L3 is trained on Starlink only and has learned that a large step does not imply a maneuver there; FORMOSAT-5 is out of distribution."))
+        "- **A known case: FORMOSAT-5's −519 m lowering on 2026-04-14** (checked 2026-09-21). At the time L2 detected it but neither L1 nor L3 confirmed it. This was not a plotting bug but two real problems: (1) **L1's suppressors wrongly blocked it (fixed on 2026-09-21)** — P1 \"decay suppressor\" and P3 \"B* suppressor\" judge decay from a \"small negative Δa\", with tolerances (2 km / 1.5 km) far above the P2 altitude threshold, so a downward lowering maneuver was treated as atmospheric decay; of FORMOSAT-5's 8 above-threshold transitions this was the one blocked, and 3 of 9 large −760 to −930 m drops on the Starlink were blocked by P3. The rule now says \"a step that already exceeds the P2 threshold cannot be suppressed by P1/P3\", so L1 flags it; on the arena overall, L1 recall goes 8.3%→8.6%, false-alarm rate 5.4%→5.6%, precision unchanged. (2) **After L3 was changed from the \"Starlink sliding window\" to a \"candidate-confirmation model chosen by family\", this event is confirmed** — the old model scored only about 0.10 (trained on Starlink only, it had learned that a large step does not imply a maneuver), whereas the new non-Starlink model uses σ-normalised features and gives this event a probability of about 0.84, so L3 confirms it."))
 
     st.header(T3("⑥ 誠實限制", "⑥ 正直な限界", "⑥ Honest limitations"))
     st.markdown(T3(
@@ -12851,12 +12876,12 @@ def render_storymap_case27():
         "2. L1 逐筆只依賴相鄰兩筆與短窗，可線上運作；L2 的 SSA、MAD 使用整段序列統計量，動畫的「逐步揭露」是把已算好的分數依時間顯示，並非嚴格的逐筆重算。\n"
         "3. 為控制網頁大小，序列已稀釋近重複 epoch（最小間隔 12 h）並最多取最近 450 筆；資料庫為滾動視窗，觀察窗實際長度依衛星而異。\n"
         "4. 各通道的「事件」採用 statistical_detectors.py 之內建判定，未針對單一衛星調參；亮燈數量多不代表較好。\n"
-        "5. L3 為本頁離線重訓的滑動窗版，僅用 284 顆 Starlink 訓練；對福衛五號等其他族群屬分布外，且線上版無阻力通道。預設對照組中，你可能看到 L1 亮而 L3 不亮——這是如實的結果，不是程式忽略了 L3。",
+        "5. L3 為「候選確認式」，依族群自動選模型：非 Starlink 用 23 顆 NASA/ILRS 衛星訓練、Starlink 用 MEME 真值訓練。兩者的成績都不高（見上表），且在 Starlink 上「確認」幾乎沒有增益。模型檔為離線訓練後上傳，頁面上不會即時重訓。",
         "1. ここで示すのは**検出法の挙動**であって精度ではない：機動の真値を重ねていないので、赤い星の数から優劣を**判断できない**。精度は報告§13.2の三層同一土俵を参照。\n"
         "2. L1は隣接2件と短窓のみに依存しオンライン動作できる。L2のSSA・MADは系列全体の統計量を使うため、アニメの「逐次表示」は計算済みスコアを時間順に見せるもので、厳密な逐次再計算ではない。\n"
         "3. ページサイズを抑えるため、近重複epochを間引き（最小間隔12 h）、直近最大450件に限定。DBはローリング窓のため観測窓の実長は衛星により異なる。\n"
         "4. 各チャネルの「イベント」はstatistical_detectors.py組み込みの判定で、個別衛星向けの調整はしていない。点灯数が多い＝優れている、ではない。\n"
-        "5. L3は本ページ用にオフライン再学習したスライド窓版で、284機のStarlinkのみで学習。FORMOSAT-5など他の族群は分布外で、オンライン版には抵抗チャネルもない。既定ペアでは「L1は点灯しL3は点灯しない」場面が見られる可能性があるが、これは実際の結果でありL3の無視ではない。",
+        "5. L3は「候補確認式」で、族群により自動でモデルを選ぶ：非Starlinkは23機のNASA/ILRS衛星、StarlinkはMEME真値で学習。どちらも成績は高くなく（上の表）、Starlinkでは「確認」の利得がほぼ無い。モデルファイルはオフライン学習後にアップロードしたもので、ページ上で再学習はしない。",
         "1. This shows **how the detectors behave**, not how accurate they are: no maneuver ground truth is overlaid, so the number of red stars **cannot** tell you which is better. "
         "For accuracy see the report's §13.2 common-arena comparison.\n"
         "2. L1 depends only on adjacent TLE pairs and a short window, so it can run online; L2's SSA and MAD use whole-series statistics, so the animation's "
@@ -12864,8 +12889,7 @@ def render_storymap_case27():
         "3. To keep the page light, near-duplicate epochs are thinned (min gap 12 h) and at most the latest 450 points are used; the database is a rolling window, "
         "so the actual window length varies by satellite.\n"
         "4. Each channel's \"events\" use statistical_detectors.py's built-in rule with no per-satellite tuning; more lights does not mean better.\n"
-        "5. The L3 here is the sliding-window version retrained offline for this page, trained on 284 Starlinks only; other families such as FORMOSAT-5 are out of distribution, and the online build has no drag channel. "
-        "In the default pair you may see L1 light up while L3 stays silent — that is the real result, not L3 being ignored."))
+        "5. L3 is a candidate-confirmation model that picks its model by family: the non-Starlink model is trained on 23 NASA/ILRS satellites, the Starlink one on MEME truth. Neither scores high (see the table above), and on Starlink the \"confirmation\" adds almost nothing. The model files were trained offline and uploaded; the page does not retrain."))
     st.caption("Code: `l1l2_explainer.py`, `maneuver_strategies_july.py`, `statistical_detectors.py`; "
                "common-arena numbers: `three_layer_common_eval.py`.")
 
