@@ -10,6 +10,7 @@ maneuver_app_july.py 專用的緊湊 P1–P6 機動偵測策略模組（乾淨�
 
 每個策略對「連續 TLE 轉換序列」回傳逐轉換布林旗標，供個別 + 合併顯示。
 偵測型（P2/P4/P6）產生旗標；抑制型（P1/P3）移除誤報；P5 調整 P2 閾值。
+2026-09-21：抑制型不得擋掉「本身已超過 P2 高度門檻」的步階（避免把向下的降軌機動當成大氣衰減）。
 """
 from __future__ import annotations
 
@@ -79,6 +80,53 @@ DEFAULT_P5 = ParabolaParams(vertex=70.0, floor=1.0, ref_x=200.0, ref_y=1.6)
 # P6 星座感知基準倍率（依傾角族群）
 DEFAULT_P6 = {"53deg": 1.0, "SSO": 1.2, "mid-inc": 1.1, "other": 1.0}
 
+# ── P1–P6 說明文字三語樣板（zh/ja/en）─────────────────────────────────────────
+# {n}/{total} 為旗標數量、{vertex}/{mult}/{p6mult} 為策略參數、{fam} 為 inc_family()
+# 回傳值（"53deg"/"SSO"/"mid-inc"/"other"，語言中立，不需翻譯）。
+NOTE_TEMPLATES: dict[str, dict[str, str]] = {
+    "P1": {
+        "zh": "單調衰減抑制：{n} 筆判為阻力衰減",
+        "ja": "単調減衰抑制：{n} 件を大気抵抗による減衰と判定",
+        "en": "Monotonic-decay suppression: {n} classified as drag decay",
+    },
+    "P2": {
+        "zh": "高度自適應閾值（拋物線左側，vertex={vertex:.0f}km）：{n} 旗標",
+        "ja": "高度適応しきい値（放物線の左枝、vertex={vertex:.0f}km）：{n} 件のフラグ",
+        "en": "Altitude-adaptive threshold (left branch of parabola, vertex={vertex:.0f} km): {n} flags",
+    },
+    "P3": {
+        "zh": "B* 輔助抑制：{n} 筆由阻力解釋",
+        "ja": "B* 補助抑制：{n} 件を大気抵抗で説明",
+        "en": "B*-assisted suppression: {n} explained by drag",
+    },
+    "P4": {
+        "zh": "多窗口補充：{n} 旗標",
+        "ja": "マルチウィンドウ補完：{n} 件のフラグ",
+        "en": "Multi-window supplement: {n} flags",
+    },
+    "P5": {
+        "zh": "F10.7 倍率（拋物線）：中位倍率 {mult:.2f}，{n} 旗標",
+        "ja": "F10.7 倍率（放物線）：中央値倍率 {mult:.2f}、{n} 件のフラグ",
+        "en": "F10.7 multiplier (parabola): median multiplier {mult:.2f}, {n} flags",
+    },
+    "P6": {
+        "zh": "星座感知（{fam}，倍率 {p6mult:.2f}）：{n} 旗標",
+        "ja": "コンステレーション感知（{fam}、倍率 {p6mult:.2f}）：{n} 件のフラグ",
+        "en": "Constellation-aware ({fam}, multiplier {p6mult:.2f}): {n} flags",
+    },
+    "combined": {
+        "zh": "合併偵測：{n} / {total} 轉換",
+        "ja": "統合検知：{n} / {total} 遷移",
+        "en": "Combined detection: {n} / {total} transitions",
+    },
+}
+
+
+def _note(key: str, lang: str, **kwargs) -> str:
+    d = NOTE_TEMPLATES.get(key, {})
+    tpl = d.get(lang) or d.get("zh") or key
+    return tpl.format(**kwargs)
+
 
 def inc_family(i_deg: float) -> str:
     if 52.0 <= i_deg <= 54.5:
@@ -140,8 +188,14 @@ def build_transitions(df: pd.DataFrame, f107_lookup: dict | None = None) -> pd.D
 def apply_strategies(tr: pd.DataFrame, orbit_class: str,
                      p2: ParabolaParams = DEFAULT_P2,
                      p5: ParabolaParams = DEFAULT_P5,
-                     p6: dict | None = None) -> dict:
+                     p6: dict | None = None,
+                     lang: str = "zh") -> dict:
     """回傳每個策略的逐轉換布林旗標與合併結果。
+
+    Parameters
+    ----------
+    lang : "zh" | "ja" | "en"，決定 notes 說明文字語言；預設 "zh"（沿用既有呼叫端行為）。
+           未知語言或該 key 缺少對應翻譯時，一律退回 "zh"。
 
     Returns
     -------
@@ -149,7 +203,7 @@ def apply_strategies(tr: pd.DataFrame, orbit_class: str,
       per_strategy : {P1..P6: np.ndarray[bool]}  各策略貢獻（偵測或抑制遮罩）
       combined     : np.ndarray[bool]            最終合併旗標
       thr_da       : np.ndarray[float]           每轉換實際採用的 Δa 閾值
-      notes        : dict                        每策略一句說明
+      notes        : dict                        每策略一句說明（依 lang 三語）
     """
     p6 = p6 or DEFAULT_P6
     n = len(tr)
@@ -209,6 +263,13 @@ def apply_strategies(tr: pd.DataFrame, orbit_class: str,
         if (not np.isnan(bstar[i])) and bstar[i] > max(bs_hi, 5e-4) and da[i] < 0 and abs(da[i]) < 1.5:
             suppress_p3[i] = True
 
+    # ── 大幅步階護欄（2026-09-21）──────────────────────────────────────────
+    # P1／P3 以「小幅負 Δa」判斷阻力衰減，但其容許值（P1 為 2 km、P3 為 1.5 km）遠大於 P2 高度門檻，
+    # 會把向下的降軌機動誤當成衰減擋掉（福衛五號 2026-04-14 的 −519 m 即為一例）。
+    # 本身已超過 P2 高度門檻的步階，不得被抑制規則擋下。
+    suppress_p1 &= ~flag_p2
+    suppress_p3 &= ~flag_p2
+
     # ── P4：多窗口補充偵測（滑動 3 筆內出現超閾值即補旗標）──────────────────
     base_detect = flag_p2 | flag_other
     flag_p4 = np.zeros(n, bool)
@@ -234,12 +295,12 @@ def apply_strategies(tr: pd.DataFrame, orbit_class: str,
         "combined": combined,
         "thr_da": thr_p5,       # 實務採用（含 F10.7 調整）
         "notes": {
-            "P1": f"單調衰減抑制：{int(suppress_p1.sum())} 筆判為阻力衰減",
-            "P2": f"高度自適應閾值（拋物線左側，vertex={p2.vertex:.0f}km）：{int(flag_p2.sum())} 旗標",
-            "P3": f"B* 輔助抑制：{int(suppress_p3.sum())} 筆由阻力解釋",
-            "P4": f"多窗口補充：{int(flag_p4.sum())} 旗標",
-            "P5": f"F10.7 倍率（拋物線）：中位倍率 {np.nanmedian(mult):.2f}，{int(flag_p5.sum())} 旗標",
-            "P6": f"星座感知（{fam}，倍率 {p6.get(fam,1.0):.2f}）：{int(flag_p6.sum())} 旗標",
-            "combined": f"合併偵測：{int(combined.sum())} / {n} 轉換",
+            "P1": _note("P1", lang, n=int(suppress_p1.sum())),
+            "P2": _note("P2", lang, vertex=p2.vertex, n=int(flag_p2.sum())),
+            "P3": _note("P3", lang, n=int(suppress_p3.sum())),
+            "P4": _note("P4", lang, n=int(flag_p4.sum())),
+            "P5": _note("P5", lang, mult=float(np.nanmedian(mult)), n=int(flag_p5.sum())),
+            "P6": _note("P6", lang, fam=fam, p6mult=p6.get(fam, 1.0), n=int(flag_p6.sum())),
+            "combined": _note("combined", lang, n=int(combined.sum()), total=n),
         },
     }
