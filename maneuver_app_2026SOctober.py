@@ -223,6 +223,13 @@ L: dict[str, dict[str, str]] = {
                                   "ja": "任意のNORAD IDを入力（空欄ならFORMOSAT-5＋Starlink1機）。TLEが1件ずつ届くとき、P1–P6ルールとCUSUM／BOCPD／SSA／MADがどう点灯するかを見る。",
                                   "en": "Enter any NORAD ID (blank = FORMOSAT-5 + one Starlink) and watch how the P1–P6 rules and CUSUM / BOCPD / SSA / MAD light up as TLEs arrive one by one."},
 
+    "storymap_case28_card_title": {"zh": "案例二十八：VCM 與傳統 TLE，在衛星碰撞預測上到底差在哪？",
+                                   "ja": "事例二十八：VCMと従来のTLEは、衛星衝突予測において何が違うのか？",
+                                   "en": "Case 28: VCM vs. Classic TLE — What Actually Differs in Satellite Collision Prediction?"},
+    "storymap_case28_card_desc": {"zh": "TLE 只描述名義軌道、沒有 covariance，因此算不出可信的碰撞機率。可調參數即時算 Pc，看同一個最近距離如何因不確定性差出好幾個數量級（含機率稀釋陷阱），並對照 2026-09 SpaceX 取得軍方 VCM 的報導。",
+                                  "ja": "TLEは公称軌道のみでcovarianceを持たないため、信頼できる衝突確率を算出できない。パラメータを変えてPcをその場で計算し、同じ最接近距離が不確実性によって数桁変わる様子（確率希釈の罠を含む）を確かめ、2026年9月のSpaceXによる軍のVCM取得報道と対照する。",
+                                  "en": "A TLE gives only a nominal orbit with no covariance, so it cannot yield a credible collision probability. Compute Pc live with adjustable inputs, see the same miss distance span orders of magnitude (including the probability-dilution trap), and read it against the Sept 2026 report of SpaceX gaining military VCM access."},
+
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
                        "ja": "HF シークレット作成に関する注意（private リポジトリのみ必要）：{e}",
@@ -1851,7 +1858,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 28):
+    for _n in range(14, 29):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -12894,6 +12901,314 @@ def render_storymap_case27():
                "common-arena numbers: `three_layer_common_eval.py`.")
 
 
+# --- render_storymap_case28 ---
+def _pc_2d(miss_m: float, sig_r_m: float, sig_t_m: float, hbr_m: float) -> float:
+    """交會平面上的二維碰撞機率（Foster 式的標準做法）：把兩物體的合成位置不確定性視為
+    以名義最近點為中心的二維常態分布，對半徑 HBR（兩物體半徑和）的圓做積分。
+    用極座標網格數值積分（非蒙地卡羅），同一組輸入永遠得到同一個數字、可複核。
+    僅用於本案例的教學示範——正式 CA 要用真實 VCM 的完整 6×6 covariance 與相對幾何。"""
+    sig_r, sig_t = max(sig_r_m, 1e-6), max(sig_t_m, 1e-6)
+    nr, nth = 240, 360
+    rr = (np.arange(nr) + 0.5) * (hbr_m / nr)
+    th = (np.arange(nth) + 0.5) * (2 * np.pi / nth)
+    R, TH = np.meshgrid(rr, th, indexing="ij")
+    X = R * np.cos(TH) + miss_m      # 沿 miss distance 方向的偏移
+    Y = R * np.sin(TH)
+    pdf = np.exp(-0.5 * ((X / sig_r) ** 2 + (Y / sig_t) ** 2)) / (2 * np.pi * sig_r * sig_t)
+    return float((pdf * R).sum() * (hbr_m / nr) * (2 * np.pi / nth))
+
+
+def render_storymap_case28():
+    if st.button(t("storymap_back"), key="back_from_case28"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例二十八：VCM 與傳統 TLE，在衛星碰撞預測上到底差在哪？",
+        "事例二十八：VCMと従来のTLEは、衛星衝突予測において何が違うのか？",
+        "Case 28: VCM vs. Classic TLE — What Actually Differs in Satellite Collision Prediction?",
+    ))
+    st.subheader(T3(
+        "一句話：TLE 描述的是名義軌道；VCM 同時描述名義軌道與它的不確定性",
+        "一言で言えば：TLEは公称軌道を記述し、VCMは公称軌道とその不確実性を同時に記述する",
+        "In one line: a TLE describes the nominal orbit; a VCM describes the nominal orbit *and* its uncertainty",
+    ))
+    st.caption(T3(
+        "本頁的 Pc 數字由下方公式即時計算（極座標數值積分，非蒙地卡羅，同輸入必得同輸出）；"
+        "文字結論引用 NASA CARA 與公開報導，來源列於頁尾。本專案本身只使用公開 TLE，**沒有** VCM 存取權——"
+        "這正是本案例要說清楚的界線。",
+        "本頁のPc数値は下記の式でその場で計算している（極座標での数値積分。モンテカルロではないため同じ入力なら必ず同じ出力）。"
+        "文章の結論はNASA CARAおよび公開報道を引用し、出典は頁末に示す。本プロジェクト自体は公開TLEのみを用い、"
+        "VCMへのアクセス権は**持たない**——その境界を明示することが本事例の目的である。",
+        "The Pc numbers on this page are computed live by the formula below (polar-grid numerical integration, "
+        "not Monte Carlo, so the same input always gives the same output). The narrative cites NASA CARA and "
+        "public reporting; sources are listed at the end. This project itself uses only public TLEs and has "
+        "**no** VCM access — drawing that line is the point of this case.",
+    ))
+
+    st.header(T3("① 兩種資料，回答的是兩個不同的問題", "① 2種類のデータは、異なる問いに答えている",
+                 "① Two data products answer two different questions"))
+    st.markdown(T3(
+        "- **TLE（Two-Line Element）**：一組*平均*軌道元素，必須搭配 SGP4／SDP4 這類分析模型才能傳播。"
+        "格式簡單、公開、更新快，適合大規模目標篩選與一般態勢展示。它回答的是：**「依公開軌道模型，物體大概會在哪裡？」**\n"
+        "- **VCM（Vector Covariance Message）**：某個 epoch 的位置／速度狀態向量，**外加 covariance**——"
+        "描述這個估計在各方向上的不確定程度，以及位置與速度誤差之間的相關性。它回答的是："
+        "**「物體預計會在哪裡，而這個預測有多不確定？」**\n\n"
+        "NASA 在 CARA 的建議中明確指出：TLE 不足以支援正式的 conjunction assessment（CA）。原因不是 TLE「不準」，"
+        "而是它**缺少描述誤差分布的 covariance**，因此無法算出標準的碰撞機率 Pc。",
+        "- **TLE（Two-Line Element）**：*平均*軌道要素の組であり、SGP4／SDP4のような解析モデルと組み合わせて初めて"
+        "伝播できる。形式が単純で公開されており更新も速いため、大規模なスクリーニングや一般的な状況表示に適する。"
+        "答えているのは：**「公開の軌道モデルによれば、物体はおよそどこにいるか？」**\n"
+        "- **VCM（Vector Covariance Message）**：あるepochにおける位置・速度の状態ベクトルに、**covarianceを加えたもの**。"
+        "推定値が各方向にどれだけ不確実か、また位置と速度の誤差がどう相関しているかを記述する。答えているのは："
+        "**「物体はどこにいると予測され、その予測はどれだけ不確実か？」**\n\n"
+        "NASAはCARAの勧告において、TLEは正式なconjunction assessment（CA）を支えるには不十分だと明言している。"
+        "理由はTLEが「不正確」だからではなく、**誤差分布を記述するcovarianceを欠く**ため、標準的な衝突確率Pcを"
+        "算出できないからである。",
+        "- **TLE (Two-Line Element)**: a set of *mean* orbital elements that must be propagated with an "
+        "analytic model such as SGP4/SDP4. Simple, public and frequently updated, it suits large-scale "
+        "screening and general situational display. It answers: **\"where is the object roughly going to be, "
+        "according to a public orbit model?\"**\n"
+        "- **VCM (Vector Covariance Message)**: a position/velocity state vector at a given epoch **plus its "
+        "covariance** — how uncertain that estimate is in each direction, and how position and velocity errors "
+        "correlate. It answers: **\"where is the object predicted to be, and how uncertain is that prediction?\"**\n\n"
+        "NASA's CARA recommendations state plainly that TLEs are not adequate for formal conjunction assessment "
+        "(CA). Not because TLEs are \"inaccurate\", but because they **carry no covariance**, so a standard "
+        "probability of collision (Pc) cannot be computed from them.",
+    ))
+
+    df_cmp = pd.DataFrame([
+        {"項目": T3("內容", "内容", "Content"),
+         "TLE": T3("平均軌道元素（需 SGP4／SDP4 傳播）", "平均軌道要素（SGP4／SDP4で伝播）", "Mean elements (propagate with SGP4/SDP4)"),
+         "VCM": T3("狀態向量＋covariance", "状態ベクトル＋covariance", "State vector + covariance")},
+        {"項目": T3("不確定性", "不確実性", "Uncertainty"),
+         "TLE": T3("無（只有經驗誤差量級）", "なし（経験的な誤差量級のみ）", "None (only empirical error scale)"),
+         "VCM": T3("有，逐方向、含相關性", "あり、方向ごと・相関を含む", "Yes, per-axis and correlated")},
+        {"項目": T3("典型誤差", "典型的な誤差", "Typical error"),
+         "TLE": T3("約 1–2 km 量級，隨傳播時間、阻力與未通報機動放大",
+                   "おおむね1〜2 km級。伝播時間・大気抵抗・未通報機動で拡大",
+                   "~1–2 km, growing with propagation time, drag and unreported maneuvers"),
+         "VCM": T3("依定軌品質而定，並隨 covariance 一起傳播", "軌道決定の品質による。covarianceとともに伝播",
+                   "Depends on OD quality; propagated together with the covariance")},
+        {"項目": T3("能算 Pc 嗎", "Pcを算出できるか", "Can it yield Pc?"),
+         "TLE": T3("不能（只能算幾何最近距離）", "不可（幾何的な最接近距離のみ）", "No (geometric miss distance only)"),
+         "VCM": T3("可以（標準 CA 流程）", "可能（標準的なCAフロー）", "Yes (standard CA workflow)")},
+        {"項目": T3("適用階段", "適用段階", "Where it fits"),
+         "TLE": T3("broad-phase：全目錄粗篩、態勢展示", "broad-phase：全カタログの粗いスクリーニング、状況表示",
+                   "Broad phase: all-catalog screening, situational display"),
+         "VCM": T3("narrow-phase：正式風險評估與避碰決策", "narrow-phase：正式なリスク評価と回避判断",
+                   "Narrow phase: formal risk assessment and avoidance decisions")},
+    ])
+    st.dataframe(df_cmp, use_container_width=True, hide_index=True)
+
+    st.header(T3("② 同樣的最近距離，Pc 可以差好幾個數量級",
+                 "② 同じ最接近距離でも、Pcは数桁変わりうる",
+                 "② The same miss distance can give Pc values orders of magnitude apart"))
+    st.markdown(T3(
+        "這是本案例最重要的一點，也是「為什麼 miss distance 不能直接當風險」的原因。下面的計算把兩物體的"
+        "合成位置不確定性放在交會平面上，對半徑 HBR（兩物體半徑和）的圓積分。**你可以自己改參數**：",
+        "本事例で最も重要な点であり、「なぜ最接近距離をそのままリスクとみなせないか」の理由でもある。以下では"
+        "両物体の合成位置不確実性を交会平面上に置き、半径HBR（両物体の半径和）の円で積分する。**パラメータは変更できる**：",
+        "This is the core point of the case, and the reason miss distance alone is not risk. The calculation "
+        "below places the combined position uncertainty on the encounter plane and integrates over a circle of "
+        "radius HBR (sum of the two object radii). **You can change the parameters**:",
+    ))
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        miss = st.number_input(T3("最近距離 miss distance (m)", "最接近距離 (m)", "Miss distance (m)"),
+                               10.0, 20000.0, 300.0, 10.0, key="c28_miss")
+    with c2:
+        sig_r = st.number_input(T3("合成徑向 σ (m)", "合成ラジアル方向 σ (m)", "Combined radial σ (m)"),
+                                1.0, 20000.0, 200.0, 10.0, key="c28_sr")
+    with c3:
+        sig_t = st.number_input(T3("合成沿跡 σ (m)", "合成イントラック σ (m)", "Combined in-track σ (m)"),
+                                1.0, 50000.0, 600.0, 10.0, key="c28_st")
+    with c4:
+        hbr = st.number_input(T3("HBR 合成半徑 (m)", "HBR 合成半径 (m)", "HBR (m)"),
+                              1.0, 200.0, 20.0, 1.0, key="c28_hbr")
+
+    pc_user = _pc_2d(miss, sig_r, sig_t, hbr)
+    st.metric(T3("此組參數的 Pc", "このパラメータでのPc", "Pc for these inputs"), f"{pc_user:.3e}")
+    st.caption(T3(
+        "操作門檻參考（各任務自訂，非唯一標準）：Pc ≥ 1e-3 多數任務要求執行避碰機動；1e-4 ≤ Pc < 1e-3 需進一步評估與加密觀測。",
+        "運用閾値の目安（各ミッションが独自に定めるもので唯一の基準ではない）：Pc ≥ 1e-3 で多くのミッションが回避機動を要求し、"
+        "1e-4 ≤ Pc < 1e-3 では追加評価と観測強化を行う。",
+        "Operational thresholds (mission-specific, not a single standard): most missions require an avoidance "
+        "maneuver at Pc ≥ 1e-3; 1e-4 ≤ Pc < 1e-3 calls for further assessment and extra tracking.",
+    ))
+
+    rows = [
+        (T3("VCM 等級（精密定軌後）", "VCM級（精密軌道決定後）", "VCM-grade (after precise OD)"), 30.0, 80.0),
+        (T3("新鮮 TLE 假想等級", "新しいTLE想定", "Fresh-TLE hypothetical"), 300.0, 1000.0),
+        (T3("數日前 TLE 假想等級", "数日前のTLE想定", "Days-old-TLE hypothetical"), 1000.0, 3000.0),
+    ]
+    df_pc = pd.DataFrame([{
+        T3("不確定性情境", "不確実性シナリオ", "Uncertainty scenario"): nm,
+        T3("徑向 σ (m)", "ラジアル σ (m)", "Radial σ (m)"): sr,
+        T3("沿跡 σ (m)", "イントラック σ (m)", "In-track σ (m)"): stg,
+        T3("Pc", "Pc", "Pc"): f"{_pc_2d(miss, sr, stg, hbr):.3e}",
+    } for nm, sr, stg in rows])
+    st.dataframe(df_pc, use_container_width=True, hide_index=True)
+    st.warning(T3(
+        "注意這張表最違反直覺的地方：**不確定性變大，Pc 不一定變大，反而可能變小**（probability dilution，機率稀釋）——"
+        "誤差橢球被攤得很開時，落在那個小圓內的機率反而下降。所以「用一個很大的保守 σ」並不是安全做法，"
+        "它可能讓真正危險的交會看起來無害。這也是為什麼 VCM 的價值不只是「有 covariance」，而是 covariance 要有 realism。"
+        "後面兩列是「假如 TLE 有 covariance 會如何」的假想值——TLE 實際上並不提供 covariance，這兩列只是用來說明量級效應。",
+        "この表で最も直感に反する点：**不確実性が大きくなってもPcは必ずしも大きくならず、むしろ小さくなりうる**"
+        "（probability dilution、確率希釈）。誤差楕円が大きく広がると、小さな円の内側に入る確率はかえって下がる。"
+        "したがって「大きめの保守的なσを使う」ことは安全策ではなく、真に危険な接近を無害に見せてしまう可能性がある。"
+        "VCMの価値は「covarianceがあること」だけでなく、そのcovarianceにrealismがあることにある。"
+        "下2行は「もしTLEにcovarianceがあればどうなるか」という仮想値であり、TLEは実際にはcovarianceを提供しない。",
+        "The counter-intuitive part: **larger uncertainty does not necessarily raise Pc — it can lower it** "
+        "(probability dilution). When the error ellipse is smeared out, the probability mass inside that small "
+        "circle drops. So \"just use a big conservative σ\" is not a safe default; it can make a genuinely "
+        "dangerous conjunction look harmless. That is why the value of a VCM is not merely *having* a "
+        "covariance, but having a covariance with realism. The last two rows are hypotheticals — TLEs do not "
+        "actually carry covariance; they only illustrate the magnitude effect.",
+    ))
+
+    sigmas = np.logspace(1.5, 4, 60)      # 30 m–10 km：低於此範圍 Pc 小到看不見，會把稀釋峰值壓平
+    pcs = [_pc_2d(miss, s, s * 3.0, hbr) for s in sigmas]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=sigmas, y=pcs, mode="lines", name="Pc"))
+    fig.add_hline(y=1e-4, line_dash="dot", annotation_text="Pc = 1e-4")
+    fig.add_hline(y=1e-3, line_dash="dash", annotation_text="Pc = 1e-3")
+    fig.update_xaxes(type="log", title=T3("合成徑向 σ (m)，沿跡 σ 固定為 3×", "合成ラジアル σ (m)、イントラック σ は3倍固定",
+                                          "Combined radial σ (m), in-track σ fixed at 3×"))
+    fig.update_yaxes(type="log", title="Pc", range=[-10, -2.5])   # 只看操作門檻附近，才看得出先升後降
+    fig.update_layout(height=360, margin=dict(l=10, r=10, t=30, b=10),
+                      title=T3(f"固定 miss distance {miss:.0f} m、HBR {hbr:.0f} m 時，Pc 隨不確定性的變化",
+                               f"最接近距離{miss:.0f} m・HBR {hbr:.0f} m 固定時のPcと不確実性の関係",
+                               f"Pc vs. uncertainty at fixed miss distance {miss:.0f} m, HBR {hbr:.0f} m"))
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption(T3(
+        "曲線先升後降：σ 遠小於 miss distance 時，兩者幾乎不可能相撞；σ 接近 miss distance 時 Pc 達到峰值；"
+        "σ 再變大則進入稀釋區。只看最近距離無法知道自己落在這條曲線的哪一段——這就是 VCM 的用處。",
+        "曲線は上昇後に下降する：σがmiss distanceよりはるかに小さければ衝突はほぼあり得ず、σがmiss distanceに近づくとPcはピークに達し、"
+        "さらにσが大きくなると希釈領域に入る。最接近距離だけを見ても自分がこの曲線のどこにいるかは分からない——そこがVCMの効用である。",
+        "The curve rises then falls: when σ is far below the miss distance a collision is nearly impossible; Pc "
+        "peaks when σ is comparable to the miss distance; beyond that you enter the dilution regime. Miss "
+        "distance alone cannot tell you where on this curve you sit — that is what a VCM is for.",
+    ))
+
+    st.header(T3("③ 兩種流程：broad-phase 篩選 vs narrow-phase 評估",
+                 "③ 2つのフロー：broad-phaseスクリーニングとnarrow-phase評価",
+                 "③ Two workflows: broad-phase screening vs. narrow-phase assessment"))
+    st.markdown(T3(
+        "實務 SSA/SDA 系統不是二選一，而是分層使用：\n\n"
+        "1. **TLE（broad-phase）**：用 SGP4 對數萬個目錄物體做全域篩選，找出可能接近的候選對。快、便宜、可公開重現。\n"
+        "2. **VCM／精密星曆（narrow-phase）**：對候選對傳播狀態與 covariance 至 TCA，算出 Pc，再依任務門檻決定"
+        "是否加密觀測、協調或執行避碰機動。\n"
+        "3. **新觀測／重新定軌**：對高風險交會補觀測、確認是否有未通報機動，收斂 covariance 後重算。\n\n"
+        "把 TLE 的角色說成「不準所以沒用」是錯的；正確的說法是「TLE 是 broad-phase 工具，不是 narrow-phase 依據」。",
+        "実務のSSA/SDAシステムは二者択一ではなく、階層的に使い分ける：\n\n"
+        "1. **TLE（broad-phase）**：SGP4で数万個のカタログ物体を全域スクリーニングし、接近しうる候補ペアを抽出する。"
+        "速く、安価で、公開再現が可能。\n"
+        "2. **VCM／精密暦（narrow-phase）**：候補ペアについて状態とcovarianceをTCAまで伝播してPcを算出し、"
+        "ミッションの閾値に従って追加観測・調整・回避機動の要否を判断する。\n"
+        "3. **新規観測／再軌道決定**：高リスクの接近には観測を追加し、未通報機動の有無を確認し、covarianceを収束させて再計算する。\n\n"
+        "「TLEは不正確だから使えない」という言い方は誤りで、正しくは「TLEはbroad-phaseの道具であり、narrow-phaseの根拠ではない」。",
+        "Operational SSA/SDA systems do not choose one or the other; they layer them:\n\n"
+        "1. **TLE (broad phase)**: SGP4-screen tens of thousands of catalogued objects to find candidate close "
+        "pairs — fast, cheap, publicly reproducible.\n"
+        "2. **VCM / precise ephemeris (narrow phase)**: propagate state *and* covariance of the candidate pair "
+        "to TCA, compute Pc, and decide against mission thresholds whether to task more tracking, coordinate, "
+        "or maneuver.\n"
+        "3. **New observations / re-OD**: add tracking on high-risk events, check for unreported maneuvers, "
+        "shrink the covariance and recompute.\n\n"
+        "\"TLEs are inaccurate, therefore useless\" is the wrong reading. The right one: TLEs are a broad-phase "
+        "tool, not a narrow-phase basis for decisions.",
+    ))
+
+    st.header(T3("④ 為什麼這件事在 2026 年特別值得談",
+                 "④ なぜこれが2026年に特に議論に値するのか",
+                 "④ Why this matters especially in 2026"))
+    st.markdown(T3(
+        "2026 年 9 月 23 日 Breaking Defense 的獨家報導指出：美國太空軍透過 Joint Commercial Operations（JCO）"
+        "與 SpaceX 的協議，讓 SpaceX 取得原本限軍方使用的**高精度目錄（High Accuracy Catalog, HAC）**，"
+        "其中包含帶 covariance（報導稱為「誤差泡泡」）的 **VCM**，交換條件是 SpaceX 提供其 Stargaze 星象追蹤系統的觀測資料；"
+        "官方並稱有限制條款，資料僅供其內部使用、不得用於商業利益。報導同時提到 SpaceX 每天執行約 2 萬次衛星機動，"
+        "其中約 1 千次是避碰；業界競爭者則擔心這種安排造成不公平優勢。\n\n"
+        "從本案例的角度，這則報導的技術意涵很清楚：**碰撞預測的關鍵差異不在「有沒有軌道資料」，而在「有沒有 covariance」**。"
+        "公開 TLE 人人可得，但要做到可信的 Pc 與避碰決策，需要的是 VCM 這一級的資料——這也正是它會成為政策與商業爭議焦點的原因。",
+        "2026年9月23日のBreaking Defenseの独占報道によれば、米宇宙軍はJoint Commercial Operations（JCO）を通じた"
+        "SpaceXとの取り決めにより、従来は軍用に限定されていた**高精度カタログ（High Accuracy Catalog, HAC）**への"
+        "アクセスをSpaceXに認めた。そこにはcovariance（報道では「誤差バブル」）を含む**VCM**が含まれ、"
+        "見返りにSpaceXは自社のStargaze星追跡システムの観測データを提供する。当局は、データは社内利用に限られ"
+        "商業的利益に用いてはならないという条件があると述べている。報道はまた、SpaceXが1日あたり約2万回の機動を行い、"
+        "うち約1千回が衝突回避であること、競合他社が不公平な優位を懸念していることにも触れている。\n\n"
+        "本事例の観点からの技術的含意は明確である：**衝突予測の決定的な差は「軌道データの有無」ではなく「covarianceの有無」にある。**"
+        "公開TLEは誰でも入手できるが、信頼できるPcと回避判断にはVCM級のデータが要る。だからこそ政策・商業上の争点になる。",
+        "Breaking Defense reported exclusively on 23 September 2026 that the US Space Force, through an "
+        "arrangement between its Joint Commercial Operations (JCO) cell and SpaceX, granted SpaceX access to "
+        "the **High Accuracy Catalog (HAC)** — previously restricted to military use — including **VCMs** with "
+        "covariance (the report calls them \"error bubbles\"), in exchange for observations from SpaceX's "
+        "Stargaze star-tracking system; officials said stipulations restrict the data to internal use and bar "
+        "commercial gain. The piece also notes SpaceX performs roughly 20,000 satellite maneuvers a day, about "
+        "1,000 of them for collision avoidance, and that competitors worry about an unfair advantage.\n\n"
+        "Read through this case, the technical implication is clear: **the decisive difference in collision "
+        "prediction is not whether you have orbit data, but whether you have covariance.** Public TLEs are "
+        "available to everyone; credible Pc and avoidance decisions need VCM-grade data — which is exactly why "
+        "it becomes a policy and commercial flashpoint.",
+    ))
+    st.info(T3(
+        "誠實標註：上述報導內容為媒體轉述，本專案無法獨立查證，也沒有 HAC／VCM 的存取權。此處引用是為了說明"
+        "「covariance 存取權」在現實中的份量，不作為本專案任何技術宣稱的依據。",
+        "誠実な注記：上記の報道内容はメディアによる伝聞であり、本プロジェクトが独立に検証したものではなく、"
+        "HAC／VCMへのアクセス権も持たない。ここでの引用は「covarianceへのアクセス」が現実にもつ重みを示すためであり、"
+        "本プロジェクトの技術的主張の根拠とはしない。",
+        "Honest note: the above is press reporting that this project cannot independently verify, and we hold no "
+        "HAC/VCM access. It is cited to show how much covariance access matters in practice, not as evidence for "
+        "any technical claim made by this project.",
+    ))
+
+    st.header(T3("⑤ 這對本專案的界線意味著什麼", "⑤ これは本プロジェクトの境界に何を意味するか",
+                 "⑤ What this means for this project's boundaries"))
+    st.markdown(T3(
+        "- 本專案全部使用**公開 TLE**（以及少數公開精密星曆），因此在碰撞議題上只能做到 **broad-phase 篩選與態勢展示**。\n"
+        "- 案例七（Pc／TCA）用的是簡化示範算法（`conjunction_pipeline.compute_pc_simplified`，二維、假設 covariance），"
+        "**不是**正式 CA 產品，也不應作為避碰機動依據。\n"
+        "- 本專案真正的貢獻在另一件事：**從 TLE 偵測機動**。未通報機動正是讓 TLE 傳播誤差暴增、也讓他人 covariance 失真的主因之一；"
+        "把「這顆衛星最近動過」標示出來，對 broad-phase 篩選的價值，比硬算一個不可信的 Pc 高。\n"
+        "- 若未來要進到 narrow-phase，需要的不是更好的模型，而是**資料等級的升級**：VCM 或 owner/operator 星曆。",
+        "- 本プロジェクトは全面的に**公開TLE**（および少数の公開精密暦）を用いるため、衝突の話題では"
+        "**broad-phaseのスクリーニングと状況表示**までしかできない。\n"
+        "- 事例七（Pc／TCA）で用いているのは簡略化したデモ用アルゴリズム（`conjunction_pipeline.compute_pc_simplified`、"
+        "2次元・covariance仮定）であり、正式なCA製品**ではなく**、回避機動の根拠にもならない。\n"
+        "- 本プロジェクトの本当の貢献は別にある：**TLEからの機動検出**である。未通報機動はTLEの伝播誤差を急増させ、"
+        "他者のcovarianceを歪める主因の一つであり、「この衛星は最近動いた」と示すことはbroad-phaseにとって"
+        "信頼できないPcを無理に出すより価値が高い。\n"
+        "- 将来narrow-phaseに進むために必要なのは、より良いモデルではなく**データ等級の引き上げ**——VCMまたは"
+        "owner/operator暦である。",
+        "- This project uses **public TLEs** (plus a little public precise ephemeris), so on collision questions "
+        "it can only do **broad-phase screening and situational display**.\n"
+        "- Case 7 (Pc/TCA) uses a simplified demonstration algorithm (`conjunction_pipeline.compute_pc_simplified`, "
+        "2-D, assumed covariance). It is **not** a formal CA product and must not be used as a basis for "
+        "avoidance maneuvers.\n"
+        "- The project's real contribution lies elsewhere: **maneuver detection from TLEs**. Unreported "
+        "maneuvers are a main reason TLE propagation error explodes and other parties' covariances go stale; "
+        "flagging \"this satellite just moved\" is worth more to broad-phase screening than forcing out an "
+        "untrustworthy Pc.\n"
+        "- Moving to narrow phase would not require a better model but a **data-grade upgrade**: VCMs or "
+        "owner/operator ephemerides.",
+    ))
+
+    st.header(T3("⑥ 來源", "⑥ 出典", "⑥ Sources"))
+    st.markdown(
+        "- NASA CARA, *Conjunction Assessment Risk Analysis — Updated Recommendations*（TLE 不足以支援正式 CA）\n"
+        "- NASA, *Conjunction Assessment and NPR 8079.1*；NASA *National Standard for Space Safety and Orbital Debris* 相關文件\n"
+        "- AMOS, *Conjunction Assessment: NASA Best Practices and Lessons Learned*\n"
+        "- Space-Track.org, TLE 格式文件與說明\n"
+        "- Theresa Hitchens, \"EXCLUSIVE: SpaceX given unique access to classified DoD space tracking data, sources say\", "
+        "*Breaking Defense*, 2026-09-23 — "
+        "https://breakingdefense.com/2026/09/exclusive-spacex-given-unique-access-to-classified-dod-space-tracking-data-sources-say/\n"
+    )
+    st.caption(T3("本頁 Pc 計算：`_pc_2d()`（極座標數值積分）；專案內既有的簡化 Pc：`conjunction_pipeline.compute_pc_simplified`。",
+                  "本頁のPc計算：`_pc_2d()`（極座標数値積分）。プロジェクト内の簡略版Pc：`conjunction_pipeline.compute_pc_simplified`。",
+                  "Pc on this page: `_pc_2d()` (polar-grid numerical integration); the project's existing simplified Pc: "
+                  "`conjunction_pipeline.compute_pc_simplified`."))
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -12904,7 +13219,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
-        "case21", "case22", "case23", "case24", "case25", "case26", "case27"):
+        "case21", "case22", "case23", "case24", "case25", "case26", "case27", "case28"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -12981,6 +13296,8 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case26()
     elif _case == "case27":
         render_storymap_case27()
+    elif _case == "case28":
+        render_storymap_case28()
     else:
         render_storymap_landing()
     st.stop()
