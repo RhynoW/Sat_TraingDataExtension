@@ -941,7 +941,7 @@ def run_local_files_mode():
 # ==========================
 
 def rebuild_downstream(parquet: bool, keep_lines: bool = False,
-                       recent_days: int = 0, whitelist: str = "") -> None:
+                       recent_days: int = 0, whitelist: str = "") -> int:
     """
     TLE 寫入 space_db.duckdb 完成後，呼叫 prc_maneuver/build_slim_db.py
     重建 space_db_slim.duckdb 與/或月份 parquet，並匯出 latest30day_tle.parquet。
@@ -956,7 +956,7 @@ def rebuild_downstream(parquet: bool, keep_lines: bool = False,
     build_script = Path(__file__).resolve().parent / "prc_maneuver" / "build_slim_db.py"
     if not build_script.exists():
         print(f"[rebuild] 找不到 build_slim_db.py：{build_script}", flush=True)
-        return
+        return 1
 
     import sys as _sys
     cmd = [_sys.executable, str(build_script)]
@@ -981,6 +981,7 @@ def rebuild_downstream(parquet: bool, keep_lines: bool = False,
               flush=True)
     else:
         print(f"[rebuild] ✅ 完成（{elapsed:.0f} s）", flush=True)
+    return result.returncode
 
 
 # ==========================
@@ -1025,9 +1026,9 @@ def main():
         help="發布用精簡：slim DB 全衛星只留最近 N 天歷史（0=停用；透傳給 build_slim_db.py）",
     )
     parser.add_argument(
-        "--whitelist", default="58573,59884,67689,69673,58204,43874",
-        help="保留完整歷史之 NORAD（逗號分隔，供 RPO 展示；透傳給 build_slim_db.py）"
-             "。神龍：58573/59884（第3次任務）、67689/69673（第4次任務 2026）",
+        "--whitelist", default="",
+        help="保留完整歷史之 NORAD（逗號分隔，透傳給 build_slim_db.py）；"
+             "留空＝沿用 build_slim_db.py 內建清單（單一來源，避免兩處清單不同步）",
     )
 
     args = parser.parse_args()
@@ -1038,8 +1039,10 @@ def main():
         run_local_files_mode()
 
     if args.rebuild_slim or args.rebuild_parquet:
-        rebuild_downstream(parquet=args.rebuild_parquet, keep_lines=args.keep_lines,
-                           recent_days=args.recent_days, whitelist=args.whitelist)
+        rc = rebuild_downstream(parquet=args.rebuild_parquet, keep_lines=args.keep_lines,
+                                recent_days=args.recent_days, whitelist=args.whitelist)
+        if rc:
+            raise SystemExit(rc)
 
 
 if __name__ == "__main__":
