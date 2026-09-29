@@ -1,0 +1,110 @@
+  q["t0"] = pd.to_datetime(q["quiet_start_tai"]) - pd.Timedelta(seconds=37)
+  q["t1"] = pd.to_datetime(q["quiet_end_tai"]) - pd.Timedelta(seconds=37)
+衛星組： {'FS3': 6, 'FS7': 6, 'GFO': 2, 'IDS': 9, 'RB': 72}
+  ...10/95
+  ...20/95
+  ...30/95
+  ...40/95
+  ...50/95
+  ...60/95
+  ...70/95
+  ...80/95
+  tt = truth[(truth.index >= t[0] - pd.Timedelta(hours=2)) & (truth.index <= t[-1] + pd.Timedelta(hours=2))]
+  ...90/95
+
+=== |drag_resid_da| > 0.3 km 誤報數（轉換數）===
+  group window  n_sats  n_trans  FP_V0  FP_V1  FP_V1s  FP_V1M  FP_V2  FP_V2M  FP_VT
+     RB  storm      72     1361      0      0       0       0      0       0      0
+     RB  quiet      72     4426      0      0       0       0      0       0      0
+    FS3  storm       6      104      0      0       0       0      0       0      0
+    FS3  quiet       6      330      0      0       0       0      0       0      0
+    FS7  storm       6      107      0      0       0       0      0       0      0
+    FS7  quiet       6      352      0      0       0       0      0       0      0
+    IDS  storm       9      222      0      0       0       0      0       0      0
+    IDS  quiet       9      754      0      0       0       0      0       0      0
+    GFO  storm       2       42      0      0       0       0      0       0      0
+    GFO  quiet       2      138      0      0       0       0      0       0      0
+ALL_neg  storm      93     1794      0      0       0       0      0       0      0
+ALL_neg  quiet      93     5862      0      0       0       0      0       0      0
+（敏感度：門檻 0.2 km）
+  group window  FP0.2_V0  FP0.2_V1  FP0.2_V1s  FP0.2_V1M  FP0.2_V2  FP0.2_V2M  FP0.2_VT
+     RB  storm         0         0          0          0         0          0         0
+     RB  quiet         0         0          0          0         0          0         0
+    FS3  storm         0         0          0          0         0          0         0
+    FS3  quiet         0         0          0          0         0          0         0
+    FS7  storm         0         0          0          0         0          0         0
+    FS7  quiet         0         0          0          0         0          0         0
+    IDS  storm         0         0          0          0         0          0         0
+    IDS  quiet         0         0          0          0         0          0         0
+    GFO  storm         0         0          0          0         0          0         0
+    GFO  quiet         0         0          0          0         0          0         0
+ALL_neg  storm         0         0          0          0         0          0         0
+ALL_neg  quiet         0         0          0          0         0          0         0
+（敏感度：門檻 0.1 km）
+  group window  FP0.1_V0  FP0.1_V1  FP0.1_V1s  FP0.1_V1M  FP0.1_V2  FP0.1_V2M  FP0.1_VT
+     RB  storm         0         4          4          4         0          0         0
+     RB  quiet         0         1          1          0         0          0         0
+    FS3  storm         0         0          0          0         0          0         0
+    FS3  quiet         0         0          0          0         0          0         0
+    FS7  storm         2         2          3          2         0          0         0
+    FS7  quiet         0         0          0          0         0          0         0
+    IDS  storm         0         0          0          0         0          0         0
+    IDS  quiet         0         0          0          0         0          0         0
+    GFO  storm         0         0          0          0         0          0         0
+    GFO  quiet         0         0          0          0         0          0         0
+ALL_neg  storm         2         6          7          6         0          0         0
+ALL_neg  quiet         0         1          1          0         0          0         0
+  group window  p95abs_V0  p95abs_V1  p95abs_V1s  p95abs_V1M  p95abs_V2  p95abs_V2M  p95abs_VT
+     RB  storm      0.036      0.044       0.044       0.037      0.023       0.018        NaN
+     RB  quiet      0.017      0.012       0.012       0.010      0.007       0.007        NaN
+    FS3  storm      0.018      0.020       0.016       0.023      0.009       0.007        NaN
+    FS3  quiet      0.007      0.009       0.008       0.004      0.003       0.003        NaN
+    FS7  storm      0.075      0.070       0.077       0.076      0.027       0.023        NaN
+    FS7  quiet      0.039      0.041       0.039       0.016      0.011       0.011        NaN
+    IDS  storm      0.004      0.005       0.003       0.004      0.003       0.002        NaN
+    IDS  quiet      0.001      0.001       0.001       0.001      0.001       0.001        NaN
+    GFO  storm      0.017      0.018       0.021       0.043      0.012       0.011      0.007
+    GFO  quiet      0.014      0.008       0.008       0.007      0.005       0.005      0.003
+ALL_neg  storm      0.037      0.045       0.045       0.033      0.021       0.017        NaN
+ALL_neg  quiet      0.017      0.013       0.013       0.009      0.007       0.006        NaN
+  group window  medresid_V0  medresid_V1  medresid_V1s  medresid_V1M  medresid_V2  medresid_V2M  medresid_VT
+     RB  storm        0.001        0.000         0.000        -0.000        0.001         0.001          NaN
+     RB  quiet        0.000        0.000         0.000         0.000       -0.000         0.000          NaN
+    FS3  storm        0.001        0.002         0.001         0.000        0.000         0.000          NaN
+    FS3  quiet       -0.000       -0.000        -0.000         0.000       -0.000         0.000          NaN
+    FS7  storm        0.005        0.006         0.005         0.001        0.006         0.004          NaN
+    FS7  quiet        0.000       -0.001        -0.000         0.001       -0.000         0.000          NaN
+    IDS  storm        0.000        0.000         0.000         0.000        0.000         0.000          NaN
+    IDS  quiet        0.000        0.000         0.000         0.000        0.000         0.000          NaN
+    GFO  storm        0.002        0.002         0.002         0.000        0.003         0.002          0.0
+    GFO  quiet        0.000        0.001         0.001         0.000        0.000         0.000          0.0
+ALL_neg  storm        0.001        0.000         0.000        -0.000        0.001         0.000          NaN
+ALL_neg  quiet        0.000        0.000         0.000         0.000       -0.000         0.000          NaN
+
+=== Model 2（IsolationForest）旗標數 ===
+group window  n_trans  M2flag_V0  M2flag_V1  M2flag_V1s  M2flag_V1M  M2flag_V2  M2flag_V2M  M2flag_VT
+   RB  storm     1361          0          0           0           0          0           0          0
+   RB  quiet     4426          0          0           0           0          0           0          0
+  FS3  storm      104          0          0           0           0          0           0          0
+  FS3  quiet      330          0          0           0           0          0           0          0
+  FS7  storm      107          0          0           0           0          0           0          0
+  FS7  quiet      352          0          0           0           0          0           0          0
+  IDS  storm      222          0          0           0           0          0           0          0
+  IDS  quiet      754          0          0           0           0          0           0          0
+  GFO  storm       42          0          0           0           0          0           0          0
+  GFO  quiet      138          0          0           0           0          0           0          0
+
+=== 注入 Δa 階躍召回（負樣本每轉換各注入一次）===
+window  inject_km    n  recall_V0  recall_V1  recall_V1s  recall_V1M  recall_V2  recall_V2M
+ storm       -1.0 1794      1.000      1.000       1.000       1.000        1.0         1.0
+ storm       -0.5 1794      1.000      1.000       1.000       1.000        1.0         1.0
+ storm       -0.4 1794      0.999      0.998       0.997       0.998        1.0         1.0
+ storm        0.4 1794      0.999      0.999       0.999       0.999        1.0         1.0
+ storm        0.5 1794      1.000      1.000       1.000       1.000        1.0         1.0
+ storm        1.0 1794      1.000      1.000       1.000       1.000        1.0         1.0
+ quiet       -1.0 5862      1.000      1.000       1.000       1.000        1.0         1.0
+ quiet       -0.5 5862      1.000      1.000       1.000       1.000        1.0         1.0
+ quiet       -0.4 5862      1.000      1.000       1.000       1.000        1.0         1.0
+ quiet        0.4 5862      1.000      1.000       1.000       1.000        1.0         1.0
+ quiet        0.5 5862      1.000      1.000       1.000       1.000        1.0         1.0
+ quiet        1.0 5862      1.000      1.000       1.000       1.000        1.0         1.0

@@ -1,0 +1,11 @@
+﻿group,window,n_trans,M2flag_V0,M2flag_V1,M2flag_V1s,M2flag_V1M,M2flag_V2,M2flag_V2M,M2flag_VT
+RB,storm,1361,0,0,0,0,0,0,0
+RB,quiet,4426,0,0,0,0,0,0,0
+FS3,storm,104,0,0,0,0,0,0,0
+FS3,quiet,330,0,0,0,0,0,0,0
+FS7,storm,107,0,0,0,0,0,0,0
+FS7,quiet,352,0,0,0,0,0,0,0
+IDS,storm,222,0,0,0,0,0,0,0
+IDS,quiet,754,0,0,0,0,0,0,0
+GFO,storm,42,0,0,0,0,0,0,0
+GFO,quiet,138,0,0,0,0,0,0,0

@@ -12,7 +12,22 @@ atmospheric_drag.py — NRLMSIS-00/2.1 物理阻力殘差（取代不可靠的 t
   阻力殘差          ：  drag_resid_da_i = Δa_i + B_eff · s_i
       純大氣衰減 → 殘差 ≈ 0；機動 → 殘差 = 機動 Δa（含太陽/地磁變化已由 ρ 涵蓋）。
 
-需求：pymsis、space_weather_ap.csv（Celestrak SW，含 F10.7_OBS / F10.7_OBS_CENTER81 / AP_AVG）。
+需求：pymsis、space_weather_ap.csv（Celestrak SW，含 F10.7_OBS / F10.7_OBS_CENTER81 / AP_AVG /
+AP1-AP8）。
+
+[2026-09-09 改善] 原版 ap(7) 陣列全填每日 AP_AVG、lat/lon 固定 0，暴時精度受限（見
+project_atmospheric_drag_model2 備忘）。改為：
+  (a) 依 NRLMSISE-00 標準定義組出真正的 3 小時解析度 ap(7)（見 _ap7_array()）；
+  (b) 若呼叫端提供 line1/line2，以 SGP4 解出當下（epoch 當刻）星下點 lat/lon 取代常數 0/0
+      （見 _subsat_latlon()）；未提供時完全退回原行為（向下相容，不影響既有呼叫端）。
+
+[2026-09-29 修正]（STORM-AI 驗證發現，research_202609/stormai/README.md）
+  (c) pymsis 預設開關 9（geomagnetic_activity=1）只讀 ap[0]（日均 Ap），(a) 組出的 3 小時 ap(7)
+      從未生效。改為有 3 小時 ap 時傳 geomagnetic_activity=-1（NRLMSIS 標準「暴時 ap 模式」）。
+      STORM_AP_MODE=False 可還原舊行為（重現 2026-09-29 以前的結果用）。
+  (d) 模型版本明示為 MSIS_VERSION=2.1（pymsis ≥0.8 的預設；舊文件寫 NRLMSIS-00 有誤）。
+  (e) drag_residual 的 dt 改用 total_seconds()：原本 astype("int64")/1e9 假設奈秒，
+      DuckDB 回傳微秒解析度時 dt 小 1000 倍 → attrs["B_eff"] 大 1000 倍（殘差因自我校準不受影響）。
 """
 from __future__ import annotations
 
@@ -24,10 +39,13 @@ import pandas as pd
 RE, MU = 6378.137, 398_600.4418
 _SW_PATH = "space_weather_ap.csv"
 _sw_cache: dict | None = None
+_ap3h_cache: pd.Series | None = None
+MSIS_VERSION = 2.1       # pymsis 預設；0 = NRLMSISE-00
+STORM_AP_MODE = True     # True：有 3 小時 ap(7) 時開 geomagnetic_activity=-1 讓其生效
 
 
 def load_space_weather(path: str = _SW_PATH) -> dict:
-    """回傳 {date_str: (f107_obs, f107_81avg, ap_avg)}（快取）。"""
+    """回傳 {date_str: (f107_obs, f107_81avg, ap_avg)}（快取；向下相容，未變動既有呼叫端）。"""
     global _sw_cache
     if _sw_cache is not None:
         return _sw_cache
@@ -52,17 +70,121 @@ def _sw_arrays(epochs, sw):
     return f, fa, a
 
 
-def density(epochs, alt_km, sw=None, lat=0.0, lon=0.0) -> np.ndarray:
-    """向量化 NRLMSIS 總質量密度 (kg/m³)；lat/lon 固定（常數偏差由 B_eff 校準吸收）。"""
+def _ap3h_series(path: str = _SW_PATH) -> pd.Series:
+    """把 space_weather_ap.csv 的 AP1-AP8（每日 8 個 3 小時值）攤平成單一時序（index=區間起始
+    UTC 時刻）。找不到 AP1-AP8 欄位時回傳空 Series（呼叫端據此退回原行為）。"""
+    global _ap3h_cache
+    if _ap3h_cache is not None:
+        return _ap3h_cache
+    sw = pd.read_csv(path)
+    ap_cols = [f"AP{i}" for i in range(1, 9)]
+    if not all(c in sw.columns for c in ap_cols):
+        _ap3h_cache = pd.Series(dtype=float)
+        return _ap3h_cache
+    d0 = pd.to_datetime(sw["DATE"]).to_numpy()
+    vals = sw[ap_cols].apply(pd.to_numeric, errors="coerce").to_numpy()  # (n_days, 8)
+    idx = (d0[:, None] + (np.arange(8) * 3).astype("timedelta64[h]")[None, :]).ravel()
+    _ap3h_cache = pd.Series(vals.ravel(), index=pd.DatetimeIndex(idx)).sort_index()
+    return _ap3h_cache
+
+
+def _ap7_array(epochs, daily_ap: np.ndarray) -> np.ndarray | None:
+    """依 NRLMSISE-00 標準定義組出 ap(7)：
+      ap[0]=當日 AP_AVG；ap[1..4]=當下／前3／前6／前9 小時之 3hr ap；
+      ap[5]=前 12–33 小時 8 筆 3hr ap 均值；ap[6]=前 36–57 小時 8 筆均值。
+    找不到 AP1-8 資料（或落在資料範圍邊界）時回傳 None／以 NaN 標記，由呼叫端補 daily 值。"""
+    s = _ap3h_series()
+    if s.empty:
+        return None
+    vals = s.to_numpy()
+    n_bins = len(vals)
+    bin_start = pd.DatetimeIndex(pd.to_datetime(epochs, utc=True)).tz_localize(None).floor("3h")
+    pos = s.index.searchsorted(bin_start, side="right") - 1
+    n = len(pos)
+    out = np.full((n, 7), np.nan)
+    out[:, 0] = daily_ap
+    for slot, lag in enumerate([0, 1, 2, 3]):
+        idx = pos - lag
+        ok = (idx >= 0) & (idx < n_bins)
+        col = np.full(n, np.nan)
+        col[ok] = vals[idx[ok]]
+        out[:, slot + 1] = col
+    for i in range(n):
+        p = pos[i]
+        if p < 0:
+            continue
+        lo, hi = max(p - 11, 0), p - 4
+        if hi >= lo:
+            out[i, 5] = np.nanmean(vals[lo:hi + 1])
+        lo2, hi2 = max(p - 19, 0), p - 12
+        if hi2 >= lo2:
+            out[i, 6] = np.nanmean(vals[lo2:hi2 + 1])
+    nanmask = np.isnan(out)
+    if nanmask.any():
+        out[nanmask] = np.broadcast_to(daily_ap[:, None], out.shape)[nanmask]
+    return out
+
+
+def _subsat_latlon(epochs, line1, line2) -> tuple[np.ndarray, np.ndarray]:
+    """由 TLE 逐筆解出當下（epoch 當刻）星下點 lat/lon（度，球形地球近似，僅供 NRLMSIS
+    輸入用——密度對地心/大地緯度差異之敏感度遠低於高度）。傳播失敗者填 0.0（退回原行為）。"""
+    from sgp4.api import Satrec, jday
+    t = pd.DatetimeIndex(pd.to_datetime(epochs, utc=True))
+    n = len(t)
+    lat = np.zeros(n)
+    lon = np.zeros(n)
+    for i in range(n):
+        l1, l2 = line1[i], line2[i]
+        if not isinstance(l1, str) or not isinstance(l2, str) or not l1 or not l2:
+            continue
+        try:
+            sat = Satrec.twoline2rv(l1, l2)
+            ti = t[i]
+            jd, fr = jday(ti.year, ti.month, ti.day, ti.hour, ti.minute,
+                          ti.second + ti.microsecond / 1e6)
+            e, r, _ = sat.sgp4(jd, fr)
+            if e:
+                continue
+            x, y, z = r
+            T = ((jd - 2451545.0) + fr) / 36525.0
+            gmst = 280.46061837 + 360.98564736629 * (jd - 2451545.0 + fr) + 0.000387933 * T ** 2
+            gmst_rad = np.deg2rad(gmst % 360.0)
+            x_ecef = np.cos(gmst_rad) * x + np.sin(gmst_rad) * y
+            y_ecef = -np.sin(gmst_rad) * x + np.cos(gmst_rad) * y
+            lon[i] = np.degrees(np.arctan2(y_ecef, x_ecef))
+            lat[i] = np.degrees(np.arctan2(z, np.hypot(x_ecef, y_ecef)))
+        except Exception:
+            continue
+    return lat, lon
+
+
+def _storm_options():
+    """NRLMSIS 開關 9 = -1：使用完整 ap(7) 歷史（否則只讀 ap[0] 日均 Ap）。"""
+    from pymsis import msis
+    return msis.create_options(geomagnetic_activity=-1)
+
+
+def density(epochs, alt_km, sw=None, lat=0.0, lon=0.0, storm_ap: bool | None = None) -> np.ndarray:
+    """向量化 NRLMSIS 總質量密度 (kg/m³)。
+
+    lat/lon 可傳純量（原行為，常數）或與 alt_km 等長之陣列（星下點實際座標，見
+    _subsat_latlon()）。ap(7) 優先用 3 小時解析度真值（見 _ap7_array()），AP1-8 欄位不存在
+    時退回全填每日 AP_AVG 的原行為。storm_ap（預設 STORM_AP_MODE）控制 3 小時 ap 是否真正
+    生效；AP1-8 不存在時一律用日均 Ap（開關 9=1）。
+    """
     import pymsis
     sw = sw or load_space_weather()
     epochs = pd.DatetimeIndex(pd.to_datetime(epochs, utc=True))
     dates = np.array([e.to_pydatetime().replace(tzinfo=None) for e in epochs])
     alt = np.asarray(alt_km, float)
     f, fa, a = _sw_arrays(epochs, sw)
-    ap = np.tile(a[:, None], (1, 7))
-    r = pymsis.calculate(dates, np.full(len(alt), lon), np.full(len(alt), lat),
-                         alt, f, fa, ap)
+    ap7 = _ap7_array(epochs, a)
+    ap = ap7 if ap7 is not None else np.tile(a[:, None], (1, 7))
+    lat_arr = np.asarray(lat, float) if np.ndim(lat) else np.full(len(alt), float(lat))
+    lon_arr = np.asarray(lon, float) if np.ndim(lon) else np.full(len(alt), float(lon))
+    use_storm = (STORM_AP_MODE if storm_ap is None else storm_ap) and ap7 is not None
+    r = pymsis.calculate(dates, lon_arr, lat_arr, alt, f, fa, ap, version=MSIS_VERSION,
+                         options=_storm_options() if use_storm else None)
     return np.asarray(r)[..., 0].ravel()
 
 
@@ -78,8 +200,7 @@ def drag_residual(df: pd.DataFrame, sw=None) -> pd.DataFrame:
     a = d["sma_km"].to_numpy(float)
     e = d["eccentricity"].to_numpy(float) if "eccentricity" in d.columns else np.zeros(len(a))
     t = pd.to_datetime(d["epoch"], utc=True)
-    t_ns = t.astype("int64").to_numpy()
-    dt_s = np.diff(t_ns) / 1e9
+    dt_s = t.diff().dt.total_seconds().to_numpy()[1:]    # 與 datetime 解析度（ns/us）無關
     da = np.diff(a)
 
     # ── 偏心軌道阻力模型（King-Hele）─────────────────────────────────────────
@@ -88,7 +209,11 @@ def drag_residual(df: pd.DataFrame, sw=None) -> pd.DataFrame:
     # e→0（近圓）時 geom→1，自動退化為原 LEO 圓軌公式。
     a0, e0 = a[:-1], e[:-1]
     alt_p = np.clip(a0 * (1.0 - e0) - RE, 80.0, 1000.0)   # 近地點高度（NRLMSIS 有效域）
-    rho_p = density(t.iloc[:-1], alt_p, sw)               # 近地點密度
+    if {"line1", "line2"}.issubset(d.columns):
+        lat_p, lon_p = _subsat_latlon(t.iloc[:-1], d["line1"].to_numpy()[:-1], d["line2"].to_numpy()[:-1])
+    else:
+        lat_p, lon_p = 0.0, 0.0                           # 無 TLE 行原始文本時退回原行為
+    rho_p = density(t.iloc[:-1], alt_p, sw, lat=lat_p, lon=lon_p)  # 近地點密度（星下點實際座標）
     H = 50.0                                              # 大氣尺度高 (km)
     z = np.clip(a0 * e0 / H, 0.0, 1e6)
     geom = ive(0, z) + 2.0 * e0 * ive(1, z)              # 數值穩定（ive=exp(-z)·Iν）
@@ -148,7 +273,8 @@ if __name__ == "__main__":
     reg = load_registry("data/url_registry.csv"); n2n = {v: k for k, v in reg["sat_name"].items()}
     for nid, lbl in [(29052, "FORMOSAT-3A 純衰減"), (n2n.get("STARLINK-30273"), "STARLINK-30273 機動"),
                      (25544, "ISS reboost"), (38752, "Van Allen A HEO 再入(期望≈0)")]:
-        df = con.execute("SELECT epoch_utc AS epoch, sma_km, eccentricity FROM raw_tle_archive "
+        df = con.execute("SELECT epoch_utc AS epoch, sma_km, eccentricity, line1, line2 "
+                         "FROM raw_tle_archive "
                          "WHERE norad_id=? AND sma_km IS NOT NULL ORDER BY epoch_utc",
                          [int(nid)]).fetchdf()
         df["epoch"] = pd.to_datetime(df["epoch"], utc=True)

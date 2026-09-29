@@ -1,0 +1,8 @@
+﻿metric,value,target
+ROC-AUC,0.8106,>=0.90
+Average Precision,0.6978,>=0.85
+F1-macro,0.7372,>=0.80
+FPR,0.05,<=0.05
+TPR_large,0.6376,>=0.9
+TPR_medium,0.4278,>=0.8
+TPR_small,0.0958,>=0.65
