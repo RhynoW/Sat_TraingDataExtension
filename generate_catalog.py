@@ -2,6 +2,16 @@
 One-time script: generate starlink_satellites.csv from the mission batch table.
 
 Run once to produce the catalog; the daily downloader reads it at runtime.
+
+WARNING (2026-09-29): the live starlink_satellites.csv has DRIFTED from this
+BATCHES table — some early batches (e.g. G6-1's placeholder IDs 20100-20109,
+found to be fake; G2-8 and G5-6, pruned to their matched IDs only) were
+manually edited out of the CSV after past research found them wrong, but this
+script's BATCHES table was never updated to match. **Do not run `generate()`
+and overwrite the live CSV** without first reconciling this table against it
+-- doing so silently reintroduces the bad rows. To add a new batch, prefer
+appending directly to starlink_satellites.csv (see the Flight14-V3 addition,
+2026-09-29) and only update BATCHES here for documentation/history.
 """
 from pathlib import Path
 import csv
@@ -71,6 +81,22 @@ BATCHES: list[tuple[str, str, int, list[int]]] = [
     ("G6-90",  "2026-03-19", 24, list(range(68262, 68272))),
     ("G6-91",  "2026-04-23", 24, list(range(68802, 68812))),
     ("G12-18", "2026-05-01", 21, list(range(70920, 70930))),
+    # ── 2026-09-28：Starship Flight 14，首批 Starlink V3（新一代，Starship 部署）──
+    # 尚未取得正式 Space-Track NORAD 編號（截至本檔更新時查證：Space-Track GP 類別、
+    # CelesTrak 正式目錄皆查無 2026-225 這個國際編號批次）。這裡用的是 SpaceX 自己交給
+    # CelesTrak／embedded 在 MEME 檔名裡的暫用編號（799501648–799501673，對應國際編號
+    # 2026-225A–2026-225AB），MEME 精密星曆已涵蓋全部 26 顆（已逐顆驗證，manifest 內
+    # status=Operational）。此批只有 26 顆、全數收錄（非其餘批次的 10 顆抽樣）。
+    # 注意：一旦 Space-Track 正式編目，SpaceX 之後發布的 MEME 檔名可能改用正式 NORAD
+    # 編號，屆時本列會與新檔名失配，需人工核對並更新（比對方式：向
+    # https://celestrak.org/NORAD/elements/gp.php?INTDES=2026-225&FORMAT=json 查詢）。
+    ("Flight14-V3", "2026-09-28", 26, [
+        799501648, 799501649, 799501650, 799501651, 799501652, 799501653,
+        799501654, 799501655, 799501656, 799501657, 799501658, 799501659,
+        799501660, 799501661, 799501662, 799501663, 799501664, 799501665,
+        799501666, 799501667, 799501668, 799501669, 799501670, 799501671,
+        799501672, 799501673,
+    ]),
 ]
 
 
@@ -80,7 +106,10 @@ def generate(out_path: Path) -> None:
         writer = csv.writer(fh)
         writer.writerow(["norad_id", "mission_batch", "launch_date", "sat_count"])
         for batch, launch_date, sat_count, ids in BATCHES:
-            assert len(ids) == 10, f"{batch}: expected 10 IDs, got {len(ids)}"
+            # 一般批次固定抽樣 10 顆；小型/首發批次（sat_count 本身 < 10，或刻意全收錄
+            # 如 Flight14-V3）允許 IDs 數等於 sat_count。
+            assert len(ids) == 10 or len(ids) == sat_count, (
+                f"{batch}: expected 10 or {sat_count} IDs, got {len(ids)}")
             for nid in ids:
                 writer.writerow([nid, batch, launch_date, sat_count])
                 rows_written += 1
