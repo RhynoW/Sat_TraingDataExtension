@@ -117,18 +117,21 @@ def build_slim_db(date_from: str, keep_lines: bool,
     #   recent_days<=0 → 沿用舊行為（date_from 以後全歷史）。
     t0 = time.time()
     whitelist = whitelist or []
+    # 排除未來 epoch（TLE 不可能晚於現在；2026-10-07 發現 13 筆 epoch 落在 10-07~10-13，
+    # 不過濾的話它們會變成「最近 N 天」視窗的錨點，把整個視窗往未來推、並流進發布 DB）。
+    not_future = "epoch_utc <= timezone('UTC', now())"
     if recent_days and recent_days > 0:
         wl_clause = (" OR norad_id IN ({})".format(
             ", ".join(str(int(x)) for x in whitelist)) if whitelist else "")
         where = (
-            f"epoch_utc >= '{date_from}' AND ("
-            f"epoch_utc >= (SELECT max(epoch_utc) FROM src.raw_tle_archive) "
+            f"{not_future} AND epoch_utc >= '{date_from}' AND ("
+            f"epoch_utc >= (SELECT max(epoch_utc) FROM src.raw_tle_archive WHERE {not_future}) "
             f"- INTERVAL '{int(recent_days)}' DAY{wl_clause})"
         )
         log.info("複製 raw_tle_archive（全衛星最近 %d 天 + 白名單%s 完整歷史，%d 欄）…",
                  recent_days, whitelist or "（無）", len(cols))
     else:
-        where = f"epoch_utc >= '{date_from}'"
+        where = f"{not_future} AND epoch_utc >= '{date_from}'"
         log.info("複製 raw_tle_archive（%s 以後全歷史，%d 欄）…", date_from, len(cols))
     dst.execute(f"""
         CREATE TABLE raw_tle_archive AS
