@@ -1,0 +1,1602 @@
+{
+  "58204": {
+    "name": "TJS-10",
+    "norad_id": 58204,
+    "n_tle": 2129,
+    "t0": "2023-11-03 19:10:04.091808+00:00",
+    "t1": "2026-10-06 17:56:56.075136+00:00",
+    "orbit_class": "HEO",
+    "n_transitions": 1996,
+    "n_flagged": 657,
+    "event": {
+      "epoch": "2023-11-09 16:41:19.370976+00:00",
+      "da_km": 17728.03841539287,
+      "di_deg": -16.866400000000002,
+      "de": -0.7269696999999999,
+      "draan_res_deg": 150.7066496375673
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": true
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：0 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：65 旗標",
+      "P3": "B* 輔助抑制：0 筆由阻力解釋",
+      "P4": "多窗口補充：198 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.31，62 旗標",
+      "P6": "星座感知（other，倍率 1.00）：572 旗標",
+      "combined": "合併偵測：657 / 1996 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.01,
+          0.802,
+          0.999
+        ],
+        "event_at_idx": true
+      },
+      "ssa": {
+        "scores_around": [
+          118485.456,
+          91034.002,
+          26983.466
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          331.422,
+          1254493.083,
+          799.362
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 17733.777292968276,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 64,
+      "n_total": 2128
+    }
+  },
+  "43874": {
+    "name": "TJS-3",
+    "norad_id": 43874,
+    "n_tle": 2227,
+    "t0": "2023-10-01 14:33:18.577728+00:00",
+    "t1": "2026-10-06 18:00:27.972864+00:00",
+    "orbit_class": "GEO",
+    "n_transitions": 2094,
+    "n_flagged": 750,
+    "event": {
+      "epoch": "2026-05-06 17:00:50.765760+00:00",
+      "da_km": 135.75320006843685,
+      "di_deg": 0.0047000000000001485,
+      "de": -6.86e-05,
+      "draan_res_deg": 0.0063660061522982266
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：0 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：58 旗標",
+      "P3": "B* 輔助抑制：0 筆由阻力解釋",
+      "P4": "多窗口補充：287 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.30，56 旗標",
+      "P6": "星座感知（other，倍率 1.00）：591 旗標",
+      "combined": "合併偵測：750 / 2094 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.01,
+          1.0,
+          1.0
+        ],
+        "event_at_idx": true
+      },
+      "ssa": {
+        "scores_around": [
+          1291.542,
+          1291.468,
+          953.04
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.196,
+          5931.084,
+          0.196
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 0.0,
+      "is_maneuver": false
+    },
+    "model2": {
+      "n_total_anomaly": 74,
+      "n_total": 2226
+    }
+  },
+  "41745": {
+    "name": "USA 271",
+    "norad_id": 41745,
+    "n_tle": 127,
+    "t0": "2025-06-18 11:37:01.030080+00:00",
+    "t1": "2026-10-06 09:02:39.115104+00:00",
+    "orbit_class": "GEO",
+    "n_transitions": 92,
+    "n_flagged": 92,
+    "event": {
+      "epoch": "2026-09-06 09:28:26.228064+00:00",
+      "da_km": 339.62635941182816,
+      "di_deg": 0.01609999999999978,
+      "de": -0.0011532,
+      "draan_res_deg": -0.0037624302774453555
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": true
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：0 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：49 旗標",
+      "P3": "B* 輔助抑制：0 筆由阻力解釋",
+      "P4": "多窗口補充：74 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.11，40 旗標",
+      "P6": "星座感知（other，倍率 1.00）：92 旗標",
+      "combined": "合併偵測：92 / 92 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.179,
+          0.0,
+          0.568
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.012,
+          0.988,
+          0.946
+        ],
+        "event_at_idx": true
+      },
+      "ssa": {
+        "scores_around": [
+          9.672,
+          10.955,
+          7.119
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.016,
+          1085.464,
+          1.068
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 340.0609469293171,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 88,
+      "n_total": 126
+    }
+  },
+  "30794": {
+    "name": "SKYNET 5A",
+    "norad_id": 30794,
+    "n_tle": 2051,
+    "t0": "2025-06-01 12:10:03.464256+00:00",
+    "t1": "2026-10-05 23:27:04.310208+00:00",
+    "orbit_class": "GEO",
+    "n_transitions": 1495,
+    "n_flagged": 447,
+    "event": {
+      "epoch": "2025-11-20 21:05:14.800128+00:00",
+      "da_km": -2.682164646073943,
+      "di_deg": 0.0030999999999998806,
+      "de": 1.0000000000000243e-07,
+      "draan_res_deg": 0.003586915475762023
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：0 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：43 旗標",
+      "P3": "B* 輔助抑制：0 筆由阻力解釋",
+      "P4": "多窗口補充：114 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.12，42 旗標",
+      "P6": "星座感知（other，倍率 1.00）：403 旗標",
+      "combined": "合併偵測：447 / 1495 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          2.355,
+          0.0,
+          0.174
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.015,
+          0.962,
+          0.913
+        ],
+        "event_at_idx": true
+      },
+      "ssa": {
+        "scores_around": [
+          19.877,
+          35.909,
+          32.877
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.674,
+          120.184,
+          0.674
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": -0.7052153445829314,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 83,
+      "n_total": 2050
+    }
+  },
+  "45448": {
+    "name": "ONEWEB-0063",
+    "norad_id": 45448,
+    "n_tle": 572,
+    "t0": "2026-04-01 02:44:16.610496+00:00",
+    "t1": "2026-10-06 11:46:57.336096+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 535,
+    "n_flagged": 0,
+    "event": {
+      "epoch": "2026-05-28 15:24:29.338272+00:00",
+      "da_km": -0.06971767347658897,
+      "di_deg": 0.0,
+      "de": -1.5799999999999977e-05,
+      "draan_res_deg": 0.00013036241018937744
+    },
+    "per_strategy": {
+      "P1_suppress": true,
+      "P2": false,
+      "P3_suppress": true,
+      "P4": false,
+      "P5": false,
+      "P6": false,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": false,
+    "notes": {
+      "P1": "單調衰減抑制：276 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：0 旗標",
+      "P3": "B* 輔助抑制：6 筆由阻力解釋",
+      "P4": "多窗口補充：0 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.09，0 旗標",
+      "P6": "星座感知（mid-inc，倍率 1.10）：0 旗標",
+      "combined": "合併偵測：0 / 535 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.0,
+          0.0,
+          4.026
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.019,
+          0.036,
+          0.104
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          29.058,
+          19.638,
+          11.715
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.0,
+          47.57,
+          4.526
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": -0.06730902723566158,
+      "is_maneuver": false
+    },
+    "model2": {
+      "n_total_anomaly": 0,
+      "n_total": 571
+    }
+  },
+  "69105": {
+    "name": "QIANFAN-146",
+    "norad_id": 69105,
+    "n_tle": 380,
+    "t0": "2026-05-28 19:35:22.273728+00:00",
+    "t1": "2026-10-06 13:24:18.859968+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 359,
+    "n_flagged": 178,
+    "event": {
+      "epoch": "2026-06-22 14:03:06.161472+00:00",
+      "da_km": 23.78548915387455,
+      "di_deg": 0.0015000000000071623,
+      "de": 0.00014800000000000013,
+      "draan_res_deg": -0.0032871764499070033
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：167 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：125 旗標",
+      "P3": "B* 輔助抑制：0 筆由阻力解釋",
+      "P4": "多窗口補充：178 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.06，123 旗標",
+      "P6": "星座感知（mid-inc，倍率 1.10）：125 旗標",
+      "combined": "合併偵測：178 / 359 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.012,
+          0.016,
+          0.024
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          9.49,
+          5.563,
+          6.771
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          5025.061,
+          73365.633,
+          15024.987
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 23.789307044767646,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 114,
+      "n_total": 379
+    }
+  },
+  "43260": {
+    "name": "GAOFEN 1-03",
+    "norad_id": 43260,
+    "n_tle": 4206,
+    "t0": "2024-01-01 03:53:43.903680+00:00",
+    "t1": "2026-10-06 14:58:22.125216+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 4186,
+    "n_flagged": 13,
+    "event": {
+      "epoch": "2025-09-20 19:39:51.600672+00:00",
+      "da_km": -0.632204757850559,
+      "di_deg": 0.027200000000007662,
+      "de": -9.960000000000001e-05,
+      "draan_res_deg": 0.0033262599573831153
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": true
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：3937 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：4 旗標",
+      "P3": "B* 輔助抑制：194 筆由阻力解釋",
+      "P4": "多窗口補充：18 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.27，1 旗標",
+      "P6": "星座感知（SSO，倍率 1.20）：1 旗標",
+      "combined": "合併偵測：13 / 4186 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.011,
+          0.026,
+          0.058
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          100.352,
+          87.663,
+          64.385
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.123,
+          371.349,
+          0.258
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": -0.6166966083725727,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 8,
+      "n_total": 4205
+    }
+  },
+  "43943": {
+    "name": "JILIN-01-09",
+    "norad_id": 43943,
+    "n_tle": 4114,
+    "t0": "2024-01-01 03:43:22.752480+00:00",
+    "t1": "2026-10-06 13:32:44.915136+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 4091,
+    "n_flagged": 21,
+    "event": {
+      "epoch": "2024-06-19 11:54:09.127008+00:00",
+      "da_km": 3.5752307540069523,
+      "di_deg": -0.003999999999990678,
+      "de": -0.00015859999999999984,
+      "draan_res_deg": 0.012132827497886911
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：4010 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：11 旗標",
+      "P3": "B* 輔助抑制：159 筆由阻力解釋",
+      "P4": "多窗口補充：27 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.27，5 旗標",
+      "P6": "星座感知（SSO，倍率 1.20）：11 旗標",
+      "combined": "合併偵測：21 / 4091 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.036,
+          0.031,
+          0.024
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          261.482,
+          264.519,
+          78.379
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.254,
+          448.915,
+          10.815
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 3.589698488482222,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 11,
+      "n_total": 4113
+    }
+  },
+  "66514": {
+    "name": "SENTINEL-6B",
+    "norad_id": 66514,
+    "n_tle": 1328,
+    "t0": "2025-11-17 08:20:13.250976+00:00",
+    "t1": "2026-10-06 08:15:25.735104+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 947,
+    "n_flagged": 12,
+    "event": {
+      "epoch": "2025-12-11 20:39:27.129024+00:00",
+      "da_km": 10.22542143942519,
+      "di_deg": -0.00039999999999906777,
+      "de": -0.0013198999999999997,
+      "draan_res_deg": 0.02675625515766278
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": true
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：695 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：5 旗標",
+      "P3": "B* 輔助抑制：12 筆由阻力解釋",
+      "P4": "多窗口補充：13 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.11，5 旗標",
+      "P6": "星座感知（mid-inc，倍率 1.10）：5 旗標",
+      "combined": "合併偵測：12 / 947 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.011,
+          0.272,
+          0.824
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          76861.079,
+          60570.899,
+          40390.37
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.0,
+          343493.975,
+          8.223
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 10.226252704703453,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 5,
+      "n_total": 1327
+    }
+  },
+  "36508": {
+    "name": "CRYOSAT 2",
+    "norad_id": 36508,
+    "n_tle": 12508,
+    "t0": "2010-04-08 15:02:25.846656+00:00",
+    "t1": "2026-10-06 14:15:41.386464+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 12041,
+    "n_flagged": 9,
+    "event": {
+      "epoch": "2010-04-08 18:29:03.585696+00:00",
+      "da_km": 8.88690315040185,
+      "di_deg": 0.007000000000005002,
+      "de": -0.0010711,
+      "draan_res_deg": 0.010534466135408024
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": true
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：9581 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：3 旗標",
+      "P3": "B* 輔助抑制：2 筆由阻力解釋",
+      "P4": "多窗口補充：9 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.04，3 旗標",
+      "P6": "星座感知（other，倍率 1.00）：3 旗標",
+      "combined": "合併偵測：9 / 12041 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.174,
+          0.0,
+          0.0
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          1.0,
+          1.0,
+          0.702
+        ],
+        "event_at_idx": true
+      },
+      "ssa": {
+        "scores_around": [
+          1876.013,
+          1223.396,
+          659.892
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.674,
+          27048.938,
+          135.942
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 8.887017178355485,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 9,
+      "n_total": 12507
+    }
+  },
+  "54754": {
+    "name": "SWOT",
+    "norad_id": 54754,
+    "n_tle": 4309,
+    "t0": "2023-01-01 00:21:41.040576+00:00",
+    "t1": "2026-10-06 14:23:37.364928+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 3841,
+    "n_flagged": 38,
+    "event": {
+      "epoch": "2023-07-14 11:06:00.914112+00:00",
+      "da_km": 22.077225098772033,
+      "di_deg": 0.0,
+      "de": -0.0012539,
+      "draan_res_deg": 0.03551150990202956
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": true
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：3564 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：21 旗標",
+      "P3": "B* 輔助抑制：47 筆由阻力解釋",
+      "P4": "多窗口補充：51 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.24，13 旗標",
+      "P6": "星座感知（mid-inc，倍率 1.10）：18 旗標",
+      "combined": "合併偵測：38 / 3841 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.0,
+          0.0,
+          0.064
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.996,
+          0.977,
+          0.074
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          19873.303,
+          43407.5,
+          30530.402
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          43781.491,
+          100025.896,
+          0.564
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 22.079856455720005,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 72,
+      "n_total": 4308
+    }
+  },
+  "43476": {
+    "name": "GRACE-FO 1",
+    "norad_id": 43476,
+    "n_tle": 8255,
+    "t0": "2018-05-22 21:20:29.859072+00:00",
+    "t1": "2026-10-06 14:53:16.816128+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 7768,
+    "n_flagged": 0,
+    "event": {
+      "epoch": "2026-09-08 13:06:17.219232+00:00",
+      "da_km": -0.9661188617137668,
+      "di_deg": 0.00010000000000331966,
+      "de": -0.00010620000000000009,
+      "draan_res_deg": 4.88794795551889e-05
+    },
+    "per_strategy": {
+      "P1_suppress": true,
+      "P2": false,
+      "P3_suppress": false,
+      "P4": false,
+      "P5": false,
+      "P6": false,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": false,
+    "notes": {
+      "P1": "單調衰減抑制：7733 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：0 旗標",
+      "P3": "B* 輔助抑制：11 筆由阻力解釋",
+      "P4": "多窗口補充：0 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.08，0 旗標",
+      "P6": "星座感知（mid-inc，倍率 1.10）：0 旗標",
+      "combined": "合併偵測：0 / 7768 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          1.759,
+          0.0,
+          1.071
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.011,
+          0.011,
+          0.011
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          222.515,
+          270.739,
+          196.841
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.019,
+          282.467,
+          1.571
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": -0.956209516586546,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 5,
+      "n_total": 8254
+    }
+  },
+  "43477": {
+    "name": "GRACE-FO 2",
+    "norad_id": 43477,
+    "n_tle": 8252,
+    "t0": "2018-05-22 21:20:29.852160+00:00",
+    "t1": "2026-10-06 14:53:41.572320+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 7767,
+    "n_flagged": 0,
+    "event": {
+      "epoch": "2026-09-08 13:06:40.131648+00:00",
+      "da_km": -0.9589631486524013,
+      "di_deg": 0.0,
+      "de": -0.0001050999999999999,
+      "draan_res_deg": 4.911112136335438e-05
+    },
+    "per_strategy": {
+      "P1_suppress": true,
+      "P2": false,
+      "P3_suppress": false,
+      "P4": false,
+      "P5": false,
+      "P6": false,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": false,
+    "notes": {
+      "P1": "單調衰減抑制：7728 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：0 旗標",
+      "P3": "B* 輔助抑制：11 筆由阻力解釋",
+      "P4": "多窗口補充：0 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.08，0 旗標",
+      "P6": "星座感知（mid-inc，倍率 1.10）：0 旗標",
+      "combined": "合併偵測：0 / 7767 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          1.921,
+          0.0,
+          2.266
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.011,
+          0.011,
+          0.011
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          214.464,
+          259.739,
+          187.744
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.004,
+          281.942,
+          2.766
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": -0.9489909461155602,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 5,
+      "n_total": 8251
+    }
+  },
+  "27421": {
+    "name": "SPOT 5",
+    "norad_id": 27421,
+    "n_tle": 3746,
+    "t0": "2023-10-07 02:17:42.766368+00:00",
+    "t1": "2026-10-06 14:15:10.282464+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 3363,
+    "n_flagged": 0,
+    "event": {
+      "epoch": "2024-10-11 17:53:09.498912+00:00",
+      "da_km": 0.08237025644939422,
+      "di_deg": 0.00010000000000331966,
+      "de": 0.0,
+      "draan_res_deg": -0.0006485235992607086
+    },
+    "per_strategy": {
+      "P1_suppress": true,
+      "P2": false,
+      "P3_suppress": false,
+      "P4": false,
+      "P5": false,
+      "P6": false,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": false,
+    "notes": {
+      "P1": "單調衰減抑制：3360 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：0 旗標",
+      "P3": "B* 輔助抑制：116 筆由阻力解釋",
+      "P4": "多窗口補充：0 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.26，0 旗標",
+      "P6": "星座感知（SSO，倍率 1.20）：0 旗標",
+      "combined": "合併偵測：0 / 3363 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.0,
+          0.0,
+          1.749
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.033,
+          0.02,
+          0.014
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          95.762,
+          1.726,
+          7.368
+        ],
+        "event_at_idx": false
+      },
+      "mad3sig": {
+        "scores_around": [
+          54.067,
+          56.104,
+          2.249
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 0.09270613743988856,
+      "is_maneuver": false
+    },
+    "model2": {
+      "n_total_anomaly": 0,
+      "n_total": 3745
+    }
+  },
+  "33105": {
+    "name": "JASON 2",
+    "norad_id": 33105,
+    "n_tle": 12602,
+    "t0": "2008-06-20 08:52:41.231424+00:00",
+    "t1": "2026-10-06 11:54:46.724832+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 12167,
+    "n_flagged": 43,
+    "event": {
+      "epoch": "2008-07-04 13:56:03.398496+00:00",
+      "da_km": -10.699615445971176,
+      "di_deg": -0.019400000000004525,
+      "de": -0.0001424,
+      "draan_res_deg": 0.020396504833149587
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：8842 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：21 旗標",
+      "P3": "B* 輔助抑制：0 筆由阻力解釋",
+      "P4": "多窗口補充：43 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.02，21 旗標",
+      "P6": "星座感知（mid-inc，倍率 1.10）：21 旗標",
+      "combined": "合併偵測：43 / 12167 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.674,
+          0.0,
+          0.0
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.021,
+          0.027,
+          0.034
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          52208.692,
+          29379.053,
+          24361.503
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          1.174,
+          86319.9,
+          1078.359
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": -10.699531661939,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 44,
+      "n_total": 12601
+    }
+  },
+  "44351": {
+    "name": "FORMOSAT7-2/COSMIC2-2",
+    "norad_id": 44351,
+    "n_tle": 2323,
+    "t0": "2024-01-01 12:54:22.039776+00:00",
+    "t1": "2026-10-06 05:29:20.959584+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 2285,
+    "n_flagged": 47,
+    "event": {
+      "epoch": "2026-01-23 16:48:45.618336+00:00",
+      "da_km": 9.338866622386377,
+      "di_deg": -9.999999999976694e-05,
+      "de": -9.07e-05,
+      "draan_res_deg": -0.008135357074706917
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：2196 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：22 旗標",
+      "P3": "B* 輔助抑制：94 筆由阻力解釋",
+      "P4": "多窗口補充：49 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.27，19 旗標",
+      "P6": "星座感知（other，倍率 1.00）：22 旗標",
+      "combined": "合併偵測：47 / 2285 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.069,
+          0.0,
+          3.473
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.012,
+          0.795,
+          0.742
+        ],
+        "event_at_idx": true
+      },
+      "ssa": {
+        "scores_around": [
+          371.236,
+          375.262,
+          274.622
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.569,
+          734.025,
+          3.973
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 9.514775053919958,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 21,
+      "n_total": 2322
+    }
+  },
+  "29047": {
+    "name": "FORMOSAT 3A",
+    "norad_id": 29047,
+    "n_tle": 2472,
+    "t0": "2024-01-01 09:30:48.772512+00:00",
+    "t1": "2026-10-06 13:36:10.232640+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 2439,
+    "n_flagged": 0,
+    "event": {
+      "epoch": "2024-10-10 20:25:16.024224+00:00",
+      "da_km": -0.034608181310431974,
+      "di_deg": 0.0,
+      "de": -2.199999999999945e-06,
+      "draan_res_deg": 0.00048184947111962195
+    },
+    "per_strategy": {
+      "P1_suppress": true,
+      "P2": false,
+      "P3_suppress": true,
+      "P4": false,
+      "P5": false,
+      "P6": false,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": false,
+    "notes": {
+      "P1": "單調衰減抑制：2426 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：0 旗標",
+      "P3": "B* 輔助抑制：122 筆由阻力解釋",
+      "P4": "多窗口補充：0 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.24，0 旗標",
+      "P6": "星座感知（mid-inc，倍率 1.10）：0 旗標",
+      "combined": "合併偵測：0 / 2439 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          0.0,
+          0.0,
+          0.767
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.012,
+          0.013,
+          0.013
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          4.424,
+          20.011,
+          13.21
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          5.271,
+          20.924,
+          1.267
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": -0.02807693439596923,
+      "is_maneuver": false
+    },
+    "model2": {
+      "n_total_anomaly": 0,
+      "n_total": 2471
+    }
+  },
+  "29601": {
+    "name": "NAVSTAR 59",
+    "norad_id": 29601,
+    "n_tle": 297,
+    "t0": "2026-03-31 15:17:25.982592+00:00",
+    "t1": "2026-10-06 02:29:50.739072+00:00",
+    "orbit_class": "MEO",
+    "n_transitions": 263,
+    "n_flagged": 0,
+    "event": {
+      "epoch": "2026-09-09 04:20:15.435744+00:00",
+      "da_km": -0.04740971283899853,
+      "di_deg": -0.00039999999999906777,
+      "de": 9.000000000000327e-06,
+      "draan_res_deg": -0.000550554562008268
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": false,
+      "P3_suppress": false,
+      "P4": false,
+      "P5": false,
+      "P6": false,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": false,
+    "notes": {
+      "P1": "單調衰減抑制：0 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：0 旗標",
+      "P3": "B* 輔助抑制：0 筆由阻力解釋",
+      "P4": "多窗口補充：0 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.07，0 旗標",
+      "P6": "星座感知（mid-inc，倍率 1.10）：0 旗標",
+      "combined": "合併偵測：0 / 263 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          1.725,
+          0.0,
+          0.174
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.014,
+          0.126,
+          0.325
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          2.922,
+          12.719,
+          11.343
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          0.081,
+          13.814,
+          0.674
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": -0.04273006898651211,
+      "is_maneuver": false
+    },
+    "model2": {
+      "n_total_anomaly": 0,
+      "n_total": 296
+    }
+  },
+  "44819": {
+    "name": "GAOFEN 12",
+    "norad_id": 44819,
+    "n_tle": 4265,
+    "t0": "2024-01-01 02:29:53.887488+00:00",
+    "t1": "2026-10-06 14:19:31.481760+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 4241,
+    "n_flagged": 12,
+    "event": {
+      "epoch": "2025-01-24 14:37:55.957152+00:00",
+      "da_km": 2.7451417708170993,
+      "di_deg": 0.0,
+      "de": -0.00013299999999999998,
+      "draan_res_deg": -0.0042296050357737425
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：4199 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：4 旗標",
+      "P3": "B* 輔助抑制：1 筆由阻力解釋",
+      "P4": "多窗口補充：12 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.27，4 旗標",
+      "P6": "星座感知（SSO，倍率 1.20）：4 旗標",
+      "combined": "合併偵測：12 / 4241 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          3.088,
+          0.0,
+          1.105
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.011,
+          0.994,
+          0.966
+        ],
+        "event_at_idx": true
+      },
+      "ssa": {
+        "scores_around": [
+          1673.186,
+          1670.298,
+          1231.427
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          3.588,
+          2821.186,
+          1.605
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 2.7601802861449074,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 4,
+      "n_total": 4264
+    }
+  },
+  "46460": {
+    "name": "JILIN-01 GAOFEN 3H",
+    "norad_id": 46460,
+    "n_tle": 4056,
+    "t0": "2024-01-01 03:56:24.526464+00:00",
+    "t1": "2026-10-06 01:23:47.354208+00:00",
+    "orbit_class": "LEO",
+    "n_transitions": 4033,
+    "n_flagged": 14,
+    "event": {
+      "epoch": "2025-01-21 13:33:27.741024+00:00",
+      "da_km": 4.2969611143735165,
+      "di_deg": 9.99999999891088e-05,
+      "de": 0.0005637999999999999,
+      "draan_res_deg": -0.007994584236346913
+    },
+    "per_strategy": {
+      "P1_suppress": false,
+      "P2": true,
+      "P3_suppress": false,
+      "P4": true,
+      "P5": true,
+      "P6": true,
+      "other(di/de/dΩ)": false
+    },
+    "combined_flag": true,
+    "notes": {
+      "P1": "單調衰減抑制：3961 筆判為阻力衰減",
+      "P2": "高度自適應閾值（拋物線左側，vertex=700km）：5 旗標",
+      "P3": "B* 輔助抑制：171 筆由阻力解釋",
+      "P4": "多窗口補充：14 旗標",
+      "P5": "F10.7 倍率（拋物線）：中位倍率 1.27，4 旗標",
+      "P6": "星座感知（SSO，倍率 1.20）：5 旗標",
+      "combined": "合併偵測：14 / 4033 轉換"
+    },
+    "l2": {
+      "cusum": {
+        "scores_around": [
+          3.068,
+          0.0,
+          0.414
+        ],
+        "event_at_idx": true
+      },
+      "bocpd": {
+        "scores_around": [
+          0.013,
+          0.017,
+          0.019
+        ],
+        "event_at_idx": false
+      },
+      "ssa": {
+        "scores_around": [
+          77.484,
+          107.395,
+          76.4
+        ],
+        "event_at_idx": true
+      },
+      "mad3sig": {
+        "scores_around": [
+          3.568,
+          131.235,
+          0.914
+        ],
+        "event_at_idx": true
+      }
+    },
+    "domain": "non-Starlink",
+    "nrlmsis": {
+      "reentry": false,
+      "drag_resid_da": 4.7639484481587955,
+      "is_maneuver": true
+    },
+    "model2": {
+      "n_total_anomaly": 13,
+      "n_total": 4055
+    }
+  }
+}

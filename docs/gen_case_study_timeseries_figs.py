@@ -61,6 +61,27 @@ SATS = [
     ("FORMOSAT7-1/COSMIC2-1", 44349, "drag"),
     ("YAOGAN-35 A", 49390, "drag"),
     ("JASON 3", 41240, "drag"),
+    # ── 擴充至 30 顆（2026-10-07）──────────────────────────────────────
+    ("TJS-10", 58204, "drag"),
+    ("TJS-3", 43874, "drag"),
+    ("USA 271", 41745, "drag"),
+    ("SKYNET 5A", 30794, "drag"),
+    ("ONEWEB-0063", 45448, "drag"),
+    ("QIANFAN-146", 69105, "drag"),
+    ("GAOFEN 1-03", 43260, "drag"),
+    ("JILIN-01-09", 43943, "drag"),
+    ("SENTINEL-6B", 66514, "drag"),
+    ("CRYOSAT 2", 36508, "drag"),
+    ("SWOT", 54754, "drag"),
+    ("GRACE-FO 1", 43476, "drag"),
+    ("GRACE-FO 2", 43477, "drag"),
+    ("SPOT 5", 27421, "drag"),
+    ("JASON 2", 33105, "drag"),
+    ("FORMOSAT7-2/COSMIC2-2", 44351, "drag"),
+    ("FORMOSAT 3A", 29047, "drag"),
+    ("NAVSTAR 59", 29601, "drag"),
+    ("GAOFEN 12", 44819, "drag"),
+    ("JILIN-01 GAOFEN 3H", 46460, "drag"),
 ]
 
 # 事件時刻（第三、四節逐層解析所選之代表事件；用於在圖上標註垂直虛線）
@@ -122,7 +143,9 @@ def merge_episodes(df, kind):
         sub = flagged.iloc[idxs]
         peak_row = sub.loc[sub["val"].idxmax()]
         reps.append({"epoch": peak_row["epoch"], "yplot": float(peak_row["yplot"]),
-                     "val": float(peak_row["val"])})
+                     "val": float(peak_row["val"]),
+                     "d0": str(sub["epoch"].min().date()), "d1": str(sub["epoch"].max().date()),
+                     "n": int(len(sub))})
     return reps
 
 
@@ -275,11 +298,18 @@ def plot_one(title, nid, kind):
     fig.savefig(out, facecolor=BG)
     plt.close(fig)
     print("saved", out, len(df), "pts,", len(reps), "labeled events,", n_lanes, "lanes")
+    ALL_EPISODES[nid] = [[r["d0"], r["d1"], r["n"], round(r["val"], 4)] for r in reps]
     return True
 
 
+ALL_EPISODES = {}
 ok = 0
 for title, nid, kind in SATS:
     if plot_one(title, nid, kind):
         ok += 1
+
+import json
+with open(OUTDIR / "episodes_all.json", "w", encoding="utf-8") as fh:
+    json.dump(ALL_EPISODES, fh, ensure_ascii=False, indent=2)
+print("episodes json ->", OUTDIR / "episodes_all.json")
 print(f"\n{ok}/{len(SATS)} figures generated -> {OUTDIR}")
