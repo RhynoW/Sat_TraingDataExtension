@@ -4691,6 +4691,18 @@ _LIT_REFS: list[tuple[str, str, str]] = [
      "\"Space-Based Passive Orbital Maneuver Detection Algorithm for High-Altitude "
      "Situational Awareness,\" *Aerospace*, 11(7):563, 2024。",
      "[MDPI](https://www.mdpi.com/2226-4310/11/7/563)"),
+    ("軌道力學與 TLE 機動偵測",
+     "S. Lemmens and H. Krag, \"Two-line-elements-based maneuver detection methods for satellites in low Earth orbit,\" *Journal of Guidance, Control, and Dynamics*, 37(3), pp. 860–868, 2014.",
+     "（DOI 待核對）"),
+    ("軌道力學與 TLE 機動偵測",
+     "R. P. Patera, \"Space event detection method,\" *Advances in Space Research*, 45(3), pp. 554–559, 2008.",
+     "（DOI 待核對）"),
+    ("統計變化點方法",
+     "P. J. Rousseeuw and C. Croux, \"Alternatives to the Median Absolute Deviation,\" *Journal of the American Statistical Association*, 88(424), pp. 1273–1283, 1993.",
+     "[DOI](https://doi.org/10.1080/01621459.1993.10476408)"),
+    ("軌道力學與 TLE 機動偵測",
+     "J. T. Emmert et al., \"NRLMSIS 2.0: A Whole-Atmosphere Empirical Model of Temperature and Neutral Species Densities,\" *Earth and Space Science*, 8, e2020EA001321, 2021.",
+     "[DOI](https://doi.org/10.1029/2020EA001321)"),
 ]
 
 # 兩岸署名政策（見 feedback_cross_strait_attribution 備忘）：大陸文獻列為外部獨立文獻，
