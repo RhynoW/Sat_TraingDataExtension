@@ -236,6 +236,13 @@ L: dict[str, dict[str, str]] = {
                                   "ja": "TLEは公称軌道のみでcovarianceを持たないため、信頼できる衝突確率を算出できない。パラメータを変えてPcをその場で計算し、同じ最接近距離が不確実性によって数桁変わる様子（確率希釈の罠を含む）を確かめ、2026年9月のSpaceXによる軍のVCM取得報道と対照する。",
                                   "en": "A TLE gives only a nominal orbit with no covariance, so it cannot yield a credible collision probability. Compute Pc live with adjustable inputs, see the same miss distance span orders of magnitude (including the probability-dilution trap), and read it against the Sept 2026 report of SpaceX gaining military VCM access."},
 
+    "storymap_case29_card_title": {"zh": "案例二十九：一次真實的人工迴避機動——孟加拉衛星以自力計算躲過印度退役衛星碎片",
+                                   "ja": "事例二十九：実際に行われた手動の回避機動——バングラデシュの衛星が自力計算でインド退役衛星の破片を回避した",
+                                   "en": "Case 29: A Real Manual Collision-Avoidance Maneuver — Bangladesh's Satellite Dodged Indian Debris With Its Own Calculations"},
+    "storymap_case29_card_desc": {"zh": "沒有 VCM、沒有商用避碰工具，孟加拉團隊靠公開預警與人工計算躲過碰撞——真實世界的對照案例，誠實揭露：本專案未分析此事件，純粹引用作為呼應案例二十八的前例。",
+                                  "ja": "VCMも商用の回避ツールもない中、バングラデシュのチームが公開の警告と手計算だけで衝突を回避した——実世界の対照例。誠実な開示：本プロジェクトはこの出来事を分析していない。事例二十八と響き合う実例として引用するのみである。",
+                                  "en": "With no VCM and no commercial avoidance tooling, a Bangladeshi team dodged a collision using a public warning and manual math alone — a real-world counterpart. Honest disclosure: this project did not analyze this event; it is cited only as a precedent echoing Case 28."},
+
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
                        "ja": "HF シークレット作成に関する注意（private リポジトリのみ必要）：{e}",
@@ -1864,7 +1871,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 29):
+    for _n in range(14, 30):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -13227,6 +13234,98 @@ def render_storymap_case28():
                   "`conjunction_pipeline.compute_pc_simplified`."))
 
 
+# --- render_storymap_case29 ---
+def render_storymap_case29():
+    if st.button(t("storymap_back"), key="back_from_case29"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例二十九：一次真實的人工迴避機動——孟加拉衛星以自力計算躲過印度退役衛星碎片",
+        "事例二十九：実際に行われた手動の回避機動——バングラデシュの衛星が自力計算でインド退役衛星の破片を回避した",
+        "Case 29: A Real Manual Collision-Avoidance Maneuver — Bangladesh's Satellite Dodged Indian Debris With Its Own Calculations",
+    ))
+    st.subheader(T3(
+        "沒有 VCM、沒有商用避碰工具，一個小國團隊仍靠公開預警與人工計算躲過碰撞——這呼應案例二十八的資料落差，也呼應本專案的立場：公開資料加上正確方法，仍能做出有意義的判斷",
+        "VCMも商用の回避ツールもない中、小国のチームが公開の警告と手計算だけで衝突を回避した——これは事例二十八のデータギャップと響き合い、本プロジェクトの立場とも一致する：公開データに正しい手法を組み合わせれば、意味のある判断は可能である",
+        "With no VCM and no commercial avoidance tooling, a small-nation team dodged a collision using only a public warning and manual calculation — echoing the data gap from Case 28, and this project's own stance: public data plus a sound method can still produce a meaningful judgment",
+    ))
+    st.caption(T3(
+        "**誠實揭露**：本案例整理自 2026 年孟加拉及台灣媒體公開報導，屬**外部真實事件引用**，並非本專案偵測管線的分析對象——本專案資料庫未收錄孟加拉 BS-1（NORAD 43463）或印度 INSAT-1A（NORAD 13129）的 TLE，也未對此事件做任何重算、驗證或機動偵測。放進 StoryMap 的理由是它與案例二十八討論的 VCM/TLE 資料落差高度呼應的真實前例，不是本專案的驗證成果。",
+        "**誠実な開示**：本事例は2026年のバングラデシュおよび台湾メディアの公開報道をまとめたものであり、**外部の実際の出来事の引用**である。本プロジェクトの検出パイプラインの分析対象ではない——本プロジェクトのデータベースにはバングラデシュのBS-1（NORAD 43463）やインドのINSAT-1A（NORAD 13129）のTLEは収録されておらず、この出来事について再計算・検証・機動検出のいずれも行っていない。StoryMapに加えた理由は、事例二十八で論じたVCM／TLEのデータギャップと強く響き合う実例だからであり、本プロジェクトの検証成果ではない。",
+        "**Honest disclosure**: this case is compiled from public 2026 Bangladeshi and Taiwanese media reporting — it is an **external real-world event**, not something analyzed by this project's own detection pipeline. The project's database contains no TLEs for Bangladesh's BS-1 (NORAD 43463) or India's INSAT-1A (NORAD 13129), and no recomputation, verification or maneuver detection was performed on this event. It is included here because it echoes, as a real precedent, the VCM/TLE data gap discussed in Case 28 — it is not a result the project itself produced.",
+    ))
+
+    st.header(T3("① 事件經過", "① 経緯", "① What happened"))
+    st.markdown(T3(
+        "- 2026-08-09 前後：孟加拉衛星公司（BSCL）地面站收到美國 Space-Track 太空監視網的預警，示警一塊碎片正快速接近其同步軌道衛星 BS-1（原名 Bangabandhu-1，NORAD 43463，位於東經 119.1°）。\n"
+        "- 工程團隊在加濟布爾（Gazipur）地面站自行計算可行的位移方向與幅度。\n"
+        "- 2026-08-13：BSCL 將 BS-1 向左小幅位移並維持至碎片通過，隨後移回原位；碎片最終與 BS-1 最近距離僅 852 公尺，衛星未受損。\n"
+        "- BSCL 董事總經理 Imadur Rahman 公開說明，全程計算與操作由孟加拉本土工程師獨立完成。",
+        "- 2026年8月9日前後：バングラデシュ衛星会社（BSCL）の地上局が、米国のSpace-Track宇宙監視網から、破片が同社の静止軌道衛星BS-1（旧名Bangabandhu-1、NORAD 43463、東経119.1°）に急速接近しているという警告を受信した。\n"
+        "- エンジニアチームはGazipur地上局で、実行可能な移動方向と移動量を自力で計算した。\n"
+        "- 2026年8月13日：BSCLはBS-1をわずかに左へ移動させ、破片が通過するまでその位置を維持した後、元の位置に戻した。破片とBS-1の最接近距離は852メートルで、衛星に損傷はなかった。\n"
+        "- BSCLの最高経営責任者Imadur Rahman氏は、計算と操作のすべてをバングラデシュ人エンジニアが独自に行ったと公表した。",
+        "- Around 9 Aug 2026: BSCL's ground station received a warning from the US Space-Track surveillance network that a piece of debris was closing in fast on its GEO satellite BS-1 (formerly Bangabandhu-1, NORAD 43463, at 119.1°E).\n"
+        "- Engineers at the Gazipur ground station worked out a feasible shift direction and magnitude on their own.\n"
+        "- On 13 Aug 2026, BSCL nudged BS-1 slightly to the left and held it there until the debris passed, then returned it to its original position; closest approach was just 852 m, with no damage to the satellite.\n"
+        "- BSCL managing director Imadur Rahman stated publicly that the calculations and the maneuver were carried out entirely by Bangladeshi engineers.",
+    ))
+
+    st.header(T3("② 碎片來源", "② 破片の出典", "② Source of the debris"))
+    st.markdown(T3(
+        "- 碎片來自印度 1982 年發射的 INSAT-1A（NORAD 13129），該衛星發射後數月即因姿態控制／推進劑問題失控，同年遭放棄，之後長期是軌道上的無控物體。\n"
+        "- 各報導對失控退役的確切時間點記載略有差異（有寫 1982 年 9 月，亦有寫推進劑耗盡於 1983 年 9 月），建議以 ISRO 官方紀錄為準，本案例不另行查證。",
+        "- 破片の出典はインドが1982年に打ち上げたINSAT-1A（NORAD 13129）である。同機は打ち上げ後わずか数ヶ月で姿勢制御・推進剤の問題により制御不能となり、同年中に放棄された。その後は長期間にわたり制御不能な軌道上物体として存在していた。\n"
+        "- 制御不能・運用終了の正確な時期については報道間で差異がある（1982年9月とする記述と、推進剤が1983年9月に尽きたとする記述がある）。ISROの公式記録を正とすべきであり、本事例ではこれ以上の検証は行っていない。",
+        "- The debris came from India's INSAT-1A (NORAD 13129), launched in 1982. The satellite lost attitude control / ran into propellant problems only months after launch and was abandoned that same year, remaining an uncontrolled object in orbit ever since.\n"
+        "- Reports differ slightly on the exact date of failure (some say September 1982, others say propellant was exhausted by September 1983); ISRO's official records should be treated as authoritative — this case does not attempt further verification.",
+    ))
+
+    st.header(T3("③ 為什麼這個案例放進本 StoryMap", "③ なぜこの事例を本StoryMapに加えたのか", "③ Why this case belongs in this StoryMap"))
+    st.markdown(T3(
+        "- 案例二十八說明了 TLE 與 VCM 的根本落差：沒有 covariance，就算不出可信的碰撞機率 Pc。這起事件是一個真實世界的對照組——BSCL 同樣沒有 VCM，甚至沒有商用避碰軟體，仍靠公開預警＋人工計算做出避碰決策。\n"
+        "- 這正呼應本專案的立場：本專案從頭到尾只用公開 TLE，沒有任何特權資料來源，卻一路證明「公開資料＋正確方法＋誠實揭露限制」仍能產出有意義的機動偵測與態勢判斷。BSCL 的案例，是「資源有限的團隊靠對的方法做出正確決策」在真實世界的縮影。\n"
+        "- 換句話說：本專案與 BSCL 面對的是同一種結構性限制（缺乏私有／軍方級的精確資料），但都選擇在限制之內把能做的事做到最好，而不是因為拿不到最好的資料就放棄判斷。",
+        "- 事例二十八はTLEとVCMの本質的な差を示した：共分散がなければ、信頼できる衝突確率Pcは算出できない。この出来事はその実世界版の対照例である——BSCLもVCMを持たず、商用の回避ソフトウェアすら持たないまま、公開の警告と手計算だけで回避の判断を下した。\n"
+        "- これは本プロジェクトの立場とも響き合う。本プロジェクトは最初から最後まで公開TLEのみを用い、特権的なデータソースは一切持たないが、それでも「公開データ＋正しい手法＋限界の誠実な開示」で意味のある機動検出と状況判断を生み出せることを一貫して示してきた。BSCLの事例は、「限られた資源のチームが正しい方法で正しい決断を下す」という構図の、現実世界における縮図である。\n"
+        "- 言い換えれば、本プロジェクトとBSCLは同じ構造的制約（民間／軍事級の精密データが手に入らない）に直面しているが、どちらもその制約の中でできる最善を尽くす道を選んでおり、最良のデータが手に入らないからといって判断そのものを放棄してはいない。",
+        "- Case 28 showed the fundamental gap between a TLE and a VCM: without covariance, there's no credible collision probability Pc to compute. This event is a real-world counterpart — BSCL had no VCM either, not even commercial avoidance software, yet still made an avoidance decision using only a public warning and manual calculation.\n"
+        "- That echoes this project's own stance: from day one, this project has used only public TLEs, with no privileged data source of any kind, and has still shown throughout that \"public data + a sound method + honest disclosure of limits\" can produce meaningful maneuver detection and situational judgment. BSCL's case is a real-world miniature of \"a resource-limited team making the right call with the right method.\"\n"
+        "- Put differently: this project and BSCL face the same structural constraint — no access to private- or military-grade precision data — and both chose to do the best possible within that constraint, rather than giving up on judgment just because the best data isn't available.",
+    ))
+
+    st.header(T3("④ 查證限制（誠實揭露）", "④ 検証上の限界（誠実な開示）", "④ Verification limits (honest disclosure)"))
+    st.markdown(T3(
+        "- 本案例所有細節均來自孟加拉媒體（The Daily Star、TBS News）及台灣媒體（民生電子報）轉述 BSCL 高層的說法，查證時沒有找到印度官方或獨立第三方對「碎片確實來自 INSAT-1A」或「852 公尺」數字的佐證。\n"
+        "- 查證時發現部分報導的發布時間標記（如「1 天前」）與系統當前日期（2026-10-09）對不上，不排除是舊聞被重新轉載；因此「事件確切發生於 2026 年 8 月」這一點，本案例**無法百分之百確認**，僅依來源報導的敘述呈現。\n"
+        "- 原始敘述中「孟加拉官方強調全程未向衛星製造商（泰雷茲阿萊尼亞航太公司）尋求操作協助」一句，查證時沒有在任一篇報導中找到逐字對應的引述，比較接近是對「工程師自主完成」敘事的合理延伸；本案例採用時僅以「自主完成」呈現，不逐字複述未經證實的細節。",
+        "- 本事例のすべての詳細は、バングラデシュのメディア（The Daily Star、TBS News）および台湾のメディア（民生電子報）がBSCL幹部の発言を伝えたものに基づいている。検証の過程で、「破片が確かにINSAT-1Aのものである」ことや「852メートル」という数値について、インド政府または独立した第三者による裏付けは見つからなかった。\n"
+        "- 検証の過程で、一部の報道の公開時刻表示（「1日前」など）が本システムの現在日付（2026年10月9日）と一致しないことが分かった。古い記事が再掲載された可能性も排除できないため、「この出来事が2026年8月に実際に発生した」という点は**完全には確認できておらず**、出典記事の記述に基づいて提示しているに過ぎない。\n"
+        "- 元の記述にある「バングラデシュ当局は、衛星メーカー（タレス・アレニア・スペース社）に運用支援を一切求めなかったと強調した」という一文については、検証で見つけたいずれの報道にも逐語的に対応する引用は見当たらなかった。「エンジニアが自力で完成させた」という報道の筋から合理的に導かれた記述に近いため、本事例では「自力で完成させた」という範囲にとどめ、未確認の詳細をそのまま繰り返すことは避けている。",
+        "- Every detail in this case comes from Bangladeshi media (The Daily Star, TBS News) and Taiwanese media (Lifenews) relaying statements from BSCL executives. No independent confirmation from India's government or a third party was found for either \"the debris was indeed from INSAT-1A\" or the 852 m figure.\n"
+        "- Verification also found that some articles' listed publish times (e.g., \"1 day ago\") don't line up with today's date in this system (2026-10-09), so it's possible an older story was being re-syndicated. For that reason, this case **cannot fully confirm** that the event occurred in August 2026 specifically — it is presented only as the source reporting describes it.\n"
+        "- The original summary states that Bangladeshi officials stressed they never sought operational help from the satellite's manufacturer (Thales Alenia Space). No article found during verification contained a matching direct quote to that effect; it reads more like a reasonable extension of the \"engineers did it themselves\" narrative. This case therefore keeps only the \"done independently\" framing and does not restate that unverified detail as fact.",
+    ))
+
+    st.markdown(T3(
+        "**判讀**：這起事件無法作為本專案偵測能力的證據（本專案完全沒有分析這兩顆衛星），但它是一個誠實、有紀律的對照：告訴我們「沒有最好的資料」不等於「做不出有意義的判斷」——只要方法對，而且願意誠實說清楚自己能做到哪裡、做不到哪裡。",
+        "**判読**：この出来事は本プロジェクトの検出能力の証拠にはならない（本プロジェクトはこの2機の衛星を一切分析していない）。しかしこれは誠実で規律ある対照例である：「最良のデータがない」ことは「意味のある判断ができない」ことを意味しない——方法が正しく、かつ自分にできることとできないことを誠実に言い切る意志があれば。",
+        "**Takeaway**: this event is not evidence of this project's own detection capability — the project never analyzed either satellite. But it is an honest, disciplined point of comparison: not having the best data doesn't mean you can't make a meaningful judgment, as long as the method is sound and you're willing to state plainly where it does and doesn't reach.",
+    ))
+
+    st.header(T3("⑤ 來源", "⑤ 出典", "⑤ Sources"))
+    st.markdown(
+        "- The Daily Star, \"Bangladesh satellite saved from space debris by local engineers\" — "
+        "https://www.thedailystar.net/news/news/bangladesh-satellite-saved-space-debris-local-engineers-4293136\n"
+        "- TBS News, \"US space tracking alert helps Bangladesh's satellite avoid Indian satellite debris\" — "
+        "https://www.tbsnews.net/tech/us-space-tracking-alert-helps-bangladeshs-satellite-avoid-indian-satellite-debris-1565871\n"
+        "- 民生電子報，〈國際太空碎片威脅升溫 美國示警助孟加拉衛星避險〉— https://lifenews.com.tw/594777\n"
+        "- Wikipedia, \"INSAT-1A\" — https://en.wikipedia.org/wiki/INSAT-1A\n"
+        "- Gunter's Space Page, \"Bangabandhu 1 (BD 1)\" — https://space.skyrocket.de/doc_sdat/bangabandhu-1.htm\n"
+    )
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -13237,7 +13336,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
-        "case21", "case22", "case23", "case24", "case25", "case26", "case27", "case28"):
+        "case21", "case22", "case23", "case24", "case25", "case26", "case27", "case28", "case29"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -13316,6 +13415,8 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case27()
     elif _case == "case28":
         render_storymap_case28()
+    elif _case == "case29":
+        render_storymap_case29()
     else:
         render_storymap_landing()
     st.stop()
