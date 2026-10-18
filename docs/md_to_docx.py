@@ -1,510 +1,532 @@
-"""md_to_docx.py
-將論文一與論文二的 Markdown 轉換為 .docx（Word）檔案。
-只依賴標準函式庫 + python-docx，無需 pandoc。
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""md_to_docx.py — 將本專案之 Markdown 論文轉為 Word (.docx)。
 
-執行：python docs/md_to_docx.py
-輸出：docs/paper1_tle_maneuver_detection_zh.docx
-       docs/paper2_lightgbm_classifier_zh.docx
+本機無 pandoc／LibreOffice，故以 python-docx 自行轉換。支援論文實際用到的
+Markdown 子集：標題、段落（粗體／斜體／行內碼／連結）、表格（含對齊）、圖片
+（alt 轉圖說）、區塊公式、行內公式、引用區塊、清單、水平線。
+
+公式處理：
+  · 區塊公式 $$...$$ → 以 matplotlib mathtext 渲染為 PNG 置中插入，\\tag{n}
+    抽出為右側式號。
+  · 行內公式 $...$ → 優先以「多個 run + 斜體 + 上下標」原生排版；僅在含
+    \\frac／\\sqrt／\\tfrac 等無法以 run 表達者才退回小圖片。
+
+用法：
+    python docs/md_to_docx.py                 # 轉換中英兩篇論文
+    python docs/md_to_docx.py <in.md> <out.docx> [zh|en]
 """
 import re
-import os
+import sys
+import tempfile
 from pathlib import Path
-from docx import Document
-from docx.shared import Pt, Cm, RGBColor, Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
-from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
-import copy
 
-DOCS_DIR = Path(__file__).parent
-
-# ── LaTeX → Word 原生方程式（OMML）────────────────────────────────────────────
-# 需要 latex2mathml + lxml + Office 內建 MML2OMML.XSL；任一缺少則回退為文字呈現。
 try:
-    import latex2mathml.converter as _l2m
-    from lxml import etree as _etree
-    _MML2OMML = Path(r"C:/Program Files/Microsoft Office/root/Office16/MML2OMML.XSL")
-    _OMML_XSLT = _etree.XSLT(_etree.parse(str(_MML2OMML))) if _MML2OMML.exists() else None
+    sys.stdout.reconfigure(encoding="utf-8")
 except Exception:
-    _OMML_XSLT = None
+    pass
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+from docx import Document
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
+from docx.oxml.ns import qn
+from docx.shared import Cm, Pt, RGBColor
+
+DOCS = Path(__file__).resolve().parent
+TMP = Path(tempfile.mkdtemp(prefix="md2docx_"))
+
+BODY_PT = 10.5
+CODE_FONT = "Consolas"
+INK = RGBColor(0x22, 0x22, 0x2A)
+MUTE = RGBColor(0x60, 0x60, 0x6A)
+IMG_W = Cm(15.6)          # A4 21cm - 左右邊距各 2.7cm
+
+# LaTeX 命令 -> Unicode（行內公式原生排版用）
+UNI = {
+    r"\sigma": "σ", r"\mu": "μ", r"\Delta": "Δ", r"\delta": "δ", r"\Phi": "Φ",
+    r"\phi": "φ", r"\alpha": "α", r"\beta": "β", r"\rho": "ρ", r"\theta": "θ",
+    r"\lambda": "λ", r"\omega": "ω", r"\pi": "π", r"\tau": "τ", r"\epsilon": "ε",
+    r"\approx": " ≈ ", r"\le": " ≤ ", r"\leq": " ≤ ", r"\ge": " ≥ ",
+    r"\geq": " ≥ ", r"\ne": " ≠ ", r"\neq": " ≠ ", r"\times": "×",
+    r"\cdot": "·", r"\pm": "±", r"\to": "→", r"\infty": "∞", r"\max": "max",
+    r"\min": "min", r"\log": "log", r"\exp": "exp", r"\ln": "ln",
+    r"\,": " ", r"\;": " ", r"\ ": " ", r"\!": "", r"\%": "%",
+}
+NEEDS_IMAGE = ("\\frac", "\\sqrt", "\\tfrac", "\\dfrac", "\\sum", "\\int", "\\big")
 
 
-def latex_to_omml(latex: str):
-    """LaTeX 字串 → OMML（Word 方程式）元素；不可用或轉換失敗回 None。"""
-    if _OMML_XSLT is None:
-        return None
+# --------------------------------------------------------------------------
+# 公式渲染
+# --------------------------------------------------------------------------
+def tex_to_mathtext(tex):
+    """論文 LaTeX -> matplotlib mathtext 子集；回傳 (公式, 式號)。"""
+    tag = None
+    m = re.search(r"\\tag\{([^}]*)\}", tex)
+    if m:
+        tag = m.group(1)
+        tex = tex[:m.start()] + tex[m.end():]
+    tex = tex.strip()
+    tex = re.sub(r"\\text\{([^}]*)\}", r"\\mathrm{\1}", tex)
+    # \mathrm d（無大括號）-> \mathrm{d}；mathtext 不接受省略大括號之寫法
+    tex = re.sub(r"\\(mathrm|mathbf|mathit)\s+([A-Za-z])", r"\\\1{\2}", tex)
+    tex = re.sub(r"\\t?frac", r"\\frac", tex)
+    tex = re.sub(r"\\bigg?[lr]?", "", tex)          # mathtext 無 \big 系列
+    for a, b in ((r"\le ", r"\leq "), (r"\ge ", r"\geq "),
+                 (r"\le}", r"\leq}"), (r"\ne ", r"\neq ")):
+        tex = tex.replace(a, b)
+    tex = tex.replace("\\,", r"\ ").replace("\\;", r"\ ").replace("\\!", "")
+    return tex, tag
+
+
+_eq_n = [0]
+
+
+def render_equation(tex, fontsize=17):
+    """把 LaTeX 渲染為 PNG，回傳 (路徑, 式號, 寬高比) 或 None。"""
+    mt, tag = tex_to_mathtext(tex)
+    _eq_n[0] += 1
+    out = TMP / f"eq_{_eq_n[0]:03d}.png"
     try:
-        mml = _l2m.convert(latex)
-        return _OMML_XSLT(_etree.fromstring(mml)).getroot()
-    except Exception:
+        fig = plt.figure(figsize=(0.1, 0.1))
+        fig.text(0, 0, f"${mt}$", fontsize=fontsize, color="#22222a")
+        fig.savefig(out, dpi=220, bbox_inches="tight", pad_inches=0.05,
+                    facecolor="white")
+        plt.close(fig)
+    except Exception as e:
+        print(f"    [警告] 公式渲染失敗，改以原文呈現: {e.__class__.__name__}: {mt[:60]}")
         return None
-
-# ── LaTeX 數式轉可讀文字 ──────────────────────────────────────────────────────
-_LATEX_MAP = [
-    (r"\\dot\{\\Omega\}",   "Ω̇"),
-    (r"\\dot\{\\omega\}",   "ω̇"),
-    (r"\\Delta",            "Δ"),
-    (r"\\Omega",            "Ω"),
-    (r"\\omega",            "ω"),
-    (r"\\theta",            "θ"),
-    (r"\\beta",             "β"),
-    (r"\\alpha",            "α"),
-    (r"\\sigma",            "σ"),
-    (r"\\tau",              "τ"),
-    (r"\\mu",               "μ"),
-    (r"\\pi",               "π"),
-    (r"\\geq",              "≥"),
-    (r"\\leq",              "≤"),
-    (r"\\neq",              "≠"),
-    (r"\\approx",           "≈"),
-    (r"\\times",            "×"),
-    (r"\\cdot",             "·"),
-    (r"\\pm",               "±"),
-    (r"\\infty",            "∞"),
-    (r"\\sqrt\{([^}]+)\}",  r"√(\1)"),
-    (r"\\frac\{([^}]+)\}\{([^}]+)\}", r"\1/\2"),
-    (r"\\left\(",           "("),
-    (r"\\right\)",          ")"),
-    (r"\\left\[",           "["),
-    (r"\\right\]",          "]"),
-    (r"\\text\{([^}]+)\}",  r"\1"),
-    (r"\\mathrm\{([^}]+)\}",r"\1"),
-    (r"\\mathbf\{([^}]+)\}",r"\1"),
-    (r"\\begin\{cases\}",   "{ "),
-    (r"\\end\{cases\}",     ""),
-    (r"\\\\",               "  /  "),
-    (r"\^{([^}]+)}",        r"^\1"),   # superscript
-    (r"\^([A-Za-z0-9*])",   r"^\1"),
-    (r"_\{([^}]+)\}",       r"_\1"),   # subscript
-    (r"_([A-Za-z0-9])",     r"_\1"),
-    (r"J_2",                "J₂"),
-    (r"R_E",                "Rₑ"),
-    (r"\$",                 ""),
-]
-
-def latex_to_text(s: str) -> str:
-    for pat, rep in _LATEX_MAP:
-        s = re.sub(pat, rep, s)
-    # strip remaining backslash commands
-    s = re.sub(r"\\[a-zA-Z]+", "", s)
-    s = re.sub(r"[{}]", "", s)
-    return s.strip()
-
-def clean_math(s: str) -> str:
-    """Strip display/inline math delimiters and convert LaTeX to text."""
-    # Display math $$...$$
-    s = re.sub(r"\$\$(.+?)\$\$", lambda m: "[" + latex_to_text(m.group(1)) + "]",
-               s, flags=re.DOTALL)
-    # Inline math $...$
-    s = re.sub(r"\$(.+?)\$", lambda m: latex_to_text(m.group(1)), s)
-    return s
+    from PIL import Image
+    with Image.open(out) as im:
+        w, h = im.size
+    return out, tag, w / h
 
 
-# ── 行內樣式解析 ──────────────────────────────────────────────────────────────
-# 跳脫字元佔位符：在粗體/斜體正則解析「之前」先把 \*、\_、\| 換成不會被正則
-# 誤認為 markdown 標記的私用區字元，解析完成、實際寫入 Run 時才還原成原字元。
-# 若在解析前就把 \* 還原成裸露的 *（舊做法），該裸星號會被 *italic* 規則
-# 誤吃，導致配對錯亂並殃及同段落後面所有 **bold** 標記。
-_ESC_MAP = {"\\*": "", "\\_": "", "\\|": ""}
-_UNESC_MAP = {v: k[1] for k, v in _ESC_MAP.items()}
+# --------------------------------------------------------------------------
+# 字型
+# --------------------------------------------------------------------------
+def style_run(run, lang, size=BODY_PT, bold=False, italic=False, code=False,
+              color=INK, sub=False, sup=False):
+    run.bold = bold
+    run.italic = italic
+    f = run.font
+    f.size = Pt(size)
+    f.color.rgb = color
+    f.subscript = sub
+    f.superscript = sup
+    f.name = CODE_FONT if code else "Times New Roman"
+    rpr = run._element.get_or_add_rPr()
+    rf = rpr.find(qn("w:rFonts"))
+    if rf is None:
+        rf = rpr.makeelement(qn("w:rFonts"), {})
+        rpr.insert(0, rf)
+    ea = CODE_FONT if code else ("Microsoft JhengHei" if lang == "zh" else "Times New Roman")
+    rf.set(qn("w:eastAsia"), ea)
+    rf.set(qn("w:ascii"), CODE_FONT if code else "Times New Roman")
+    rf.set(qn("w:hAnsi"), CODE_FONT if code else "Times New Roman")
+    return run
 
 
-def _restore_escapes(s: str) -> str:
-    for ph, ch in _UNESC_MAP.items():
-        s = s.replace(ph, ch)
-    return s
+# --------------------------------------------------------------------------
+# 行內公式 -> runs
+# --------------------------------------------------------------------------
+def inline_math_runs(par, tex, lang, size=BODY_PT, color=INK):
+    """把行內公式排成 run；無法原生表達者回傳 False（呼叫端改用圖片）。"""
+    if any(k in tex for k in NEEDS_IMAGE):
+        return False
+    s = tex
+    for k in sorted(UNI, key=len, reverse=True):
+        s = s.replace(k, UNI[k])
+    s = re.sub(r"\\mathrm\{([^}]*)\}", r"\1", s)
+    s = re.sub(r"\\mathbf\{([^}]*)\}", r"\1", s)
+    if "\\" in s:                      # 仍有未知命令
+        return False
+    # 依 _{..} ^{..} _x ^x 切段
+    tokens, i = [], 0
+    while i < len(s):
+        c = s[i]
+        if c in "_^" and i + 1 < len(s):
+            kind = "sub" if c == "_" else "sup"
+            if s[i + 1] == "{":
+                j = s.index("}", i + 2)
+                tokens.append((kind, s[i + 2:j]))
+                i = j + 1
+            else:
+                tokens.append((kind, s[i + 1]))
+                i += 2
+        else:
+            if tokens and tokens[-1][0] == "txt":
+                tokens[-1] = ("txt", tokens[-1][1] + c)
+            else:
+                tokens.append(("txt", c))
+            i += 1
+    for kind, txt in tokens:
+        if not txt:
+            continue
+        ital = bool(re.fullmatch(r"[A-Za-z]+", txt)) and txt not in ("max", "min", "log", "ln", "exp")
+        style_run(par.add_run(txt), lang, size=size, italic=ital, color=color,
+                  sub=(kind == "sub"), sup=(kind == "sup"))
+    return True
 
 
-def _add_styled_runs(para, text: str):
-    """解析 **bold**、*italic*、`code`（不含超連結），依序加入 Run。"""
-    pattern = re.compile(
-        r"\*\*(.+?)\*\*"        # **bold**
-        r"|\*(.+?)\*"           # *italic*
-        r"|`(.+?)`"             # `code`
-        r"|\!\[([^\]]*)\]\([^)]*\)"  # ![img](path) → skip in inline
-        r"|(\[([^\]]+)\]\([^)]*\))"  # [link text](url) → text only（非 http）
-        r"|(.+?)"               # plain text
-        r"|(\s+)",              # whitespace
-        re.DOTALL)
-
-    for m in pattern.finditer(text):
-        bold_t, ital_t, code_t, img_t, _, link_t, plain_t, ws_t = m.groups()
-        if bold_t:
-            run = para.add_run(_restore_escapes(bold_t))
-            run.bold = True
-        elif ital_t:
-            run = para.add_run(_restore_escapes(ital_t))
-            run.italic = True
-        elif code_t:
-            run = para.add_run(_restore_escapes(code_t))
-            run.font.name = "Courier New"
-            run.font.size = Pt(9)
-        elif link_t:
-            para.add_run(_restore_escapes(link_t))
-        elif plain_t:
-            para.add_run(_restore_escapes(plain_t))
-        elif ws_t:
-            para.add_run(ws_t)
+# --------------------------------------------------------------------------
+# 行內語法 -> runs
+# --------------------------------------------------------------------------
+# 單星斜體只要求「星號內側非空白」（如 |Δ*a*| 中的 *a*，其左側是文字而非空白，
+# 舊的 (?<![\w*]) 寫法會漏判）。**粗體** 由前一個分支先行匹配，故不衝突。
+TOKEN_RE = re.compile(
+    r"(\*\*\*.+?\*\*\*|\*\*.+?\*\*|\*(?!\s)[^*\n]+?(?<!\s)\*|`[^`]+`|"
+    r"\[[^\]]*\]\([^)]*\)|\$[^$\n]+?\$)", re.S)
 
 
-def add_inline_runs(para, text: str):
-    """行內解析：先把 [文字](http…) 轉為真超連結，其餘交給樣式解析。"""
-    pos = 0
-    for m in _LINK_RE.finditer(text):
-        if m.start() > pos:
-            _add_styled_runs(para, text[pos:m.start()])
-        add_hyperlink(para, m.group(1), m.group(2))
-        pos = m.end()
-    if pos < len(text):
-        _add_styled_runs(para, text[pos:])
+MD_ESC = re.compile(r"\\([\\`*_{}\[\]()#+.!|>~-])")
 
 
-def add_para_text(para, raw: str):
-    """先清理 math、再寫入行內樣式。"""
-    raw = clean_math(raw)
-    # 跳脫字元先換成佔位符（見 _ESC_MAP 註解），避免裸露 * 打亂粗體/斜體配對
-    for esc, ph in _ESC_MAP.items():
-        raw = raw.replace(esc, ph)
-    add_inline_runs(para, raw)
+def unesc(s):
+    """還原 Markdown 跳脫序列（如 B\\* -> B*）。"""
+    return MD_ESC.sub(r"\1", s)
 
 
-# ── 超連結 ────────────────────────────────────────────────────────────────────
-_LINK_RE = re.compile(r"\[([^\]]+)\]\((https?://[^)]+)\)")
+def add_inline(par, text, lang, size=BODY_PT, bold0=False, color=INK):
+    """把一段含 Markdown 行內語法之文字加入段落。"""
+    for part in TOKEN_RE.split(text):
+        if not part:
+            continue
+        if part.startswith("***") and part.endswith("***"):
+            style_run(par.add_run(unesc(part[3:-3])), lang, size, bold=True, italic=True, color=color)
+        elif part.startswith("**") and part.endswith("**"):
+            style_run(par.add_run(unesc(part[2:-2])), lang, size, bold=True, color=color)
+        elif part.startswith("*") and part.endswith("*") and len(part) > 2:
+            style_run(par.add_run(unesc(part[1:-1])), lang, size, bold=bold0, italic=True, color=color)
+        elif part.startswith("`") and part.endswith("`"):
+            style_run(par.add_run(part[1:-1]), lang, size - 0.5, bold=bold0, code=True, color=color)
+        elif part.startswith("[") and "](" in part:
+            m = re.match(r"\[([^\]]*)\]\(([^)]*)\)", part)
+            style_run(par.add_run(unesc(m.group(1))), lang, size, bold=bold0, color=color)
+        elif part.startswith("$") and part.endswith("$") and len(part) > 2:
+            if not inline_math_runs(par, part[1:-1], lang, size, color):
+                r = render_equation(part[1:-1], fontsize=13)
+                if r:
+                    path, _tag, ratio = r
+                    h = Pt(size * 1.45)
+                    par.add_run().add_picture(str(path), height=h)
+                else:
+                    style_run(par.add_run(part[1:-1]), lang, size, italic=True, color=color)
+        else:
+            style_run(par.add_run(unesc(part)), lang, size, bold=bold0, color=color)
 
 
-def add_hyperlink(paragraph, text: str, url: str):
-    """在段落內加入可點擊的 Word 超連結（藍字底線）。"""
-    r_id = paragraph.part.relate_to(
-        url, "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
-        is_external=True)
-    h = OxmlElement("w:hyperlink")
-    h.set(qn("r:id"), r_id)
-    r = OxmlElement("w:r")
-    rpr = OxmlElement("w:rPr")
-    color = OxmlElement("w:color"); color.set(qn("w:val"), "0563C1"); rpr.append(color)
-    u = OxmlElement("w:u"); u.set(qn("w:val"), "single"); rpr.append(u)
-    r.append(rpr)
-    t = OxmlElement("w:t"); t.text = _restore_escapes(text); r.append(t)
-    h.append(r)
-    paragraph._p.append(h)
+# --------------------------------------------------------------------------
+# 區塊處理
+# --------------------------------------------------------------------------
+def add_paragraph(doc, lang, space_after=6, space_before=0, indent=None):
+    p = doc.add_paragraph()
+    pf = p.paragraph_format
+    pf.space_after = Pt(space_after)
+    pf.space_before = Pt(space_before)
+    pf.line_spacing = 1.18
+    if indent is not None:
+        pf.left_indent = indent
+    return p
 
 
-def add_text_with_links(paragraph, text: str):
-    """把含 [文字](URL) 的字串寫入段落，連結轉為真超連結、其餘為一般文字。"""
-    pos = 0
-    for m in _LINK_RE.finditer(text):
-        if m.start() > pos:
-            add_inline_runs(paragraph, text[pos:m.start()])
-        add_hyperlink(paragraph, m.group(1), m.group(2))
-        pos = m.end()
-    if pos < len(text):
-        add_inline_runs(paragraph, text[pos:])
+def add_heading(doc, lang, level, text):
+    p = doc.add_heading(level=level)
+    p.paragraph_format.space_before = Pt(14 if level <= 2 else 10)
+    p.paragraph_format.space_after = Pt(6)
+    for r in list(p.runs):
+        r._element.getparent().remove(r._element)
+    size = {0: 17, 1: 14.5, 2: 12.5, 3: 11.5}.get(level, 11)
+    add_inline(p, text, lang, size=size, bold0=True, color=INK)
+    for r in p.runs:
+        r.bold = True
+        r.font.color.rgb = INK
+        rf = r._element.get_or_add_rPr().find(qn("w:rFonts"))
+        if rf is not None and lang == "zh":
+            rf.set(qn("w:eastAsia"), "Microsoft JhengHei")
+    if level == 0:
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    return p
 
 
-# ── 表格處理 ──────────────────────────────────────────────────────────────────
-def strip_cell(s: str) -> str:
-    return clean_math(s.strip().strip("*").strip())
+def add_table(doc, rows, lang):
+    """rows: list of list[str]；第 1 列為表頭，第 2 列為對齊定義。"""
+    header, align_row, body = rows[0], rows[1], rows[2:]
+    aligns = []
+    for a in align_row:
+        a = a.strip()
+        if a.startswith(":") and a.endswith(":"):
+            aligns.append(WD_ALIGN_PARAGRAPH.CENTER)
+        elif a.endswith(":"):
+            aligns.append(WD_ALIGN_PARAGRAPH.RIGHT)
+        else:
+            aligns.append(WD_ALIGN_PARAGRAPH.LEFT)
+    ncol = len(header)
+    aligns += [WD_ALIGN_PARAGRAPH.LEFT] * (ncol - len(aligns))
 
-def is_separator_row(row_text: str) -> bool:
-    return bool(re.match(r"^\|?[\s\-:]+(\|[\s\-:]+)*\|?$", row_text.strip()))
+    t = doc.add_table(rows=1 + len(body), cols=ncol)
+    t.style = "Table Grid"
+    t.alignment = WD_TABLE_ALIGNMENT.CENTER
 
-def parse_table_row(line: str):
-    """切表格欄位，跳過反斜線跳脫的管線（\\| 是儲存格內的字面 |，非欄界）。"""
-    s = line.strip()
-    if s.startswith("|"):
-        s = s[1:]
-    if s.endswith("|") and not s.endswith("\\|"):
-        s = s[:-1]
-    parts = re.split(r"(?<!\\)\|", s)
-    return [p.strip().replace("\\|", "|") for p in parts]
+    # 依內容實際字寬估算欄寬（中日韓字元計 2 個字元當量），避免 autofit 把
+    # 名稱或數值擠到斷行；空間不足時自動縮小表格字型而非壓爛欄位。
+    def vis_len(s):
+        s = re.sub(r"[*`]|\[([^\]]*)\]\([^)]*\)", r"\1", s)
+        return sum(2 if ord(c) > 0x2E80 else 1 for c in s)
 
-def build_word_table(doc, rows):
-    """rows: list of list[str] — 第一行為表頭。"""
-    if not rows:
-        return
-    ncols = max(len(r) for r in rows)
-    tbl = doc.add_table(rows=len(rows), cols=ncols)
-    tbl.style = "Table Grid"
-    tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
-    for ri, row in enumerate(rows):
-        for ci, cell_text in enumerate(row):
-            if ci >= ncols:
-                break
-            cell = tbl.cell(ri, ci)
+    demand = []
+    for j in range(ncol):
+        cells = [vis_len(r[j].strip()) for r in body if j < len(r)]
+        head = vis_len(header[j].strip()) * 1.18      # 表頭為粗體，略寬
+        demand.append(min(max([head] + cells or [1]), 40))
+
+    CELL_PAD = 0.30                      # 左右內距合計 (cm)
+    fsize = 9.5
+    while fsize > 7.4:
+        per = fsize * 0.0177             # Times New Roman 每字元當量寬 (cm)
+        need = [d * per + CELL_PAD for d in demand]
+        if sum(need) <= IMG_W.cm:
+            break
+        fsize -= 0.5
+    per = fsize * 0.0177
+    need = [d * per + CELL_PAD for d in demand]
+    scale = IMG_W.cm / sum(need)
+    widths = [Cm(w * scale) for w in need]
+
+    t.autofit = False
+    # 縮小儲存格內距，把寬度讓給內容
+    mar = t._tbl.tblPr.makeelement(qn("w:tblCellMar"), {})
+    for side, val in (("left", "72"), ("right", "72")):   # 72 dxa = 0.127 cm
+        e = mar.makeelement(qn(f"w:{side}"), {})
+        e.set(qn("w:w"), val)
+        e.set(qn("w:type"), "dxa")
+        mar.append(e)
+    t._tbl.tblPr.append(mar)
+    tblPr = t._tbl.tblPr
+    layout = tblPr.makeelement(qn("w:tblLayout"), {})
+    layout.set(qn("w:type"), "fixed")
+    tblPr.append(layout)
+    for j, w in enumerate(widths):
+        for row in t.rows:
+            row.cells[j].width = w
+    for j, cell_txt in enumerate(header):
+        cell = t.cell(0, j)
+        cell.text = ""
+        p = cell.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.paragraph_format.space_after = Pt(2)
+        add_inline(p, cell_txt.strip(), lang, size=fsize, bold0=True)
+        for r in p.runs:
+            r.bold = True
+        shd = cell._tc.get_or_add_tcPr().makeelement(qn("w:shd"), {})
+        shd.set(qn("w:val"), "clear")
+        shd.set(qn("w:fill"), "EDEDF2")
+        cell._tc.get_or_add_tcPr().append(shd)
+    for i, row in enumerate(body, start=1):
+        for j in range(ncol):
+            cell = t.cell(i, j)
             cell.text = ""
             p = cell.paragraphs[0]
-            p.clear()
-            if ri == 0:
-                run = p.add_run(strip_cell(cell_text))
-                run.bold = True
-            else:
-                add_text_with_links(p, clean_math(cell_text.strip()))
-            p.paragraph_format.space_before = Pt(2)
-            p.paragraph_format.space_after  = Pt(2)
-    doc.add_paragraph()  # 表格後空行
+            p.alignment = aligns[j]
+            p.paragraph_format.space_after = Pt(2)
+            add_inline(p, row[j].strip() if j < len(row) else "", lang, size=fsize)
+    return t
 
 
-# ── 圖片插入 ──────────────────────────────────────────────────────────────────
-def try_insert_image(doc, img_path_str: str):
-    img_path = DOCS_DIR / img_path_str
-    if img_path.exists():
-        try:
-            p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run = p.add_run()
-            run.add_picture(str(img_path), width=Inches(5.8))
-        except Exception as e:
-            doc.add_paragraph(f"[圖片：{img_path_str}  — 插入失敗：{e}]")
+def add_image(doc, src, caption, lang):
+    path = DOCS / src
+    if not path.exists() and (Path.cwd() / src).exists():
+        path = Path.cwd() / src          # 子資料夾內之 md：圖檔相對於執行目錄
+    if not path.exists():
+        print(f"    [警告] 找不到圖檔，略過: {src}")
+        return
+    p = add_paragraph(doc, lang, space_after=2, space_before=8)
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.add_run().add_picture(str(path), width=IMG_W)
+    if caption:
+        c = add_paragraph(doc, lang, space_after=10)
+        c.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        add_inline(c, caption, lang, size=9, color=MUTE)
+
+
+def add_block_equation(doc, tex, lang):
+    r = render_equation(tex)
+    p = add_paragraph(doc, lang, space_after=8, space_before=8)
+    if not r:
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        add_inline(p, tex, lang, size=BODY_PT)
+        return
+    path, tag, ratio = r
+    height = Cm(0.62) if ratio > 6 else Cm(0.95)
+    if tag:
+        # \u5b78\u8853\u6163\u4f8b\uff1a\u516c\u5f0f\u7f6e\u4e2d\u3001\u5f0f\u865f\u9760\u53f3 \u2014\u2014 \u4ee5\u7f6e\u4e2d\uff0f\u9760\u53f3\u5169\u500b\u5b9a\u4f4d\u9ede\u9054\u6210
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        ts = p.paragraph_format.tab_stops
+        ts.add_tab_stop(Cm(IMG_W.cm / 2), WD_TAB_ALIGNMENT.CENTER)
+        ts.add_tab_stop(IMG_W, WD_TAB_ALIGNMENT.RIGHT)
+        p.add_run("\t").add_picture(str(path), height=height)
+        style_run(p.add_run(f"\t({tag})"), lang, size=BODY_PT, color=INK)
     else:
-        doc.add_paragraph(f"[圖片：{img_path_str}  — 檔案未找到]")
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run().add_picture(str(path), height=height)
 
 
-# ── 文件樣式設定 ──────────────────────────────────────────────────────────────
-def setup_doc_styles(doc: Document, font_name: str = "Microsoft YaHei"):
-    """設定字體與基本樣式。font_name 依語言選擇（zh: Microsoft YaHei / ja: Yu Gothic / en: Calibri）。"""
-    from docx.shared import Pt, RGBColor
-    from docx.oxml.ns import qn
-
-    style_normal = doc.styles["Normal"]
-    style_normal.font.name = font_name
-    style_normal.font.size = Pt(11)
-    style_normal._element.rPr.rFonts.set(qn("w:eastAsia"), font_name)
-
-    for heading_name, size, bold_flag in [
-        ("Heading 1", 18, True),
-        ("Heading 2", 15, True),
-        ("Heading 3", 13, True),
-    ]:
-        sty = doc.styles[heading_name]
-        sty.font.name = font_name
-        sty.font.size = Pt(size)
-        sty.font.bold = bold_flag
-        sty.font.color.rgb = RGBColor(0x1a, 0x3a, 0x5c)
-        sty._element.rPr.rFonts.set(qn("w:eastAsia"), font_name)
-
-    # Quote style
-    if "Quote" not in [s.name for s in doc.styles]:
-        pass
-    try:
-        q = doc.styles["Quote"]
-        q.font.name  = font_name
-        q.font.size  = Pt(10)
-        q.font.italic = True
-        q.paragraph_format.left_indent  = Cm(1)
-        q.paragraph_format.right_indent = Cm(1)
-    except Exception:
-        pass
+def add_quote(doc, lines, lang):
+    p = add_paragraph(doc, lang, space_after=8, space_before=6, indent=Cm(0.6))
+    p.paragraph_format.right_indent = Cm(0.4)
+    for i, ln in enumerate(lines):
+        if i:
+            p.add_run().add_break()
+        add_inline(p, ln, lang, size=9.5, color=MUTE)
+    pbdr = p._p.get_or_add_pPr().makeelement(qn("w:pBdr"), {})
+    left = pbdr.makeelement(qn("w:left"), {})
+    left.set(qn("w:val"), "single")
+    left.set(qn("w:sz"), "12")
+    left.set(qn("w:space"), "8")
+    left.set(qn("w:color"), "B8B8C4")
+    pbdr.append(left)
+    p._p.get_or_add_pPr().append(pbdr)
 
 
-# ── 主轉換邏輯 ────────────────────────────────────────────────────────────────
-def convert_md_to_docx(md_path: Path, out_path: Path, font_name: str = "Microsoft YaHei"):
+def add_hr(doc, lang):
+    p = add_paragraph(doc, lang, space_after=8, space_before=8)
+    pbdr = p._p.get_or_add_pPr().makeelement(qn("w:pBdr"), {})
+    bot = pbdr.makeelement(qn("w:bottom"), {})
+    bot.set(qn("w:val"), "single")
+    bot.set(qn("w:sz"), "6")
+    bot.set(qn("w:space"), "1")
+    bot.set(qn("w:color"), "C9C9D1")
+    pbdr.append(bot)
+    p._p.get_or_add_pPr().append(pbdr)
+
+
+# --------------------------------------------------------------------------
+# 主轉換
+# --------------------------------------------------------------------------
+def convert(md_path, out_path, lang):
+    md_path, out_path = Path(md_path), Path(out_path)
+    text = md_path.read_text(encoding="utf-8")
+    lines = text.replace("\r\n", "\n").split("\n")
+
     doc = Document()
-    setup_doc_styles(doc, font_name=font_name)
+    sec = doc.sections[0]
+    sec.page_width, sec.page_height = Cm(21.0), Cm(29.7)
+    sec.left_margin = sec.right_margin = Cm(2.7)
+    sec.top_margin = sec.bottom_margin = Cm(2.54)
+    normal = doc.styles["Normal"]
+    normal.font.name = "Times New Roman"
+    normal.font.size = Pt(BODY_PT)
+    normal.element.rPr.rFonts.set(
+        qn("w:eastAsia"), "Microsoft JhengHei" if lang == "zh" else "Times New Roman")
 
-    # 頁面邊距
-    for section in doc.sections:
-        section.top_margin    = Cm(2.5)
-        section.bottom_margin = Cm(2.5)
-        section.left_margin   = Cm(3.0)
-        section.right_margin  = Cm(2.5)
+    stats = dict(heading=0, para=0, table=0, image=0, equation=0, quote=0, list=0)
+    i, n = 0, len(lines)
+    while i < n:
+        ln = lines[i]
+        s = ln.strip()
 
-    lines = md_path.read_text(encoding="utf-8").splitlines()
+        if not s:
+            i += 1
+            continue
 
-    state     = "normal"   # normal | table | code_block
-    tbl_rows  = []
-    code_lines = []
-
-    i = 0
-    while i < len(lines):
-        raw = lines[i]
-        stripped = raw.strip()
-
-        # ── 程式碼區塊 ──────────────────────────────────────────────
-        if stripped.startswith("```"):
-            if state != "code_block":
-                state = "code_block"
-                code_lines = []
+        # 區塊公式（可跨行）
+        if s.startswith("$$"):
+            buf = s
+            while buf.count("$$") < 2 and i + 1 < n:
                 i += 1
-                continue
-            else:
-                # 結束 code block
-                p = doc.add_paragraph()
-                p.paragraph_format.left_indent = Cm(1)
-                run = p.add_run("\n".join(code_lines))
-                run.font.name = "Courier New"
-                run.font.size = Pt(8.5)
-                state = "normal"
-                code_lines = []
+                buf += "\n" + lines[i].strip()
+            tex = buf.strip()[2:-2] if buf.strip().endswith("$$") else buf.strip()[2:]
+            add_block_equation(doc, tex, lang)
+            stats["equation"] += 1
+            i += 1
+            continue
+
+        # 圖片（獨立成行）
+        m = re.fullmatch(r"!\[([^\]]*)\]\(([^)]+)\)", s)
+        if m:
+            add_image(doc, m.group(2), m.group(1), lang)
+            stats["image"] += 1
+            i += 1
+            continue
+
+        # 標題
+        m = re.match(r"^(#{1,6})\s+(.*)$", s)
+        if m:
+            add_heading(doc, lang, min(len(m.group(1)) - 1, 4), m.group(2).strip())
+            stats["heading"] += 1
+            i += 1
+            continue
+
+        # 水平線
+        if re.fullmatch(r"-{3,}|\*{3,}|_{3,}", s):
+            add_hr(doc, lang)
+            i += 1
+            continue
+
+        # 表格
+        if s.startswith("|"):
+            rows = []
+            while i < n and lines[i].strip().startswith("|"):
+                cells = [c for c in lines[i].strip().strip("|").split("|")]
+                rows.append(cells)
                 i += 1
-                continue
-
-        if state == "code_block":
-            code_lines.append(raw)
-            i += 1
+            if len(rows) >= 2:
+                add_table(doc, rows, lang)
+                stats["table"] += 1
             continue
 
-        # ── 表格 ────────────────────────────────────────────────────
-        if stripped.startswith("|") or (state == "table" and stripped.startswith("|")):
-            if is_separator_row(stripped):
+        # 引用區塊
+        if s.startswith(">"):
+            buf = []
+            while i < n and lines[i].strip().startswith(">"):
+                buf.append(re.sub(r"^\s*>\s?", "", lines[i]))
                 i += 1
-                continue
-            if state != "table":
-                state = "table"
-                tbl_rows = []
-            tbl_rows.append(parse_table_row(stripped))
-            # 看下一行是否還是表格
-            next_line = lines[i+1].strip() if i+1 < len(lines) else ""
-            if not next_line.startswith("|") and not is_separator_row(next_line):
-                build_word_table(doc, tbl_rows)
-                state = "normal"
-                tbl_rows = []
+            add_quote(doc, [b for b in buf if b.strip()], lang)
+            stats["quote"] += 1
+            continue
+
+        # 清單
+        m = re.match(r"^(\s*)([-*]|\d+\.)\s+(.*)$", ln)
+        if m:
+            depth = len(m.group(1)) // 2
+            ordered = m.group(2)[0].isdigit()
+            p = add_paragraph(doc, lang, space_after=3,
+                              indent=Cm(0.75 + 0.6 * depth))
+            p.paragraph_format.first_line_indent = Cm(-0.55)
+            bullet = f"{m.group(2)} " if ordered else "\u2022  "
+            style_run(p.add_run(bullet), lang, size=BODY_PT)
+            add_inline(p, m.group(3), lang)
+            stats["list"] += 1
             i += 1
             continue
 
-        if state == "table":
-            build_word_table(doc, tbl_rows)
-            state = "normal"
-            tbl_rows = []
-            # 不 continue，繼續處理當前行
-
-        # ── 圖片 ─────────────────────────────────────────────────────
-        img_match = re.match(r"!\[([^\]]*)\]\(([^)]+)\)", stripped)
-        if img_match:
-            alt_text = img_match.group(1)
-            img_file = img_match.group(2)
-            try_insert_image(doc, img_file)
-            # 加圖說
-            p_cap = doc.add_paragraph()
-            p_cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            run_cap = p_cap.add_run(alt_text if alt_text else img_file)
-            run_cap.italic = True
-            run_cap.font.size = Pt(9.5)
-            i += 1
-            continue
-
-        # ── blockquote ─────────────────────────────────────────────
-        if stripped.startswith("> "):
-            content = stripped[2:]
-            # 多行 blockquote 合併
-            while i+1 < len(lines) and lines[i+1].strip().startswith("> "):
-                i += 1
-                content += " " + lines[i].strip()[2:]
-            content = clean_math(content)
-            try:
-                p = doc.add_paragraph(style="Quote")
-            except Exception:
-                p = doc.add_paragraph()
-                p.paragraph_format.left_indent = Cm(1)
-            add_inline_runs(p, content)
-            i += 1
-            continue
-
-        # ── 標題 ─────────────────────────────────────────────────────
-        h_match = re.match(r"^(#{1,4})\s+(.+)", stripped)
-        if h_match:
-            level = len(h_match.group(1))
-            title_text = clean_math(h_match.group(2))
-            style_map = {1: "Heading 1", 2: "Heading 2",
-                         3: "Heading 3", 4: "Heading 4"}
-            style_name = style_map.get(level, "Heading 3")
-            p = doc.add_paragraph(style=style_name)
-            p.clear()
-            add_inline_runs(p, title_text)
-            i += 1
-            continue
-
-        # ── 顯示型 LaTeX 方程式：$$…\tag{n}$$ → Word 原生方程式（APA：置中＋編號右靠）──
-        eq_disp = re.match(r"^\$\$(.+?)\$\$$", stripped)
-        if eq_disp:
-            latex = eq_disp.group(1).strip()
-            tag = None
-            tm = re.search(r"\\tag\{(\d+)\}", latex)
-            if tm:
-                tag = tm.group(1)
-                latex = latex.replace(tm.group(0), "").strip()
-            omml = latex_to_omml(latex)
-            p = doc.add_paragraph()
-            p.paragraph_format.space_before = Pt(6)
-            p.paragraph_format.space_after = Pt(6)
-            if omml is not None:
-                sect = doc.sections[0]
-                content_w = int(sect.page_width - sect.left_margin - sect.right_margin)
-                p.paragraph_format.tab_stops.add_tab_stop(content_w // 2, WD_TAB_ALIGNMENT.CENTER)
-                p.paragraph_format.tab_stops.add_tab_stop(content_w, WD_TAB_ALIGNMENT.RIGHT)
-                p.add_run("\t")
-                p._p.append(copy.deepcopy(omml))
-                if tag:
-                    p.add_run(f"\t({tag})")
-            else:  # 後備：文字置中
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                add_inline_runs(p, latex_to_text(latex) + (f"　　({tag})" if tag else ""))
-            i += 1
-            continue
-
-        # ── APA 置中：表/圖標題（**表 N　…**／**圖 N　…**）與編號方程式（… (N)）──
-        is_caption = bool(re.match(r"^\*\*(表|圖)\s?\d+", stripped))
-        is_equation = bool(re.search(r"\(\d+\)\s*$", stripped)) and \
-            any(op in stripped for op in ("=", "≈", "≥", "≤"))
-        if is_caption or is_equation:
-            p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.paragraph_format.space_before = Pt(6)
-            p.paragraph_format.space_after = Pt(4)
-            add_para_text(p, stripped)
-            i += 1
-            continue
-
-        # ── 水平線 ─────────────────────────────────────────────────
-        if stripped in ("---", "***", "___"):
-            doc.add_paragraph()  # 空行代替分割線
-            i += 1
-            continue
-
-        # ── 有序/無序清單 ───────────────────────────────────────────
-        li_match = re.match(r"^(\s*)(\d+\.|-|\*)\s+(.+)", raw)
-        if li_match:
-            indent_len = len(li_match.group(1))
-            marker     = li_match.group(2)
-            content    = li_match.group(3)
-            is_ordered = bool(re.match(r"\d+\.", marker))
-            style_name = "List Number" if is_ordered else "List Bullet"
-            try:
-                p = doc.add_paragraph(style=style_name)
-            except Exception:
-                p = doc.add_paragraph()
-                p.paragraph_format.left_indent = Cm(0.75 + indent_len * 0.25)
-            p.clear()
-            add_para_text(p, content)
-            i += 1
-            continue
-
-        # ── 空行 ─────────────────────────────────────────────────────
-        if not stripped:
-            doc.add_paragraph()
-            i += 1
-            continue
-
-        # ── 一般段落 ─────────────────────────────────────────────────
-        p = doc.add_paragraph()
-        p.paragraph_format.space_after = Pt(4)
-        add_para_text(p, stripped)
+        # 一般段落
+        p = add_paragraph(doc, lang)
+        add_inline(p, s, lang)
+        stats["para"] += 1
         i += 1
 
-    doc.save(str(out_path))
-    size_kb = out_path.stat().st_size // 1024
-    print(f"  saved {out_path}  ({size_kb} KB)")
+    doc.save(out_path)
+    kb = out_path.stat().st_size // 1024
+    print(f"  已輸出 {out_path.name}  ({kb} KB)")
+    print("   ", "  ".join(f"{k}={v}" for k, v in stats.items()))
+    return stats
 
 
-# ─────────────────────────────────────────────────────────────────────────────
+def main():
+    if len(sys.argv) >= 3:
+        convert(sys.argv[1], sys.argv[2],
+                sys.argv[3] if len(sys.argv) > 3 else "zh")
+        return
+    for md, lang in (("paper_tle_sma_noise_floor.md", "zh"),
+                     ("paper_tle_sma_noise_floor_EN.md", "en")):
+        src = DOCS / md
+        print(f"[{lang}] {md}")
+        convert(src, src.with_suffix(".docx"), lang)
+
+
 if __name__ == "__main__":
-    print("轉換中...")
-    convert_md_to_docx(
-        DOCS_DIR / "paper1_tle_maneuver_detection_zh.md",
-        DOCS_DIR / "paper1_tle_maneuver_detection_zh.docx",
-    )
-    convert_md_to_docx(
-        DOCS_DIR / "paper2_lightgbm_classifier_zh.md",
-        DOCS_DIR / "paper2_lightgbm_classifier_zh.docx",
-    )
-    print("完成。")
+    main()

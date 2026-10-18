@@ -366,10 +366,13 @@ def main() -> int:
     ap.add_argument("--recent-days", type=int, default=0,
                     help="發布用精簡：全衛星只保留最近 N 天歷史（live app 只取每顆最新一筆即足）；"
                          "0=停用（沿用 --from 全歷史）。建議搭配 --keep-lines。")
-    ap.add_argument("--whitelist", default="58573,59884,67689,69673,58204,43874,41745,30794",
+    ap.add_argument("--whitelist", default="58573,59884,67689,69673,58204,43874,41745,30794,"
+                                           "59103,59102,68754,68758,68759,68762,68763,68764",
                     help="以逗號分隔之 NORAD，這些衛星保留完整歷史（供 RPO 反演展示，"
                          "如神龍第3次 58573,59884、第4次 2026 太空梭67689/ObjH 69673、"
-                         "2025-09 美英奧林匹克衛士 USA271 41745/SKYNET5A 30794）；空字串＝無白名單。")
+                         "2025-09 美英奧林匹克衛士 USA271 41745/SKYNET5A 30794、"
+                         "2026-10 COSMOS 2612×ICEYE-X36 RPO：ICEYE-X36 59103/X37 59102 與 "
+                         "COSMOS 2609–2614 68754,68758,68759,68762,68763,68764）；空字串＝無白名單。")
     ap.add_argument("--parquet-src", choices=["original", "slim"], default="original",
                     help="parquet 資料來源：original=原始DB, slim=精簡DB（需先執行slim）")
     ap.add_argument("--latest30day", action="store_true",
