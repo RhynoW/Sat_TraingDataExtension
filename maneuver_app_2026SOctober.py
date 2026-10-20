@@ -237,6 +237,13 @@ L: dict[str, dict[str, str]] = {
                                   "ja": "VCMも商用の回避ツールもない中、バングラデシュのチームが公開の警告と手計算だけで衝突を回避した——実世界の対照例。誠実な開示：本プロジェクトはこの出来事を分析していない。事例二十八と響き合う実例として引用するのみである。",
                                   "en": "With no VCM and no commercial avoidance tooling, a Bangladeshi team dodged a collision using a public warning and manual math alone — a real-world counterpart. Honest disclosure: this project did not analyze this event; it is cited only as a precedent echoing Case 28."},
 
+    "storymap_case30_card_title": {"zh": "案例三十：負的大氣阻力？——推力被藏進 TLE 的 B* 參數",
+                                   "ja": "事例三十：負の大気抵抗？——推力がTLEのB*パラメータに隠れている",
+                                   "en": "Case 30: Negative Drag? — Thrust Hiding Inside the TLE's B* Term"},
+    "storymap_case30_card_desc": {"zh": "SGP4 沒有推力項，持續推進的衛星只能把推力擬合進阻力參數 B*，於是出現物理上不可能的負 B*。普查 2.3 萬個低軌物件並以 Starlink MEME 真值驗證，再檢查這件事對本專案偵測規則的實際影響——包括兩個被數據推翻的原始推測。",
+                                  "ja": "SGP4には推力項がないため、推進を続ける衛星は推力を抵抗パラメータB*に押し込むしかなく、物理的にあり得ない負のB*が現れる。低軌道の約2.3万物体を調査し、Starlink MEME真値で検証したうえで、本プロジェクトの検出規則への実際の影響を確かめる——データに覆された当初の推測2つも含めて。",
+                                  "en": "SGP4 has no thrust term, so a continuously thrusting satellite can only have its thrust fitted into the drag term B* — producing physically impossible negative B*. A census of ~23,000 LEO objects, validated against Starlink MEME truth, then a check of what this actually means for this project's detection rules — including two initial guesses the data overturned."},
+
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
                        "ja": "HF シークレット作成に関する注意（private リポジトリのみ必要）：{e}",
@@ -1865,7 +1872,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 30):
+    for _n in range(14, 31):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -13320,6 +13327,317 @@ def render_storymap_case29():
     )
 
 
+# ══ StoryMap 案例三十（2026-10-20 新增）：B* 吸收推力 ══════════════════════════════
+
+_CASE30_TAG = "20261020"
+_CASE30_GROUP_COLORS = {"Starlink": "#2a78d6", "OneWeb": "#eb6834", "Kuiper": "#1baf7a",
+                        "debris": "#eda100", "other_payload": "#e87ba4"}
+
+
+def _auc(score: pd.Series, y: pd.Series) -> float:
+    """Mann–Whitney 秩和法 AUC（免 sklearn 依賴）。"""
+    r = score.rank()
+    n_pos, n_neg = int(y.sum()), int((~y).sum())
+    if n_pos == 0 or n_neg == 0:
+        return float("nan")
+    return float((r[y].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case30_data() -> dict:
+    """案例三十之離線分析結果（bstar_thrust_analysis.py 之輸出）。缺任一檔即回傳空 dict。"""
+    names = ("population", "tle_truth", "transitions", "l1_control", "examples")
+    paths = {k: DATA / "benchmark" / f"bstar_thrust_{k}_{_CASE30_TAG}.csv" for k in names}
+    if not all(p.exists() for p in paths.values()):
+        return {}
+    return {k: pd.read_csv(p) for k, p in paths.items()}
+
+
+def render_storymap_case30():
+    if st.button(t("storymap_back"), key="back_from_case30"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例三十：負的大氣阻力？——推力被藏進 TLE 的 B* 參數",
+        "事例三十：負の大気抵抗？——推力がTLEのB*パラメータに隠れている",
+        "Case 30: Negative Drag? — Thrust Hiding Inside the TLE's B* Term",
+    ))
+    st.subheader(T3(
+        "大氣阻力只會讓衛星減速，B* 照理永遠是正的。但推進中的星系常出現負 B*——因為 SGP4 沒有推力項，推力只好被擬合進阻力參數。這件事有多普遍、是不是真的、對本專案的偵測規則又有什麼影響？",
+        "大気抵抗は衛星を減速させるだけなので、B*は本来常に正のはずである。しかし推進中のコンステレーションでは負のB*がよく現れる——SGP4には推力項がないため、推力が抵抗パラメータに押し込まれるからだ。これはどれほど一般的で、本当にそうなのか、そして本プロジェクトの検出規則にどう影響するのか？",
+        "Atmospheric drag can only slow a satellite down, so B* should always be positive. Yet thrusting constellations often show negative B* — because SGP4 has no thrust term, thrust gets fitted into the drag parameter instead. How common is this, is it really thrust, and what does it mean for this project's detection rules?",
+    ))
+    st.caption(T3(
+        "**術語**：TLE（雙行根數）是美國太空監視網公開的軌道資料，用 SGP4 模型推算位置。**B\\***（B-star）是 TLE 裡唯一描述大氣阻力的參數，單位為 1/地球半徑，越大代表阻力越強。**ndot** 是平均運動的一階變化率。**MEME** 是 SpaceX 公開的 Starlink 精密星曆，本專案以它作為真值。",
+        "**用語**：TLE（2行軌道要素）は米国の宇宙監視網が公開する軌道データで、SGP4モデルで位置を推算する。**B\\***（B-star）はTLEの中で大気抵抗を表す唯一のパラメータで、単位は1/地球半径、大きいほど抵抗が強い。**ndot**は平均運動の一次変化率。**MEME**はSpaceXが公開するStarlinkの精密暦で、本プロジェクトはこれを真値として用いる。",
+        "**Terms**: a TLE (two-line element set) is the public orbit data from the US space surveillance network, propagated with the SGP4 model. **B\\*** (B-star) is the only drag parameter in a TLE, in units of 1/Earth radii — larger means stronger drag. **ndot** is the first derivative of mean motion. **MEME** is SpaceX's public precise ephemeris for Starlink, used as ground truth in this project.",
+    ))
+
+    d = load_case30_data()
+    if not d:
+        st.info(T3(
+            f"本頁所需之離線分析檔（`data/benchmark/bstar_thrust_*_{_CASE30_TAG}.csv`）目前找不到。可執行 `python bstar_thrust_analysis.py` 重新產生（需本機全庫 `space_db.duckdb` 與 MEME 原始檔）。",
+            f"本ページに必要なオフライン分析ファイル（`data/benchmark/bstar_thrust_*_{_CASE30_TAG}.csv`）が現在見つからない。`python bstar_thrust_analysis.py` を実行して再生成できる（ローカルの全量 `space_db.duckdb` とMEME原ファイルが必要）。",
+            f"The offline analysis files this page needs (`data/benchmark/bstar_thrust_*_{_CASE30_TAG}.csv`) cannot be found. Run `python bstar_thrust_analysis.py` to regenerate them (requires the full local `space_db.duckdb` and raw MEME files).",
+        ))
+        return
+    pop, truth, trans, ctrl, ex = (d[k] for k in ("population", "tle_truth", "transitions", "l1_control", "examples"))
+
+    group_label = {
+        "Starlink": "Starlink", "OneWeb": "OneWeb", "Kuiper": "Kuiper",
+        "debris": T3("碎片／火箭殘骸", "破片／ロケット残骸", "Debris / rocket bodies"),
+        "other_payload": T3("其他酬載", "その他のペイロード", "Other payloads"),
+    }
+
+    # ── ① 物理 ───────────────────────────────────────────────────────────────
+    st.header(T3("① 為什麼負 B* 不該存在", "① なぜ負のB*は存在しないはずなのか", "① Why negative B* shouldn't exist"))
+    st.markdown(T3(
+        "- 大氣阻力的方向永遠和速度相反，只會讓軌道降低，所以描述阻力強弱的 B* 應該永遠為正。\n"
+        "- SGP4 的力模型只有地球重力（含扁率）、大氣阻力和日月擾動，**沒有推力項**。美方定軌時，會用一段時間的觀測擬合出一組 TLE；如果衛星在這段時間持續推進，模型裡又沒有推力，擬合只能把多出來的沿軌加速度塞進唯一能調的參數——B*。\n"
+        "- 推力把軌道往上推 → 看起來像「負的阻力」→ **B* 變成負值**；推力把軌道往下拉 → 看起來像「特別強的阻力」→ **B* 異常偏大**。",
+        "- 大気抵抗の向きは常に速度と逆で、軌道を下げることしかできない。したがって抵抗の強さを表すB*は常に正であるはずだ。\n"
+        "- SGP4の力学モデルには地球重力（扁平率を含む）、大気抵抗、日月摂動しかなく、**推力項がない**。米国側の軌道決定では、ある期間の観測からTLEを1組フィットする。その期間に衛星が推進を続けていても、モデルに推力がないため、余分な軌道方向の加速度は唯一調整できるパラメータ——B*——に押し込まれるしかない。\n"
+        "- 推力が軌道を押し上げる → 「負の抵抗」のように見える → **B*が負になる**。推力が軌道を引き下げる → 「異常に強い抵抗」のように見える → **B*が異常に大きくなる**。",
+        "- Drag always acts opposite to velocity and can only lower an orbit, so B*, which measures drag strength, should always be positive.\n"
+        "- SGP4's force model contains only Earth's gravity (with oblateness), atmospheric drag and lunisolar perturbations — **no thrust term**. US orbit determination fits one TLE to a span of observations; if the satellite was thrusting during that span, the extra along-track acceleration has nowhere to go except the one adjustable parameter: B*.\n"
+        "- Thrust raising the orbit looks like \"negative drag\" → **B* turns negative**; thrust lowering the orbit looks like \"unusually strong drag\" → **B* becomes abnormally large**.",
+    ))
+
+    # ── ② 普查 ───────────────────────────────────────────────────────────────
+    st.header(T3("② 普查：2.3 萬個低軌物件", "② 調査：低軌道の約2.3万物体", "② Census: ~23,000 LEO objects"))
+    bands = ["450-600", "800-1300"]
+    sub = pop[pop.alt_band.isin(bands) & pop.group.isin(list(_CASE30_GROUP_COLORS))]
+    agg = (sub.groupby(["alt_band", "group"])
+              .agg(n=("norad_id", "size"), neg=("neg_bstar_frac", "mean"), jump=("bstar_jump_rel", "median"))
+              .reset_index())
+    agg = agg[agg.n >= 20]
+    fig = make_subplots(rows=1, cols=2, subplot_titles=(
+        T3("負 B* 比例（物件平均）", "負のB*の割合（物体平均）", "Share of negative B* (mean per object)"),
+        T3("B* 跳動幅度（|ΔB*|／|B*| 中位數）", "B*の変動幅（|ΔB*|／|B*|の中央値）", "B* jump size (median |ΔB*|/|B*|)")))
+    for g, color in _CASE30_GROUP_COLORS.items():
+        a = agg[agg.group == g]
+        if a.empty:
+            continue
+        x = [f"{b} km" for b in a.alt_band]
+        fig.add_bar(x=x, y=a.neg, name=group_label[g], marker_color=color, legendgroup=g, row=1, col=1,
+                    hovertemplate="%{x}<br>%{y:.1%}<extra>" + group_label[g] + "</extra>")
+        fig.add_bar(x=x, y=a.jump, name=group_label[g], marker_color=color, legendgroup=g, showlegend=False,
+                    row=1, col=2, hovertemplate="%{x}<br>%{y:.3f}<extra>" + group_label[g] + "</extra>")
+    fig.update_yaxes(tickformat=".0%", row=1, col=1)
+    fig.update_layout(barmode="group", height=420, bargap=0.25, bargroupgap=0.08,
+                      legend=dict(orientation="h", y=-0.15), margin=dict(t=50, b=10))
+    st.plotly_chart(fig, use_container_width=True)
+
+    def _cell(band, grp, col):
+        r = agg[(agg.alt_band == band) & (agg.group == grp)]
+        return float(r[col].iloc[0]) if len(r) else float("nan")
+
+    deb_lo, oth_lo, sl_lo = (_cell("450-600", g, "neg") for g in ("debris", "other_payload", "Starlink"))
+    kp_lo = _cell("450-600", "Kuiper", "neg")
+    deb_hi, ow_hi = _cell("800-1300", "debris", "neg"), _cell("800-1300", "OneWeb", "neg")
+    jump_deb_hi, jump_ow_hi = _cell("800-1300", "debris", "jump"), _cell("800-1300", "OneWeb", "jump")
+    s_deb_lo, s_oth_lo = f"{deb_lo:.2%}", f"{oth_lo:.2%}"
+    s_sl_lo, s_kp_lo = f"{sl_lo:.1%}", f"{kp_lo:.1%}"
+    s_deb_hi, s_ow_hi = f"{deb_hi:.1%}", f"{ow_hi:.1%}"
+    s_jump_ratio = f"{jump_ow_hi / jump_deb_hi:.0f}"
+    n_pop = f"{len(pop):,}"
+    st.markdown(T3(
+        f"範圍：2026-08 以後、高度 1,300 km 以下的近圓軌道物件，共 **{n_pop}** 個。\n\n"
+        f"- **450–600 km（阻力強，B* 測得準）**：碎片的負 B* 只有 {s_deb_lo}、一般酬載 {s_oth_lo}，幾乎不存在；Starlink 是 **{s_sl_lo}**、Kuiper 是 **{s_kp_lo}**。這是最乾淨的對照。\n"
+        f"- **800–1,300 km（阻力弱）**：碎片也有 {s_deb_hi} 的負 B*——高空大氣稀薄，B* 本身就測不準，符號可能被雜訊翻轉。OneWeb 是 **{s_ow_hi}**，仍明顯高出許多；B* 跳動幅度更是碎片的約 **{s_jump_ratio} 倍**。",
+        f"範囲：2026年8月以降、高度1,300 km以下の近円軌道物体、計 **{n_pop}** 個。\n\n"
+        f"- **450〜600 km（抵抗が強く、B*を精度よく決定できる）**：破片の負のB*は{s_deb_lo}、一般ペイロードは{s_oth_lo}で、ほぼ存在しない。Starlinkは **{s_sl_lo}**、Kuiperは **{s_kp_lo}**。これが最もクリーンな対照である。\n"
+        f"- **800〜1,300 km（抵抗が弱い）**：破片にも{s_deb_hi}の負のB*がある——高層の大気は希薄で、B*そのものが精度よく決まらず、符号が雑音で反転しうる。OneWebは **{s_ow_hi}** で依然として大きく上回り、B*の変動幅は破片の約 **{s_jump_ratio}倍** に達する。",
+        f"Scope: near-circular objects below 1,300 km with TLEs since Aug 2026 — **{n_pop}** objects.\n\n"
+        f"- **450–600 km (strong drag, B* well determined)**: negative B* is essentially absent for debris ({s_deb_lo}) and other payloads ({s_oth_lo}); Starlink shows **{s_sl_lo}** and Kuiper **{s_kp_lo}**. This is the cleanest comparison.\n"
+        f"- **800–1,300 km (weak drag)**: even debris shows {s_deb_hi} negative B* — the thin upper atmosphere makes B* poorly determined, so noise can flip its sign. OneWeb still stands far above at **{s_ow_hi}**, and its B* jump size is about **{s_jump_ratio}×** that of debris.",
+    ))
+
+    st.markdown(T3("**範例時序**：同高度的推進衛星與碎片，B* 長什麼樣子",
+                   "**時系列の例**：同じ高度の推進衛星と破片で、B*はどう見えるか",
+                   "**Example series**: B* for a thrusting satellite vs. debris at the same altitude"))
+    ex["epoch"] = pd.to_datetime(ex["epoch"], utc=True)
+    pairs = [(1150, 1250, "OneWeb"), (470, 500, "Starlink")]
+    fig2 = make_subplots(rows=1, cols=2, subplot_titles=(
+        T3("約 1,200 km：OneWeb vs 碎片", "約1,200 km：OneWeb vs 破片", "~1,200 km: OneWeb vs debris"),
+        T3("約 480 km：Starlink vs 火箭殘骸", "約480 km：Starlink vs ロケット残骸", "~480 km: Starlink vs rocket body")))
+    for col, (lo, hi, grp) in enumerate(pairs, 1):
+        for g in (grp, "debris"):
+            e = ex[(ex.group == g) & ex.alt_km.between(lo, hi)]
+            if e.empty:
+                continue
+            label = f"{str(e.object_name.iloc[0]).replace('0 ', '', 1)}（{e.alt_km.iloc[0]:.0f} km）"
+            fig2.add_scatter(x=e.epoch, y=e.bstar, mode="lines+markers", name=label,
+                             line=dict(color=_CASE30_GROUP_COLORS[g], width=1.5), marker=dict(size=4),
+                             row=1, col=col)
+        fig2.add_hline(y=0, line_color="#9a9a96", line_width=1, row=1, col=col)
+    fig2.update_layout(height=380, legend=dict(orientation="h", y=-0.2), margin=dict(t=50, b=10))
+    fig2.update_yaxes(title_text="B* (1/R⊕)", row=1, col=1)
+    st.plotly_chart(fig2, use_container_width=True)
+    st.caption(T3(
+        "注意 1,200 km 那顆碎片也會跨過零線：高空 B* 本來就不穩，所以高軌的負 B* 不能單獨當推力證據，要和同高度碎片比較。",
+        "1,200 kmの破片もゼロ線をまたいでいる点に注意：高高度のB*はもともと不安定なので、高軌道の負のB*だけを推力の証拠とすることはできず、同じ高度の破片と比較する必要がある。",
+        "Note that the ~1,200 km debris also crosses zero: B* is inherently unstable at high altitude, so negative B* up there cannot stand alone as evidence of thrust — it has to be compared with debris at the same altitude.",
+    ))
+
+    # ── ③ MEME 真值 ──────────────────────────────────────────────────────────
+    st.header(T3("③ 用真值確認：負 B* 真的對應推力嗎？", "③ 真値で確認：負のB*は本当に推力に対応するのか？",
+                 "③ Checking against truth: does negative B* really mean thrust?"))
+    st.markdown(T3(
+        "相關性不等於因果。所以我們用 Starlink 的 MEME 精密星曆當真值：對每一筆 TLE，計算它 epoch 之前 12 小時、MEME 一圈平均高度的實際變化率（km/天），看 B* 是否跟著推力方向走。",
+        "相関は因果ではない。そこでStarlinkのMEME精密暦を真値として用いる：各TLEについて、そのepoch前12時間のMEME一周平均高度の実際の変化率（km/日）を計算し、B*が推力の向きに沿って動くかを確かめる。",
+        "Correlation isn't causation, so we use Starlink's MEME precise ephemeris as truth: for each TLE, compute the actual rate of change of MEME's orbit-averaged altitude (km/day) over the 12 hours before its epoch, and see whether B* follows the direction of thrust.",
+    ))
+    bins = [-np.inf, -1, -0.2, 0.05, 0.5, np.inf]
+    cls_labels = [T3("降軌（< −1）", "降下（< −1）", "Lowering (< −1)"),
+                  T3("緩降（−1 ~ −0.2）", "緩降下（−1〜−0.2）", "Slow descent (−1 to −0.2)"),
+                  T3("持平（−0.2 ~ 0.05）", "横ばい（−0.2〜0.05）", "Flat (−0.2 to 0.05)"),
+                  T3("緩升（0.05 ~ 0.5）", "緩上昇（0.05〜0.5）", "Slow rise (0.05 to 0.5)"),
+                  T3("升軌（> 0.5）", "上昇（> 0.5）", "Raising (> 0.5)")]
+    truth["cls"] = pd.cut(truth.meme_rate_km_d, bins, labels=cls_labels)
+    col_cls = T3("MEME 高度變化率（km/天）", "MEME高度変化率（km/日）", "MEME altitude rate (km/day)")
+    col_n = T3("TLE 筆數", "TLE件数", "TLEs")
+    col_neg = T3("負 B* 比例", "負のB*の割合", "Negative B* share")
+    col_med = T3("B* 中位數", "B*の中央値", "Median B*")
+    tb = (truth.groupby("cls", observed=True)
+               .agg(**{col_n: ("bstar", "size"), col_neg: ("bstar", lambda s: (s < 0).mean()),
+                       col_med: ("bstar", "median")})
+               .reset_index().rename(columns={"cls": col_cls}))
+    st.dataframe(tb.style.format({col_neg: "{:.1%}", col_med: "{:.5f}"}), hide_index=True, use_container_width=True)
+
+    auc_down = _auc(truth.bstar, truth.meme_rate_km_d < -1)
+    auc_up = _auc(-truth.bstar, truth.meme_rate_km_d > 0.5)
+    flat = truth[truth.meme_rate_km_d.between(-0.2, 0.05)]
+    up = truth[truth.meme_rate_km_d > 0.5]
+    down = truth[truth.meme_rate_km_d < -1]
+    s_up_neg, s_flat_neg = f"{(up.bstar < 0).mean():.0%}", f"{(flat.bstar < 0).mean():.0%}"
+    s_down_ratio = f"{down.bstar.median() / flat.bstar.median():.1f}"
+    s_auc_down, s_auc_up = f"{auc_down:.3f}", f"{auc_up:.3f}"
+    n_truth, n_truth_sat = f"{len(truth):,}", f"{truth.norad.nunique()}"
+    st.markdown(T3(
+        f"樣本：{n_truth_sat} 顆 Starlink、{n_truth} 筆 TLE（每份 MEME 只用前 24 小時，因為升軌期間 MEME 的預報超過 24 小時就會失準）。\n\n"
+        f"- **升軌時**，負 B* 比例從持平時的 {s_flat_neg} 升到 **{s_up_neg}**。\n"
+        f"- **降軌時**，B* 中位數是持平時的 **{s_down_ratio} 倍**——反向推力被當成「特別強的阻力」。\n"
+        f"- 只看單筆 TLE 的 B*，判斷「是否正在降軌」的 AUC 是 **{s_auc_down}**，判斷「是否正在升軌」是 **{s_auc_up}**（0.5 = 瞎猜，1 = 完美）。",
+        f"サンプル：Starlink {n_truth_sat}機、TLE {n_truth}件（各MEMEは先頭24時間のみ使用。上昇期間中はMEMEの予報が24時間を超えると外れるため）。\n\n"
+        f"- **上昇時**、負のB*の割合は横ばい時の{s_flat_neg}から **{s_up_neg}** に上がる。\n"
+        f"- **降下時**、B*の中央値は横ばい時の **{s_down_ratio}倍**——逆向きの推力が「異常に強い抵抗」として扱われる。\n"
+        f"- 1件のTLEのB*だけで「降下中か」を判定するAUCは **{s_auc_down}**、「上昇中か」は **{s_auc_up}**（0.5 = 当て推量、1 = 完全）。",
+        f"Sample: {n_truth_sat} Starlink satellites, {n_truth} TLEs (only the first 24 h of each MEME file is used, because MEME forecasts drift beyond ~24 h during orbit raising).\n\n"
+        f"- **While raising**, the share of negative B* jumps from {s_flat_neg} (flat) to **{s_up_neg}**.\n"
+        f"- **While lowering**, median B* is **{s_down_ratio}×** the flat-period value — reverse thrust is read as \"unusually strong drag\".\n"
+        f"- Using a single TLE's B* alone, the AUC for \"is it lowering?\" is **{s_auc_down}** and for \"is it raising?\" **{s_auc_up}** (0.5 = guessing, 1 = perfect).",
+    ))
+    st.caption(T3(
+        f"持平時仍有 {s_flat_neg} 的負 B*：Starlink 平時持續做補償阻力的站位保持，推力剛好抵銷阻力時高度看起來不變，但推力其實存在，B* 會在零附近擺動。",
+        f"横ばい時にも{s_flat_neg}の負のB*がある：Starlinkは普段から抵抗を補う軌道維持を続けており、推力が抵抗をちょうど打ち消すと高度は変わらないように見えるが、推力は実際に存在し、B*はゼロ付近で揺れる。",
+        f"Even flat periods show {s_flat_neg} negative B*: Starlink continuously runs drag-makeup station-keeping, so when thrust just cancels drag the altitude looks flat, but the thrust is still there and B* hovers around zero.",
+    ))
+
+    # ── ④ 對本專案的意義 ─────────────────────────────────────────────────────
+    st.header(T3("④ 對本專案的意義：兩個推測被數據推翻", "④ 本プロジェクトにとっての意味：データに覆された2つの推測",
+                 "④ What it means for this project: two guesses the data overturned"))
+    st.markdown(T3(
+        "發現 B* 吸收推力之後，我們最初的推測是：「B* 和 ndot 的跳動，讓 L1 規則層對 Starlink 有效、對碎片會誤報」。實際檢查程式碼和數據之後，這個推測**兩半都不成立**。",
+        "B*が推力を吸収することに気づいた後、当初の推測は「B*とndotの変動が、L1規則層をStarlinkに有効にし、破片には誤報をもたらす」というものだった。プログラムとデータを実際に確認すると、この推測は**どちらの半分も成り立たなかった**。",
+        "After finding that B* absorbs thrust, our first guess was: \"B* and ndot jumps make the L1 rule layer work on Starlink but false-alarm on debris.\" Checking the actual code and data, **neither half of that guess holds**.",
+    ))
+
+    st.subheader(T3("推測一：L1 靠 B* 偵測機動？——不是", "推測一：L1はB*で機動を検出している？——違う",
+                    "Guess 1: does L1 detect maneuvers via B*? — No"))
+    tot = len(trans)
+    man = trans.dalt_meme_km.abs() > 0.3
+    down_m = trans.dalt_meme_km < -0.3
+    quiet = trans.dalt_meme_km.abs() < 0.1
+    sup = trans.p1_sup | trans.p3_sup
+    cancelled = trans.detect_raw & sup
+    n_cancel, n_cancel_real = int(cancelled.sum()), int((cancelled & man).sum())
+    n_cancel_down, n_cancel_quiet = int((cancelled & down_m).sum()), int((cancelled & quiet).sum())
+    rec_raw = (trans.detect_raw & man).sum() / man.sum()
+    rec_final = (trans.l1_flag & man).sum() / man.sum()
+    p3_n = int(trans.p3_sup.sum())
+    p3_real = (trans.p3_sup & man).sum() / max(p3_n, 1)
+    s_tot, s_man = f"{tot:,}", f"{int(man.sum())}"
+    s_rec_raw, s_rec_final = f"{rec_raw:.3f}", f"{rec_final:.3f}"
+    s_p3_real, s_base = f"{p3_real:.0%}", f"{man.mean():.1%}"
+    st.markdown(T3(
+        "L1 規則層**完全沒用 ndot**；B* 也**不是用來偵測**，而是用在兩條**抑制**規則上——P1「B* 為正、而且連續小幅下降 → 判定為阻力衰減」，P3「B* 偏高、而且小幅下降 → 判定為阻力造成」。兩條規則都假設「B* = 大氣阻力」。\n\n"
+        f"這個假設在推進星系上確實會失效：P3 觸發的 {p3_n} 次裡，有 **{s_p3_real}** 是 MEME 顯示的真實機動（整體只有 {s_base}）。但實際傷害很小——在 {s_tot} 次轉換中，抑制規則只取消了 **{n_cancel}** 次偵測，其中 {n_cancel_real} 次是真實機動（{n_cancel_down} 次降軌）、{n_cancel_quiet} 次是正確擋掉的誤報；對 {s_man} 次真實機動的召回率只從 {s_rec_raw} 降到 {s_rec_final}。原因是 2026-09-21 加的護欄：**超過 P2 高度門檻的步階不能被抑制**。",
+        "L1規則層は**ndotを一切使っていない**。B*も**検出には使われず**、2つの**抑制**規則に使われている——P1「B*が正で、小さな減少が続く → 抵抗による減衰と判定」、P3「B*が高く、小さく減少 → 抵抗によるものと判定」。どちらも「B* = 大気抵抗」を前提としている。\n\n"
+        f"この前提は推進コンステレーションでは確かに崩れる：P3が発動した{p3_n}回のうち **{s_p3_real}** はMEMEが示す実際の機動だった（全体では{s_base}にすぎない）。しかし実害は小さい——{s_tot}回の遷移のうち、抑制規則が取り消した検出は **{n_cancel}** 回だけで、うち{n_cancel_real}回が実際の機動（降下{n_cancel_down}回）、{n_cancel_quiet}回は正しく取り除かれた誤報だった。{s_man}回の実際の機動に対する再現率は{s_rec_raw}から{s_rec_final}に下がっただけである。理由は2026-09-21に追加したガードレール：**P2高度閾値を超えるステップは抑制できない**。",
+        "The L1 rule layer **does not use ndot at all**, and B* is **not used for detection** — only in two **suppression** rules: P1 \"positive B* plus a run of small decreases → drag decay\" and P3 \"high B* plus a small decrease → caused by drag\". Both assume \"B* = atmospheric drag\".\n\n"
+        f"That assumption does break on thrusting constellations: of P3's {p3_n} firings, **{s_p3_real}** were real maneuvers per MEME (versus {s_base} overall). But the actual damage is small — across {s_tot} transitions the suppression rules cancelled only **{n_cancel}** detections: {n_cancel_real} real maneuvers ({n_cancel_down} lowerings) and {n_cancel_quiet} correctly removed false alarms; recall on {s_man} real maneuvers dropped only from {s_rec_raw} to {s_rec_final}. The reason is the guardrail added on 2026-09-21: **a step larger than the P2 altitude threshold cannot be suppressed**.",
+    ))
+
+    st.subheader(T3("推測二：碎片誤報來自 B* 跳動？——不是", "推測二：破片の誤報はB*の変動から？——違う",
+                    "Guess 2: do debris false alarms come from B* jumps? — No"))
+    cg = ctrl.groupby("group").agg(tr=("n_tr", "sum"), flag=("n_flag", "sum"), p2=("n_p2", "sum"),
+                                   p1=("n_p1_sup", "sum"), objs=("norad", "size"))
+    col_g = T3("族群（450–600 km，各抽 300 個）", "グループ（450〜600 km、各300個抽出）", "Group (450–600 km, 300 sampled each)")
+    col_flag = T3("L1 旗標率（每次轉換）", "L1フラグ率（遷移ごと）", "L1 flag rate (per transition)")
+    col_p2 = T3("其中來自 P2（Δa 超過門檻）", "うちP2由来（Δaが閾値超過）", "of which from P2 (Δa over threshold)")
+    col_p1 = T3("P1 抑制作用比例", "P1抑制の作用割合", "P1 suppression share")
+    ct = pd.DataFrame({
+        col_g: [group_label[g] for g in cg.index],
+        col_flag: cg.flag / cg.tr, col_p2: cg.p2 / cg.tr, col_p1: cg.p1 / cg.tr,
+    })
+    st.dataframe(ct.style.format({col_flag: "{:.2%}", col_p2: "{:.2%}", col_p1: "{:.1%}"}),
+                 hide_index=True, use_container_width=True)
+    s_deb_flag = f"{cg.loc['debris', 'flag'] / cg.loc['debris', 'tr']:.2%}"
+    s_oth_flag = f"{cg.loc['other_payload', 'flag'] / cg.loc['other_payload', 'tr']:.2%}"
+    s_deb_p1 = f"{cg.loc['debris', 'p1'] / cg.loc['debris', 'tr']:.0%}"
+    st.markdown(T3(
+        f"碎片確實會被 L1 誤報（{s_deb_flag}，約為一般酬載 {s_oth_flag} 的數倍；碎片不會機動，所以全是誤報），但來源是 **Δa 的雜訊**（P2）——碎片形狀不規則、追蹤精度較差，TLE 本身就比較粗。B* 在碎片上反而發揮**保護作用**：P1 抑制規則作用在 {s_deb_p1} 的碎片轉換上。",
+        f"破片は確かにL1で誤報される（{s_deb_flag}、一般ペイロードの{s_oth_flag}の数倍。破片は機動しないので、すべて誤報）。しかしその原因は **Δaの雑音**（P2）である——破片は形状が不規則で追跡精度も低く、TLEそのものが粗い。B*は破片ではむしろ**保護的に働いている**：P1抑制規則は破片の遷移の{s_deb_p1}に作用している。",
+        f"Debris does get false-alarmed by L1 ({s_deb_flag}, several times the {s_oth_flag} of other payloads; debris doesn't maneuver, so all of these are false), but the source is **Δa noise** (P2) — irregular shapes and poorer tracking make debris TLEs coarser to begin with. On debris, B* actually plays a **protective** role: the P1 suppression rule acts on {s_deb_p1} of debris transitions.",
+    ))
+
+    st.subheader(T3("真正的意義：一個還沒被使用的訊號", "本当の意味：まだ使われていない信号",
+                    "The real takeaway: a signal not yet used"))
+    st.markdown(T3(
+        f"- L1 對 MEME 顯示的真實機動（單次轉換 > 300 m）召回率只有 **{s_rec_final}**；而 B* 單筆判斷降軌的 AUC 就有 **{s_auc_down}**。\n"
+        "- 本專案的 ML 模型（Plan B，以及 L3 候選確認模型）特徵中**都沒有 B* 和 ndot**——B* 唯一的用途是「抑制」。\n"
+        "- 因此 B* 是一個**有潛力、但尚未驗證**的偵測特徵：若把「B* 相對該星自身基準的偏離」納入 L3 特徵重訓，可能提升對推進星系的召回率，尤其是降軌。這需要另外做訓練與樣本外驗證，本頁**沒有**做這件事。\n"
+        "- 反過來，這也是一個警訊：對推進星系，**不能把 B* 當成大氣密度或阻力的量測**，凡是用 TLE B* 反推熱層密度的研究，都要先排除推進中的衛星。",
+        f"- MEMEが示す実際の機動（1遷移あたり > 300 m）に対するL1の再現率は **{s_rec_final}** にすぎない。一方、B*単独で降下を判定するAUCは **{s_auc_down}** に達する。\n"
+        "- 本プロジェクトのMLモデル（Plan B、およびL3候補確認モデル）の特徴量には**いずれもB*もndotも含まれていない**——B*の唯一の用途は「抑制」である。\n"
+        "- したがってB*は**有望だが未検証**の検出特徴量である：「その衛星自身の基準からのB*の偏差」をL3特徴量に加えて再学習すれば、推進コンステレーション、特に降下に対する再現率が上がる可能性がある。これには別途の学習と標本外検証が必要で、本ページでは**行っていない**。\n"
+        "- 逆にこれは警告でもある：推進コンステレーションでは、**B*を大気密度や抵抗の測定値として扱ってはならない**。TLEのB*から熱圏密度を逆算する研究はすべて、まず推進中の衛星を除外する必要がある。",
+        f"- L1's recall on real MEME maneuvers (> 300 m per transition) is only **{s_rec_final}**, while B* alone reaches an AUC of **{s_auc_down}** for detecting lowering.\n"
+        "- This project's ML models (Plan B, and the L3 candidate-confirmation models) have **neither B* nor ndot** among their features — B*'s only role is suppression.\n"
+        "- So B* is a **promising but unvalidated** detection feature: adding \"B* deviation from the satellite's own baseline\" to the L3 features and retraining could raise recall on thrusting constellations, especially for lowering. That requires separate training and out-of-sample validation, which this page has **not** done.\n"
+        "- Conversely, it's a warning: for thrusting constellations, **B* must not be treated as a measurement of atmospheric density or drag** — any study inverting thermospheric density from TLE B* must first exclude thrusting satellites.",
+    ))
+
+    # ── ⑤ 誠實揭露 ───────────────────────────────────────────────────────────
+    st.header(T3("⑤ 誠實揭露", "⑤ 誠実な開示", "⑤ Honest disclosure"))
+    st.markdown(T3(
+        "- **真值只有 Starlink**：OneWeb 和 Kuiper 沒有公開精密星曆，它們的負 B* 只能從「遠高於同高度碎片」間接推論，沒有直接驗證。\n"
+        "- **高軌 B* 本來就不穩**：800 km 以上，碎片也有可觀的負 B*。高軌的推力證據要靠「和同高度碎片比較」，不能只看有沒有負值。\n"
+        "- **美方的定軌程序未公開**：B* 如何被擬合、是否有約束，我們無從得知；本頁描述的是從結果反推的機制。\n"
+        "- **抽樣**：MEME 每顆衛星均勻抽 20 份、每份只用前 24 小時；L1 對照組每族群隨機抽 300 個物件（固定亂數種子）。",
+        "- **真値はStarlinkのみ**：OneWebとKuiperには公開の精密暦がなく、それらの負のB*は「同高度の破片より大幅に多い」ことから間接的に推論しているだけで、直接検証していない。\n"
+        "- **高軌道のB*はもともと不安定**：800 km以上では破片にもかなりの負のB*がある。高軌道での推力の証拠は「同高度の破片との比較」に頼る必要があり、負の値の有無だけでは判断できない。\n"
+        "- **米国の軌道決定手順は非公開**：B*がどのようにフィットされ、制約があるかどうかは分からない。本ページが述べているのは結果から逆算したメカニズムである。\n"
+        "- **抽出**：MEMEは衛星ごとに均等に20ファイルを抽出し、各ファイルの先頭24時間のみ使用。L1の対照群は各グループから300物体を無作為抽出（乱数シード固定）。",
+        "- **Truth exists only for Starlink**: OneWeb and Kuiper have no public precise ephemerides, so their negative B* is inferred only indirectly (far above same-altitude debris), not validated directly.\n"
+        "- **High-altitude B* is inherently unstable**: above 800 km even debris shows notable negative B*. Evidence of thrust up there must rest on comparison with same-altitude debris, not on the mere presence of negative values.\n"
+        "- **US orbit-determination procedures are not public**: how B* is fitted, and whether it is constrained, is unknown to us; this page describes a mechanism inferred from the results.\n"
+        "- **Sampling**: 20 MEME files per satellite, evenly spaced, using only the first 24 h of each; the L1 control groups are 300 objects sampled at random per group (fixed random seed).",
+    ))
+    st.markdown(T3(
+        "**判讀**：負 B* 是 TLE 在說「這段時間有我解釋不了的推力」。它對本專案現有規則的干擾，已被護欄壓到很小；更值得做的，是把它從「干擾」轉成「訊號」——但那要另外驗證，本頁只指出方向。",
+        "**判読**：負のB*は、TLEが「この期間に説明できない推力があった」と言っているのである。本プロジェクトの既存規則への干渉はガードレールによってごく小さく抑えられている。より価値があるのは、それを「干渉」から「信号」に変えることだ——ただしそれには別途検証が必要で、本ページは方向性を示すにとどまる。",
+        "**Takeaway**: a negative B* is the TLE saying \"there was thrust here I can't explain\". Its interference with this project's existing rules has already been kept small by the guardrail; the more valuable step is to turn it from interference into a signal — but that needs its own validation, and this page only points the way.",
+    ))
+    st.caption(T3(
+        f"資料與程式：`bstar_thrust_analysis.py` → `data/benchmark/bstar_thrust_{{population,tle_truth,transitions,l1_control,examples}}_{_CASE30_TAG}.csv`；L1 規則：`maneuver_strategies_july.apply_strategies`。",
+        f"データとプログラム：`bstar_thrust_analysis.py` → `data/benchmark/bstar_thrust_{{population,tle_truth,transitions,l1_control,examples}}_{_CASE30_TAG}.csv`。L1規則：`maneuver_strategies_july.apply_strategies`。",
+        f"Data and code: `bstar_thrust_analysis.py` → `data/benchmark/bstar_thrust_{{population,tle_truth,transitions,l1_control,examples}}_{_CASE30_TAG}.csv`; L1 rules: `maneuver_strategies_july.apply_strategies`.",
+    ))
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -13330,7 +13648,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
-        "case21", "case22", "case23", "case24", "case25", "case26", "case27", "case28", "case29"):
+        "case21", "case22", "case23", "case24", "case25", "case26", "case27", "case28", "case29", "case30"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -13411,6 +13729,8 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case28()
     elif _case == "case29":
         render_storymap_case29()
+    elif _case == "case30":
+        render_storymap_case30()
     else:
         render_storymap_landing()
     st.stop()
