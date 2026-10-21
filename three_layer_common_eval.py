@@ -234,6 +234,64 @@ def eval_binary(pred, y, sev):
     return eval_scores(pred.astype(float), y, sev, 0.5)
 
 
+BLIND_AUC_OK = 0.85      # 凍結盲測判為「維持」之 AUC 下限
+BLIND_FPR_OK = 0.10      # 測試端實測 FPR 上限（訓練端門檻設在 0.05；超過 2 倍視為門檻失準）
+
+
+def frozen_blind(U, seed=2026):
+    """凍結盲測：(a) 前 60% 時間訓練、後 40% 盲測；(b) 隨機保留 20% 衛星整組盲測。
+    門檻只由訓練折負樣本設定（FPR≤0.05），原 L3 與 L3 v2 各跑一次。"""
+    y = U["label"].to_numpy(); sev = U["sev"].to_numpy(); groups = U["norad_id"].to_numpy()
+    t_ns = U["t_ns"].to_numpy(float)
+    models = [("L3", [f"f_{c}_{st}" for c in CH for st in ("max", "mean", "p90")],
+               lambda: HistGradientBoostingClassifier(**HGB))]
+    try:
+        from lightgbm import LGBMClassifier
+        models.append(("L3 v2", L3V2_FEATS, lambda: LGBMClassifier(**L3V2_LGB)))
+    except ImportError:
+        pass
+    D = np.quantile(t_ns, 0.60)
+    rng = np.random.default_rng(seed)
+    sat_ids = np.array(sorted(set(groups.tolist())))
+    hold = set(rng.choice(sat_ids, size=max(1, len(sat_ids) // 5), replace=False).tolist())
+    tem2 = np.array([g in hold for g in groups])
+    splits = [(t_ns < D, t_ns >= D, "out-of-time（前60%訓/後40%盲測）"),
+              (~tem2, tem2, f"unseen-satellite（保留 {len(hold)} 顆從未訓練）")]
+    rows = []
+    for name, feats, make in models:
+        X = U[feats].to_numpy(float)
+        for trm, tem, tag in splits:
+            if trm.sum() < 50 or tem.sum() < 20 or len(set(y[tem].tolist())) < 2:
+                continue
+            Xtr, ytr, gtr = X[trm], y[trm], groups[trm]
+            # 門檻取自訓練集內部 GroupKFold OOF 分數，而非訓練樣本的自我預測：
+            # 後者對 LightGBM 等易過擬模型過度自信，門檻偏低，測試端 FPR 會遠超 0.05
+            p_tr = np.zeros(len(ytr))
+            for a, b in GroupKFold(5).split(Xtr, ytr, gtr):
+                p_tr[b] = make().fit(Xtr[a], ytr[a]).predict_proba(Xtr[b])[:, 1]
+            thr = fpr_floor_threshold(p_tr[ytr == 0], 0.05)   # 門檻只由訓練期負樣本設定
+            p_te = make().fit(Xtr, ytr).predict_proba(X[tem])[:, 1]
+            m = eval_scores(p_te, y[tem], sev[tem], thr)
+            rows.append(dict(model=name, setting=tag, auc=roc_auc_score(y[tem], p_te),
+                             rec_large=m["rec_large"], recall=m["recall"],
+                             fpr=m["fpr"], n_test=int(tem.sum())))
+    return rows
+
+
+def blind_verdict(rows):
+    """依實測數字產生判讀（不預設結論）：AUC ≥ BLIND_AUC_OK 且測試 FPR ≤ BLIND_FPR_OK 才算「維持」。"""
+    out = []
+    for r in rows:
+        bad = []
+        if r["auc"] < BLIND_AUC_OK:
+            bad.append(f"AUC {r['auc']:.3f} < {BLIND_AUC_OK}")
+        if r["fpr"] > BLIND_FPR_OK:
+            bad.append(f"測試 FPR {r['fpr']:.3f} > {BLIND_FPR_OK}（訓練端門檻在新資料上失準）")
+        kind = "時間外推" if r["setting"].startswith("out-of-time") else "跨衛星外推"
+        out.append(f"{r['model']}｜{kind}：" + ("維持" if not bad else "未維持——" + "；".join(bad)))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=config.SPACE_DB)
@@ -436,41 +494,18 @@ def main():
           "而非特定演算法——完成表 13-2 (2)→(3) 之單變因歸因。")
 
     # ── #4 凍結盲測（回應委員：真正 hold-out；門檻以訓練集設定＝可部署套未來）──
-    t_ns_arr = U["t_ns"].to_numpy(float)
-    blind_rows = []
-
-    def _blind(trm, tem, tag):
-        if trm.sum() < 50 or tem.sum() < 20 or len(set(y[tem].tolist())) < 2:
-            return
-        clf = HistGradientBoostingClassifier(**HGB).fit(X[trm], y[trm])
-        p_tr = clf.predict_proba(X[trm])[:, 1]
-        p_te = clf.predict_proba(X[tem])[:, 1]
-        thr = fpr_floor_threshold(p_tr[y[trm] == 0], 0.05)   # 門檻由歷史(訓練負樣本)設定
-        m = eval_scores(p_te, y[tem], sev[tem], thr)
-        blind_rows.append(dict(setting=tag, auc=roc_auc_score(y[tem], p_te),
-                               rec_large=m["rec_large"], recall=m["recall"],
-                               fpr=m["fpr"], n_test=int(tem.sum())))
-
-    # (a) out-of-time：前 60% 時間訓練、後 40% 從未見過之時間段盲測
-    D = np.quantile(t_ns_arr, 0.60)
-    _blind(t_ns_arr < D, t_ns_arr >= D, "out-of-time（前60%訓/後40%盲測）")
-    # (b) unseen-satellite：隨機保留 20% 衛星整組、從未參與訓練
-    rng = np.random.default_rng(2026)
-    sat_ids = np.array(sorted(set(groups.tolist())))
-    hold = set(rng.choice(sat_ids, size=max(1, len(sat_ids) // 5), replace=False).tolist())
-    tem2 = np.array([g in hold for g in groups])
-    _blind(~tem2, tem2, f"unseen-satellite（保留 {len(hold)} 顆從未訓練）")
-
+    blind_rows = frozen_blind(U)
     print("\n" + "=" * 92)
     print("#4 凍結盲測（真正 hold-out：不共時段／不共衛星；門檻以訓練集設定＝可部署）")
     print("=" * 92)
-    print(f"  {'設定':<40}{'AUC':>7}{'large召回':>10}{'FPR':>8}{'測試unit':>9}")
+    print(f"  {'模型':<8}{'設定':<40}{'AUC':>7}{'large召回':>10}{'FPR':>8}{'測試unit':>9}")
     for r in blind_rows:
-        print(f"  {r['setting']:<40}{r['auc']:>7.3f}{r['rec_large']:>10.3f}{r['fpr']:>8.3f}{r['n_test']:>9}")
+        print(f"  {r['model']:<8}{r['setting']:<40}{r['auc']:>7.3f}{r['rec_large']:>10.3f}{r['fpr']:>8.3f}{r['n_test']:>9}")
     if blind_rows:
         pd.DataFrame(blind_rows).to_csv(Path("data/benchmark") / f"frozen_blind_{date}.csv",
                                         index=False, encoding="utf-8-sig")
-    print("  判讀：凍結盲測仍維持高 large 召回／AUC ⇒ L3 非記憶訓練樣本，具時間與跨衛星外推力。")
+    for line in blind_verdict(blind_rows):
+        print("  判讀：" + line)
     outp = Path("data/benchmark") / f"three_layer_common_eval_{date}.csv"
     outp.parent.mkdir(parents=True, exist_ok=True)
     rec = []
