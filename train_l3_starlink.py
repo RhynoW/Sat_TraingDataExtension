@@ -8,6 +8,8 @@ train_l3_starlink.py
 標籤：候選落在任一 MEME medium+ 轉移 ±1.5 天內 → 1（與非 Starlink 版的配對容差 TOL_D=1.5 天一致）。
 評估：衛星分組 GroupKFold(5) → OOF 機率；決策門檻 θ 於 OOF 上以平均 F1 選定（事件級 P/R/F1，
 同 tasa14_l2_compare.metrics）。Starlink 更新頻率相近，僅一個 θ。
+特徵：10 個 σ 正規化特徵＋3 個 B* 偏離特徵（l3_candidate.BSTAR_FEATS，2026-10-21 起；
+依據 exp_l3_bstar_feature.py：OOF AUC 0.692→0.724、精確率 0.694→0.723，F1 僅 +0.004）。
 
 輸出：models_fusion/l3_starlink.pkl、data/benchmark/starlink_candidate_features_<date>.csv、
       data/benchmark/l3_starlink_oof_<date>.csv
@@ -43,6 +45,7 @@ OUT_MODEL = "models_fusion/l3_starlink.pkl"
 TOL = pd.Timedelta(days=1.5)
 THETA_GRID = np.arange(0.10, 0.91, 0.05)
 HGB = dict(max_iter=250, learning_rate=0.08, random_state=42)
+FEATS = C.FEATS + C.BSTAR_FEATS
 
 
 def build(rebuild=False):
@@ -88,6 +91,18 @@ def build(rebuild=False):
     return out
 
 
+def attach_bstar(d):
+    """逐顆衛星自全庫讀 B* 序列，以 l3_candidate.add_bstar_features 加上 B* 偏離特徵。"""
+    con = duckdb.connect(config.SPACE_DB, read_only=True)
+    out = []
+    for nid, g in d.groupby("norad"):
+        tle = con.execute("SELECT epoch_utc AS epoch, bstar FROM raw_tle_archive WHERE norad_id=? "
+                          "ORDER BY epoch_utc", [int(nid)]).fetchdf()
+        out.append(C.add_bstar_features(g.drop(columns=C.BSTAR_FEATS, errors="ignore"), tle))
+    con.close()
+    return pd.concat(out).loc[d.index]
+
+
 def sat_events(df):
     """每顆衛星的真值事件表（ws=we=MEME 轉移時刻；同 1 天內合併）。"""
     tp = sorted(glob.glob("data/meme_truth/transitions_full_*.csv"))[-1]
@@ -115,30 +130,40 @@ def main():
     rng["lo"] = pd.to_datetime(rng["lo"], utc=True, format="mixed")
     rng["hi"] = pd.to_datetime(rng["hi"], utc=True, format="mixed")
     sats = [n for n in df.norad.unique() if len(events[int(n)]) > 0]
-    d = df[df.norad.isin(sats)].reset_index(drop=True)
-    print(f"{len(sats)} 顆（有真值事件）、{len(d)} 候選、正例率 {d.label.mean():.2f}", flush=True)
+    d = attach_bstar(df[df.norad.isin(sats)].reset_index(drop=True))
+    print(f"{len(sats)} 顆（有真值事件）、{len(d)} 候選、正例率 {d.label.mean():.2f}；"
+          f"B* 特徵缺值率 {d[C.BSTAR_FEATS[0]].isna().mean():.3f}", flush=True)
 
-    oof = np.zeros(len(d))
-    for tr, te in GroupKFold(5).split(d, d.label, d.norad):
-        oof[te] = HistGradientBoostingClassifier(**HGB).fit(d.iloc[tr][C.FEATS], d.iloc[tr]["label"]).predict_proba(d.iloc[te][C.FEATS])[:, 1]
-    d["oof"] = oof
-    best_th, best = 0.5, -1.0
-    for th in THETA_GRID:
-        f = np.mean([star_f1(g, g["oof"].to_numpy(), th, events[int(n)], rng.loc[n, "lo"], rng.loc[n, "hi"])["f1"]
-                     for n, g in d.groupby("norad")])
-        if f > best:
-            best, best_th = float(f), float(th)
-    per = [dict(norad=int(n), **star_f1(g, g["oof"].to_numpy(), best_th, events[int(n)], rng.loc[n, "lo"], rng.loc[n, "hi"]))
-           for n, g in d.groupby("norad")]
-    per = pd.DataFrame(per)
+    def fit_eval(feats, tag):
+        oof = np.zeros(len(d))
+        for tr, te in GroupKFold(5).split(d, d.label, d.norad):
+            oof[te] = HistGradientBoostingClassifier(**HGB).fit(d.iloc[tr][feats], d.iloc[tr]["label"]).predict_proba(d.iloc[te][feats])[:, 1]
+        dd = d.assign(oof=oof)
+        best_th, best = 0.5, -1.0
+        for th in THETA_GRID:
+            f = np.mean([star_f1(g, g["oof"].to_numpy(), th, events[int(n)], rng.loc[n, "lo"], rng.loc[n, "hi"])["f1"]
+                         for n, g in dd.groupby("norad")])
+            if f > best:
+                best, best_th = float(f), float(th)
+        per = pd.DataFrame([dict(norad=int(n), **star_f1(g, g["oof"].to_numpy(), best_th, events[int(n)],
+                                                         rng.loc[n, "lo"], rng.loc[n, "hi"]))
+                            for n, g in dd.groupby("norad")])
+        print(f"OOF {tag}（{len(per)} 顆）θ={best_th:.2f}：平均 F1={per.f1.mean():.3f} P={per.precision.mean():.3f} R={per.recall.mean():.3f}", flush=True)
+        clf = HistGradientBoostingClassifier(**HGB).fit(d[feats], d["label"])
+        return clf, best_th, per
+
+    clf, best_th, per = fit_eval(FEATS, "主模型（含 B*）")
     per.to_csv(f"data/benchmark/l3_starlink_oof_{STAMP}.csv", index=False)
-    print(f"OOF（{len(per)} 顆）θ={best_th:.2f}：平均 F1={per.f1.mean():.3f} P={per.precision.mean():.3f} R={per.recall.mean():.3f}", flush=True)
-    clf = HistGradientBoostingClassifier(**HGB).fit(d[C.FEATS], d["label"])
-    joblib.dump({"clf": clf, "feats": C.FEATS, "theta": {"dense": best_th, "sparse": best_th},
+    # 備援模型：只用原 10 特徵。資料缺 B* 時（如某些部署後端），主模型會把缺值學成「非機動」而全數否決，
+    # 故推論端（l1l2_explainer.compute_l3c）在候選全無 B* 時改用此備援模型。
+    clf_fb, th_fb, per_fb = fit_eval(C.FEATS, "備援模型（無 B*）")
+    loso = lambda p: {"f1": float(p.f1.mean()), "precision": float(p.precision.mean()),
+                      "recall": float(p.recall.mean()), "n": int(len(p))}
+    joblib.dump({"clf": clf, "feats": FEATS, "theta": {"dense": best_th, "sparse": best_th},
                  "cadence_split_d": C.CADENCE_SPLIT_D, "family": "starlink", "n_sats": len(sats),
-                 "n_candidates": int(len(d)),
-                 "loso": {"f1": float(per.f1.mean()), "precision": float(per.precision.mean()),
-                          "recall": float(per.recall.mean()), "n": int(len(per))},
+                 "n_candidates": int(len(d)), "loso": loso(per),
+                 "fallback_no_bstar": {"clf": clf_fb, "feats": C.FEATS,
+                                       "theta": {"dense": th_fb, "sparse": th_fb}, "loso": loso(per_fb)},
                  "trained_on": STAMP}, OUT_MODEL)
     print("saved →", OUT_MODEL)
 

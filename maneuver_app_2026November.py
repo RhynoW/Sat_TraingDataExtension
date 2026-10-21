@@ -12673,7 +12673,7 @@ def _c27_l3(nid: int, days: int, p2_scale: float, family: str):
     P = _c27_prepare(nid, days, p2_scale)
     if P is None:
         return None, None
-    full = load_tle(nid)[["epoch", "sma_km"]]
+    full = load_tle(nid)[["epoch", "sma_km", "bstar"]]          # bstar：Starlink 模型之 B* 偏離特徵用
     return P, X.compute_l3c(full, P, family)
 
 
@@ -12818,7 +12818,7 @@ def render_storymap_case27():
                               "Not enough data in this window to form candidates, or the L3 model file is missing; skipping this section."))
             else:
                 l3s = X.l3c_summary(L3)
-                fam_txt = T3("Starlink 族群模型（MEME 真值訓練）", "Starlink族モデル（MEME真値で学習）", "Starlink-family model (trained on MEME truth)") if fam == "starlink" else \
+                fam_txt = T3("Starlink 族群模型（MEME 真值訓練；2026-10-21 起另加 3 個 B\\* 偏離特徵，共 13 個，見案例三十——圖中②③只畫前 10 個）", "Starlink族モデル（MEME真値で学習。2026-10-21からB\\*偏差特徴量3個を追加して計13個、事例三十を参照——図の②③は最初の10個のみ表示）", "Starlink-family model (trained on MEME truth; since 2026-10-21 it adds 3 B\\* deviation features, 13 in total — see Case 30; panels ② and ③ show only the first 10)") if fam == "starlink" else \
                     T3("非 Starlink 低軌模型（NASA/ILRS 認證機動窗，23 顆衛星訓練）", "非Starlink低軌道モデル（NASA/ILRS認証機動窓、23機で学習）", "non-Starlink LEO model (NASA/ILRS certified maneuver windows, trained on 23 satellites)")
                 st.markdown(T3(
                     "**L3 怎麼運作**：L3 不是另一個偵測器，而是「確認者」。① 先由前段偵測器（iter2、pred 兩種曲線偵測，加上 L2 的 CUSUM／BOCPD／SSA／MAD 3σ）"
@@ -13356,7 +13356,12 @@ def load_case30_data() -> dict:
     paths = {k: DATA / "benchmark" / f"bstar_thrust_{k}_{_CASE30_TAG}.csv" for k in names}
     if not all(p.exists() for p in paths.values()):
         return {}
-    return {k: pd.read_csv(p) for k, p in paths.items()}
+    out = {k: pd.read_csv(p) for k, p in paths.items()}
+    # 2026-10-21 後續實驗（選用；缺檔則頁面改顯示提示）
+    for key, pat in (("exp", "exp_l3_bstar_summary_*.csv"), ("cand_src", "exp_bstar_candidate_source_*.csv")):
+        g = sorted((DATA / "benchmark").glob(pat))
+        out[key] = pd.read_csv(g[-1]) if g else pd.DataFrame()
+    return out
 
 
 def render_storymap_case30():
@@ -13599,21 +13604,68 @@ def render_storymap_case30():
         f"Debris does get false-alarmed by L1 ({s_deb_flag}, several times the {s_oth_flag} of other payloads; debris doesn't maneuver, so all of these are false), but the source is **Δa noise** (P2) — irregular shapes and poorer tracking make debris TLEs coarser to begin with. On debris, B\\* actually plays a **protective** role: the P1 suppression rule acts on {s_deb_p1} of debris transitions.",
     ))
 
-    st.subheader(T3("真正的意義：一個還沒被使用的訊號", "本当の意味：まだ使われていない信号",
-                    "The real takeaway: a signal not yet used"))
+    st.subheader(T3("真正的意義：把「干擾」轉成「訊號」——已驗證", "本当の意味：「干渉」を「信号」に——検証済み",
+                    "The real takeaway: turning interference into signal — now validated"))
     st.markdown(T3(
         f"- L1 對 MEME 顯示的真實機動（單次轉換 > 300 m）召回率只有 **{s_rec_final}**；而 B\\* 單筆判斷降軌的 AUC 就有 **{s_auc_down}**。\n"
-        "- 本專案的 ML 模型（Plan B，以及 L3 候選確認模型）特徵中**都沒有 B\\* 和 ndot**——B\\* 唯一的用途是「抑制」。\n"
-        "- 因此 B\\* 是一個**有潛力、但尚未驗證**的偵測特徵：若把「B\\* 相對該星自身基準的偏離」納入 L3 特徵重訓，可能提升對推進星系的召回率，尤其是降軌。這需要另外做訓練與樣本外驗證，本頁**沒有**做這件事。\n"
+        "- 原本本專案的 ML 模型（Plan B，以及 L3 候選確認模型）特徵中**都沒有 B\\* 和 ndot**——B\\* 唯一的用途是「抑制」。\n"
         "- 反過來，這也是一個警訊：對推進星系，**不能把 B\\* 當成大氣密度或阻力的量測**，凡是用 TLE B\\* 反推熱層密度的研究，都要先排除推進中的衛星。",
         f"- MEMEが示す実際の機動（1遷移あたり > 300 m）に対するL1の再現率は **{s_rec_final}** にすぎない。一方、B\\*単独で降下を判定するAUCは **{s_auc_down}** に達する。\n"
-        "- 本プロジェクトのMLモデル（Plan B、およびL3候補確認モデル）の特徴量には**いずれもB\\*もndotも含まれていない**——B\\*の唯一の用途は「抑制」である。\n"
-        "- したがってB\\*は**有望だが未検証**の検出特徴量である：「その衛星自身の基準からのB\\*の偏差」をL3特徴量に加えて再学習すれば、推進コンステレーション、特に降下に対する再現率が上がる可能性がある。これには別途の学習と標本外検証が必要で、本ページでは**行っていない**。\n"
+        "- もともと本プロジェクトのMLモデル（Plan B、およびL3候補確認モデル）の特徴量には**いずれもB\\*もndotも含まれていなかった**——B\\*の唯一の用途は「抑制」だった。\n"
         "- 逆にこれは警告でもある：推進コンステレーションでは、**B\\*を大気密度や抵抗の測定値として扱ってはならない**。TLEのB\\*から熱圏密度を逆算する研究はすべて、まず推進中の衛星を除外する必要がある。",
         f"- L1's recall on real MEME maneuvers (> 300 m per transition) is only **{s_rec_final}**, while B\\* alone reaches an AUC of **{s_auc_down}** for detecting lowering.\n"
-        "- This project's ML models (Plan B, and the L3 candidate-confirmation models) have **neither B\\* nor ndot** among their features — B\\*'s only role is suppression.\n"
-        "- So B\\* is a **promising but unvalidated** detection feature: adding \"B\\* deviation from the satellite's own baseline\" to the L3 features and retraining could raise recall on thrusting constellations, especially for lowering. That requires separate training and out-of-sample validation, which this page has **not** done.\n"
+        "- This project's ML models (Plan B, and the L3 candidate-confirmation models) originally had **neither B\\* nor ndot** among their features — B\\*'s only role was suppression.\n"
         "- Conversely, it's a warning: for thrusting constellations, **B\\* must not be treated as a measurement of atmospheric density or drag** — any study inverting thermospheric density from TLE B\\* must first exclude thrusting satellites.",
+    ))
+
+    exp, cand_src = d.get("exp", pd.DataFrame()), d.get("cand_src", pd.DataFrame())
+    if exp.empty:
+        st.info(T3("B\\* 特徵實驗之結果檔（`data/benchmark/exp_l3_bstar_summary_*.csv`）找不到；可執行 `python exp_l3_bstar_feature.py` 重新產生。",
+                   "B\\*特徴量実験の結果ファイル（`data/benchmark/exp_l3_bstar_summary_*.csv`）が見つからない。`python exp_l3_bstar_feature.py` で再生成できる。",
+                   "The B\\* feature experiment results (`data/benchmark/exp_l3_bstar_summary_*.csv`) cannot be found; run `python exp_l3_bstar_feature.py` to regenerate them."))
+        return
+    em = exp.groupby("arm")[["auc", "precision", "recall", "f1"]].mean()
+    arm_label = {"base": T3("原 10 個特徵", "元の10特徴量", "Original 10 features"),
+                 "+bstar": T3("加 3 個 B* 特徵（已採用）", "B*特徴量3個を追加（採用済み）", "+3 B* features (adopted)"),
+                 "+bstar+ndot": T3("再加 ndot", "さらにndotを追加", "+ ndot as well")}
+    col_arm = T3("特徵組合", "特徴量の組み合わせ", "Feature set")
+    col_auc = T3("候選判別力（ROC-AUC）", "候補の判別力（ROC-AUC）", "Candidate discrimination (ROC-AUC)")
+    col_p, col_r = T3("精確率", "適合率", "Precision"), T3("召回率", "再現率", "Recall")
+    col_f1 = T3("F1", "F1", "F1")
+    et = pd.DataFrame({col_arm: [arm_label[a] for a in ("base", "+bstar", "+bstar+ndot")],
+                       col_auc: [em.loc[a, "auc"] for a in ("base", "+bstar", "+bstar+ndot")],
+                       col_p: [em.loc[a, "precision"] for a in ("base", "+bstar", "+bstar+ndot")],
+                       col_r: [em.loc[a, "recall"] for a in ("base", "+bstar", "+bstar+ndot")],
+                       col_f1: [em.loc[a, "f1"] for a in ("base", "+bstar", "+bstar+ndot")]})
+    st.dataframe(et.style.format({col_auc: "{:.3f}", col_p: "{:.3f}", col_r: "{:.3f}", col_f1: "{:.3f}"}),
+                 hide_index=True, use_container_width=True)
+    s_a0, s_a1 = f"{em.loc['base', 'auc']:.3f}", f"{em.loc['+bstar', 'auc']:.3f}"
+    s_p0, s_p1 = f"{em.loc['base', 'precision']:.3f}", f"{em.loc['+bstar', 'precision']:.3f}"
+    s_r0, s_r1 = f"{em.loc['base', 'recall']:.3f}", f"{em.loc['+bstar', 'recall']:.3f}"
+    s_f0, s_f1 = f"{em.loc['base', 'f1']:.3f}", f"{em.loc['+bstar', 'f1']:.3f}"
+    n_seed = f"{exp.seed.nunique()}"
+    if not cand_src.empty:
+        c3 = cand_src[cand_src.k_mad == 3].iloc[0]
+        s_cov0, s_cov1 = f"{c3.coverage_dA:.1%}", f"{c3.coverage_union:.1%}"
+        s_xp = f"{c3.extra_precision:.0%}"
+        cand_zh = f"把 B\\* 改當成**新的候選來源**也幫助不大：MEME 機動的涵蓋率只從 {s_cov0} 提高到 {s_cov1}，新增的候選只有 {s_xp} 是真機動。"
+        cand_ja = f"B\\*を**新たな候補の供給源**にしても効果は小さい：MEME機動のカバー率は{s_cov0}から{s_cov1}に上がるだけで、追加候補のうち実際の機動は{s_xp}にすぎない。"
+        cand_en = f"Using B\\* as a **new source of candidates** doesn't help much either: MEME maneuver coverage rises only from {s_cov0} to {s_cov1}, and only {s_xp} of the added candidates are real maneuvers."
+    else:
+        cand_zh = cand_ja = cand_en = ""
+    st.markdown(T3(
+        f"**實驗（2026-10-21）**：在 L3 Starlink 候選確認模型上做 A/B 比較。資料、模型參數、按衛星分組的 5 折交叉驗證和門檻選法完全相同，只差有沒有加入 3 個 B\\* 偏離特徵（以候選時刻之前 30 天的中位數和 MAD 為基準，只用過去的資料，線上也能照做），並用 {n_seed} 種不同分折各跑一次。\n\n"
+        f"- **判別力確實提升**：候選判別力 {s_a0} → **{s_a1}**，精確率 {s_p0} → **{s_p1}**，每種分折的結果都一致。\n"
+        f"- **但突破不了召回率上限**：召回率 {s_r0} → {s_r1}，F1 只從 {s_f0} 到 {s_f1}。確認模型只能否決 Δa 偵測器提出的候選，不能補出新的偵測。{cand_zh}這和 TLE 時間解析度造成的召回天花板一致。\n"
+        "- **已納入正式模型**：2026-10-21 起，L3 Starlink 模型改用 10＋3 個特徵重新訓練（案例二十七的 L3 動畫即使用此模型）。非 Starlink 的模型不加——不推進的衛星，B\\* 代表真實的大氣阻力，意義不同。",
+        f"**実験（2026-10-21）**：L3 Starlink 候補確認モデルでA/B比較を行った。データ、モデルのパラメータ、衛星単位の5分割交差検証、閾値の選び方はすべて同じで、違いは3つのB\\*偏差特徴量（候補時刻より前の30日間の中央値とMADを基準とし、過去のデータのみを使うためオンラインでも同じことができる）を加えたかどうかだけである。分割の仕方を変えて{n_seed}通り実行した。\n\n"
+        f"- **判別力は確かに向上**：候補の判別力 {s_a0} → **{s_a1}**、適合率 {s_p0} → **{s_p1}**。どの分割でも結果は一致した。\n"
+        f"- **しかし再現率の上限は破れない**：再現率 {s_r0} → {s_r1}、F1は{s_f0}から{s_f1}になっただけ。確認モデルはΔa検出器が挙げた候補を却下することしかできず、新たな検出を補うことはできない。{cand_ja}これはTLEの時間分解能による再現率の天井と一致する。\n"
+        "- **正式モデルに採用済み**：2026-10-21から、L3 Starlinkモデルは10＋3個の特徴量で再学習した（事例二十七のL3アニメーションはこのモデルを使用）。Starlink以外のモデルには加えない——推進しない衛星では、B\\*は実際の大気抵抗を表し、意味が異なるからである。",
+        f"**Experiment (2026-10-21)**: an A/B comparison on the L3 Starlink candidate-confirmation model. Data, model parameters, satellite-grouped 5-fold cross-validation and threshold selection are identical; the only difference is whether 3 B\\* deviation features are added (baselined on the median and MAD over the 30 days before each candidate, using past data only, so it works online too), run under {n_seed} different fold splits.\n\n"
+        f"- **Discrimination genuinely improves**: candidate ROC-AUC {s_a0} → **{s_a1}**, precision {s_p0} → **{s_p1}**, consistent across every split.\n"
+        f"- **But it can't break the recall ceiling**: recall {s_r0} → {s_r1}, F1 only {s_f0} → {s_f1}. A confirmation model can only reject candidates proposed by the Δa detectors; it can't add new detections. {cand_en} This is consistent with the recall ceiling set by TLE time resolution.\n"
+        "- **Adopted into the production model**: since 2026-10-21 the L3 Starlink model has been retrained with 10 + 3 features (the L3 animation in Case 27 uses this model). Non-Starlink models do not get them — for non-thrusting satellites, B\\* reflects real atmospheric drag and means something different.",
     ))
 
     # ── ⑤ 誠實揭露 ───────────────────────────────────────────────────────────
@@ -13633,14 +13685,14 @@ def render_storymap_case30():
         "- **Sampling**: 20 MEME files per satellite, evenly spaced, using only the first 24 h of each; the L1 control groups are 300 objects sampled at random per group (fixed random seed).",
     ))
     st.markdown(T3(
-        "**判讀**：負 B\\* 是 TLE 在說「這段時間有我解釋不了的推力」。它對本專案現有規則的干擾，已被護欄壓到很小；更值得做的，是把它從「干擾」轉成「訊號」——但那要另外驗證，本頁只指出方向。",
-        "**判読**：負のB\\*は、TLEが「この期間に説明できない推力があった」と言っているのである。本プロジェクトの既存規則への干渉はガードレールによってごく小さく抑えられている。より価値があるのは、それを「干渉」から「信号」に変えることだ——ただしそれには別途検証が必要で、本ページは方向性を示すにとどまる。",
-        "**Takeaway**: a negative B\\* is the TLE saying \"there was thrust here I can't explain\". Its interference with this project's existing rules has already been kept small by the guardrail; the more valuable step is to turn it from interference into a signal — but that needs its own validation, and this page only points the way.",
+        "**判讀**：負 B\\* 是 TLE 在說「這段時間有我解釋不了的推力」。它對本專案現有規則的干擾，已被護欄壓到很小；反過來把它當成特徵，確實讓 L3 更會分辨真假候選，但召回率的上限來自 TLE 本身的時間解析度，換特徵救不回來。",
+        "**判読**：負のB\\*は、TLEが「この期間に説明できない推力があった」と言っているのである。本プロジェクトの既存規則への干渉はガードレールによってごく小さく抑えられている。逆にそれを特徴量として使うと、L3は真偽の候補をよりよく見分けられるようになったが、再現率の上限はTLEそのものの時間分解能によるもので、特徴量を変えても取り戻せない。",
+        "**Takeaway**: a negative B\\* is the TLE saying \"there was thrust here I can't explain\". Its interference with this project's existing rules has already been kept small by the guardrail; used the other way round, as a feature, it does help L3 tell real candidates from false ones — but the recall ceiling comes from the TLE's own time resolution, and no feature can recover that.",
     ))
     st.caption(T3(
-        f"資料與程式：`bstar_thrust_analysis.py` → `data/benchmark/bstar_thrust_{{population,tle_truth,transitions,l1_control,examples}}_{_CASE30_TAG}.csv`；L1 規則：`maneuver_strategies_july.apply_strategies`。",
-        f"データとプログラム：`bstar_thrust_analysis.py` → `data/benchmark/bstar_thrust_{{population,tle_truth,transitions,l1_control,examples}}_{_CASE30_TAG}.csv`。L1規則：`maneuver_strategies_july.apply_strategies`。",
-        f"Data and code: `bstar_thrust_analysis.py` → `data/benchmark/bstar_thrust_{{population,tle_truth,transitions,l1_control,examples}}_{_CASE30_TAG}.csv`; L1 rules: `maneuver_strategies_july.apply_strategies`.",
+        f"資料與程式：`bstar_thrust_analysis.py` → `data/benchmark/bstar_thrust_{{population,tle_truth,transitions,l1_control,examples}}_{_CASE30_TAG}.csv`；L1 規則：`maneuver_strategies_july.apply_strategies`；B\\* 特徵實驗：`exp_l3_bstar_feature.py`、`exp_bstar_candidate_source.py`。",
+        f"データとプログラム：`bstar_thrust_analysis.py` → `data/benchmark/bstar_thrust_{{population,tle_truth,transitions,l1_control,examples}}_{_CASE30_TAG}.csv`。L1規則：`maneuver_strategies_july.apply_strategies`。B\\*特徴量実験：`exp_l3_bstar_feature.py`、`exp_bstar_candidate_source.py`。",
+        f"Data and code: `bstar_thrust_analysis.py` → `data/benchmark/bstar_thrust_{{population,tle_truth,transitions,l1_control,examples}}_{_CASE30_TAG}.csv`; L1 rules: `maneuver_strategies_july.apply_strategies`; B\\* feature experiments: `exp_l3_bstar_feature.py`, `exp_bstar_candidate_source.py`.",
     ))
 
 

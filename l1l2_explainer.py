@@ -224,7 +224,8 @@ def load_l3(family: str):
 def compute_l3c(tle_df: pd.DataFrame, P: dict, family: str) -> dict | None:
     """以 l3_candidate 對完整 TLE 序列產生候選與特徵，L3 逐一給機率並依 θ 確認／否決。
 
-    tle_df：完整歷史（epoch, sma_km）——σ 正規化特徵需要足夠長的序列；顯示時再截到 P 的觀察窗。
+    tle_df：完整歷史（epoch, sma_km[, bstar]）——σ 正規化特徵需要足夠長的序列；顯示時再截到 P 的觀察窗。
+            模型若含 B* 偏離特徵（2026-10-21 起之 Starlink 模型），需另含 bstar 欄；缺則該特徵為 NaN。
     ablation：把單一特徵歸零後機率掉多少（＝該特徵對此候選決策的貢獻）。
     """
     M = load_l3(family)
@@ -235,9 +236,15 @@ def compute_l3c(tle_df: pd.DataFrame, P: dict, family: str) -> dict | None:
     cand = C.build_candidates(t, a)
     if cand.empty:
         return None
-    clf, feats = M["clf"], M["feats"]
+    clf, feats, theta_map, bstar_fallback = M["clf"], M["feats"], M["theta"], False
+    if any(f in C.BSTAR_FEATS for f in feats):
+        cand = C.add_bstar_features(cand, tle_df)
+        # 候選全無 B*（資料源缺 bstar）時，主模型會把缺值當成「非機動」而全數否決 → 改用備援模型
+        if cand[C.BSTAR_FEATS].isna().all().all() and "fallback_no_bstar" in M:
+            fb = M["fallback_no_bstar"]
+            clf, feats, theta_map, bstar_fallback = fb["clf"], fb["feats"], fb["theta"], True
     cls = C.cadence_class(float(cand["cadence_d"].iloc[0]))
-    theta = float(M["theta"][cls])
+    theta = float(theta_map[cls])
     X = cand[feats].astype(float)                 # 保留欄名（模型以 DataFrame 訓練）
     p = clf.predict_proba(X)[:, 1]
     drop = np.zeros((len(cand), len(L3_ABLATE)))
@@ -258,8 +265,9 @@ def compute_l3c(tle_df: pd.DataFrame, P: dict, family: str) -> dict | None:
     l2 = (cand[["src_cusum", "src_bocpd", "src_ssa", "src_mad3sig"]].sum(axis=1) > 0).to_numpy()
     return {"cand": cand[show].reset_index(drop=True), "proba": p[show], "acc": (p >= theta)[show],
             "drop": drop[show], "theta": theta, "cls": cls, "l1": l1[show], "l2": l2[show],
-            "family": family, "n_all": int(len(cand)),
-            "model": {k: M.get(k) for k in ("loso", "n_sats", "n_candidates", "trained_on", "family")}}
+            "family": family, "n_all": int(len(cand)), "bstar_fallback": bstar_fallback,
+            "model": {**{k: M.get(k) for k in ("loso", "n_sats", "n_candidates", "trained_on", "family")},
+                      **({"loso": M["fallback_no_bstar"]["loso"]} if bstar_fallback else {})}}
 
 
 def fig_l3c(P: dict, L: dict, T) -> go.Figure:

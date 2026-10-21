@@ -190,3 +190,43 @@ def build_candidates(t, a, lo=None, hi=None) -> pd.DataFrame:
 
 def cadence_class(cadence_d: float) -> str:
     return "dense" if cadence_d < CADENCE_SPLIT_D else "sparse"
+
+
+# ── B* 偏離特徵（2026-10-21，僅 Starlink 模型使用）──────────────────────────────
+# 推進星系之 B* 會吸收推力（案例三十）。以候選時刻 ±1 天窗口內之 B*，相對「窗口之前 30 天」之
+# 中位數／MAD 的偏離量作特徵；只用過去資料作基準，線上推論可照做。
+# 非推進衛星之 B* 代表真實阻力、意義不同，故不用於非 Starlink（l3_altimetry）模型。
+BSTAR_FEATS = ["b_dev_max", "b_dev_min", "b_neg_frac"]
+BSTAR_WIN_D = 1.0
+BSTAR_BASE_D = 30.0
+BSTAR_MAD_FLOOR = 1e-5
+BSTAR_MIN_BASE = 5
+
+
+def add_bstar_features(cand: pd.DataFrame, tle_df: pd.DataFrame) -> pd.DataFrame:
+    """在候選表加上 BSTAR_FEATS。tle_df 需含 epoch、bstar；資料不足之候選為 NaN（HGB 可處理缺值）。"""
+    out = cand.copy()
+    for k in BSTAR_FEATS:
+        out[k] = np.nan
+    if cand.empty or "bstar" not in tle_df.columns:
+        return out
+    tl = tle_df[["epoch", "bstar"]].dropna().copy()
+    tl["epoch"] = pd.to_datetime(tl["epoch"], utc=True)
+    tl = tl.drop_duplicates("epoch").sort_values("epoch")
+    # duckdb 可能回傳 µs 單位；一律轉 ns 整數再比較
+    tt = pd.DatetimeIndex(tl["epoch"]).as_unit("ns").astype("int64").to_numpy()
+    bb = tl["bstar"].to_numpy(float)
+    win, base = int(BSTAR_WIN_D * 86400e9), int(BSTAR_BASE_D * 86400e9)
+    ce = pd.DatetimeIndex(pd.to_datetime(cand["epoch"], utc=True)).as_unit("ns").astype("int64").to_numpy()
+    vals = np.full((len(cand), len(BSTAR_FEATS)), np.nan)
+    for i, e0 in enumerate(ce):
+        w = (tt >= e0 - win) & (tt <= e0 + win)
+        b = (tt >= e0 - win - base) & (tt < e0 - win)
+        if w.sum() == 0 or b.sum() < BSTAR_MIN_BASE:
+            continue
+        med = float(np.median(bb[b]))
+        mad = max(1.4826 * float(np.median(np.abs(bb[b] - med))), BSTAR_MAD_FLOOR)
+        z = (bb[w] - med) / mad
+        vals[i] = (z.max(), z.min(), float((bb[w] < 0).mean()))
+    out[BSTAR_FEATS] = vals
+    return out
