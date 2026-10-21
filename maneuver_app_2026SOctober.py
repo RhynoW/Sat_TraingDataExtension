@@ -11196,10 +11196,10 @@ def render_storymap_case22():
                 st.markdown(desc[0])
             else:
                 st.markdown(T3(
-                    "B* 值異常偏高時，Δa 的變化多半可由阻力本身解釋，作為 P1 之外的第二道抑制條件。",
-                    "B*値が異常に高い場合、Δaの変化の多くは抵抗自体で説明でき、P1に次ぐ第2の抑制条件となる。",
+                    "B* 值異常偏高時，Δa 的變化多半可由阻力本身解釋，作為 P1 之外的第二道抑制條件。（2026-10-21 補註：對持續推進的星系，降軌推力也會讓 B* 異常偏高，P3 因此可能誤擋真實降軌；實測影響很小，詳見案例三十。）",
+                    "B*値が異常に高い場合、Δaの変化の多くは抵抗自体で説明でき、P1に次ぐ第2の抑制条件となる。（2026-10-21 補足：推進を続けるコンステレーションでは、降下の推力もB*を異常に高くするため、P3が実際の降下を誤って抑制しうる。実測での影響はごく小さい。詳細は事例三十を参照。）",
                     "When B* is unusually high, most of the Δa change can be explained by drag alone — a "
-                    "second suppression condition alongside P1.",
+                    "second suppression condition alongside P1. (Note added 2026-10-21: for continuously thrusting constellations, lowering thrust also drives B* abnormally high, so P3 can wrongly suppress a real lowering; the measured impact is small — see Case 30.)",
                 ))
 
     st.header(T3(
@@ -12909,12 +12909,12 @@ def render_storymap_case27():
         "2. L1 逐筆只依賴相鄰兩筆與短窗，可線上運作；L2 的 SSA、MAD 使用整段序列統計量，動畫的「逐步揭露」是把已算好的分數依時間顯示，並非嚴格的逐筆重算。\n"
         "3. 為控制網頁大小，序列已稀釋近重複 epoch（最小間隔 12 h）並最多取最近 450 筆；資料庫為滾動視窗，觀察窗實際長度依衛星而異。\n"
         "4. 各通道的「事件」採用 statistical_detectors.py 之內建判定，未針對單一衛星調參；亮燈數量多不代表較好。\n"
-        "5. L3 為「候選確認式」，依族群自動選模型：非 Starlink 用 23 顆 NASA/ILRS 衛星訓練、Starlink 用 MEME 真值訓練。兩者的成績都不高（見上表），且在 Starlink 上「確認」幾乎沒有增益。模型檔為離線訓練後上傳，頁面上不會即時重訓。",
+        "5. L3 為「候選確認式」，依族群自動選模型：非 Starlink 用 23 顆 NASA/ILRS 衛星訓練、Starlink 用 MEME 真值訓練。兩者的成績都不高（見上表）。在 Starlink 上「確認」的增益很小：2026-10-21 起 Starlink 模型加入 3 個 B\\* 偏離特徵（見案例三十），L3 F1 0.373 對「候選全接受」0.366，增益主要來自精確率，召回率不變。模型檔為離線訓練後上傳，頁面上不會即時重訓。",
         "1. ここで示すのは**検出法の挙動**であって精度ではない：機動の真値を重ねていないので、赤い星の数から優劣を**判断できない**。精度は報告§13.2の三層同一土俵を参照。\n"
         "2. L1は隣接2件と短窓のみに依存しオンライン動作できる。L2のSSA・MADは系列全体の統計量を使うため、アニメの「逐次表示」は計算済みスコアを時間順に見せるもので、厳密な逐次再計算ではない。\n"
         "3. ページサイズを抑えるため、近重複epochを間引き（最小間隔12 h）、直近最大450件に限定。DBはローリング窓のため観測窓の実長は衛星により異なる。\n"
         "4. 各チャネルの「イベント」はstatistical_detectors.py組み込みの判定で、個別衛星向けの調整はしていない。点灯数が多い＝優れている、ではない。\n"
-        "5. L3は「候補確認式」で、族群により自動でモデルを選ぶ：非Starlinkは23機のNASA/ILRS衛星、StarlinkはMEME真値で学習。どちらも成績は高くなく（上の表）、Starlinkでは「確認」の利得がほぼ無い。モデルファイルはオフライン学習後にアップロードしたもので、ページ上で再学習はしない。",
+        "5. L3は「候補確認式」で、族群により自動でモデルを選ぶ：非Starlinkは23機のNASA/ILRS衛星、StarlinkはMEME真値で学習。どちらも成績は高くない（上の表）。Starlinkでは「確認」の利得は小さい：2026-10-21からStarlinkモデルにB\\*偏差特徴量を3個追加した（事例三十）。L3のF1は0.373で「候補をすべて受理」の0.366を上回るが、利得は主に適合率によるもので、再現率は変わらない。モデルファイルはオフライン学習後にアップロードしたもので、ページ上で再学習はしない。",
         "1. This shows **how the detectors behave**, not how accurate they are: no maneuver ground truth is overlaid, so the number of red stars **cannot** tell you which is better. "
         "For accuracy see the report's §13.2 common-arena comparison.\n"
         "2. L1 depends only on adjacent TLE pairs and a short window, so it can run online; L2's SSA and MAD use whole-series statistics, so the animation's "
@@ -12922,7 +12922,7 @@ def render_storymap_case27():
         "3. To keep the page light, near-duplicate epochs are thinned (min gap 12 h) and at most the latest 450 points are used; the database is a rolling window, "
         "so the actual window length varies by satellite.\n"
         "4. Each channel's \"events\" use statistical_detectors.py's built-in rule with no per-satellite tuning; more lights does not mean better.\n"
-        "5. L3 is a candidate-confirmation model that picks its model by family: the non-Starlink model is trained on 23 NASA/ILRS satellites, the Starlink one on MEME truth. Neither scores high (see the table above), and on Starlink the \"confirmation\" adds almost nothing. The model files were trained offline and uploaded; the page does not retrain."))
+        "5. L3 is a candidate-confirmation model that picks its model by family: the non-Starlink model is trained on 23 NASA/ILRS satellites, the Starlink one on MEME truth. Neither scores high (see the table above). On Starlink the \"confirmation\" adds little: since 2026-10-21 the Starlink model includes 3 B\\* deviation features (see Case 30), giving an L3 F1 of 0.373 vs 0.366 for \"accept all candidates\" — the gain comes mainly from precision, and recall is unchanged. The model files were trained offline and uploaded; the page does not retrain."))
     st.caption("Code: `l1l2_explainer.py`, `maneuver_strategies_july.py`, `statistical_detectors.py`; "
                "common-arena numbers: `three_layer_common_eval.py`.")
 
@@ -13602,13 +13602,13 @@ def render_storymap_case30():
                     "The real takeaway: turning interference into signal — now validated"))
     st.markdown(T3(
         f"- L1 對 MEME 顯示的真實機動（單次轉換 > 300 m）召回率只有 **{s_rec_final}**；而 B\\* 單筆判斷降軌的 AUC 就有 **{s_auc_down}**。\n"
-        "- 原本本專案的 ML 模型（Plan B，以及 L3 候選確認模型）特徵中**都沒有 B\\* 和 ndot**——B\\* 唯一的用途是「抑制」。\n"
+        "- L3 候選確認模型原本**沒有 B\\* 和 ndot**。Plan B（LightGBM 單星分類器）則有一個 `bstar_f107_normalized` 特徵，但它的設計用意是把 B\\* 當成**阻力的量測**（所以才對太陽通量正規化）——對推進星系，這個特徵其實也混入了推力。\n"
         "- 反過來，這也是一個警訊：對推進星系，**不能把 B\\* 當成大氣密度或阻力的量測**，凡是用 TLE B\\* 反推熱層密度的研究，都要先排除推進中的衛星。",
         f"- MEMEが示す実際の機動（1遷移あたり > 300 m）に対するL1の再現率は **{s_rec_final}** にすぎない。一方、B\\*単独で降下を判定するAUCは **{s_auc_down}** に達する。\n"
-        "- もともと本プロジェクトのMLモデル（Plan B、およびL3候補確認モデル）の特徴量には**いずれもB\\*もndotも含まれていなかった**——B\\*の唯一の用途は「抑制」だった。\n"
+        "- L3候補確認モデルにはもともと**B\\*もndotも含まれていなかった**。Plan B（LightGBMの単一衛星分類器）には `bstar_f107_normalized` という特徴量が1つあるが、これはB\\*を**抵抗の測定値**として扱う設計である（だから太陽フラックスで正規化している）——推進コンステレーションでは、この特徴量にも実は推力が混入している。\n"
         "- 逆にこれは警告でもある：推進コンステレーションでは、**B\\*を大気密度や抵抗の測定値として扱ってはならない**。TLEのB\\*から熱圏密度を逆算する研究はすべて、まず推進中の衛星を除外する必要がある。",
         f"- L1's recall on real MEME maneuvers (> 300 m per transition) is only **{s_rec_final}**, while B\\* alone reaches an AUC of **{s_auc_down}** for detecting lowering.\n"
-        "- This project's ML models (Plan B, and the L3 candidate-confirmation models) originally had **neither B\\* nor ndot** among their features — B\\*'s only role was suppression.\n"
+        "- The L3 candidate-confirmation models originally had **neither B\\* nor ndot**. Plan B (the LightGBM single-satellite classifier) does have one feature, `bstar_f107_normalized`, but it is designed to treat B\\* as **a measurement of drag** (hence the solar-flux normalisation) — for thrusting constellations, that feature is in fact contaminated by thrust as well.\n"
         "- Conversely, it's a warning: for thrusting constellations, **B\\* must not be treated as a measurement of atmospheric density or drag** — any study inverting thermospheric density from TLE B\\* must first exclude thrusting satellites.",
     ))
 

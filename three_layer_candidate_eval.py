@@ -144,10 +144,13 @@ def eval_starlink():
     events = TS.sat_events(df)
     M = joblib.load("models_fusion/l3_starlink.pkl")
     theta = float(M["theta"]["dense"])
+    feats = M["feats"]            # 2026-10-21 起含 B* 偏離特徵；θ 係依此特徵集選定，須一致
     d = df[df.norad.map(lambda n: len(events[int(n)]) > 0)].reset_index(drop=True)
+    if any(f in C.BSTAR_FEATS for f in feats):
+        d = TS.attach_bstar(d)
     oof = np.zeros(len(d))
     for tr, te in GroupKFold(5).split(d, d.label, d.norad):
-        oof[te] = HistGradientBoostingClassifier(**HGB).fit(d.iloc[tr][C.FEATS], d.iloc[tr]["label"]).predict_proba(d.iloc[te][C.FEATS])[:, 1]
+        oof[te] = HistGradientBoostingClassifier(**HGB).fit(d.iloc[tr][feats], d.iloc[tr]["label"]).predict_proba(d.iloc[te][feats])[:, 1]
     d["oof"] = oof
     rows = []
     for k, (n, g) in enumerate(d.groupby("norad")):
