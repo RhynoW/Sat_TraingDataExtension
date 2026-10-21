@@ -60,8 +60,8 @@ from sklearn.metrics import roc_auc_score
 from statistical_detectors import run_all
 import maneuver_strategies_july as ms
 from compare_tle_vs_ephemeris import load_registry
-from satdet import (config, episodes_by_sat, episode_masks, quiet_blocks,
-                    fpr_floor_threshold, load_drag_map, to_ns, TOL_NS)
+from satdet import (config, coverage_mask, episodes_by_sat, episode_masks, quiet_blocks,
+                    fpr_floor_threshold, load_drag_map, to_ns, truth_coverage, TOL_NS)
 from satdet.common import SEV_RANK
 
 CH = ["cusum", "bocpd", "ssa", "mad3sig", "drag"]          # 與 fusion_scorer 一致
@@ -69,13 +69,33 @@ STAT_CH = ["cusum", "bocpd", "ssa", "mad3sig"]             # L2 純統計通道�
 HGB = dict(max_iter=300, learning_rate=0.06, max_depth=4,
            l2_regularization=1.0, class_weight="balanced", random_state=42)
 RANK_SEV = {v: k for k, v in SEV_RANK.items()}
+# L3 v2 特徵與參數（exp_l3_v2.py 選定）
+L3V2_FEATS = ([f"f_{c}_{st}" for c in CH for st in ("max", "mean", "p90")]
+              + [f"t_{c}_{k}" for c in CH for k in ("peakpos", "rise", "conc")]
+              + ["x_stat_minus_drag", "x_stat_over_drag", "snr_window", "da_max_m"]
+              + ["v2_levelshift_sig", "v2_levelshift_abs", "v2_net_da_sig", "v2_di_max", "v2_de_max",
+                 "v2_b_dev_max", "v2_b_dev_min", "v2_b_neg_frac"]
+              + ["alt_km", "inc_deg", "q_cadence_day", "q_sigma_m"])
+L3V2_LGB = dict(n_estimators=600, learning_rate=0.03, num_leaves=31, min_child_samples=40, subsample=0.8,
+                subsample_freq=1, colsample_bytree=0.8, reg_lambda=1.0, class_weight="balanced",
+                random_state=42, verbose=-1)
 
 
-def build_common_units(db, sats, drag_by, eps_by):
-    """單一遍歷建共同 unit 集，同時記錄三層在每個 unit 上的分數／旗標。"""
+def build_common_units(db, sats, drag_by, eps_by, cov_by=None, skipped=None):
+    """單一遍歷建共同 unit 集，同時記錄三層在每個 unit 上的分數／旗標。
+
+    cov_by：{norad: (lo_ns, hi_ns)} 真值涵蓋時段（satdet.truth_coverage）。給定時：
+      ・沒有真值的衛星整顆不納入評估（記入 skipped），不再預設為「安靜」；
+      ・負（安靜）unit 只取自涵蓋時段內——真值以外的時段沒有標記，不等於沒有機動。
+    cov_by=None 時維持舊行為（全部未被 episode 涵蓋之 epoch 皆視為安靜），僅供重現舊數字。
+    """
     con = duckdb.connect(db, read_only=True)
     rows = []
     for name, nid in sats:
+        if cov_by is not None and int(nid) not in cov_by:
+            if skipped is not None:
+                skipped.append((name, int(nid)))
+            continue
         df = con.execute(
             "SELECT epoch_utc AS epoch, sma_km, inclination_deg, eccentricity, "
             "raan_deg, bstar FROM raw_tle_archive WHERE norad_id=? AND sma_km IS NOT NULL "
@@ -85,6 +105,9 @@ def build_common_units(db, sats, drag_by, eps_by):
         df["epoch"] = pd.to_datetime(df["epoch"], utc=True, format="ISO8601")
         ep = to_ns(df["epoch"])
         sma = df["sma_km"].to_numpy(float)
+        inc = df["inclination_deg"].to_numpy(float)       # v2 特徵用
+        ecc = df["eccentricity"].to_numpy(float)
+        bst = df["bstar"].to_numpy(float)
 
         # ── 資料品質 proxy（per-sat 常數，供 §13.4 品質切片，不參與訓練）──
         gaps_day = np.diff(ep.astype(float)) / 8.64e13          # ns → day
@@ -154,12 +177,38 @@ def build_common_units(db, sats, drag_by, eps_by):
             da_max_m = float(np.max(np.abs(np.diff(sm)))) * 1000.0 if len(sm) > 1 else 0.0
             row["snr_window"] = da_max_m / q_sigma_m if q_sigma_m and q_sigma_m > 0 else 0.0
             row["da_max_m"] = da_max_m            # 窗內最大 |Δa|（公尺，絕對量）——供「純 Δa」基線
+            # ── v2 特徵（2026-10-21，L3 v2 實驗用；additive，不影響既有 15 維與上列特徵）──
+            # 皆只由 TLE 推得；B* 基準只用窗口之前的資料（線上可照做）
+            idx = np.where(mask)[0]
+            w0, w1 = ep[idx[0]], ep[idx[-1]]
+            sig = q_sigma_m / 1000.0 if q_sigma_m and q_sigma_m > 0 else np.nan        # km
+            pre = (ep >= w0 - 2 * TOL_NS) & (ep < w0)
+            post = (ep > w1) & (ep <= w1 + 2 * TOL_NS)
+            if pre.any() and post.any() and np.isfinite(sig):
+                ls = float(np.median(sma[post]) - np.median(sma[pre])) / sig
+            else:
+                ls = np.nan
+            row["v2_levelshift_sig"] = ls                       # 窗口前後 48h 位準差（σ 單位，含正負）
+            row["v2_levelshift_abs"] = abs(ls) if np.isfinite(ls) else np.nan
+            row["v2_net_da_sig"] = float(sm[-1] - sm[0]) / sig if len(sm) > 1 and np.isfinite(sig) else np.nan
+            row["v2_di_max"] = float(np.max(np.abs(np.diff(inc[mask])))) if len(sm) > 1 else 0.0
+            row["v2_de_max"] = float(np.max(np.abs(np.diff(ecc[mask])))) if len(sm) > 1 else 0.0
+            base = (ep >= w0 - 31 * 86400 * 10**9) & (ep < w0 - 86400 * 10**9) & np.isfinite(bst)
+            bw = bst[mask]; bw = bw[np.isfinite(bw)]
+            if base.sum() >= 5 and len(bw):
+                med = float(np.median(bst[base])); mad = max(1.4826 * float(np.median(np.abs(bst[base] - med))), 1e-5)
+                row["v2_b_dev_max"] = float((bw.max() - med) / mad)
+                row["v2_b_dev_min"] = float((bw.min() - med) / mad)
+                row["v2_b_neg_frac"] = float((bw < 0).mean())
+            else:
+                row["v2_b_dev_max"] = row["v2_b_dev_min"] = row["v2_b_neg_frac"] = np.nan
             return row
 
         masks, assigned = episode_masks(ep, eps_by.get(int(nid), []), TOL_NS)
         for mask, rk, _lat in masks:
             rows.append(unit_row(mask, 1, int(rk)))
-        for w in quiet_blocks(ep, np.where(~assigned)[0], 2 * TOL_NS):
+        in_cov = coverage_mask(ep, cov_by.get(int(nid))) if cov_by is not None else np.ones(len(ep), bool)
+        for w in quiet_blocks(ep, np.where(~assigned & in_cov)[0], 2 * TOL_NS):
             m = np.zeros(len(ep), bool); m[w] = True
             rows.append(unit_row(m, 0, 0))
     con.close()
@@ -189,12 +238,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default=config.SPACE_DB)
     ap.add_argument("--max-sats", type=int, default=None)
+    ap.add_argument("--save-l3v2", action="store_true", help="以全部 unit 訓練並存 models_fusion/fusion_scorer_v2.pkl")
+    ap.add_argument("--legacy-quiet", action="store_true",
+                    help="舊行為：沒有真值或真值範圍以外之時段一律視為安靜（僅供重現 2026-10-07 以前之數字）")
     args = ap.parse_args()
 
     tp = sorted(glob.glob("data/meme_truth/transitions_full_*.csv"))[-1]
     truth = pd.read_csv(tp)
     truth["t_to"] = pd.to_datetime(truth["t_to"], utc=True, format="ISO8601")
     eps_by = episodes_by_sat(truth)   # {norad: [(times_ns, rank)]}
+    cov_by = None if args.legacy_quiet else truth_coverage(truth)   # 完整真值表（未依嚴重度過濾）
 
     reg = load_registry("data/url_registry.csv")
     n2n = {v: k for k, v in reg["sat_name"].items()}
@@ -202,7 +255,12 @@ def main():
 
     print(f"建共同 unit 集：{len(sats)} 顆 Starlink，MEME medium+ 真值 …", flush=True)
     drag_by = load_drag_map()
-    U = build_common_units(args.db, sats, drag_by, eps_by)
+    skipped = []
+    U = build_common_units(args.db, sats, drag_by, eps_by, cov_by, skipped)
+    if cov_by is not None:
+        print(f"  無真值、不納入評估之衛星：{len(skipped)} 顆"
+              + (f"（例：{', '.join(n for n, _ in skipped[:3])} …）" if skipped else ""))
+        print("  負（安靜）unit 只取自各星真值涵蓋時段內")
     y = U["label"].to_numpy(); sev = U["sev"].to_numpy(); groups = U["norad_id"].to_numpy()
     neg = y == 0
     P, N = int((y == 1).sum()), int(neg.sum())
@@ -247,6 +305,29 @@ def main():
     thr = fpr_floor_threshold(oof[neg], 0.05)
     results["L3 融合評分器 OOF"] = {**eval_scores(oof, y, sev, thr), "auc": roc_auc_score(y, oof)}
 
+    # ── L3 v2（2026-10-21）：15 維＋既有增強特徵＋v2 特徵＋4 個背景常數，LightGBM，同一 GroupKFold OOF ──
+    # 依 exp_l3_v2.py：修正後擂台 AUC 0.813 → 0.858 ± 0.002（5 種分折）；族群內 AUC 皆提升，背景特徵單獨僅 0.56
+    try:
+        from lightgbm import LGBMClassifier
+        X2 = U[L3V2_FEATS].to_numpy(float)
+        oof2 = np.zeros(len(y))
+        for tr_i, te_i in GroupKFold(5).split(X2, y, groups):
+            oof2[te_i] = LGBMClassifier(**L3V2_LGB).fit(X2[tr_i], y[tr_i]).predict_proba(X2[te_i])[:, 1]
+        thr2 = fpr_floor_threshold(oof2[neg], 0.05)
+        results["L3 v2 融合評分器 OOF"] = {**eval_scores(oof2, y, sev, thr2), "auc": roc_auc_score(y, oof2)}
+        if args.save_l3v2:
+            import joblib
+            final = LGBMClassifier(**L3V2_LGB).fit(X2, y)
+            Path("models_fusion").mkdir(exist_ok=True)
+            joblib.dump({"clf": final, "feats": L3V2_FEATS, "thr": float(thr2), "params": L3V2_LGB,
+                         "oof_auc": float(roc_auc_score(y, oof2)), "n_units": int(len(y)),
+                         "n_sats": int(len(np.unique(groups))), "trained_on": datetime.now(timezone.utc).strftime("%Y%m%d"),
+                         "note": "unit 級（episode ±24h 窗）模型；線上逐 epoch 推論需另實作 v2 特徵之串流計算"},
+                        "models_fusion/fusion_scorer_v2.pkl")
+            print("  → models_fusion/fusion_scorer_v2.pkl")
+    except ImportError:
+        print("  （未安裝 lightgbm，略過 L3 v2）")
+
     # ── 三層 per-unit 二元預測（交叉分析用）──
     l1_pred = U["l1_flag"].to_numpy(bool)
     s_best = U[f"l2_{best_c}"].to_numpy()
@@ -267,7 +348,7 @@ def main():
     # ── 輸出表 ──
     order = ["基線 純|Δa|絕對門檻", "基線 僅阻力模型", "基線 σ正規化|Δa|(單特徵)",
              "L1 規則 P1–P6", f"L2 {best_c}（單通道）", "L2 五通道樸素max",
-             "L3 融合評分器 OOF", "naive 隨機（對照）"]
+             "L3 融合評分器 OOF", "L3 v2 融合評分器 OOF", "naive 隨機（對照）"]
     print("\n" + "=" * 92)
     print(f"三層同一擂台：{U['norad_id'].nunique()} 顆 Starlink · MEME episode unit · "
           f"操作點 FPR≤0.05（L1 為二元規則）")
@@ -276,6 +357,8 @@ def main():
           f"{'large':>8}{'medium':>8}{'small':>8}"
     print(hdr); print("  " + "-" * 88)
     for k in order:
+        if k not in results:
+            continue
         m = results[k]
         auc = f"{m['auc']:.3f}" if "auc" in m else "  —  "
         print(f"  {k:<22}{auc:>7}{m['precision']:>8.3f}{m['recall']:>8.3f}"
@@ -311,7 +394,7 @@ def main():
     print("  判讀：L3 補漏 > 反向損失 ⇒ 融合層對前兩層有實質增量，非重複其輸出。")
 
     # CSV（彙總 + per-unit 明細）
-    date = datetime.now(timezone.utc).strftime("%Y%m%d")
+    date = datetime.now(timezone.utc).strftime("%Y%m%d") + ("_legacyquiet" if args.legacy_quiet else "")
 
     # ── #8 模型消融：固定 episode-native MEME 資料＋15 聚合特徵＋GroupKFold，只換分類器 ──
     #    回應委員：隔離表 13-2 之 (2)→(3) 中「模型」因素，檢驗 0.97 是否依賴 HistGB、

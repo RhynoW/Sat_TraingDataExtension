@@ -56,3 +56,29 @@ def quiet_blocks(ep_ns: np.ndarray, idx: np.ndarray, width_ns: int = 2 * TOL_NS)
             q += 1
         yield np.array(w)
         p = q
+
+
+def truth_coverage(truth: pd.DataFrame, key: str = "norad_id",
+                   from_col: str = "t_from", to_col: str = "t_to") -> dict:
+    """完整真值表 → {key 值: (lo_ns, hi_ns)}：每顆衛星真值實際涵蓋之時段。
+
+    須傳入「未依嚴重度過濾」的完整真值表（含 none／small 轉移），否則只有小機動的衛星會被誤判為沒有真值。
+    """
+    lo = to_ns(truth[from_col])
+    hi = to_ns(truth[to_col])
+    d = pd.DataFrame({"k": truth[key].to_numpy(), "lo": lo, "hi": hi})
+    g = d.groupby("k").agg(lo=("lo", "min"), hi=("hi", "max"))
+    return {(int(k) if isinstance(k, (int, np.integer)) else k): (int(r.lo), int(r.hi)) for k, r in g.iterrows()}
+
+
+def coverage_mask(ep_ns: np.ndarray, cov) -> np.ndarray:
+    """epoch 是否落在真值涵蓋時段內。cov 為 None（該星沒有真值）時全部為 False。
+
+    評估時，負（安靜）樣本只能取自涵蓋時段內：真值以外的時段「沒有標記」不等於「沒有機動」
+    （例：新入軌批次尚無真值、或 TLE 已更新而真值檔停在較早日期）。
+    """
+    ep_ns = np.asarray(ep_ns)
+    if cov is None:
+        return np.zeros(len(ep_ns), bool)
+    lo, hi = cov
+    return (ep_ns >= lo) & (ep_ns <= hi)

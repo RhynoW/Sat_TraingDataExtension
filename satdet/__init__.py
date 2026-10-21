@@ -4,7 +4,7 @@ from .common import (EPHEMERIS_TYPE_SGP4, EPHEMERIS_TYPE_SGP4_XP, GAP_NS,
                      episodes_by_sat, fpr_floor_threshold, latest_file,
                      merge_episodes, tle_ephemeris_type, to_ns, warn_sgp4xp)
 from .manifest import input_file, record
-from .units import episode_masks, load_drag_map, quiet_blocks
+from .units import coverage_mask, episode_masks, load_drag_map, quiet_blocks, truth_coverage
 from . import config
 
 __all__ = [
@@ -13,5 +13,5 @@ __all__ = [
     "GAP_NS", "HOUR_NS", "RANK_SEV", "SEV_RANK", "TOL_NS",
     "episodes_by_sat", "fpr_floor_threshold", "latest_file", "merge_episodes",
     "to_ns", "input_file", "record", "episode_masks", "load_drag_map",
-    "quiet_blocks", "config",
+    "quiet_blocks", "truth_coverage", "coverage_mask", "config",
 ]

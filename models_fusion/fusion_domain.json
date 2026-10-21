@@ -1,0 +1,32 @@
+{
+  "source": "MEME 真值涵蓋之 Starlink（data/meme_truth/transitions_full_*），fusion_scorer 之訓練族群",
+  "built_on": "2026-10-21",
+  "n_sats": 283,
+  "inc_families_deg": [
+    [
+      42.45,
+      43.54,
+      86
+    ],
+    [
+      52.59,
+      53.72,
+      140
+    ],
+    [
+      69.4,
+      70.58,
+      26
+    ],
+    [
+      96.65,
+      97.96,
+      31
+    ]
+  ],
+  "alt_range_km": [
+    323.8,
+    588.3
+  ],
+  "min_age_days": 4.0
+}
