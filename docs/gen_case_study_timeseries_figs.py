@@ -303,13 +303,15 @@ def plot_one(title, nid, kind):
 
 
 ALL_EPISODES = {}
-ok = 0
-for title, nid, kind in SATS:
-    if plot_one(title, nid, kind):
-        ok += 1
 
-import json
-with open(OUTDIR / "episodes_all.json", "w", encoding="utf-8") as fh:
-    json.dump(ALL_EPISODES, fh, ensure_ascii=False, indent=2)
-print("episodes json ->", OUTDIR / "episodes_all.json")
-print(f"\n{ok}/{len(SATS)} figures generated -> {OUTDIR}")
+if __name__ == "__main__":   # 2026-10-21：加保護，供 batch_detect_starlink_v3.py 重用 merge_episodes
+    ok = 0
+    for title, nid, kind in SATS:
+        if plot_one(title, nid, kind):
+            ok += 1
+
+    import json
+    with open(OUTDIR / "episodes_all.json", "w", encoding="utf-8") as fh:
+        json.dump(ALL_EPISODES, fh, ensure_ascii=False, indent=2)
+    print("episodes json ->", OUTDIR / "episodes_all.json")
+    print(f"\n{ok}/{len(SATS)} figures generated -> {OUTDIR}")
