@@ -5,6 +5,13 @@
 > `HF_TOKEN` 401，連續多日排程失敗），且本機憑證已驗證可用，改為**手動執行下列腳本**
 > 更新兩個 HF Dataset／Space，不再依賴雲端排程。
 
+> **2026-10-23 更新**：移除排程後，`starlink-maneuver-db`（maneuver-detection Space 的資料源）
+> 因無人手動執行而停在 2026-09-21。改由 `download_tle_unified.bat publish` 第 4 步自動呼叫
+> `ci/sync_maneuver_dataset.py`：直接取本機 `space_db.duckdb` 中比 Dataset 更新的 TLE 併入年度檔
+> 上傳（不向 Space-Track 重抓），完成後重啟 `maneuver-detection-i18n`。每次約上下傳 1.2 GB，
+> 失敗只警告、不影響前面已完成的 SatDashboard 發布；可單獨重跑
+> `python ci/sync_maneuver_dataset.py`（`--dry-run` 只統計新增列數）。
+
 ## 用法（本機執行，需要本機 `.env` 已有效的 Space-Track 帳密、且已 `hf auth login`）
 
 ```

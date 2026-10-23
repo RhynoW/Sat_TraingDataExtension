@@ -5,6 +5,7 @@ rem
 rem  用法：download_tle_unified.bat [publish]
 rem    publish = 完成後接續執行 scenario-advanced01\update_slim_publish_hf.bat skipbuild
 rem              併入 StoryMap TLE、上傳 HF Dataset、重啟兩個 Space
+rem              then step 4 syncs new TLE into HF dataset starlink-maneuver-db (ci\sync_maneuver_dataset.py)
 rem
 rem  第 1 步抓 CelesTrak SW-All.csv 與 SW-Last5Years.csv：
 rem    前者供網站離軌 Starlink 再入預測使用，後者更新父專案 space_weather_ap.csv 給阻力殘差使用；
@@ -16,21 +17,25 @@ setlocal
 set PYTHONIOENCODING=utf-8
 cd /d "%~dp0"
 
-echo [%TIME:~0,8%] [1/3] Update space weather files from CelesTrak ...
+echo [%TIME:~0,8%] [1/4] Update space weather files from CelesTrak ...
 python scenario-advanced01\tools\fetch_space_weather.py
 if errorlevel 1 echo [WARN] space weather update failed - keeping previous files
 
-echo [%TIME:~0,8%] [2/3] Download TLE from Space-Track, rebuild slim DB and parquet ...
+echo [%TIME:~0,8%] [2/4] Download TLE from Space-Track, rebuild slim DB and parquet ...
 python download_TLE_unified.py --mode spacetrack --rebuild-slim --rebuild-parquet --keep-lines --recent-days 14
 if errorlevel 1 goto :fail
 
 if /i not "%~1"=="publish" (
-  echo [%TIME:~0,8%] [3/3] skipped publish - run with "publish" to deploy to HF
+  echo [%TIME:~0,8%] [3/4] skipped publish - run with "publish" to deploy to HF
   goto :ok
 )
-echo [%TIME:~0,8%] [3/3] Publish slim DB and space weather to HF ...
+echo [%TIME:~0,8%] [3/4] Publish slim DB and space weather to HF ...
 call "%~dp0scenario-advanced01\update_slim_publish_hf.bat" skipbuild
 if errorlevel 1 goto :fail
+
+echo [%TIME:~0,8%] [4/4] Sync new TLE into HF dataset starlink-maneuver-db ...
+python ci\sync_maneuver_dataset.py
+if errorlevel 1 echo [WARN] starlink-maneuver-db sync failed - rerun: python ci\sync_maneuver_dataset.py
 
 :ok
 echo [%TIME:~0,8%] [OK] done
