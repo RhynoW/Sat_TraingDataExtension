@@ -244,6 +244,13 @@ L: dict[str, dict[str, str]] = {
                                   "ja": "SGP4には推力項がないため、推進を続ける衛星は推力を抵抗パラメータB*に押し込むしかなく、物理的にあり得ない負のB*が現れる。低軌道の約2.3万物体を調査し、Starlink MEME真値で検証したうえで、本プロジェクトの検出規則への実際の影響を確かめる——データに覆された当初の推測2つも含めて。",
                                   "en": "SGP4 has no thrust term, so a continuously thrusting satellite can only have its thrust fitted into the drag term B* — producing physically impossible negative B*. A census of ~23,000 LEO objects, validated against Starlink MEME truth, then a check of what this actually means for this project's detection rules — including two initial guesses the data overturned."},
 
+    "storymap_case31_card_title": {"zh": "案例三十一：俄國軍事衛星 COSMOS 2612 逼近 ICEYE-X36——用公開 TLE 重建一次近距離交會",
+                                   "ja": "事例三十一：ロシア軍事衛星COSMOS 2612がICEYE-X36に接近——公開TLEで近接遭遇を再構成する",
+                                   "en": "Case 31: Russian Military Satellite COSMOS 2612 Closes In on ICEYE-X36 — Reconstructing a Close Approach from Public TLEs"},
+    "storymap_case31_card_desc": {"zh": "2026 年 5 月進入同一軌道面、9/30 升軌調相位、10/15–16 進入繞飛、10/18 離開——以公開 TLE（至 10/22）現場重算高度與距離，搭配 SatDashboard RPO 檢視器的報告圖與 3D 回放，並把外部報導（LeoLabs、RUSI、ICEYE）與本專案判讀分開標示。",
+                                  "ja": "2026年5月に同じ軌道面へ入り、9月30日に高度を上げて位相を調整、10月15〜16日に周回へ入り、10月18日に離脱——公開TLE（10月22日まで）から高度と距離をその場で再計算し、SatDashboard RPOビューアのレポート図と3D再生を添え、外部報道（LeoLabs、RUSI、ICEYE）と本プロジェクトの判読を区別して示す。",
+                                  "en": "Into the same orbital plane in May 2026, a phasing climb on 30 Sep, circumnavigation on 15–16 Oct, departure on 18 Oct — altitude and distance recomputed live from public TLEs (through 22 Oct), with the SatDashboard RPO viewer's report and 3D replay, and external reporting (LeoLabs, RUSI, ICEYE) kept separate from this project's own reading."},
+
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
                        "ja": "HF シークレット作成に関する注意（private リポジトリのみ必要）：{e}",
@@ -1872,7 +1879,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 31):
+    for _n in range(14, 32):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -13690,6 +13697,278 @@ def render_storymap_case30():
     ))
 
 
+# --- render_storymap_case31 ---
+# 2026-10-23 新增：COSMOS 2612 接近 ICEYE-X36（俄國軍事衛星 RPO）。
+# 高度與距離由 raw_tle_archive 現場以 SGP4 計算（每時刻採 epoch 最近之 elset）；
+# 靜態圖取自 SatDashboard /rpo 檢視器（/api/rpo/59103/68762/report.png 與 3D 回放截圖）。
+_CASE31_X36, _CASE31_C2612 = 59103, 68762
+_CASE31_T0, _CASE31_T1 = "2026-09-15", "2026-10-23"
+_CASE31_IMG = DATA / "storymap" / "case31"
+_CASE31_RPO_URL = "https://rhynowu-atrdc-satdashboard-i18n.hf.space/rpo?primary=59103&secondary=68762"
+_CASE31_CNN_URL = "https://edition.cnn.com/2026/10/19/science/russian-satellite-iceye-x36-approach"
+
+
+def _case31_propagate(tle: pd.DataFrame, t_ns: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """每個取樣時刻採 epoch 最接近之 elset 做 SGP4，回傳 TEME 位置與速度（km、km/s）。"""
+    from sgp4.api import Satrec
+    ep = tle["epoch_ns"].to_numpy()
+    j = np.clip(np.searchsorted(ep, t_ns), 1, len(ep) - 1)
+    j = np.where(np.abs(t_ns - ep[j - 1]) <= np.abs(ep[j] - t_ns), j - 1, j)
+    jd = 2440587.5 + t_ns / 86400e9
+    jd0 = np.floor(jd - 0.5) + 0.5
+    fr = jd - jd0
+    r = np.full((len(t_ns), 3), np.nan)
+    v = np.full((len(t_ns), 3), np.nan)
+    for k in np.unique(j):
+        m = j == k
+        sat = Satrec.twoline2rv(tle["line1"].iat[k], tle["line2"].iat[k])
+        e, rr, vv = sat.sgp4_array(jd0[m], fr[m])
+        ok = e == 0
+        r[np.flatnonzero(m)[ok]] = rr[ok]
+        v[np.flatnonzero(m)[ok]] = vv[ok]
+    return r, v
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case31_data() -> dict:
+    """兩星 TLE、逐 elset 平均高度、2 分鐘取樣之距離與沿軌間距、自動偵測之高度跳變。"""
+    con = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        df = con.execute(
+            "SELECT norad_id, epoch_utc, sma_km, inclination_deg, line1, line2 FROM raw_tle_archive "
+            "WHERE norad_id IN (?, ?) AND epoch_utc >= CAST(? AS TIMESTAMP) AND epoch_utc < CAST(? AS TIMESTAMP)",
+            [_CASE31_X36, _CASE31_C2612, "2026-09-01", _CASE31_T1]).fetchdf()
+    finally:
+        con.close()
+    if df.empty:
+        return {}
+    df["epoch_utc"] = pd.to_datetime(df["epoch_utc"], utc=True).dt.tz_localize(None)
+    # HF 遠端模式下 data.parquet 與年度分割檔可能重複收錄同一筆 elset
+    df = df.drop_duplicates(["norad_id", "epoch_utc"]).sort_values(["norad_id", "epoch_utc"])
+    df["epoch_ns"] = df["epoch_utc"].to_numpy().astype("datetime64[ns]").astype("int64")
+    df["alt_km"] = df["sma_km"] - 6378.137
+    a = df[df.norad_id == _CASE31_X36].reset_index(drop=True)
+    b = df[df.norad_id == _CASE31_C2612].reset_index(drop=True)
+    if len(a) < 2 or len(b) < 2:
+        return {}
+    t_end = min(a.epoch_utc.max(), b.epoch_utc.max()) + pd.Timedelta(hours=6)
+    ts = pd.date_range(_CASE31_T0, t_end, freq="2min")
+    t_ns = ts.to_numpy().astype("datetime64[ns]").astype("int64")
+    ra, va = _case31_propagate(a, t_ns)
+    rb, _ = _case31_propagate(b, t_ns)
+    dr = rb - ra
+    dist = np.linalg.norm(dr, axis=1)
+    along = np.einsum("ij,ij->i", dr, va / np.linalg.norm(va, axis=1, keepdims=True))
+    sep = pd.DataFrame({"t": ts, "dist_km": dist, "along_km": along}).dropna()
+    # COSMOS 2612 相鄰 elset 平均高度跳變 > 1 km 視為機動（時間為 elset 反映機動後之 epoch，晚於實際點火）
+    jb = b.assign(dalt=b["alt_km"].diff(), dinc=b["inclination_deg"].diff())
+    jumps = jb[(jb.epoch_utc >= _CASE31_T0) & (jb.dalt.abs() > 1.0)][["epoch_utc", "dalt", "alt_km", "dinc"]]
+    return {"x36": a, "c2612": b, "sep": sep, "jumps": jumps.reset_index(drop=True)}
+
+
+def render_storymap_case31():
+    if st.button(t("storymap_back"), key="back_from_case31"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例三十一：俄國軍事衛星 COSMOS 2612 逼近 ICEYE-X36——用公開 TLE 重建一次近距離交會",
+        "事例三十一：ロシア軍事衛星COSMOS 2612がICEYE-X36に接近——公開TLEで近接遭遇を再構成する",
+        "Case 31: Russian Military Satellite COSMOS 2612 Closes In on ICEYE-X36 — Reconstructing a Close Approach from Public TLEs",
+    ))
+    st.subheader(T3(
+        "2026 年 10 月，俄國衛星 COSMOS 2612 經過數週的軌道調整，接近 ICEYE 營運、美國註冊的雷達成像衛星 ICEYE-X36。只用公開 TLE，能看出多少？",
+        "2026年10月、ロシアの衛星COSMOS 2612は数週間にわたる軌道調整を経て、ICEYEが運用する米国登録のレーダー撮像衛星ICEYE-X36に接近した。公開TLEだけで、どこまで見えるのか？",
+        "In October 2026, after weeks of orbit adjustments, the Russian satellite COSMOS 2612 closed in on ICEYE-X36, a US-registered radar imaging satellite operated by ICEYE. How much can public TLEs alone reveal?",
+    ))
+    st.caption(T3(
+        "**術語**：**SAR**（合成孔徑雷達）可在夜間或雲雨天成像。**RPO**（交會與近距離操作）指一顆衛星刻意接近另一顆。**TLE** 是美國太空監視網公開的軌道根數，以 SGP4 模型推算位置，位置誤差約為公里級。**NMC**（自然運動繞飛）指兩星高度相同、軌道略有差異時，一星在另一星周圍畫出的橢圓相對軌跡，不需持續推進即可維持。",
+        "**用語**：**SAR**（合成開口レーダー）は夜間や悪天候でも撮像できる。**RPO**（ランデブー・近傍運用）は、ある衛星が意図的に別の衛星へ接近することを指す。**TLE**は米国の宇宙監視網が公開する軌道要素で、SGP4モデルで位置を推算し、位置誤差はキロメートル級である。**NMC**（自然運動周回）は、2機の高度が同じで軌道がわずかに異なるとき、一方が他方の周りに描く楕円状の相対軌道で、継続的な推進なしに維持できる。",
+        "**Terms**: **SAR** (synthetic aperture radar) can image at night and through cloud. **RPO** (rendezvous and proximity operations) means one satellite deliberately approaching another. A **TLE** is the public orbit data from the US space surveillance network, propagated with the SGP4 model; its position error is on the order of a kilometer. **NMC** (natural motion circumnavigation) is the elliptical relative path one satellite traces around another when both share the same altitude with slightly different orbits — it holds without continuous thrusting.",
+    ))
+    st.info(T3(
+        "**資料口徑**：本頁的高度、距離與機動時點全部由本專案以公開 TLE 自行計算（TLE 資料至 2026-10-22）。外部報導（LeoLabs、RUSI、ICEYE 聲明、CNN）另外標註為他方口徑，本專案未取得其原始資料。",
+        "**データの基準**：本ページの高度・距離・機動時刻はすべて、本プロジェクトが公開TLEから独自に計算したものである（TLEは2026年10月22日まで）。外部報道（LeoLabs、RUSI、ICEYEの声明、CNN）は他者の基準として別途明記しており、本プロジェクトはその元データを入手していない。",
+        "**Data basis**: every altitude, distance and maneuver time on this page was computed by this project from public TLEs (TLEs through 22 Oct 2026). External reporting (LeoLabs, RUSI, ICEYE's statement, CNN) is labeled separately as third-party figures; this project has no access to their underlying data.",
+    ))
+
+    # ── ① 事件經過 ───────────────────────────────────────────────────────────
+    st.header(T3("① 事件經過", "① 経緯", "① What happened"))
+    st.markdown(T3(
+        "- **2026-05 中旬**：COSMOS 2612 與 2610、2611、2613、2614 同週將傾角由約 96.95° 調到 97.80–97.85°，進入 ICEYE-X36 的軌道面（本專案 TLE 判讀共 5 顆；英國智庫 RUSI 2026-06 報告則指出有四顆俄方衛星調整軌道對齊 X36，顆數與本專案判讀不同）。\n"
+        "- **9/30**：COSMOS 2612 升軌約 47 km，在較高軌道停留約 12 天。較高的軌道週期較長，藉此調整與 X36 的前後相位。\n"
+        "- **10/12**：降回 X36 同高度。\n"
+        "- **10/15–16**：先降約 2 km 由後方追上 X36，再升回同高度，進入以 X36 為中心的繞飛（NMC），橢圓中心落後 X36 約 2 km。\n"
+        "- **10/18**：本專案重建的最近距離出現在此日；當晚再升軌約 2.3 km，開始向 X36 後方漂離。\n"
+        "- **10/20**：降回同高度，相對漂移停止，此後停在 X36 後方約 475 km。\n"
+        "- **他方口徑**：LeoLabs 與獨立追蹤者報導 Kosmos 2612 自 9/30 起多次機動、10/15–19 接近 X36，最近約 500 m；追蹤者未見 X36 軌道有受撞擊或擾動的跡象。ICEYE 聲明「持續密切追蹤，星座架構具持續運作與韌性」，未證實任何攻擊或損害。",
+        "- **2026年5月中旬**：COSMOS 2612は2610、2611、2613、2614と同じ週に軌道傾斜角を約96.95°から97.80〜97.85°へ変え、ICEYE-X36の軌道面に入った（本プロジェクトのTLE判読では計5機。英国のシンクタンクRUSIの2026年6月の報告は、ロシアの衛星4機がX36に合わせて軌道を調整したと指摘しており、機数は本プロジェクトの判読と異なる）。\n"
+        "- **9月30日**：COSMOS 2612は高度を約47 km上げ、約12日間高い軌道に留まった。高い軌道は周期が長いため、これによりX36との前後の位相を調整した。\n"
+        "- **10月12日**：X36と同じ高度に戻った。\n"
+        "- **10月15〜16日**：まず約2 km下げて後方からX36に追いつき、再び同じ高度に戻して、X36を中心とする周回（NMC）に入った。楕円の中心はX36の約2 km後方である。\n"
+        "- **10月18日**：本プロジェクトが再構成した最接近はこの日に現れた。同日夜に再び約2.3 km上昇し、X36の後方へ離れ始めた。\n"
+        "- **10月20日**：同じ高度に戻り、相対的な漂流が止まった。以降はX36の約475 km後方に留まっている。\n"
+        "- **他者の基準**：LeoLabsと独立した追跡者は、Kosmos 2612が9月30日以降に何度も機動し、10月15〜19日にX36へ接近、最接近は約500 mだったと報じた。追跡者はX36の軌道に衝突や擾乱の兆候を確認していない。ICEYEは「状況を注視しており、コンステレーションの設計は継続性と耐障害性を備えている」と声明し、攻撃や損害は確認していない。",
+        "- **Mid-May 2026**: in the same week, COSMOS 2612, 2610, 2611, 2613 and 2614 changed inclination from about 96.95° to 97.80–97.85°, moving into ICEYE-X36's orbital plane (this project's TLE reading finds 5 satellites; a June 2026 report by the UK think tank RUSI says four Russian satellites adjusted their orbits to align with X36 — a different count from ours).\n"
+        "- **30 Sep**: COSMOS 2612 raised its orbit by about 47 km and stayed there for about 12 days. A higher orbit has a longer period, which let it shift its along-track phase relative to X36.\n"
+        "- **12 Oct**: back down to X36's altitude.\n"
+        "- **15–16 Oct**: first dropped about 2 km to catch up with X36 from behind, then climbed back to the same altitude and entered a circumnavigation (NMC) centered on X36, with the ellipse center about 2 km behind X36.\n"
+        "- **18 Oct**: this project's reconstructed closest approach falls on this day; that evening it climbed about 2.3 km again and began drifting away behind X36.\n"
+        "- **20 Oct**: back to the same altitude; relative drift stopped, and it has since stayed about 475 km behind X36.\n"
+        "- **Third-party figures**: LeoLabs and independent trackers reported that Kosmos 2612 maneuvered repeatedly from 30 Sep and approached X36 on 15–19 Oct, closest about 500 m; trackers saw no sign of impact or disturbance in X36's orbit. ICEYE said it is \"aware of the situation and tracking it closely\" and that its \"constellation architecture is designed for continuity and resilience\"; no attack or damage has been confirmed.",
+    ))
+
+    d = load_case31_data()
+    if not d:
+        st.warning(T3(
+            "資料庫中找不到兩星（NORAD 59103、68762）在本期間的 TLE，無法現場計算下方圖表。",
+            "データベースに両衛星（NORAD 59103、68762）の当該期間のTLEが見つからないため、以下の図をその場で計算できない。",
+            "No TLEs for the two satellites (NORAD 59103, 68762) in this period were found in the database, so the charts below cannot be computed.",
+        ))
+    else:
+        a, b, sep, jumps = d["x36"], d["c2612"], d["sep"], d["jumps"]
+        last_ep = min(a.epoch_utc.max(), b.epoch_utc.max())
+
+        # ── ② 高度歷史 ───────────────────────────────────────────────────────
+        st.header(T3("② 本專案重算：兩星平均高度", "② 本プロジェクトの再計算：両衛星の平均高度", "② Our recomputation: mean altitude of both satellites"))
+        st.markdown(T3(
+            "每一筆 TLE 都可換算成一個平均高度。X36 幾乎保持水平；COSMOS 2612 的每一次台階就是一次機動。表中時間是**第一筆反映機動後的 TLE 時間**，實際點火通常早數小時。",
+            "各TLEは1つの平均高度に換算できる。X36はほぼ水平を保ち、COSMOS 2612の段差の一つひとつが1回の機動である。表の時刻は**機動後の状態を最初に反映したTLEの時刻**であり、実際の噴射は通常その数時間前である。",
+            "Each TLE converts to one mean altitude. X36 stays almost flat; every step in COSMOS 2612's line is a maneuver. Times in the table are **the epoch of the first TLE reflecting the maneuver** — the actual burn is usually several hours earlier.",
+        ))
+        name_x36 = "ICEYE-X36"
+        name_c = "COSMOS 2612"
+        fig = go.Figure()
+        for df_, nm, col in ((a, name_x36, "#2a78d6"), (b, name_c, "#d63a2a")):
+            s_ = df_[df_.epoch_utc >= _CASE31_T0]
+            fig.add_trace(go.Scatter(x=s_.epoch_utc, y=s_.alt_km, mode="lines+markers", name=nm,
+                                     line=dict(color=col, width=2.5, shape="hv"), marker=dict(size=4)))
+        fig.update_layout(height=380, margin=dict(l=10, r=10, t=30, b=10),
+                          yaxis_title=T3("平均高度（km）", "平均高度（km）", "Mean altitude (km)"),
+                          legend=dict(orientation="h", y=1.08))
+        st.plotly_chart(fig, use_container_width=True)
+        if not jumps.empty:
+            col_t = T3("TLE 時間（UTC）", "TLE時刻（UTC）", "TLE epoch (UTC)")
+            col_d = T3("高度變化（km）", "高度変化（km）", "Altitude change (km)")
+            col_a = T3("變化後高度（km）", "変化後の高度（km）", "Altitude after (km)")
+            col_i = T3("傾角變化（°）", "傾斜角変化（°）", "Inclination change (°)")
+            tbl = pd.DataFrame({
+                col_t: jumps.epoch_utc.dt.strftime("%Y-%m-%d %H:%M"),
+                col_d: jumps.dalt.round(1), col_a: jumps.alt_km.round(1), col_i: jumps.dinc.round(3),
+            })
+            st.dataframe(tbl, hide_index=True, use_container_width=True)
+
+        # ── ③ 距離 ───────────────────────────────────────────────────────────
+        st.header(T3("③ 本專案重算：兩星距離", "③ 本プロジェクトの再計算：両衛星の距離", "③ Our recomputation: distance between the satellites"))
+        i_min = int(sep.dist_km.idxmin())
+        d_min, t_min = float(sep.dist_km.loc[i_min]), sep.t.loc[i_min]
+        last = sep.iloc[-1]
+        d_min_s = f"{d_min:.2f}"
+        t_min_s = t_min.strftime("%m-%d %H:%M")
+        d_last_s = f"{last.dist_km:,.0f}"
+        along_last_s = f"{abs(last.along_km):,.0f}"
+        behind = last.along_km < 0
+        m1, m2, m3 = st.columns(3)
+        m1.metric(T3("重建最近距離", "再構成した最接近距離", "Reconstructed closest approach"), f"{d_min_s} km", t_min_s + " UTC")
+        m2.metric(T3("資料最後時刻距離", "データ最終時刻の距離", "Distance at end of data"), f"{d_last_s} km",
+                  last.t.strftime("%m-%d %H:%M") + " UTC")
+        m3.metric(T3("TLE 資料截至", "TLEデータの最終時刻", "TLEs through"), last_ep.strftime("%Y-%m-%d %H:%M"))
+        st.caption(T3(
+            f"最近距離 {d_min_s} km 是 SGP4 重建值，低於公開 TLE 約 1 km 的精度，**不是量測值**；它與 LeoLabs 報導的約 500 m 屬同一量級，但不應拿來互相印證到百公尺。資料最後時刻 COSMOS 2612 在 X36 {'後方' if behind else '前方'}約 {along_last_s} km（沿軌方向）。",
+            f"最接近距離 {d_min_s} km はSGP4による再構成値で、公開TLEの精度（約1 km）を下回っており、**測定値ではない**。LeoLabsが報じた約500 mと同じ桁ではあるが、百メートル単位で互いを裏付ける材料にすべきではない。データ最終時刻にCOSMOS 2612はX36の{'後方' if behind else '前方'}約 {along_last_s} km（軌道方向）にいる。",
+            f"The {d_min_s} km closest approach is an SGP4 reconstruction, below the ~1 km accuracy of public TLEs — **not a measurement**. It is the same order of magnitude as LeoLabs' reported ~500 m, but the two should not be used to corroborate each other to the hundred-meter level. At the end of the data, COSMOS 2612 is about {along_last_s} km {'behind' if behind else 'ahead of'} X36 along track.",
+        ))
+        hourly = sep.set_index("t").resample("1h").dist_km.min().dropna()
+        fig = go.Figure()
+        fig.add_hrect(y0=0.05, y1=1.0, fillcolor="#9aa4b2", opacity=0.2, line_width=0)
+        fig.add_trace(go.Scatter(x=hourly.index, y=hourly.values, mode="lines",
+                                 name=T3("每小時最近距離", "1時間ごとの最接近距離", "Hourly minimum distance"),
+                                 line=dict(color="#2a78d6", width=2)))
+        fig.add_trace(go.Scatter(x=[t_min], y=[d_min], mode="markers+text", text=[f"{d_min_s} km"],
+                                 textposition="top right", marker=dict(color="#d63a2a", size=10), showlegend=False))
+        fig.update_layout(height=380, margin=dict(l=10, r=10, t=30, b=10), yaxis_type="log",
+                          yaxis_title=T3("距離（km，對數）", "距離（km、対数）", "Distance (km, log)"),
+                          legend=dict(orientation="h", y=1.08))
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption(T3("灰帶＝1 km 以下，低於公開 TLE 精度。",
+                      "灰色の帯＝1 km以下で、公開TLEの精度を下回る範囲。",
+                      "Gray band = below 1 km, under the accuracy of public TLEs."))
+
+        zoom = sep[(sep.t >= "2026-10-15") & (sep.t < "2026-10-20")]
+        if not zoom.empty:
+            st.markdown(T3(
+                "放大 10/15–10/20、改用線性刻度：繞飛期間距離每圈（約 96 分鐘）在 0 至數公里之間擺動，10/18 晚升軌後迅速拉開。",
+                "10月15〜20日を拡大し線形目盛にすると、周回中の距離は1周（約96分）ごとに0〜数キロメートルの間で揺れ、10月18日夜の上昇後に急速に離れていく。",
+                "Zooming in on 15–20 Oct on a linear scale: during the circumnavigation the distance swings between 0 and a few km every orbit (~96 min), then opens up quickly after the climb on the evening of 18 Oct.",
+            ))
+            fig = go.Figure(go.Scatter(x=zoom.t, y=zoom.dist_km, mode="lines", line=dict(color="#2a78d6", width=1.5),
+                                       name=T3("距離", "距離", "Distance")))
+            fig.update_layout(height=320, margin=dict(l=10, r=10, t=20, b=10),
+                              yaxis=dict(title=T3("距離（km）", "距離（km）", "Distance (km)"), range=[0, 20]))
+            st.plotly_chart(fig, use_container_width=True)
+
+    # ── ④ SatDashboard 圖表 ─────────────────────────────────────────────────
+    st.header(T3("④ SatDashboard RPO 檢視器的輸出", "④ SatDashboard RPO ビューアの出力", "④ Output from the SatDashboard RPO viewer"))
+    st.markdown(T3(
+        f"同一配對也收錄在 SatDashboard 的 RPO 檢視器，可互動回放 3D 場景：[開啟 /rpo 檢視器]({_CASE31_RPO_URL})。下面兩張是它的輸出。",
+        f"同じ組み合わせはSatDashboardのRPOビューアにも収録されており、3Dシーンを対話的に再生できる：[/rpoビューアを開く]({_CASE31_RPO_URL})。以下の2枚はその出力である。",
+        f"The same pair is in SatDashboard's RPO viewer, where the 3D scene can be replayed interactively: [open the /rpo viewer]({_CASE31_RPO_URL}). The two images below are its output.",
+    ))
+    rep = _CASE31_IMG / ("rpo_report_en.png" if _lang() == "en" else "rpo_report_zh.png")
+    if rep.exists():
+        st.image(str(rep), use_container_width=True)
+        st.markdown(T3(
+            "**怎麼讀這張報告**（2026-10-23 產生）：\n"
+            "- **左：ICEYE 星座 RAAN × 高度**——每個藍點是一顆 ICEYE 衛星的軌道面與高度；紅星（COSMOS 2612）與橘圈（X36）重疊，代表兩者在同一軌道面、同一高度。\n"
+            "- **中上：平均高度歷史**——與本頁 ② 相同的資料，標出 +47 km、−48 km 與 10 月中下旬的數次 ±2–3 km 小機動。\n"
+            "- **中下：距離**——實線為 TLE 期間內的 SGP4 距離，虛線為假設之後不再機動的彈道預測；灰帶為低於 TLE 精度的範圍。\n"
+            "- **右：相對運動 R–I 與 C–I**——以 X36 為原點，徑向／橫向對沿軌作圖；資料末段 COSMOS 2612 停在沿軌約 −475 km，已不在 X36 附近繞飛。\n"
+            "- 報告副標「高度差僅 0.01 km、伴飛或漂離無法判定」是自動判讀規則的保守措辭：兩星高度相同，代表**相對漂移已停止**，不代表仍在近距離伴飛——此時兩星相距約 475 km。",
+            "**このレポートの読み方**（2026年10月23日生成）：\n"
+            "- **左：ICEYEコンステレーションのRAAN×高度**——青い点はICEYE各衛星の軌道面と高度。赤い星（COSMOS 2612）とオレンジの円（X36）が重なっており、両者が同じ軌道面・同じ高度にあることを示す。\n"
+            "- **中央上：平均高度の履歴**——本ページ②と同じデータで、+47 km、−48 km、そして10月中下旬の数回の±2〜3 kmの小機動を示す。\n"
+            "- **中央下：距離**——実線はTLE期間内のSGP4距離、破線はその後機動しないと仮定した弾道予測。灰色の帯はTLE精度を下回る範囲。\n"
+            "- **右：相対運動R–IとC–I**——X36を原点に、径方向／横方向を軌道方向に対してプロットしたもの。データの終盤でCOSMOS 2612は軌道方向約−475 kmに留まり、もはやX36の近くを周回していない。\n"
+            "- レポートの副題「高度差わずか0.01 km、随伴か離脱かは判定できない」は自動判読規則の控えめな表現である。両衛星の高度が同じことは**相対的な漂流が止まった**ことを意味し、まだ近距離で随伴していることを意味しない——この時点で両衛星は約475 km離れている。",
+            "**How to read this report** (generated 23 Oct 2026):\n"
+            "- **Left: ICEYE constellation, RAAN × altitude** — each blue dot is one ICEYE satellite's orbital plane and altitude; the red star (COSMOS 2612) overlaps the orange ring (X36), meaning the two share a plane and an altitude.\n"
+            "- **Top middle: mean-altitude history** — the same data as ② on this page, marking +47 km, −48 km and several ±2–3 km small maneuvers in mid-to-late October.\n"
+            "- **Bottom middle: distance** — the solid line is the SGP4 distance within the TLE span; the dashed line is a ballistic forecast assuming no further maneuvers; the gray band is below TLE accuracy.\n"
+            "- **Right: relative motion R–I and C–I** — radial / cross-track versus along-track with X36 at the origin; at the end of the data COSMOS 2612 sits at about −475 km along track and is no longer circling X36.\n"
+            "- The report subtitle (\"altitude difference only 0.01 km; companion flight or drift-away cannot be determined\") is the automatic rule's conservative wording: equal altitudes mean **relative drift has stopped**, not that the two are still flying close together — they are about 475 km apart at this point.",
+        ))
+    shot = _CASE31_IMG / "rpo3d_zh.png"
+    if shot.exists():
+        st.image(str(shot), use_container_width=True)
+        st.caption(T3(
+            "3D 回放截圖（中文介面，2026-10-16 繞飛期間）：橘點＝X36、藍點＝COSMOS 2612，兩星周圍的網格為 3σ 位置不確定性橢球；右上浮動視窗以 COSMOS 2612 為中心畫出相對軌跡，可見每圈的繞飛弧線。",
+            "3D再生のスクリーンショット（中国語UI、2026年10月16日の周回中）：オレンジ＝X36、青＝COSMOS 2612。両衛星を囲む格子は3σの位置不確実性楕円体である。右上のフローティングウィンドウはCOSMOS 2612を中心に相対軌道を描いており、1周ごとの周回の弧が見える。",
+            "3D replay screenshot (Chinese UI, during the circumnavigation on 16 Oct 2026): orange = X36, blue = COSMOS 2612; the meshes around them are 3σ position-uncertainty ellipsoids. The floating window at top right plots the relative path centered on COSMOS 2612, showing the arc of each circuit.",
+        ))
+
+    # ── ⑤ 判讀與限制 ───────────────────────────────────────────────────────
+    st.header(T3("⑤ 判讀與限制（誠實揭露）", "⑤ 判読と限界（誠実な開示）", "⑤ Interpretation and limits (honest disclosure)"))
+    st.markdown(T3(
+        "- **看得出的**：軌道面匹配（5 月）、升軌停留調相位（9/30–10/12）、追趕與同步（10/15–16）、繞飛後離開（10/18–20）——這一串機動的順序與幅度，公開 TLE 都能清楚重建，並與外部報導的時間吻合。\n"
+        "- **看不出的**：次公里距離、繞飛橢圓的確切形狀、點火的確切時刻（TLE 晚於實際機動數小時），以及最重要的——**意圖**。公開資料只能描述衛星做了什麼，無法判斷它為什麼這樣做。\n"
+        "- **不下的結論**：兩星高度差小於公開 TLE 精度時，換用另一筆 elset，相對漂移的方向就可能反過來。因此 TLE 外推不能對「是否仍在伴飛」這類次公里尺度的問題下定論，需要雷達或光學的密集觀測。\n"
+        "- **為什麼重要**：即使沒有碰撞，極近距離的交會也可能迫使目標衛星做避讓、消耗燃料、打亂任務排程，或被視為展示反太空能力。對太空態勢感知而言，關鍵不只是最近距離，而是辨識**連續的機動序列**與相對軌道幾何——這正是本專案機動偵測方法的用途。",
+        "- **見えること**：軌道面の一致（5月）、高い軌道に留まっての位相調整（9月30日〜10月12日）、追いつきと同期（10月15〜16日）、周回後の離脱（10月18〜20日）——この一連の機動の順序と規模は公開TLEで明確に再構成でき、外部報道の時期とも一致する。\n"
+        "- **見えないこと**：1 km未満の距離、周回楕円の正確な形、噴射の正確な時刻（TLEは実際の機動より数時間遅れる）、そして最も重要な**意図**である。公開データは衛星が何をしたかは記述できるが、なぜそうしたかは判断できない。\n"
+        "- **下さない結論**：両衛星の高度差が公開TLEの精度を下回るとき、別のelsetに替えるだけで相対的な漂流の向きが逆になりうる。したがってTLEの外挿では「まだ随伴しているか」というキロメートル未満の問いに結論を出せず、レーダーや光学による高密度の観測が必要である。\n"
+        "- **なぜ重要か**：衝突がなくても、極めて近い距離での接近は、標的衛星に回避を強いたり、燃料を消費させたり、運用計画を乱したり、対宇宙能力の誇示と見なされたりしうる。宇宙状況把握にとって重要なのは最接近距離だけではなく、**連続した機動の系列**と相対軌道の幾何を見分けることであり、それこそが本プロジェクトの機動検出手法の用途である。",
+        "- **What can be seen**: plane matching (May), phasing by holding a higher orbit (30 Sep–12 Oct), catch-up and synchronization (15–16 Oct), departure after circling (18–20 Oct) — the order and size of this maneuver sequence are clearly reconstructable from public TLEs and match the timing in external reports.\n"
+        "- **What cannot be seen**: sub-kilometer distances, the exact shape of the circumnavigation ellipse, exact burn times (TLEs lag actual maneuvers by hours), and above all **intent**. Public data can describe what a satellite did, not why.\n"
+        "- **Conclusions we do not draw**: when the altitude difference between the two is below public-TLE accuracy, simply switching to another elset can reverse the direction of relative drift. TLE extrapolation therefore cannot settle sub-kilometer questions such as whether the two are still flying together; that takes dense radar or optical tracking.\n"
+        "- **Why it matters**: even without a collision, a very close approach can force the target to maneuver, burn fuel, disrupt its mission schedule, or be read as a demonstration of counterspace capability. For space situational awareness, the key is not just the closest distance but recognizing the **sequence of maneuvers** and the relative orbital geometry — exactly what this project's maneuver detection is for.",
+    ))
+    st.caption(T3(
+        f"外部來源：CNN 2026-10-19 報導（{_CASE31_CNN_URL}）；LeoLabs 分析、RUSI 2026-06 報告與 ICEYE 聲明皆經該報導轉引，本專案未直接取得原文。",
+        f"外部ソース：CNN 2026年10月19日の報道（{_CASE31_CNN_URL}）。LeoLabsの分析、RUSIの2026年6月の報告、ICEYEの声明はいずれも同報道を通じた引用であり、本プロジェクトは原文を直接入手していない。",
+        f"External source: CNN report of 19 Oct 2026 ({_CASE31_CNN_URL}); the LeoLabs analysis, RUSI's June 2026 report and ICEYE's statement are all cited via that report — this project did not obtain the originals directly.",
+    ))
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -13700,7 +13979,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
-        "case21", "case22", "case23", "case24", "case25", "case26", "case27", "case28", "case29", "case30"):
+        "case21", "case22", "case23", "case24", "case25", "case26", "case27", "case28", "case29", "case30", "case31"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -13783,6 +14062,8 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case29()
     elif _case == "case30":
         render_storymap_case30()
+    elif _case == "case31":
+        render_storymap_case31()
     else:
         render_storymap_landing()
     st.stop()
