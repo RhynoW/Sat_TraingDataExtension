@@ -19,11 +19,11 @@ cd /d "%~dp0"
 
 echo [%TIME:~0,8%] [1/4] Update space weather files from CelesTrak ...
 python scenario-advanced01\tools\fetch_space_weather.py
-if errorlevel 1 echo [WARN] space weather update failed - keeping previous files
+if not "%errorlevel%"=="0" echo [WARN] space weather update failed - keeping previous files
 
 echo [%TIME:~0,8%] [2/4] Download TLE from Space-Track, rebuild slim DB and parquet ...
 python download_TLE_unified.py --mode spacetrack --rebuild-slim --rebuild-parquet --keep-lines --recent-days 14
-if errorlevel 1 goto :fail
+if not "%errorlevel%"=="0" goto :fail
 
 if /i not "%~1"=="publish" (
   echo [%TIME:~0,8%] [3/4] skipped publish - run with "publish" to deploy to HF
@@ -31,11 +31,11 @@ if /i not "%~1"=="publish" (
 )
 echo [%TIME:~0,8%] [3/4] Publish slim DB and space weather to HF ...
 call "%~dp0scenario-advanced01\update_slim_publish_hf.bat" skipbuild
-if errorlevel 1 goto :fail
+if not "%errorlevel%"=="0" goto :fail
 
 echo [%TIME:~0,8%] [4/4] Sync new TLE into HF dataset starlink-maneuver-db ...
 python ci\sync_maneuver_dataset.py
-if errorlevel 1 echo [WARN] starlink-maneuver-db sync failed - rerun: python ci\sync_maneuver_dataset.py
+if not "%errorlevel%"=="0" echo [WARN] starlink-maneuver-db sync failed - rerun: python ci\sync_maneuver_dataset.py
 
 :ok
 echo [%TIME:~0,8%] [OK] done

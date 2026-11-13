@@ -90,6 +90,17 @@ def fmt_mb(path: Path) -> str:
     return "不存在"
 
 
+def write_parquet(df: pd.DataFrame, path: Path) -> None:
+    """以 DuckDB 寫 parquet（snappy），取代 df.to_parquet：
+    Python 3.13 / Windows ARM64 無 pyarrow wheel，pandas 無法自行寫 parquet。"""
+    c = duckdb.connect()
+    try:
+        c.register("df_out", df)
+        c.execute(f"COPY df_out TO '{Path(path).as_posix()}' (FORMAT parquet, COMPRESSION snappy)")
+    finally:
+        c.close()
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Part 1: 建立 space_db_slim.duckdb
 # ─────────────────────────────────────────────────────────────────────────────
@@ -249,7 +260,7 @@ def export_parquet(date_from: str, db_path: Path) -> None:
             log.debug("  %04d-%02d: 無中國衛星資料，略過", yr, mo)
             continue
 
-        df.to_parquet(out_path, index=False, compression="snappy")
+        write_parquet(df, out_path)
         sz = out_path.stat().st_size / 1024
         total_size += out_path.stat().st_size
         log.info("  %04d-%02d: %6d 列 → %s  (%d KB)",
@@ -259,7 +270,7 @@ def export_parquet(date_from: str, db_path: Path) -> None:
     log.info("匯出 sat_n2yo_metadata.parquet …")
     meta_df = con.execute("SELECT * FROM sat_n2yo_metadata").fetchdf()
     meta_path = PARQUET_DIR / "sat_metadata.parquet"
-    meta_df.to_parquet(meta_path, index=False, compression="snappy")
+    write_parquet(meta_df, meta_path)
     total_size += meta_path.stat().st_size
     log.info("  sat_metadata.parquet: %d 列, %d KB",
              len(meta_df), meta_path.stat().st_size // 1024)
@@ -329,7 +340,7 @@ def export_latest30day_parquet() -> None:
     """).fetchdf()
 
     out_tle = PARQUET_DIR / "latest30day_tle.parquet"
-    df_tle.to_parquet(out_tle, index=False, compression="snappy")
+    write_parquet(df_tle, out_tle)
     sz_tle = out_tle.stat().st_size
     log.info("  latest30day_tle.parquet: %d 顆衛星, %.0f KB  (%.1f s)",
              len(df_tle), sz_tle / 1024, time.time() - t0)
@@ -341,7 +352,7 @@ def export_latest30day_parquet() -> None:
             "SELECT * FROM conjunction_events ORDER BY tca_utc DESC"
         ).fetchdf()
         out_ce = PARQUET_DIR / "conjunction_events.parquet"
-        df_ce.to_parquet(out_ce, index=False, compression="snappy")
+        write_parquet(df_ce, out_ce)
         log.info("  conjunction_events.parquet: %d 列, %.0f KB  (%.1f s)",
                  len(df_ce), out_ce.stat().st_size / 1024, time.time() - t0)
     except Exception as e:

@@ -879,7 +879,11 @@ def run_spacetrack_mode(source_format: str = "3le"):
             )
 
         except Exception as e:
-            print(f"{e} TLE下載失敗，日期 {current_date.strftime(fmt)}")
+            # 失敗即停：不推進 LAST_TLE_DATE，下次執行從同一天重試；
+            # 以非零結束碼讓 download_tle_unified.bat 中止、不發佈舊資料。
+            print(f"{e} TLE下載失敗，日期 {current_date.strftime(fmt)}；"
+                  f"LAST_TLE_DATE 維持不變，中止", flush=True)
+            raise SystemExit(1)
 
         write_last_tle_date(current_date, fmt)
         print(f"更新 LAST_TLE_DATE = {current_date.strftime(fmt)}")
