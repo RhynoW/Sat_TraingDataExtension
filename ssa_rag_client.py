@@ -26,6 +26,7 @@ Streamlit integration sketch:
         for s in result.sources:
             st.caption(f"來源：{s['file_name']} (chunk {s['chunk_index']})")
 """
+import os
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -119,14 +120,19 @@ class SSARAGClient:
     This client does not load any models itself.
     """
 
-    def __init__(self, base_url: str = DEFAULT_BASE_URL, timeout: float = DEFAULT_TIMEOUT):
+    def __init__(self, base_url: str = DEFAULT_BASE_URL, timeout: float = DEFAULT_TIMEOUT,
+                 token: Optional[str] = None):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        # Private HF Space deployment needs "Authorization: Bearer <HF token>".
+        # Falls back to the SSA_RAG_TOKEN env var; the local service ignores it.
+        token = token if token is not None else os.environ.get("SSA_RAG_TOKEN")
+        self._headers = {"Authorization": f"Bearer {token}"} if token else {}
 
     def health(self) -> bool:
         """Return True if the SSA-RAG service is reachable and healthy."""
         try:
-            resp = requests.get(f"{self.base_url}/health", timeout=5)
+            resp = requests.get(f"{self.base_url}/health", headers=self._headers, timeout=5)
             return resp.ok and resp.json().get("status") == "ok"
         except requests.RequestException:
             return False
@@ -156,7 +162,8 @@ class SSARAGClient:
             payload["topic"] = topic
         if client_id:
             payload["client_id"] = client_id
-        resp = requests.post(f"{self.base_url}/ask", json=payload, timeout=self.timeout)
+        resp = requests.post(f"{self.base_url}/ask", json=payload, headers=self._headers,
+                             timeout=self.timeout)
         resp.raise_for_status()
         data = resp.json()
         return AskResult(

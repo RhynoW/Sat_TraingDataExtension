@@ -5,7 +5,15 @@ maneuver_app_2026November.py — 機動偵測儀表板（2026-11 版，前身 ma
 配合最新 ML（models_meme_forecast）與統計偵測（CUSUM/BOCPD/SSA）模型的重寫版。
 用法（本機）：  streamlit run maneuver_app_2026November.py
 
-【2026-11 版】由 2026-10 版改版，功能與計算邏輯不變，僅更新版本與資料來源說明：
+【2026-11 版（2026-10-29 改版，以當日 2026-10 版全文為底）】
+  * PDF 報告改版：F1 摘要版（一頁：三項指標＋五欄候選事件表＋半長軸主圖＋限制說明）、
+    F2 技術完整版（摘要＋附錄 A–F）；修正落點清單索引錯位與（近）重複 TLE，
+    事件統一由 L1 規則候選點 48 小時連鎖合併，其餘通道作輔助欄位（邏輯在 maneuver_report_builder.py）。
+  * 「產生 PDF」不再自動開新分頁（移除 about:blank 空白頁），完成後以下載按鈕取得。
+  * 資料：HF Dataset RhynoWu/starlink-maneuver-db 之 raw_tle_archive 已去重
+    （刪除遷移遺留的舊整合檔；38,765,133 → 18,907,885 列）。
+
+【2026-11 版先前註記（2026-10-21）】
   * 資料來源：HF Dataset RhynoWu/satdashboard-db 的 space_db_slim.duckdb（設 HF_DATASET_REPO 時為遠端 Parquet 模式；本機有母庫時走本機模式）。
   * 資料更新：每日 Space-Track TLE 增量抓取（update_slim_publish_hf.bat 第 0 步）→ 重建 slim DB → 發布。
   * 資料品質：發布前排除未來 epoch（build_slim_db.py），避免「最近 N 天」視窗被錯誤錨點推移。
@@ -39,7 +47,9 @@ from __future__ import annotations
 
 import colorsys
 import glob
+import json
 import os
+import re
 from datetime import timezone
 from pathlib import Path
 
@@ -63,12 +73,12 @@ R_E = 6378.137
 LANG_LABELS = {"zh": "中文", "ja": "日本語", "en": "English"}
 L: dict[str, dict[str, str]] = {
     # ── 頁面 / 標題 ──────────────────────────────────────────────────────────
-    "page_title": {"zh": "機動偵測儀表板（2026 年 10 月版）",
-                   "ja": "マヌーバ検知ダッシュボード（2026年10月版）",
-                   "en": "Maneuver Detection Dashboard (October 2026)"},
-    "app_title": {"zh": "🛰️ 機動偵測儀表板（2026 年 10 月版）",
-                  "ja": "🛰️ マヌーバ検知ダッシュボード（2026年10月版）",
-                  "en": "🛰️ Maneuver Detection Dashboard (October 2026)"},
+    "page_title": {"zh": "機動偵測儀表板（2026 年 11 月版）",
+                   "ja": "マヌーバ検知ダッシュボード（2026年11月版）",
+                   "en": "Maneuver Detection Dashboard (November 2026)"},
+    "app_title": {"zh": "🛰️ 機動偵測儀表板（2026 年 11 月版）",
+                  "ja": "🛰️ マヌーバ検知ダッシュボード（2026年11月版）",
+                  "en": "🛰️ Maneuver Detection Dashboard (November 2026)"},
     "app_caption": {"zh": "整合 P1–P6 規則、CUSUM/BOCPD/SSA"
                           "（Singular Spectrum Analysis，奇異譜分析）統計層、"
                           "MEME-tuned ML forecast 模型",
@@ -249,6 +259,19 @@ L: dict[str, dict[str, str]] = {
     "storymap_case30_card_desc": {"zh": "SGP4 沒有推力項，持續推進的衛星只能把推力擬合進阻力參數 B*，於是出現物理上不可能的負 B*。普查 2.3 萬個低軌物件並以 Starlink MEME 真值驗證，再檢查這件事對本專案偵測規則的實際影響——包括兩個被數據推翻的原始推測。",
                                   "ja": "SGP4には推力項がないため、推進を続ける衛星は推力を抵抗パラメータB*に押し込むしかなく、物理的にあり得ない負のB*が現れる。低軌道の約2.3万物体を調査し、Starlink MEME真値で検証したうえで、本プロジェクトの検出規則への実際の影響を確かめる——データに覆された当初の推測2つも含めて。",
                                   "en": "SGP4 has no thrust term, so a continuously thrusting satellite can only have its thrust fitted into the drag term B* — producing physically impossible negative B*. A census of ~23,000 LEO objects, validated against Starlink MEME truth, then a check of what this actually means for this project's detection rules — including two initial guesses the data overturned."},
+
+    "storymap_case31_card_title": {"zh": "案例三十一：俄國軍事衛星 COSMOS 2612 逼近 ICEYE-X36——用公開 TLE 重建一次近距離交會",
+                                   "ja": "事例三十一：ロシア軍事衛星COSMOS 2612がICEYE-X36に接近——公開TLEで近接遭遇を再構成する",
+                                   "en": "Case 31: Russian Military Satellite COSMOS 2612 Closes In on ICEYE-X36 — Reconstructing a Close Approach from Public TLEs"},
+    "storymap_case31_card_desc": {"zh": "2026 年 5 月進入同一軌道面、9/30 升軌調相位、10/15–16 進入繞飛、10/18 離開——以公開 TLE（至 10/22）現場重算高度與距離，搭配 SatDashboard RPO 檢視器的報告圖與 3D 回放，並把外部報導（LeoLabs、RUSI、ICEYE）與本專案判讀分開標示。",
+                                  "ja": "2026年5月に同じ軌道面へ入り、9月30日に高度を上げて位相を調整、10月15〜16日に周回へ入り、10月18日に離脱——公開TLE（10月22日まで）から高度と距離をその場で再計算し、SatDashboard RPOビューアのレポート図と3D再生を添え、外部報道（LeoLabs、RUSI、ICEYE）と本プロジェクトの判読を区別して示す。",
+                                  "en": "Into the same orbital plane in May 2026, a phasing climb on 30 Sep, circumnavigation on 15–16 Oct, departure on 18 Oct — altitude and distance recomputed live from public TLEs (through 22 Oct), with the SatDashboard RPO viewer's report and 3D replay, and external reporting (LeoLabs, RUSI, ICEYE) kept separate from this project's own reading."},
+    "storymap_case32_card_title": {"zh": "案例三十二：NOTSO、JCO、CIC 與 Space ISAC——美國太空軍如何與商業衛星業者共享威脅資訊",
+                                   "ja": "事例三十二：NOTSO、JCO、CIC と Space ISAC——米宇宙軍は商業衛星事業者と脅威情報をどう共有するか",
+                                   "en": "Case 32: NOTSO, JCO, CIC and Space ISAC — How the US Space Force Shares Threat Information with Commercial Satellite Operators"},
+    "storymap_case32_card_desc": {"zh": "從 Orbital Watch 的單向非機密簡報，到 JCO 發布的 NOTSO、邀請制可含機密的 CIC，以及付費會員制的 Space ISAC——比較四者的參與門檻、資訊等級與角色，並說明 TraCSS 與它們的差異、機密共享的制度難題，以及公開 TLE 機動偵測在「非機密早期預警」層的位置與限制。",
+                                  "ja": "Orbital Watch の一方向の非機密ブリーフから、JCO が出す NOTSO、招待制で機密を含みうる CIC、有料会員制の Space ISAC まで——4 つの参加条件・情報区分・役割を比べ、TraCSS との違い、機密共有の制度的課題、そして公開 TLE による機動検出が「非機密の早期警戒」層で占める位置と限界を説明する。",
+                                  "en": "From Orbital Watch's one-way unclassified briefings to JCO's NOTSOs, the invitation-only and possibly classified CIC, and the paid-membership Space ISAC — comparing entry bars, classification levels and roles, how TraCSS differs, the institutional hurdles of classified sharing, and where public-TLE maneuver detection fits (and falls short) in the unclassified early-warning layer."},
 
     # ── 資料後端 bootstrap ───────────────────────────────────────────────────
     "warn_hf_secret": {"zh": "HF secret 建立提示（private repo 才需要）：{e}",
@@ -479,9 +502,9 @@ L: dict[str, dict[str, str]] = {
                                     "en": "Unified detection unavailable: {err}"},
 
     # ── ① 根數與差值 ─────────────────────────────────────────────────────────
-    "sec1_title": {"zh": "① 軌道根數連續變化與差值",
-                   "ja": "① 軌道要素の連続変化と差分",
-                   "en": "① Orbital element time series and differences"},
+    "sec1_title": {"zh": "軌道根數連續變化與差值",
+                   "ja": "軌道要素の連続変化と差分",
+                   "en": "Orbital element time series and differences"},
     "radio_left_y": {"zh": "左上 Y 軸顯示", "ja": "左上 Y 軸の表示", "en": "Top-left Y axis"},
     "help_left_y": {"zh": "切換左上第一格：半長軸 a ↔ 距離地表高度（a − R⊕，R⊕=6378.137 km）。"
                           "註：Streamlit 無法擷取「滑鼠點選 Y 軸」事件，故以此切換鈕達成等效功能；"
@@ -506,9 +529,9 @@ L: dict[str, dict[str, str]] = {
                                  "red crosses = P1–P6 combined detections."},
 
     # ── ② P1–P6 ─────────────────────────────────────────────────────────────
-    "sec2_title": {"zh": "② P1–P6 策略：個別 vs 合併",
-                   "ja": "② P1–P6 戦略：個別 vs 統合",
-                   "en": "② P1–P6 strategies: individual vs combined"},
+    "sec2_title": {"zh": "P1–P6 策略：個別 vs 合併",
+                   "ja": "P1–P6 戦略：個別 vs 統合",
+                   "en": "P1–P6 strategies: individual vs combined"},
     "tbl_kind_suppress": {"zh": "抑制", "ja": "抑制", "en": "Suppression"},
     "tbl_kind_detect": {"zh": "偵測", "ja": "検知", "en": "Detection"},
     "tbl_kind_final": {"zh": "最終", "ja": "最終", "en": "Final"},
@@ -522,9 +545,9 @@ L: dict[str, dict[str, str]] = {
                       "en": "P5: F10.7 → multiplier"},
 
     # ── ③ 統計層 + ML ───────────────────────────────────────────────────────
-    "sec3_title": {"zh": "③ 統計偵測層（CUSUM/BOCPD/SSA）＋ ML 偵測/預測",
-                   "ja": "③ 統計的検知層（CUSUM/BOCPD/SSA）＋ ML 検知・予測",
-                   "en": "③ Statistical detection layer (CUSUM/BOCPD/SSA) + ML detection/forecast"},
+    "sec3_title": {"zh": "統計偵測層（CUSUM/BOCPD/SSA）＋ ML 偵測/預測",
+                   "ja": "統計的検知層（CUSUM/BOCPD/SSA）＋ ML 検知・予測",
+                   "en": "Statistical detection layer (CUSUM/BOCPD/SSA) + ML detection/forecast"},
     "succ_starlink_domain": {"zh": "🛰️ **{sat} 屬 Starlink（Model 1 分布內）→ 主判：Model 1（監督式）**，"
                                    "Model 2 / NRLMSIS 殘差供交叉驗證。",
                              "ja": "🛰️ **{sat} は Starlink（Model 1 の分布内）→ 主判定：Model 1（教師あり）**。"
@@ -719,9 +742,9 @@ L: dict[str, dict[str, str]] = {
                                          "`python fusion_scorer.py`)."},
 
     # ── ⑤ MEME vs TLE ───────────────────────────────────────────────────────
-    "sec5_title": {"zh": "⑤ MEME vs TLE（僅 72h 模型，不做長時程外推）",
-                   "ja": "⑤ MEME vs TLE（72h モデルのみ、長期外挿は行わない）",
-                   "en": "⑤ MEME vs TLE (72 h model only; no long-term extrapolation)"},
+    "sec5_title": {"zh": "MEME vs TLE（僅 72h 模型，不做長時程外推）",
+                   "ja": "MEME vs TLE（72h モデルのみ、長期外挿は行わない）",
+                   "en": "MEME vs TLE (72 h model only; no long-term extrapolation)"},
     "xaxis_meme_age": {"zh": "MEME 外推齡 (h, 0–72)", "ja": "MEME 外挿経過時間 (h, 0–72)",
                        "en": "MEME propagation age (h, 0–72)"},
     "yaxis_tle_meme_err": {"zh": "TLE-vs-MEME 位置誤差 (km)", "ja": "TLE-vs-MEME 位置誤差 (km)",
@@ -737,9 +760,9 @@ L: dict[str, dict[str, str]] = {
                                  "en": "MEME comparison unavailable: {e}"},
 
     # ── ⑥ 資料品質稽核 ───────────────────────────────────────────────────────
-    "sec6_title": {"zh": "⑥ 資料品質稽核（quality_flag：good / suspect / rejected）",
-                   "ja": "⑥ データ品質監査（quality_flag：good / suspect / rejected）",
-                   "en": "⑥ Data quality audit (quality_flag: good / suspect / rejected)"},
+    "sec6_title": {"zh": "資料品質稽核（quality_flag：good / suspect / rejected）",
+                   "ja": "データ品質監査（quality_flag：good / suspect / rejected）",
+                   "en": "Data quality audit (quality_flag: good / suspect / rejected)"},
     "metric_q_good": {"zh": "良好 good", "ja": "良好 good", "en": "Good"},
     "metric_q_suspect": {"zh": "存疑 suspect", "ja": "要確認 suspect", "en": "Suspect"},
     "metric_q_rejected": {"zh": "剔除 rejected", "ja": "除外 rejected", "en": "Rejected"},
@@ -772,9 +795,9 @@ L: dict[str, dict[str, str]] = {
                               "`python data_quality_audit.py`."},
 
     # ── ⑦ 星系級異常分析 ────────────────────────────────────────────────────
-    "sec7_title": {"zh": "⑦ 星系級異常分析（軌道面 Δi std／批量機動／陣型誤差）",
-                   "ja": "⑦ コンステレーション規模の異常解析（軌道面 Δi std／一斉マヌーバ／編隊誤差）",
-                   "en": "⑦ Constellation-level anomaly analysis (per-plane Δi std / batch maneuvers "
+    "sec7_title": {"zh": "星系級異常分析（軌道面 Δi std／批量機動／陣型誤差）",
+                   "ja": "コンステレーション規模の異常解析（軌道面 Δi std／一斉マヌーバ／編隊誤差）",
+                   "en": "Constellation-level anomaly analysis (per-plane Δi std / batch maneuvers "
                          "/ formation error)"},
     "caption_not_constellation": {"zh": "「{sat}」不屬於已知星系清單，略過。已知：{known}",
                                   "ja": "「{sat}」は既知のコンステレーション一覧に含まれないためスキップします。"
@@ -830,9 +853,9 @@ L: dict[str, dict[str, str]] = {
                                          "maneuver."},
 
     # ── ④ 艦隊級統計 ─────────────────────────────────────────────────────────
-    "sec4_title": {"zh": "④ 艦隊級統計（全 MEME 284 顆）＋ 95% 信賴區間",
-                   "ja": "④ フリート全体の統計（MEME 全 284 機）＋ 95% 信頼区間",
-                   "en": "④ Fleet-level statistics (all 284 MEME satellites) + 95% confidence "
+    "sec4_title": {"zh": "艦隊級統計（全 MEME 284 顆）＋ 95% 信賴區間",
+                   "ja": "フリート全体の統計（MEME 全 284 機）＋ 95% 信頼区間",
+                   "en": "Fleet-level statistics (all 284 MEME satellites) + 95% confidence "
                          "intervals"},
     "metric_fleet_rate": {"zh": "艦隊機動事件率（每 30 天／每顆）",
                           "ja": "衛星群全体のマヌーバイベント率（30日あたり／衛星）",
@@ -849,8 +872,8 @@ L: dict[str, dict[str, str]] = {
                          "en": "transitions_full ground-truth file not found."},
 
     # ── ⑩ 合成 TLE ───────────────────────────────────────────────────────────
-    "sec10_title": {"zh": "⑩ 合成 TLE 批次生成", "ja": "⑩ 合成TLEの一括生成",
-                    "en": "⑩ Batch synthetic TLE generation"},
+    "sec10_title": {"zh": "合成 TLE 批次生成", "ja": "合成TLEの一括生成",
+                    "en": "Batch synthetic TLE generation"},
     "exp_synth": {"zh": "展開合成資料生成器（依條件批次產生）",
                   "ja": "合成データ生成器を開く（条件を指定して一括生成）",
                   "en": "Open the synthetic data generator (batch generation by criteria)"},
@@ -885,20 +908,20 @@ L: dict[str, dict[str, str]] = {
                                         "synthetic_app.py instead)"},
 
     # ── ⑧ SSA-RAG 知識問答 / footer ─────────────────────────────────────────
-    "sec8_title": {"zh": "⑧ SSA-RAG 知識問答（太空態勢感知知識庫）",
-                   "ja": "⑧ SSA-RAG ナレッジ Q&A（宇宙状況把握ナレッジベース）",
-                   "en": "⑧ SSA-RAG knowledge Q&A (space situational awareness knowledge base)"},
+    "sec8_title": {"zh": "SSA-RAG 知識問答（太空態勢感知知識庫）",
+                   "ja": "SSA-RAG ナレッジ Q&A（宇宙状況把握ナレッジベース）",
+                   "en": "SSA-RAG knowledge Q&A (space situational awareness knowledge base)"},
     "exp_rag_qa": {"zh": "展開互動問答（需 SSA-RAG 服務上線）",
                    "ja": "対話型 Q&A を開く（SSA-RAG サービスの起動が必要）",
                    "en": "Open interactive Q&A (requires the SSA-RAG service to be running)"},
-    "footer": {"zh": "maneuver_app_2026September.py · 模型：P1–P6（拋物線 P2/P5）· CUSUM/BOCPD/SSA · "
+    "footer": {"zh": "maneuver_app_2026November.py · 模型：P1–P6（拋物線 P2/P5）· CUSUM/BOCPD/SSA · "
                      "MEME-tuned 偵測(window≥5km) + forecast(1d) · 真值：MEME 284 顆 · "
                      "SSA-RAG 自動解說＋知識問答",
-               "ja": "maneuver_app_2026September.py · モデル：P1–P6（放物線 P2/P5）· CUSUM/BOCPD/SSA · "
+               "ja": "maneuver_app_2026November.py · モデル：P1–P6（放物線 P2/P5）· CUSUM/BOCPD/SSA · "
                      "MEME チューニング済みマヌーバ検知(window≥5km) ＋ forecast(1d) · "
                      "真値：MEME 284 機 · "
                      "SSA-RAG 自動解説＋ナレッジ Q&A",
-               "en": "maneuver_app_2026September.py · Models: P1–P6 (parabolic P2/P5) · CUSUM/BOCPD/SSA "
+               "en": "maneuver_app_2026November.py · Models: P1–P6 (parabolic P2/P5) · CUSUM/BOCPD/SSA "
                      "· MEME-tuned detection (window ≥5 km) + forecast (1 d) · Ground truth: 284 MEME "
                      "satellites · SSA-RAG auto-explanation + knowledge Q&A"},
 }
@@ -1570,14 +1593,24 @@ def render_ssa_rag_page(base_url: str = RAG_DEFAULT_URL) -> None:
     with col_topic:
         topic = st.selectbox(t("sel_topic"), [_ALL] + TOPICS, key="ssa_topic_july",
                              format_func=lambda k: t("opt_all") if k == _ALL else k)
+    def _fill_example() -> None:
+        # 有 key 的 text_input 只在首次繪製時採用 value，之後改選範例題不會帶入；
+        # 須在選單 on_change 時直接寫入其 session_state（2026-10-29：選了範例、送出卻無反應）
+        choice = st.session_state.get("ssa_prompt_choice_july", _CUSTOM)
+        if choice != _CUSTOM:
+            st.session_state["ssa_question_july"] = choice
+
     with col_prompt:
         prompts = SUGGESTED_PROMPTS.get(topic, [])
-        prompt_choice = st.selectbox(t("sel_example_q"), [_CUSTOM] + prompts,
-                                     key="ssa_prompt_choice_july",
-                                     format_func=lambda k: t("opt_custom") if k == _CUSTOM else k)
-    default_q = "" if prompt_choice == _CUSTOM else prompt_choice
-    question = st.text_input(t("input_question"), value=default_q, key="ssa_question_july")
-    if st.button(t("btn_send"), type="primary", key="ssa_submit_july") and question:
+        st.selectbox(t("sel_example_q"), [_CUSTOM] + prompts, key="ssa_prompt_choice_july",
+                     format_func=lambda k: t("opt_custom") if k == _CUSTOM else k,
+                     on_change=_fill_example)
+    question = st.text_input(t("input_question"), key="ssa_question_july")
+    clicked = st.button(t("btn_send"), type="primary", key="ssa_submit_july")
+    if clicked and not question.strip():
+        st.warning(T3("請先輸入問題，或從「範例問題」選一題。", "質問を入力するか、「例題」から選んでください。",
+                      "Type a question, or pick one from the example list."))
+    if clicked and question.strip():
         with st.spinner(t("spinner_querying")):
             try:
                 result = client.ask(question, topic=None if topic == _ALL else topic,
@@ -1878,7 +1911,7 @@ def render_storymap_landing():
             st.session_state["storymap_case"] = "case13"
             st.rerun()
 
-    for _n in range(14, 31):
+    for _n in range(14, 33):
         _card = st.container(border=True)
         with _card:
             st.subheader(t(f"storymap_case{_n}_card_title"))
@@ -2660,6 +2693,20 @@ def load_case5_real_data() -> dict:
     return out
 
 
+@st.cache_data(show_spinner=False)
+def load_case5_meme_sawtooth() -> dict:
+    """案例五第二節之凍結資料：MEME 檔內預報之軌道平均半長軸鋸齒＋各星 MEME 阻力 vs 本專案模型。
+    MEME 原始星曆（data/raw）未上傳 HF Space，故預先計算；產生器見
+    research_202610/validation_20261029/scripts/case5_meme_sawtooth_data.py。缺檔回傳空 dict。"""
+    p1 = DATA / "benchmark" / "case5_meme_sawtooth_series_20261029.csv"
+    p2 = DATA / "benchmark" / "case5_meme_drag_vs_model_20261029.csv"
+    if not (p1.exists() and p2.exists()):
+        return {}
+    s = pd.read_csv(p1)
+    s["t"] = pd.to_datetime(s["t"], utc=True, format="mixed")
+    return {"series": s, "table": pd.read_csv(p2)}
+
+
 # --- render_storymap_case5 ---
 def render_storymap_case5():
     if st.button(t("storymap_back"), key="back_from_case5"):
@@ -2771,6 +2818,158 @@ def render_storymap_case5():
                     "directly determines \"natural reentry, maneuver = 0,\" so the number of points flagged "
                     "as a maneuver in the chart above is correctly **0**.",
                 ))
+
+    # ── 第二節（2026-10-29 新增）：MEME 預報裡看得到推力 ───────────────────────
+    msaw = load_case5_meme_sawtooth()
+    if msaw:
+        st.markdown("---")
+        st.header(T3(
+            "MEME 預報裡看得到推力：滑行被阻力拉低，推力再推回去",
+            "MEME 予報に見える推力：滑空中は抵抗で下がり、推力で押し戻される",
+            "Thrust Is Visible in the MEME Forecasts: Drag Pulls the Orbit Down, Thrust Pushes It Back",
+        ))
+        st.markdown(T3(
+            "上面的殘差都是從 TLE 算出來的。TLE 大約每 8 小時才一筆，看到的只是兩筆之間的**淨變化**；"
+            "如果推力和阻力在中間互相抵銷，TLE 就看不出來。\n\n"
+            "SpaceX 公開的 **MEME 星曆**不一樣：每份檔是他們對未來 3 天、每分鐘一筆的預報軌道，"
+            "裡面包含他們預定的推力。我們把半長軸**每繞一圈取一次平均**，扣掉地球重力場（J2）造成的每圈數公里起伏。"
+            "J2 不會讓平均半長軸長期升降，所以剩下的變化只可能有兩個來源：**阻力只會讓它下降，要上升就必須有推力。**",
+            "上の残差はすべて TLE から算出したものである。TLE はおよそ 8 時間に 1 件しかなく、見えるのは 2 件間の"
+            "**正味の変化**だけである。推力と抵抗がその間で打ち消し合えば、TLE からは見えない。\n\n"
+            "SpaceX が公開する **MEME 暦**は異なる：各ファイルは今後 3 日間・1 分ごとの予報軌道であり、予定された推力を"
+            "含む。軌道長半径を**1 周ごとに平均**し、地球重力場（J2）による 1 周あたり数 km の揺らぎを取り除く。"
+            "J2 は平均長半径を長期的に上下させないため、残る変化の原因は 2 つしかない：**抵抗は下げるだけで、"
+            "上げるには推力が必要である。**",
+            "The residuals above are all computed from TLEs. A TLE arrives only about every 8 hours, so it shows "
+            "only the **net change** between two sets; if thrust and drag cancel in between, the TLE cannot see it.\n\n"
+            "SpaceX's public **MEME ephemerides** are different: each file is their 3-day, one-point-per-minute "
+            "forecast orbit, including their planned thrust. We **average the semi-major axis over each orbit**, "
+            "removing the few-km per-orbit ripple caused by Earth's gravity field (J2). J2 does not raise or lower "
+            "the orbit-averaged semi-major axis over time, so what remains can come from only two sources: "
+            "**drag can only lower it; raising it requires thrust.**",
+        ))
+        s, tab = msaw["series"], msaw["table"]
+        kind_txt = {"V3": T3("V3 新星", "V3 新衛星", "new V3"), "mature": T3("成熟星", "成熟衛星", "mature"),
+                    "low": T3("低軌星", "低軌道衛星", "low-orbit")}
+        ccols = st.columns(2)
+        for i, (nid, g) in enumerate(s.groupby("norad", sort=False)):
+            k = g["kind"].iloc[0]; alt_s = f"{g['alt_km'].mean():.0f}"; fdate = g["file"].iloc[0][:10]
+            # 只畫逐圈點（分析即以每圈一點為準）；5 分鐘平滑線含移動平均窗與真實週期不完全對齊之殘餘震盪，不呈現
+            po = g[g["point"].str.startswith("orbit")].sort_values("t")
+            dn = po[po["point"] == "orbit_down"]; up = po[po["point"] == "orbit_up"]
+            with ccols[i % 2]:
+                st.subheader(f"{g['name'].iloc[0]}（NORAD {nid}，{kind_txt[k]}，~{alt_s} km）")
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=po["t"], y=po["dalt_m"], mode="lines", line=dict(color="#90A4AE", width=1.2),
+                                         name=T3("軌道平均半長軸（每圈一點）", "軌道平均長半径（1 周 1 点）",
+                                                 "Orbit-averaged SMA (one point per orbit)")))
+                fig.add_trace(go.Scatter(x=dn["t"], y=dn["dalt_m"], mode="markers", marker=dict(color="#64B5F6", size=6),
+                                         name=T3("下降圈（滑行，阻力）", "下降周回（滑空・抵抗）", "Falling orbit (coast, drag)")))
+                fig.add_trace(go.Scatter(x=up["t"], y=up["dalt_m"], mode="markers",
+                                         marker=dict(color="#FFA726", size=7, symbol="triangle-up"),
+                                         name=T3("上升圈（推力）", "上昇周回（推力）", "Rising orbit (thrust)")))
+                tail = po[po["in_tail"]] if "in_tail" in po else po.iloc[0:0]
+                if len(tail):   # 預報尾段：逐圈變化僅數公尺、非物理預報，不納入統計
+                    fig.add_vrect(x0=tail["t"].min(), x1=tail["t"].max(), fillcolor="#9E9E9E", opacity=0.15,
+                                  line_width=0, annotation_text=T3("預報尾段（未納入計算）", "予報末尾（計算対象外）",
+                                                                   "Forecast tail (excluded)"),
+                                  annotation_position="top left", annotation_font_size=10)
+                fig.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10), plot_bgcolor="rgba(0,0,0,0)",
+                                  yaxis_title=T3("相對檔首變化 (m)", "ファイル開始からの変化 (m)", "Change from file start (m)"),
+                                  legend=dict(orientation="h", y=-0.25))
+                st.plotly_chart(fig, use_container_width=True, key=f"case5_meme_{nid}")
+                st.caption(T3(f"MEME 檔：{fdate}（3 天預報）", f"MEME ファイル：{fdate}（3 日予報）",
+                              f"MEME file: {fdate} (3-day forecast)"))
+
+        def _m(x):
+            return f"{x:+.0f}".replace("-", "−")
+        coast_rng = f"{_m(tab['meme_coast_drag_m_per_day'].max())}～{_m(tab['meme_coast_drag_m_per_day'].min())}"
+        net_rng = f"{_m(tab['meme_net_m_per_day'].min())}～{_m(tab['meme_net_m_per_day'].max())}"
+        v3 = tab[tab["kind"] == "V3"]; mat = tab[tab["kind"] == "mature"]
+        v3_model = f"{_m(v3['model_drag_m_per_day'].max())}～{_m(v3['model_drag_m_per_day'].min())}"
+        v3_err = f"{(v3['model_drag_m_per_day'] / v3['meme_coast_drag_m_per_day'] - 1).abs().max():.0%}"
+        mat_model = f"{_m(mat['model_drag_m_per_day'].max())}～{_m(mat['model_drag_m_per_day'].min())}"
+        mat_coast = f"{_m(mat['meme_coast_drag_m_per_day'].max())}～{_m(mat['meme_coast_drag_m_per_day'].min())}"
+        mat_x = f"{(mat['meme_coast_drag_m_per_day'] / mat['model_drag_m_per_day']).mean():.0f}"
+        mat_names = "、".join(str(n) for n in mat["norad"])
+
+        st.markdown(T3(
+            f"10-20 之後的每份檔都出現一樣的**鋸齒**：滑行時被阻力拉低，推力再推回去，三天下來淨變化幾乎是 0"
+            f"（各星 {net_rng} m／日）。逐圈拆開後，滑行段的阻力衰減約 {coast_rng} m／日：",
+            f"10-20 以降のどのファイルにも同じ**のこぎり波**が現れる：滑空中は抵抗で下がり、推力で押し戻され、"
+            f"3 日間の正味の変化はほぼ 0（各衛星 {net_rng} m／日）。周回ごとに分解すると、滑空区間の抵抗減衰は"
+            f"約 {coast_rng} m／日：",
+            f"Every file after 10-20 shows the same **sawtooth**: drag pulls the orbit down while coasting, thrust "
+            f"pushes it back, and over three days the net change is almost zero ({net_rng} m/day per satellite). "
+            f"Broken down orbit by orbit, the drag decay during coasting is about {coast_rng} m/day:",
+        ))
+        show = tab.assign(kind=tab["kind"].map(kind_txt))[
+            ["name", "norad", "kind", "alt_km", "meme_coast_drag_m_per_day", "model_drag_m_per_day",
+             "meme_net_m_per_day", "B_eff"]]
+        show.columns = [T3("衛星", "衛星", "Satellite"), "NORAD", T3("類型", "種類", "Type"),
+                        T3("高度 (km)", "高度 (km)", "Altitude (km)"),
+                        T3("MEME 滑行段阻力 (m/日)", "MEME 滑空区間の抵抗 (m/日)", "MEME coasting drag (m/day)"),
+                        T3("本專案模型預測 (m/日)", "本プロジェクトのモデル予測 (m/日)", "Our model's prediction (m/day)"),
+                        T3("MEME 淨變化 (m/日)", "MEME 正味の変化 (m/日)", "MEME net change (m/day)"), "B_eff"]
+        st.dataframe(show, hide_index=True, use_container_width=True)
+        st.success(T3(
+            f"**判讀**：\n\n"
+            f"- **V3 新星**：本專案的阻力模型預測 {v3_model} m／日，與 MEME 滑行段相差在 {v3_err} 以內。"
+            f"所以 TLE 上看到的殘差偏正，是推力在補償阻力，**物理模型是對的**。但 MEME 真值只把淨變化 ≥ 5 km 算成機動，"
+            f"這些時段被標成「安靜」，阻力殘差因此看起來像誤報。\n"
+            f"- **成熟星**（{mat_names}）：真實阻力和 V3 差不多（{mat_coast} m／日），我們的模型卻只預測 {mat_model} m／日，"
+            f"**低估約 {mat_x} 倍**。原因是它們長期補償阻力，TLE 上的半長軸幾乎不變，逐衛星自我校準的 B 只抓到雜訊而被壓得很小。"
+            f"殘差剛好接近 0，是「錯得剛好」。\n"
+            f"- **本案例的啟示**：對持續以推力補償阻力的衛星，自我校準的 B 不是物理阻力係數，殘差代表的是"
+            f"「相對這顆星常態的偏離」，而不是推力大小。這和案例三十「推力被藏進 B*」是同一類現象："
+            f"TLE 的阻力參數會把持續的推力吸收進去。",
+            f"**判読**：\n\n"
+            f"- **V3 新衛星**：本プロジェクトの抵抗モデルの予測は {v3_model} m／日で、MEME の滑空区間との差は {v3_err} 以内。"
+            f"したがって TLE で見える残差のプラス偏りは推力による抵抗補償であり、**物理モデルは正しい**。ただし MEME の真値は"
+            f"正味の変化 5 km 以上のみを機動とするため、これらの期間は「静穏」とされ、抵抗残差は誤報のように見える。\n"
+            f"- **成熟衛星**（{mat_names}）：実際の抵抗は V3 とほぼ同じ（{mat_coast} m／日）なのに、本モデルの予測は"
+            f" {mat_model} m／日にすぎず、**約 {mat_x} 倍の過小評価**である。長期間抵抗を補償しているため TLE の長半径は"
+            f"ほぼ変わらず、衛星ごとに自己較正される B はノイズしか捉えず非常に小さくなる。残差がちょうど 0 付近になるのは"
+            f"「偶然うまく間違えている」からである。\n"
+            f"- **本事例の教訓**：推力で抵抗を常時補償する衛星では、自己較正された B は物理的な抵抗係数ではなく、"
+            f"残差が表すのは推力の大きさではなく「その衛星の平常状態からの偏差」である。これは事例三十「推力が B* に"
+            f"隠れる」と同類の現象である：TLE の抵抗パラメータは持続的な推力を吸収してしまう。",
+            f"**Verdict**:\n\n"
+            f"- **New V3 satellites**: our drag model predicts {v3_model} m/day, within {v3_err} of MEME's coasting "
+            f"drag. So the positive residual seen in the TLEs is thrust offsetting drag, and **the physics model is "
+            f"right**. But the MEME truth counts only a net change of ≥ 5 km as a maneuver, so these periods are labelled "
+            f"\"quiet\" and the drag residual looks like a false alarm.\n"
+            f"- **Mature satellites** ({mat_names}): their real drag is about the same as V3's ({mat_coast} m/day), yet "
+            f"our model predicts only {mat_model} m/day, **an underestimate of about {mat_x}×**. Because they offset drag "
+            f"all the time, their TLE semi-major axis barely changes, and the per-satellite self-calibrated B captures "
+            f"only noise and ends up very small. The residual sits near zero because the model is \"wrong in just the "
+            f"right way.\"\n"
+            f"- **Lesson of this case**: for satellites that continuously thrust to offset drag, the self-calibrated "
+            f"B is not a physical drag coefficient, and the residual reflects \"departure from that satellite's usual "
+            f"behaviour\" rather than the size of the thrust. This is the same kind of effect as Case 30 (\"thrust "
+            f"hidden in B*\"): the TLE's drag parameter absorbs sustained thrust.",
+        ))
+        st.caption(T3(
+            "每份 MEME 檔約第 50 小時之後（圖中灰底）逐圈只變化數公尺，不像真實的阻力衰減，應是預報尾段改用了不同的外推方式，"
+            "統計時已排除；若納入，滑行段阻力會被低估約 5～15%。"
+            "MEME 是 SpaceX 自身的力模型與預報，不是量測真值，但與本專案模型彼此獨立。MEME 原始星曆未上傳到本站，"
+            "本節使用預先計算的凍結資料（`data/benchmark/case5_meme_*_20261029.csv`；產生器 "
+            "`research_202610/validation_20261029/scripts/case5_meme_sawtooth_data.py`）。10-06～10-20 MEME 無資料。",
+            "各 MEME ファイルの約 50 時間目以降（図の灰色部分）は 1 周あたりの変化が数メートルしかなく、実際の抵抗減衰とは"
+            "考えにくいため、予報末尾で別の外挿方法に切り替わっていると見られ、統計から除外した（含めると滑空区間の抵抗を"
+            "約 5～15% 過小評価する）。"
+            "MEME は SpaceX 自身の力学モデルによる予報であり、計測された真値ではないが、本プロジェクトのモデルとは独立している。"
+            "MEME の元データは本サイトにアップロードしていないため、本節は事前計算した固定データを使用する"
+            "（`data/benchmark/case5_meme_*_20261029.csv`；生成スクリプト "
+            "`research_202610/validation_20261029/scripts/case5_meme_sawtooth_data.py`）。10-06～10-20 は MEME データなし。",
+            "After roughly hour 50 of each MEME file (grey band), the per-orbit change is only a few metres, unlike real "
+            "drag decay, so the forecast tail appears to switch to a different extrapolation; it is excluded from the "
+            "statistics (including it would understate coasting drag by about 5–15%). "
+            "MEME is SpaceX's own force-model forecast, not measured truth, but it is independent of our model. The raw "
+            "MEME ephemerides are not uploaded to this site, so this section uses precomputed frozen data "
+            "(`data/benchmark/case5_meme_*_20261029.csv`; generator "
+            "`research_202610/validation_20261029/scripts/case5_meme_sawtooth_data.py`). No MEME data for 10-06 to 10-20.",
+        ))
 
     st.markdown("---")
     st.success(T3(
@@ -13696,6 +13895,523 @@ def render_storymap_case30():
     ))
 
 
+# --- render_storymap_case31 ---
+# 2026-10-23 新增：COSMOS 2612 接近 ICEYE-X36（俄國軍事衛星 RPO）。
+# 高度與距離由 raw_tle_archive 現場以 SGP4 計算（每時刻採 epoch 最近之 elset）；
+# 靜態圖取自 SatDashboard /rpo 檢視器（/api/rpo/59103/68762/report.png 與 3D 回放截圖）。
+_CASE31_X36, _CASE31_C2612 = 59103, 68762
+_CASE31_T0, _CASE31_T1 = "2026-09-15", "2026-10-23"
+_CASE31_IMG = DATA / "storymap" / "case31"
+_CASE31_RPO_URL = "https://rhynowu-atrdc-satdashboard-i18n.hf.space/rpo?primary=59103&secondary=68762"
+_CASE31_CNN_URL = "https://edition.cnn.com/2026/10/19/science/russian-satellite-iceye-x36-approach"
+
+
+def _case31_propagate(tle: pd.DataFrame, t_ns: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """每個取樣時刻採 epoch 最接近之 elset 做 SGP4，回傳 TEME 位置與速度（km、km/s）。"""
+    from sgp4.api import Satrec
+    ep = tle["epoch_ns"].to_numpy()
+    j = np.clip(np.searchsorted(ep, t_ns), 1, len(ep) - 1)
+    j = np.where(np.abs(t_ns - ep[j - 1]) <= np.abs(ep[j] - t_ns), j - 1, j)
+    jd = 2440587.5 + t_ns / 86400e9
+    jd0 = np.floor(jd - 0.5) + 0.5
+    fr = jd - jd0
+    r = np.full((len(t_ns), 3), np.nan)
+    v = np.full((len(t_ns), 3), np.nan)
+    for k in np.unique(j):
+        m = j == k
+        sat = Satrec.twoline2rv(tle["line1"].iat[k], tle["line2"].iat[k])
+        e, rr, vv = sat.sgp4_array(jd0[m], fr[m])
+        ok = e == 0
+        r[np.flatnonzero(m)[ok]] = rr[ok]
+        v[np.flatnonzero(m)[ok]] = vv[ok]
+    return r, v
+
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def load_case31_data() -> dict:
+    """兩星 TLE、逐 elset 平均高度、2 分鐘取樣之距離與沿軌間距、自動偵測之高度跳變。"""
+    con = duckdb.connect(DB_PATH, read_only=True)
+    try:
+        df = con.execute(
+            "SELECT norad_id, epoch_utc, sma_km, inclination_deg, line1, line2 FROM raw_tle_archive "
+            "WHERE norad_id IN (?, ?) AND epoch_utc >= CAST(? AS TIMESTAMP) AND epoch_utc < CAST(? AS TIMESTAMP)",
+            [_CASE31_X36, _CASE31_C2612, "2026-09-01", _CASE31_T1]).fetchdf()
+    finally:
+        con.close()
+    if df.empty:
+        return {}
+    df["epoch_utc"] = pd.to_datetime(df["epoch_utc"], utc=True).dt.tz_localize(None)
+    # HF 遠端模式下 data.parquet 與年度分割檔可能重複收錄同一筆 elset
+    df = df.drop_duplicates(["norad_id", "epoch_utc"]).sort_values(["norad_id", "epoch_utc"])
+    df["epoch_ns"] = df["epoch_utc"].to_numpy().astype("datetime64[ns]").astype("int64")
+    df["alt_km"] = df["sma_km"] - 6378.137
+    a = df[df.norad_id == _CASE31_X36].reset_index(drop=True)
+    b = df[df.norad_id == _CASE31_C2612].reset_index(drop=True)
+    if len(a) < 2 or len(b) < 2:
+        return {}
+    t_end = min(a.epoch_utc.max(), b.epoch_utc.max()) + pd.Timedelta(hours=6)
+    ts = pd.date_range(_CASE31_T0, t_end, freq="2min")
+    t_ns = ts.to_numpy().astype("datetime64[ns]").astype("int64")
+    ra, va = _case31_propagate(a, t_ns)
+    rb, _ = _case31_propagate(b, t_ns)
+    dr = rb - ra
+    dist = np.linalg.norm(dr, axis=1)
+    along = np.einsum("ij,ij->i", dr, va / np.linalg.norm(va, axis=1, keepdims=True))
+    sep = pd.DataFrame({"t": ts, "dist_km": dist, "along_km": along}).dropna()
+    # COSMOS 2612 相鄰 elset 平均高度跳變 > 1 km 視為機動（時間為 elset 反映機動後之 epoch，晚於實際點火）
+    jb = b.assign(dalt=b["alt_km"].diff(), dinc=b["inclination_deg"].diff())
+    jumps = jb[(jb.epoch_utc >= _CASE31_T0) & (jb.dalt.abs() > 1.0)][["epoch_utc", "dalt", "alt_km", "dinc"]]
+    return {"x36": a, "c2612": b, "sep": sep, "jumps": jumps.reset_index(drop=True)}
+
+
+def render_storymap_case31():
+    if st.button(t("storymap_back"), key="back_from_case31"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例三十一：俄國軍事衛星 COSMOS 2612 逼近 ICEYE-X36——用公開 TLE 重建一次近距離交會",
+        "事例三十一：ロシア軍事衛星COSMOS 2612がICEYE-X36に接近——公開TLEで近接遭遇を再構成する",
+        "Case 31: Russian Military Satellite COSMOS 2612 Closes In on ICEYE-X36 — Reconstructing a Close Approach from Public TLEs",
+    ))
+    st.subheader(T3(
+        "2026 年 10 月，俄國衛星 COSMOS 2612 經過數週的軌道調整，接近 ICEYE 營運、美國註冊的雷達成像衛星 ICEYE-X36。只用公開 TLE，能看出多少？",
+        "2026年10月、ロシアの衛星COSMOS 2612は数週間にわたる軌道調整を経て、ICEYEが運用する米国登録のレーダー撮像衛星ICEYE-X36に接近した。公開TLEだけで、どこまで見えるのか？",
+        "In October 2026, after weeks of orbit adjustments, the Russian satellite COSMOS 2612 closed in on ICEYE-X36, a US-registered radar imaging satellite operated by ICEYE. How much can public TLEs alone reveal?",
+    ))
+    st.caption(T3(
+        "**術語**：**SAR**（合成孔徑雷達）可在夜間或雲雨天成像。**RPO**（交會與近距離操作）指一顆衛星刻意接近另一顆。**TLE** 是美國太空監視網公開的軌道根數，以 SGP4 模型推算位置，位置誤差約為公里級。**NMC**（自然運動繞飛）指兩星高度相同、軌道略有差異時，一星在另一星周圍畫出的橢圓相對軌跡，不需持續推進即可維持。",
+        "**用語**：**SAR**（合成開口レーダー）は夜間や悪天候でも撮像できる。**RPO**（ランデブー・近傍運用）は、ある衛星が意図的に別の衛星へ接近することを指す。**TLE**は米国の宇宙監視網が公開する軌道要素で、SGP4モデルで位置を推算し、位置誤差はキロメートル級である。**NMC**（自然運動周回）は、2機の高度が同じで軌道がわずかに異なるとき、一方が他方の周りに描く楕円状の相対軌道で、継続的な推進なしに維持できる。",
+        "**Terms**: **SAR** (synthetic aperture radar) can image at night and through cloud. **RPO** (rendezvous and proximity operations) means one satellite deliberately approaching another. A **TLE** is the public orbit data from the US space surveillance network, propagated with the SGP4 model; its position error is on the order of a kilometer. **NMC** (natural motion circumnavigation) is the elliptical relative path one satellite traces around another when both share the same altitude with slightly different orbits — it holds without continuous thrusting.",
+    ))
+    st.info(T3(
+        "**資料口徑**：本頁的高度、距離與機動時點全部由本專案以公開 TLE 自行計算（TLE 資料至 2026-10-22）。外部報導（LeoLabs、RUSI、ICEYE 聲明、CNN）另外標註為他方口徑，本專案未取得其原始資料。",
+        "**データの基準**：本ページの高度・距離・機動時刻はすべて、本プロジェクトが公開TLEから独自に計算したものである（TLEは2026年10月22日まで）。外部報道（LeoLabs、RUSI、ICEYEの声明、CNN）は他者の基準として別途明記しており、本プロジェクトはその元データを入手していない。",
+        "**Data basis**: every altitude, distance and maneuver time on this page was computed by this project from public TLEs (TLEs through 22 Oct 2026). External reporting (LeoLabs, RUSI, ICEYE's statement, CNN) is labeled separately as third-party figures; this project has no access to their underlying data.",
+    ))
+
+    # ── ① 事件經過 ───────────────────────────────────────────────────────────
+    st.header(T3("① 事件經過", "① 経緯", "① What happened"))
+    st.markdown(T3(
+        "- **2026-05 中旬**：COSMOS 2612 與 2610、2611、2613、2614 同週將傾角由約 96.95° 調到 97.80–97.85°，進入 ICEYE-X36 的軌道面（本專案 TLE 判讀共 5 顆；英國智庫 RUSI 2026-06 報告則指出有四顆俄方衛星調整軌道對齊 X36，顆數與本專案判讀不同）。\n"
+        "- **9/30**：COSMOS 2612 升軌約 47 km，在較高軌道停留約 12 天。較高的軌道週期較長，藉此調整與 X36 的前後相位。\n"
+        "- **10/12**：降回 X36 同高度。\n"
+        "- **10/15–16**：先降約 2 km 由後方追上 X36，再升回同高度，進入以 X36 為中心的繞飛（NMC），橢圓中心落後 X36 約 2 km。\n"
+        "- **10/18**：本專案重建的最近距離出現在此日；當晚再升軌約 2.3 km，開始向 X36 後方漂離。\n"
+        "- **10/20**：降回同高度，相對漂移停止，此後停在 X36 後方約 475 km。\n"
+        "- **他方口徑**：LeoLabs 與獨立追蹤者報導 Kosmos 2612 自 9/30 起多次機動、10/15–19 接近 X36，最近約 500 m；追蹤者未見 X36 軌道有受撞擊或擾動的跡象。ICEYE 聲明「持續密切追蹤，星座架構具持續運作與韌性」，未證實任何攻擊或損害。",
+        "- **2026年5月中旬**：COSMOS 2612は2610、2611、2613、2614と同じ週に軌道傾斜角を約96.95°から97.80〜97.85°へ変え、ICEYE-X36の軌道面に入った（本プロジェクトのTLE判読では計5機。英国のシンクタンクRUSIの2026年6月の報告は、ロシアの衛星4機がX36に合わせて軌道を調整したと指摘しており、機数は本プロジェクトの判読と異なる）。\n"
+        "- **9月30日**：COSMOS 2612は高度を約47 km上げ、約12日間高い軌道に留まった。高い軌道は周期が長いため、これによりX36との前後の位相を調整した。\n"
+        "- **10月12日**：X36と同じ高度に戻った。\n"
+        "- **10月15〜16日**：まず約2 km下げて後方からX36に追いつき、再び同じ高度に戻して、X36を中心とする周回（NMC）に入った。楕円の中心はX36の約2 km後方である。\n"
+        "- **10月18日**：本プロジェクトが再構成した最接近はこの日に現れた。同日夜に再び約2.3 km上昇し、X36の後方へ離れ始めた。\n"
+        "- **10月20日**：同じ高度に戻り、相対的な漂流が止まった。以降はX36の約475 km後方に留まっている。\n"
+        "- **他者の基準**：LeoLabsと独立した追跡者は、Kosmos 2612が9月30日以降に何度も機動し、10月15〜19日にX36へ接近、最接近は約500 mだったと報じた。追跡者はX36の軌道に衝突や擾乱の兆候を確認していない。ICEYEは「状況を注視しており、コンステレーションの設計は継続性と耐障害性を備えている」と声明し、攻撃や損害は確認していない。",
+        "- **Mid-May 2026**: in the same week, COSMOS 2612, 2610, 2611, 2613 and 2614 changed inclination from about 96.95° to 97.80–97.85°, moving into ICEYE-X36's orbital plane (this project's TLE reading finds 5 satellites; a June 2026 report by the UK think tank RUSI says four Russian satellites adjusted their orbits to align with X36 — a different count from ours).\n"
+        "- **30 Sep**: COSMOS 2612 raised its orbit by about 47 km and stayed there for about 12 days. A higher orbit has a longer period, which let it shift its along-track phase relative to X36.\n"
+        "- **12 Oct**: back down to X36's altitude.\n"
+        "- **15–16 Oct**: first dropped about 2 km to catch up with X36 from behind, then climbed back to the same altitude and entered a circumnavigation (NMC) centered on X36, with the ellipse center about 2 km behind X36.\n"
+        "- **18 Oct**: this project's reconstructed closest approach falls on this day; that evening it climbed about 2.3 km again and began drifting away behind X36.\n"
+        "- **20 Oct**: back to the same altitude; relative drift stopped, and it has since stayed about 475 km behind X36.\n"
+        "- **Third-party figures**: LeoLabs and independent trackers reported that Kosmos 2612 maneuvered repeatedly from 30 Sep and approached X36 on 15–19 Oct, closest about 500 m; trackers saw no sign of impact or disturbance in X36's orbit. ICEYE said it is \"aware of the situation and tracking it closely\" and that its \"constellation architecture is designed for continuity and resilience\"; no attack or damage has been confirmed.",
+    ))
+
+    d = load_case31_data()
+    if not d:
+        st.warning(T3(
+            "資料庫中找不到兩星（NORAD 59103、68762）在本期間的 TLE，無法現場計算下方圖表。",
+            "データベースに両衛星（NORAD 59103、68762）の当該期間のTLEが見つからないため、以下の図をその場で計算できない。",
+            "No TLEs for the two satellites (NORAD 59103, 68762) in this period were found in the database, so the charts below cannot be computed.",
+        ))
+    else:
+        a, b, sep, jumps = d["x36"], d["c2612"], d["sep"], d["jumps"]
+        last_ep = min(a.epoch_utc.max(), b.epoch_utc.max())
+
+        # ── ② 高度歷史 ───────────────────────────────────────────────────────
+        st.header(T3("② 本專案重算：兩星平均高度", "② 本プロジェクトの再計算：両衛星の平均高度", "② Our recomputation: mean altitude of both satellites"))
+        st.markdown(T3(
+            "每一筆 TLE 都可換算成一個平均高度。X36 幾乎保持水平；COSMOS 2612 的每一次台階就是一次機動。表中時間是**第一筆反映機動後的 TLE 時間**，實際點火通常早數小時。",
+            "各TLEは1つの平均高度に換算できる。X36はほぼ水平を保ち、COSMOS 2612の段差の一つひとつが1回の機動である。表の時刻は**機動後の状態を最初に反映したTLEの時刻**であり、実際の噴射は通常その数時間前である。",
+            "Each TLE converts to one mean altitude. X36 stays almost flat; every step in COSMOS 2612's line is a maneuver. Times in the table are **the epoch of the first TLE reflecting the maneuver** — the actual burn is usually several hours earlier.",
+        ))
+        name_x36 = "ICEYE-X36"
+        name_c = "COSMOS 2612"
+        fig = go.Figure()
+        for df_, nm, col in ((a, name_x36, "#2a78d6"), (b, name_c, "#d63a2a")):
+            s_ = df_[df_.epoch_utc >= _CASE31_T0]
+            fig.add_trace(go.Scatter(x=s_.epoch_utc, y=s_.alt_km, mode="lines+markers", name=nm,
+                                     line=dict(color=col, width=2.5, shape="hv"), marker=dict(size=4)))
+        fig.update_layout(height=380, margin=dict(l=10, r=10, t=30, b=10),
+                          yaxis_title=T3("平均高度（km）", "平均高度（km）", "Mean altitude (km)"),
+                          legend=dict(orientation="h", y=1.08))
+        st.plotly_chart(fig, use_container_width=True)
+        if not jumps.empty:
+            col_t = T3("TLE 時間（UTC）", "TLE時刻（UTC）", "TLE epoch (UTC)")
+            col_d = T3("高度變化（km）", "高度変化（km）", "Altitude change (km)")
+            col_a = T3("變化後高度（km）", "変化後の高度（km）", "Altitude after (km)")
+            col_i = T3("傾角變化（°）", "傾斜角変化（°）", "Inclination change (°)")
+            tbl = pd.DataFrame({
+                col_t: jumps.epoch_utc.dt.strftime("%Y-%m-%d %H:%M"),
+                col_d: jumps.dalt.round(1), col_a: jumps.alt_km.round(1), col_i: jumps.dinc.round(3),
+            })
+            st.dataframe(tbl, hide_index=True, use_container_width=True)
+
+        # ── ③ 距離 ───────────────────────────────────────────────────────────
+        st.header(T3("③ 本專案重算：兩星距離", "③ 本プロジェクトの再計算：両衛星の距離", "③ Our recomputation: distance between the satellites"))
+        i_min = int(sep.dist_km.idxmin())
+        d_min, t_min = float(sep.dist_km.loc[i_min]), sep.t.loc[i_min]
+        last = sep.iloc[-1]
+        d_min_s = f"{d_min:.2f}"
+        t_min_s = t_min.strftime("%m-%d %H:%M")
+        d_last_s = f"{last.dist_km:,.0f}"
+        along_last_s = f"{abs(last.along_km):,.0f}"
+        behind = last.along_km < 0
+        m1, m2, m3 = st.columns(3)
+        m1.metric(T3("重建最近距離", "再構成した最接近距離", "Reconstructed closest approach"), f"{d_min_s} km", t_min_s + " UTC")
+        m2.metric(T3("資料最後時刻距離", "データ最終時刻の距離", "Distance at end of data"), f"{d_last_s} km",
+                  last.t.strftime("%m-%d %H:%M") + " UTC")
+        m3.metric(T3("TLE 資料截至", "TLEデータの最終時刻", "TLEs through"), last_ep.strftime("%Y-%m-%d %H:%M"))
+        st.caption(T3(
+            f"最近距離 {d_min_s} km 是 SGP4 重建值，低於公開 TLE 約 1 km 的精度，**不是量測值**；它與 LeoLabs 報導的約 500 m 屬同一量級，但不應拿來互相印證到百公尺。資料最後時刻 COSMOS 2612 在 X36 {'後方' if behind else '前方'}約 {along_last_s} km（沿軌方向）。",
+            f"最接近距離 {d_min_s} km はSGP4による再構成値で、公開TLEの精度（約1 km）を下回っており、**測定値ではない**。LeoLabsが報じた約500 mと同じ桁ではあるが、百メートル単位で互いを裏付ける材料にすべきではない。データ最終時刻にCOSMOS 2612はX36の{'後方' if behind else '前方'}約 {along_last_s} km（軌道方向）にいる。",
+            f"The {d_min_s} km closest approach is an SGP4 reconstruction, below the ~1 km accuracy of public TLEs — **not a measurement**. It is the same order of magnitude as LeoLabs' reported ~500 m, but the two should not be used to corroborate each other to the hundred-meter level. At the end of the data, COSMOS 2612 is about {along_last_s} km {'behind' if behind else 'ahead of'} X36 along track.",
+        ))
+        hourly = sep.set_index("t").resample("1h").dist_km.min().dropna()
+        fig = go.Figure()
+        fig.add_hrect(y0=0.05, y1=1.0, fillcolor="#9aa4b2", opacity=0.2, line_width=0)
+        fig.add_trace(go.Scatter(x=hourly.index, y=hourly.values, mode="lines",
+                                 name=T3("每小時最近距離", "1時間ごとの最接近距離", "Hourly minimum distance"),
+                                 line=dict(color="#2a78d6", width=2)))
+        fig.add_trace(go.Scatter(x=[t_min], y=[d_min], mode="markers+text", text=[f"{d_min_s} km"],
+                                 textposition="top right", marker=dict(color="#d63a2a", size=10), showlegend=False))
+        fig.update_layout(height=380, margin=dict(l=10, r=10, t=30, b=10), yaxis_type="log",
+                          yaxis_title=T3("距離（km，對數）", "距離（km、対数）", "Distance (km, log)"),
+                          legend=dict(orientation="h", y=1.08))
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption(T3("灰帶＝1 km 以下，低於公開 TLE 精度。",
+                      "灰色の帯＝1 km以下で、公開TLEの精度を下回る範囲。",
+                      "Gray band = below 1 km, under the accuracy of public TLEs."))
+
+        zoom = sep[(sep.t >= "2026-10-15") & (sep.t < "2026-10-20")]
+        if not zoom.empty:
+            st.markdown(T3(
+                "放大 10/15–10/20、改用線性刻度：繞飛期間距離每圈（約 96 分鐘）在 0 至數公里之間擺動，10/18 晚升軌後迅速拉開。",
+                "10月15〜20日を拡大し線形目盛にすると、周回中の距離は1周（約96分）ごとに0〜数キロメートルの間で揺れ、10月18日夜の上昇後に急速に離れていく。",
+                "Zooming in on 15–20 Oct on a linear scale: during the circumnavigation the distance swings between 0 and a few km every orbit (~96 min), then opens up quickly after the climb on the evening of 18 Oct.",
+            ))
+            fig = go.Figure(go.Scatter(x=zoom.t, y=zoom.dist_km, mode="lines", line=dict(color="#2a78d6", width=1.5),
+                                       name=T3("距離", "距離", "Distance")))
+            fig.update_layout(height=320, margin=dict(l=10, r=10, t=20, b=10),
+                              yaxis=dict(title=T3("距離（km）", "距離（km）", "Distance (km)"), range=[0, 20]))
+            st.plotly_chart(fig, use_container_width=True)
+
+    # ── ④ SatDashboard 圖表 ─────────────────────────────────────────────────
+    st.header(T3("④ SatDashboard RPO 檢視器的輸出", "④ SatDashboard RPO ビューアの出力", "④ Output from the SatDashboard RPO viewer"))
+    st.markdown(T3(
+        f"同一配對也收錄在 SatDashboard 的 RPO 檢視器，可互動回放 3D 場景：[開啟 /rpo 檢視器]({_CASE31_RPO_URL})。下面兩張是它的輸出。",
+        f"同じ組み合わせはSatDashboardのRPOビューアにも収録されており、3Dシーンを対話的に再生できる：[/rpoビューアを開く]({_CASE31_RPO_URL})。以下の2枚はその出力である。",
+        f"The same pair is in SatDashboard's RPO viewer, where the 3D scene can be replayed interactively: [open the /rpo viewer]({_CASE31_RPO_URL}). The two images below are its output.",
+    ))
+    rep = _CASE31_IMG / ("rpo_report_en.png" if _lang() == "en" else "rpo_report_zh.png")
+    if rep.exists():
+        st.image(str(rep), use_container_width=True)
+        st.markdown(T3(
+            "**怎麼讀這張報告**（2026-10-23 產生）：\n"
+            "- **左：ICEYE 星座 RAAN × 高度**——每個藍點是一顆 ICEYE 衛星的軌道面與高度；紅星（COSMOS 2612）與橘圈（X36）重疊，代表兩者在同一軌道面、同一高度。\n"
+            "- **中上：平均高度歷史**——與本頁 ② 相同的資料，標出 +47 km、−48 km 與 10 月中下旬的數次 ±2–3 km 小機動。\n"
+            "- **中下：距離**——實線為 TLE 期間內的 SGP4 距離，虛線為假設之後不再機動的彈道預測；灰帶為低於 TLE 精度的範圍。\n"
+            "- **右：相對運動 R–I 與 C–I**——以 X36 為原點，徑向／橫向對沿軌作圖；資料末段 COSMOS 2612 停在沿軌約 −475 km，已不在 X36 附近繞飛。\n"
+            "- 報告副標「高度差僅 0.01 km、伴飛或漂離無法判定」是自動判讀規則的保守措辭：兩星高度相同，代表**相對漂移已停止**，不代表仍在近距離伴飛——此時兩星相距約 475 km。",
+            "**このレポートの読み方**（2026年10月23日生成）：\n"
+            "- **左：ICEYEコンステレーションのRAAN×高度**——青い点はICEYE各衛星の軌道面と高度。赤い星（COSMOS 2612）とオレンジの円（X36）が重なっており、両者が同じ軌道面・同じ高度にあることを示す。\n"
+            "- **中央上：平均高度の履歴**——本ページ②と同じデータで、+47 km、−48 km、そして10月中下旬の数回の±2〜3 kmの小機動を示す。\n"
+            "- **中央下：距離**——実線はTLE期間内のSGP4距離、破線はその後機動しないと仮定した弾道予測。灰色の帯はTLE精度を下回る範囲。\n"
+            "- **右：相対運動R–IとC–I**——X36を原点に、径方向／横方向を軌道方向に対してプロットしたもの。データの終盤でCOSMOS 2612は軌道方向約−475 kmに留まり、もはやX36の近くを周回していない。\n"
+            "- レポートの副題「高度差わずか0.01 km、随伴か離脱かは判定できない」は自動判読規則の控えめな表現である。両衛星の高度が同じことは**相対的な漂流が止まった**ことを意味し、まだ近距離で随伴していることを意味しない——この時点で両衛星は約475 km離れている。",
+            "**How to read this report** (generated 23 Oct 2026):\n"
+            "- **Left: ICEYE constellation, RAAN × altitude** — each blue dot is one ICEYE satellite's orbital plane and altitude; the red star (COSMOS 2612) overlaps the orange ring (X36), meaning the two share a plane and an altitude.\n"
+            "- **Top middle: mean-altitude history** — the same data as ② on this page, marking +47 km, −48 km and several ±2–3 km small maneuvers in mid-to-late October.\n"
+            "- **Bottom middle: distance** — the solid line is the SGP4 distance within the TLE span; the dashed line is a ballistic forecast assuming no further maneuvers; the gray band is below TLE accuracy.\n"
+            "- **Right: relative motion R–I and C–I** — radial / cross-track versus along-track with X36 at the origin; at the end of the data COSMOS 2612 sits at about −475 km along track and is no longer circling X36.\n"
+            "- The report subtitle (\"altitude difference only 0.01 km; companion flight or drift-away cannot be determined\") is the automatic rule's conservative wording: equal altitudes mean **relative drift has stopped**, not that the two are still flying close together — they are about 475 km apart at this point.",
+        ))
+    shot = _CASE31_IMG / "rpo3d_zh.png"
+    if shot.exists():
+        st.image(str(shot), use_container_width=True)
+        st.caption(T3(
+            "3D 回放截圖（中文介面，2026-10-16 繞飛期間）：橘點＝X36、藍點＝COSMOS 2612，兩星周圍的網格為 3σ 位置不確定性橢球；右上浮動視窗以 COSMOS 2612 為中心畫出相對軌跡，可見每圈的繞飛弧線。",
+            "3D再生のスクリーンショット（中国語UI、2026年10月16日の周回中）：オレンジ＝X36、青＝COSMOS 2612。両衛星を囲む格子は3σの位置不確実性楕円体である。右上のフローティングウィンドウはCOSMOS 2612を中心に相対軌道を描いており、1周ごとの周回の弧が見える。",
+            "3D replay screenshot (Chinese UI, during the circumnavigation on 16 Oct 2026): orange = X36, blue = COSMOS 2612; the meshes around them are 3σ position-uncertainty ellipsoids. The floating window at top right plots the relative path centered on COSMOS 2612, showing the arc of each circuit.",
+        ))
+
+    # ── ⑤ 判讀與限制 ───────────────────────────────────────────────────────
+    st.header(T3("⑤ 判讀與限制（誠實揭露）", "⑤ 判読と限界（誠実な開示）", "⑤ Interpretation and limits (honest disclosure)"))
+    st.markdown(T3(
+        "- **看得出的**：軌道面匹配（5 月）、升軌停留調相位（9/30–10/12）、追趕與同步（10/15–16）、繞飛後離開（10/18–20）——這一串機動的順序與幅度，公開 TLE 都能清楚重建，並與外部報導的時間吻合。\n"
+        "- **看不出的**：次公里距離、繞飛橢圓的確切形狀、點火的確切時刻（TLE 晚於實際機動數小時），以及最重要的——**意圖**。公開資料只能描述衛星做了什麼，無法判斷它為什麼這樣做。\n"
+        "- **不下的結論**：兩星高度差小於公開 TLE 精度時，換用另一筆 elset，相對漂移的方向就可能反過來。因此 TLE 外推不能對「是否仍在伴飛」這類次公里尺度的問題下定論，需要雷達或光學的密集觀測。\n"
+        "- **為什麼重要**：即使沒有碰撞，極近距離的交會也可能迫使目標衛星做避讓、消耗燃料、打亂任務排程，或被視為展示反太空能力。對太空態勢感知而言，關鍵不只是最近距離，而是辨識**連續的機動序列**與相對軌道幾何——這正是本專案機動偵測方法的用途。",
+        "- **見えること**：軌道面の一致（5月）、高い軌道に留まっての位相調整（9月30日〜10月12日）、追いつきと同期（10月15〜16日）、周回後の離脱（10月18〜20日）——この一連の機動の順序と規模は公開TLEで明確に再構成でき、外部報道の時期とも一致する。\n"
+        "- **見えないこと**：1 km未満の距離、周回楕円の正確な形、噴射の正確な時刻（TLEは実際の機動より数時間遅れる）、そして最も重要な**意図**である。公開データは衛星が何をしたかは記述できるが、なぜそうしたかは判断できない。\n"
+        "- **下さない結論**：両衛星の高度差が公開TLEの精度を下回るとき、別のelsetに替えるだけで相対的な漂流の向きが逆になりうる。したがってTLEの外挿では「まだ随伴しているか」というキロメートル未満の問いに結論を出せず、レーダーや光学による高密度の観測が必要である。\n"
+        "- **なぜ重要か**：衝突がなくても、極めて近い距離での接近は、標的衛星に回避を強いたり、燃料を消費させたり、運用計画を乱したり、対宇宙能力の誇示と見なされたりしうる。宇宙状況把握にとって重要なのは最接近距離だけではなく、**連続した機動の系列**と相対軌道の幾何を見分けることであり、それこそが本プロジェクトの機動検出手法の用途である。",
+        "- **What can be seen**: plane matching (May), phasing by holding a higher orbit (30 Sep–12 Oct), catch-up and synchronization (15–16 Oct), departure after circling (18–20 Oct) — the order and size of this maneuver sequence are clearly reconstructable from public TLEs and match the timing in external reports.\n"
+        "- **What cannot be seen**: sub-kilometer distances, the exact shape of the circumnavigation ellipse, exact burn times (TLEs lag actual maneuvers by hours), and above all **intent**. Public data can describe what a satellite did, not why.\n"
+        "- **Conclusions we do not draw**: when the altitude difference between the two is below public-TLE accuracy, simply switching to another elset can reverse the direction of relative drift. TLE extrapolation therefore cannot settle sub-kilometer questions such as whether the two are still flying together; that takes dense radar or optical tracking.\n"
+        "- **Why it matters**: even without a collision, a very close approach can force the target to maneuver, burn fuel, disrupt its mission schedule, or be read as a demonstration of counterspace capability. For space situational awareness, the key is not just the closest distance but recognizing the **sequence of maneuvers** and the relative orbital geometry — exactly what this project's maneuver detection is for.",
+    ))
+    st.caption(T3(
+        f"外部來源：CNN 2026-10-19 報導（{_CASE31_CNN_URL}）；LeoLabs 分析、RUSI 2026-06 報告與 ICEYE 聲明皆經該報導轉引，本專案未直接取得原文。",
+        f"外部ソース：CNN 2026年10月19日の報道（{_CASE31_CNN_URL}）。LeoLabsの分析、RUSIの2026年6月の報告、ICEYEの声明はいずれも同報道を通じた引用であり、本プロジェクトは原文を直接入手していない。",
+        f"External source: CNN report of 19 Oct 2026 ({_CASE31_CNN_URL}); the LeoLabs analysis, RUSI's June 2026 report and ICEYE's statement are all cited via that report — this project did not obtain the originals directly.",
+    ))
+
+
+# --- render_storymap_case32 ---
+# 案例三十二（2026-10-29）：美國太空軍與商業衛星業者的威脅資訊共享——NOTSO、JCO、CIC、Space ISAC、
+# Orbital Watch 與 TraCSS。純敘事、不需即時計算；內容依 Elara Nova Podcast「The Elara Edge」第 30 集
+# （他方口徑，標示於頁首），同一份整理已入 SSA-RAG 知識庫（sda_threat_info_sharing_notso_jco_cic_isac_zh.md）。
+# 公開頁不寫任何本專案與 JCO 的使用關係（案例三十一定下的規則）。
+_CASE32_SRC_URL = "https://elaranova.com/the-elara-edge-5/"
+
+
+def _case32_table(cols: list[tuple[str, str, str]], rows: list[list[tuple[str, str, str]]]) -> None:
+    """三語表格：每格為 (zh, ja, en)，依目前語言取用。用 st.table（自動換行），長句不會被截斷；
+    第一欄設為列標題。"""
+    k = {"zh": 0, "ja": 1, "en": 2}.get(_lang(), 0)
+    df = pd.DataFrame([[c[k] for c in r] for r in rows], columns=[c[k] for c in cols])
+    st.table(df.set_index(df.columns[0]))
+
+
+def render_storymap_case32():
+    if st.button(t("storymap_back"), key="back_from_case32"):
+        st.session_state["storymap_case"] = None
+        st.rerun()
+
+    st.title(T3(
+        "案例三十二：NOTSO、JCO、CIC 與 Space ISAC——美國太空軍如何與商業衛星業者共享威脅資訊",
+        "事例三十二：NOTSO、JCO、CIC と Space ISAC——米宇宙軍は商業衛星事業者と脅威情報をどう共有するか",
+        "Case 32: NOTSO, JCO, CIC and Space ISAC — How the US Space Force Shares Threat Information with Commercial Satellite Operators",
+    ))
+    st.subheader(T3(
+        "商業衛星可能比軍方更早看到異常，也可能成為目標。從單向的非機密通知，到可交換機密資訊的協同圈，這幾個機制各自扮演什麼角色？",
+        "商業衛星は軍より早く異常に気づくことがあり、標的にもなりうる。一方向の非機密通知から機密を交換できる協同の輪まで、これらの仕組みはそれぞれ何を担うのか？",
+        "Commercial satellites may spot anomalies before the military does — and may also be targets. From one-way unclassified notices to circles that exchange classified information, what role does each mechanism play?",
+    ))
+    st.caption(T3(
+        "**術語**：**SDA**（太空域感知）在追蹤物體位置之外，還涵蓋電磁頻譜、網路與意圖分析。**CSpOC** 是美國的聯合太空作戰中心。**RPO**（交會與近距離操作）指一顆衛星刻意接近另一顆。**SCIF** 是處理高機密資訊的安全隔離設施。**DD Form 254** 是證明公司與國防部有合約、需要接觸機密資訊的表單。",
+        "**用語**：**SDA**（宇宙領域把握）は物体の位置追跡に加え、電磁スペクトル、サイバー、意図の分析を含む。**CSpOC** は米国の連合宇宙作戦センター。**RPO**（ランデブー・近傍運用）はある衛星が意図的に別の衛星へ接近すること。**SCIF** は高度な機密情報を扱う隔離施設。**DD Form 254** は企業が国防総省と契約し機密へのアクセスを要することを示す書式である。",
+        "**Terms**: **SDA** (space domain awareness) goes beyond tracking positions to cover the electromagnetic spectrum, cyber, and intent. **CSpOC** is the US Combined Space Operations Center. **RPO** (rendezvous and proximity operations) means one satellite deliberately approaching another. A **SCIF** is a secure facility for handling highly classified information. **DD Form 254** is the form showing a company is on a defense contract that requires classified access.",
+    ))
+    st.info(T3(
+        f"**資料口徑**：本頁內容整理自 Elara Nova 的 Podcast「The Elara Edge」第 30 集〈Orbital Watch to Enable Sharing of Classified Threat Information〉（主持人 Scott King，來賓為退役上校 Charlie McGillis；{_CASE32_SRC_URL}），屬他方口徑，本專案未獨立查證。節目頁面未標示刊登日期；Orbital Watch「今年四月」宣布的年份、「超過 900 家公司」的數字，以及對中國、俄羅斯能力與意圖的描述，皆為節目所述。",
+        f"**データの基準**：本ページは Elara Nova のポッドキャスト「The Elara Edge」第30回〈Orbital Watch to Enable Sharing of Classified Threat Information〉（司会 Scott King、ゲストは退役大佐 Charlie McGillis；{_CASE32_SRC_URL}）をもとに整理したもので、他者の基準であり本プロジェクトは独自に検証していない。番組ページに公開日はなく、Orbital Watch が「今年4月」に発表された年、「900社超」という数字、中国・ロシアの能力と意図に関する記述はいずれも番組での発言である。",
+        f"**Data basis**: this page summarizes Episode 30 of Elara Nova's podcast The Elara Edge, \"Orbital Watch to Enable Sharing of Classified Threat Information\" (host Scott King, guest retired Col. Charlie McGillis; {_CASE32_SRC_URL}). These are third-party statements that this project has not independently verified. The episode page carries no publication date; the year of the April Orbital Watch announcement, the \"over 900 companies\" figure, and the descriptions of Chinese and Russian capabilities and intent all come from the episode.",
+    ))
+
+    # ── ① 為什麼要共享 ───────────────────────────────────────────────────────
+    st.header(T3("① 為什麼要和商業業者共享威脅資訊", "① なぜ商業事業者と脅威情報を共有するのか", "① Why share threat information with industry"))
+    st.markdown(T3(
+        "- **威脅多元**：碰撞與碎片、網路攻擊、電子戰、GPS 干擾與欺騙、動能反衛星攻擊同時存在，商業衛星也可能成為目標。\n"
+        "- **軍民兩用**：許多國防任務依賴商業衛星與地面設施，太空軍認為必須與產業共享威脅資訊，才能維持國家太空能力的韌性。\n"
+        "- **商業端可能最早看到**：營運商往往最先遇到干擾、異常機動或網路事件，可以成為「指示與警告」的早期來源。",
+        "- **多様な脅威**：衝突とデブリ、サイバー攻撃、電子戦、GPS の妨害となりすまし、運動エネルギー型の対衛星攻撃が同時に存在し、商業衛星も標的になりうる。\n"
+        "- **軍民両用**：多くの国防任務が商業衛星と地上施設に依存しており、宇宙軍は国家の宇宙能力の強靭性を保つには産業界と脅威情報を共有する必要があると考えている。\n"
+        "- **商業側が最初に気づくことがある**：事業者は妨害、異常な機動、サイバー事象に最初に直面することが多く、「兆候と警告」の早期情報源になりうる。",
+        "- **Many threats**: collisions and debris, cyberattacks, electronic warfare, GPS jamming and spoofing, and kinetic anti-satellite attacks all coexist, and commercial satellites can be targets too.\n"
+        "- **Dual use**: many defense missions rely on commercial satellites and ground facilities, so the Space Force sees sharing threat information with industry as essential to keeping national space capability resilient.\n"
+        "- **Industry may see it first**: operators are often the first to hit jamming, unusual maneuvers or cyber events, making them an early source of indications and warnings.",
+    ))
+
+    # ── ② Orbital Watch ──────────────────────────────────────────────────────
+    st.header(T3("② Orbital Watch：從單向發布走向雙向交換", "② Orbital Watch：一方向の配信から双方向の交換へ", "② Orbital Watch: from one-way release to two-way exchange"))
+    st.markdown(T3(
+        "Orbital Watch 由太空系統司令部（SSC）宣布，目標是從單向發布非機密資訊，逐步發展到雙向交換，甚至分享機密威脅資訊。",
+        "Orbital Watch は宇宙システム軍団（SSC）が発表したもので、非機密情報の一方向配信から、双方向の交換、さらには機密の脅威情報の共有へと段階的に発展させることを目指す。",
+        "Orbital Watch was announced by Space Systems Command (SSC). The goal is to move step by step from one-way release of unclassified information to two-way exchange, and eventually to sharing classified threat information.",
+    ))
+    _case32_table(
+        [("階段", "段階", "Phase"), ("機制", "仕組み", "Mechanism"), ("資訊流向", "情報の流れ", "Direction"), ("重點", "要点", "Key points")],
+        [[("第一階段", "第1段階", "Phase 1"),
+          ("透過 Space Force Front Door 基本註冊", "Space Force Front Door で基本登録", "Basic registration via the Space Force Front Door"),
+          ("單向", "一方向", "One-way"),
+          ("向已註冊廠商發送非機密威脅簡報；據來賓說法已超過 900 家公司。不需特殊訓練，但廠商無法追問或回報。",
+           "登録企業に非機密の脅威ブリーフを配信（ゲストによれば900社超）。特別な訓練は不要だが、企業は質問も報告もできない。",
+           "Unclassified threat fact sheets go to registered vendors — over 900 companies, per the guest. No special training, but vendors cannot ask follow-ups or report back.")],
+         [("第二階段（規劃中）", "第2段階（計画中）", "Phase 2 (planned)"),
+          ("安全的商業入口網站", "安全な商業ポータル", "Secure commercial portal"),
+          ("雙向", "双方向", "Two-way"),
+          ("營運商可回報異常、提出問題，太空軍也能回傳觀察到的威脅；節目未確認已上線。",
+           "事業者は異常の報告や質問ができ、宇宙軍も観測した脅威を返せる。番組では稼働済みかは確認されていない。",
+           "Operators can report anomalies and ask questions, and the Space Force can send back threats it observes; the episode does not confirm it is live.")]],
+    )
+
+    # ── ③ 四個名詞 ───────────────────────────────────────────────────────────
+    st.header(T3("③ NOTSO、JCO、CIC、Space ISAC 是什麼", "③ NOTSO、JCO、CIC、Space ISAC とは", "③ What NOTSO, JCO, CIC and Space ISAC are"))
+    _case32_table(
+        [("名詞", "用語", "Term"), ("性質", "性質", "What it is"), ("參與門檻", "参加の条件", "Entry bar"),
+         ("資訊等級", "情報の区分", "Classification"), ("主要功能", "主な機能", "Main function")],
+        [[("NOTSO（太空營運商通知）", "NOTSO（宇宙事業者への通知）", "NOTSO (Notice to Space Operators)"),
+          ("通知／警示產品，不是組織", "通知・警告の成果物で、組織ではない", "A notice/alert product, not an organization"),
+          ("收到通知即可", "通知を受け取るだけ", "Just receive it"), ("非機密", "非機密", "Unclassified"),
+          ("告知衛星機動、發射等高關注太空事件", "衛星の機動や打ち上げなど注目度の高い事象を知らせる", "Flags high-interest events such as satellite maneuvers or launches")],
+         [("JCO（聯合商業作業細胞）", "JCO（統合商業運用セル）", "JCO (Joint Commercial Operations cell)"),
+          ("政府主導的商業資料整合機制", "政府主導の商業データ統合の仕組み", "Government-led integration of commercial data"),
+          ("需訓練、遵循方法論並完成 onboarding", "訓練、手法の順守、オンボーディングが必要", "Training, its methodology, and onboarding"),
+          ("非機密", "非機密", "Unclassified"),
+          ("整合商業感測器與分析，提供 24/7 非機密 SDA，並發布 NOTSO", "商業センサーと分析を統合し 24 時間の非機密 SDA を提供、NOTSO を発出", "Fuses commercial sensors and analytics into 24/7 unclassified SDA and issues NOTSOs")],
+         [("CIC（商業整合細胞）", "CIC（商業統合セル）", "CIC (Commercial Integration Cell)"),
+          ("邀請制的機密協同機制", "招待制の機密協同の仕組み", "Invitation-only classified collaboration"),
+          ("受邀、訓練、具安全許可與合約基礎", "招待、訓練、セキュリティクリアランスと契約の基盤", "Invitation, training, clearances and a contract basis"),
+          ("可含機密", "機密を含みうる", "Can be classified"),
+          ("與 CSpOC 協同、參與演訓與軍事規劃", "CSpOC と協同し、演習と軍事計画に参加", "Works with the CSpOC, joins exercises and military planning")],
+         [("Space ISAC（太空資訊共享與分析中心）", "Space ISAC（宇宙情報共有・分析センター）", "Space ISAC (Information Sharing and Analysis Center)"),
+          ("會員制產業資訊共享組織", "会員制の産業情報共有組織", "Membership industry sharing organization"),
+          ("付費會員", "有料会員", "Paid membership"), ("以非機密為主，另涉網安", "主に非機密、サイバーも扱う", "Mostly unclassified, plus cyber"),
+          ("彙整會員回報、網安監測、24/7 營運中心、轉發 NOTSO", "会員報告の集約、サイバー監視、24 時間運用センター、NOTSO の転送", "Pools member reports, monitors cyber, runs a 24/7 ops center, relays NOTSOs")]],
+    )
+    st.markdown(T3(
+        "**一句話區分**：NOTSO 告訴你「太空中發生了某件高關注事件」；JCO 整合商業資料看「正在發生什麼」並發出 NOTSO；CIC 邀請少數商業夥伴進入機密協同圈；Space ISAC 讓付費會員共享、回報與接收營運及網安威脅資訊。",
+        "**一言での区別**：NOTSO は「宇宙で注目すべき事象が起きた」と知らせる。JCO は商業データを統合して「何が起きているか」を見て NOTSO を出す。CIC は少数の商業パートナーを機密の協同の輪に招く。Space ISAC は有料会員が運用とサイバーの脅威情報を共有・報告・受信する場である。",
+        "**In one line each**: NOTSO tells you \"a high-interest event just happened in space\"; JCO fuses commercial data to see \"what is happening\" and issues NOTSOs; CIC brings a few invited commercial partners into a classified collaboration circle; Space ISAC lets paying members share, report and receive operational and cyber threat information.",
+    ))
+
+    # ── ④ JCO 與 CIC ─────────────────────────────────────────────────────────
+    st.header(T3("④ JCO 與 CIC：開放的資料整合 vs 邀請制的機密協同", "④ JCO と CIC：開かれたデータ統合と招待制の機密協同", "④ JCO vs CIC: open data integration vs invitation-only classified collaboration"))
+    _case32_table(
+        [("面向", "観点", "Aspect"), ("JCO", "JCO", "JCO"), ("CIC", "CIC", "CIC")],
+        [[("主要目的", "主な目的", "Purpose"),
+          ("把商業感測器、資料與分析整合進「保護與防衛」任務", "商業センサー・データ・分析を「防護と防衛」任務に統合", "Bring commercial sensors, data and analytics into the protect-and-defend mission"),
+          ("讓精選商業夥伴參與深度資訊共享、演訓與軍事規劃", "選ばれた商業パートナーが深い情報共有・演習・軍事計画に参加", "Let selected partners join deep information sharing, exercises and military planning")],
+         [("運作重點", "運用の要点", "How it runs"),
+          ("全球與區域細胞 24/7 運作，盟國也可參與", "世界と地域のセルが 24 時間運用、同盟国も参加可能", "Global and regional cells run 24/7, with allies taking part"),
+          ("成員可派員進駐 CSpOC 作業現場", "メンバーは CSpOC の現場に人員を配置できる", "Members can staff a seat on the CSpOC floor")],
+         [("典型輸出", "典型的な成果", "Typical output"),
+          ("對衛星機動、發射等活動發布 NOTSO", "衛星の機動や打ち上げに対し NOTSO を発出", "NOTSOs on maneuvers, launches and similar activity"),
+          ("演訓參與、作戰司令部規劃支援、更深入的威脅與任務資訊", "演習参加、作戦司令部の計画支援、より深い脅威・任務情報", "Exercise participation, combatant-command planning support, deeper threat and mission information")],
+         [("制度基礎", "制度的基盤", "Institutional basis"),
+          ("著重商業資料與分析能力的整合", "商業データと分析能力の統合が中心", "Centered on integrating commercial data and analytics"),
+          ("早期以 CRADA（不涉金錢）贊助安全許可；成員多已持有 DD Form 254", "初期は CRADA（金銭の授受なし）でクリアランスを支援。現在メンバーの多くは DD Form 254 を保有", "Began with CRADAs (no money exchanged) to sponsor clearances; most members now hold a DD Form 254")]],
+    )
+    st.markdown(T3(
+        "節目以 **Viasat** 為例：它是 CIC 成員，俄烏戰爭開始時同時遭遇干擾與網路攻擊。若當時已有 Orbital Watch，CSpOC 可把這件事作為早期預警，告訴其他營運商類似攻擊可能是蓄意行為，而非偶發事故。\n\n"
+        "**參與深度大致排序**：Orbital Watch（廣泛非機密發布）→ JCO（商業資料整合、非機密 SDA）→ CIC（邀請制、機密協同）。",
+        "番組は **Viasat** を例に挙げる。同社は CIC のメンバーで、ロシアのウクライナ侵攻の開始時に妨害とサイバー攻撃を同時に受けた。当時 Orbital Watch があれば、CSpOC はこれを早期警告として扱い、同様の攻撃は偶発ではなく意図的でありうると他の事業者に伝えられたという。\n\n"
+        "**参加の深さのおおよその順**：Orbital Watch（広範な非機密配信）→ JCO（商業データ統合、非機密 SDA）→ CIC（招待制、機密協同）。",
+        "The episode uses **Viasat** as an example: a CIC member, it suffered jamming and a cyberattack at the start of Russia's invasion of Ukraine. Had Orbital Watch existed then, the CSpOC could have treated the event as an early warning and told other operators that similar attacks were likely deliberate rather than accidental.\n\n"
+        "**Rough order of participation depth**: Orbital Watch (broad unclassified release) → JCO (commercial data integration, unclassified SDA) → CIC (invitation-only, classified collaboration).",
+    ))
+
+    # ── ⑤ Space ISAC ─────────────────────────────────────────────────────────
+    st.header(T3("⑤ Space ISAC：產業端的彙整、網安監測與傳播", "⑤ Space ISAC：産業側の集約、サイバー監視、伝達", "⑤ Space ISAC: industry-side pooling, cyber monitoring and distribution"))
+    st.markdown(T3(
+        "Space ISAC 不是政府作戰指揮單位，而是採「pay-to-play」付費會員制的產業資訊共享組織：\n"
+        "- **彙整與網安監測**：彙整會員回報的異常與網安事件，持續監測太空相關網路威脅——這是它與 JCO、CIC 最大的功能差異之一。\n"
+        "- **24/7 營運中心**：營運商遭遇異常或攻擊時可向其回報；資訊會在情報體系內上報，再嘗試傳播給其他營運商。\n"
+        "- **轉發 NOTSO**：轉發 JCO 的 NOTSO，並補充營運環境脈絡，協助會員理解事件的營運影響。\n"
+        "- **保護來源**：回報可能含專屬資訊，分享前需去識別化（whitewash）。\n"
+        "- **價值**：不需要政府合約或機密許可。對還沒有 DD Form 254、SCIF 或人員許可的公司，是最容易進入的資訊共享入口。",
+        "Space ISAC は政府の作戦指揮組織ではなく、「pay-to-play」の有料会員制による産業の情報共有組織である：\n"
+        "- **集約とサイバー監視**：会員が報告した異常とサイバー事象を集約し、宇宙関連のサイバー脅威を継続的に監視する——JCO や CIC との最大の機能的な違いの一つ。\n"
+        "- **24 時間の運用センター**：事業者は異常や攻撃に遭遇したとき報告でき、情報はインテリジェンス・コミュニティ内で上申され、他の事業者への伝達が図られる。\n"
+        "- **NOTSO の転送**：JCO の NOTSO を転送し、運用環境の文脈を補って会員が事象の影響を理解できるようにする。\n"
+        "- **情報源の保護**：報告には専有情報が含まれうるため、共有前に匿名化（whitewash）する。\n"
+        "- **価値**：政府との契約や機密クリアランスを必要としない。DD Form 254、SCIF、人員のクリアランスをまだ持たない企業にとって、最も入りやすい情報共有の入口である。",
+        "Space ISAC is not a government command body but a pay-to-play membership organization for industry information sharing:\n"
+        "- **Pooling and cyber monitoring**: it pools anomalies and cyber incidents reported by members and continuously monitors space-related cyber threats — one of its biggest functional differences from JCO and CIC.\n"
+        "- **24/7 operations center**: operators can report anomalies or attacks; information is escalated within the intelligence community and then pushed out to other operators where possible.\n"
+        "- **NOTSO relay**: it relays JCO's NOTSOs and adds operational context so members understand the impact.\n"
+        "- **Source protection**: reports may contain proprietary information, so they are sanitized (\"whitewashed\") before sharing.\n"
+        "- **Value**: no government contract or clearance required. For companies without a DD Form 254, a SCIF or cleared staff, it is the easiest way into information sharing.",
+    ))
+
+    # ── ⑥ 威脅趨勢與 RPO ─────────────────────────────────────────────────────
+    st.header(T3("⑥ 威脅趨勢：RPO 不必然是敵意，關鍵是行為模式", "⑥ 脅威の動向：RPO は必ずしも敵対的ではなく、鍵は行動パターン", "⑥ Threat trends: RPO is not necessarily hostile — the pattern of behavior is what matters"))
+    st.markdown(T3(
+        "以下為節目來賓與分析者的觀點：\n"
+        "- 近十年中國快速部署 ISR 衛星、衛星通信、大型星座與反太空能力，軌道機動也更積極。\n"
+        "- 實踐二十一號與實踐二十五號曾在 GEO 近距離操作，可能是衛星燃料補給實驗；TJS 系列被認為可能執行訊號情報、早期預警與衛星檢視任務，TJS-3 曾於 2018 年接近一顆美國 ISR 衛星。\n"
+        "- 來賓指出俄羅斯與中國擁有可照射成像衛星的雷射能力，並表示俄羅斯曾強調支援美軍的商業資產可能被視為合法目標（來賓的描述，非俄方原文）。\n\n"
+        "**RPO 本身不必然是敵意行為**：它可以用於燃料補給、檢查故障衛星或拍照，也可能用於監視、訊號偵察、干擾或反太空行動。判讀需要看**連續的機動序列與相對軌道幾何**。案例三十一以公開 TLE 重建 COSMOS 2612 接近 ICEYE-X36 的過程，就是這類分析的實例。",
+        "以下は番組のゲストと分析者の見解である：\n"
+        "- この十年で中国は ISR 衛星、衛星通信、大規模コンステレーション、対宇宙能力を急速に配備し、軌道機動もより積極的になった。\n"
+        "- 実践21号と実践25号は GEO で近接運用を行い、燃料補給の実験だった可能性がある。TJS シリーズは信号情報、早期警戒、衛星検査を担うとみられ、TJS-3 は 2018 年に米国の ISR 衛星へ接近した。\n"
+        "- ゲストは、ロシアと中国が撮像衛星を照射できるレーザー能力を持つと指摘し、ロシアは米軍を支援する商業資産を正当な標的とみなしうると強調してきたと述べた（ゲストの表現で、ロシア側の原文ではない）。\n\n"
+        "**RPO 自体は必ずしも敵対行為ではない**：燃料補給、故障衛星の点検、撮影にも使えるが、監視、信号偵察、妨害、対宇宙行動にも使われうる。判読には**連続した機動の系列と相対軌道の幾何**を見る必要がある。事例三十一で公開 TLE から COSMOS 2612 の ICEYE-X36 への接近を再構成したのは、その一例である。",
+        "The following are views of the episode's guest and of analysts:\n"
+        "- Over the past decade China has rapidly fielded ISR satellites, satellite communications, large constellations and counterspace capabilities, with more aggressive orbital maneuvering.\n"
+        "- Shijian-21 and Shijian-25 operated in close proximity in GEO, probably a refueling experiment; the TJS series is believed to carry out signals intelligence, early warning and satellite inspection, and TJS-3 approached a US ISR satellite in 2018.\n"
+        "- The guest said Russia and China have lasers able to dazzle imaging satellites, and that Russia has stressed that commercial assets supporting the US military could be treated as legitimate targets (the guest's characterization, not a Russian quote).\n\n"
+        "**RPO is not hostile by itself**: it can serve refueling, inspecting a failed satellite or taking pictures — or surveillance, signals collection, interference or counterspace action. Reading it requires the **sequence of maneuvers and the relative orbital geometry**. Case 31, which reconstructs COSMOS 2612's approach to ICEYE-X36 from public TLEs, is an example of this kind of analysis.",
+    ))
+
+    # ── ⑦ 機密共享的挑戰 ─────────────────────────────────────────────────────
+    st.header(T3("⑦ 機密共享的挑戰：不是「發 email」就好", "⑦ 機密共有の課題：「メールを送る」だけでは済まない", "⑦ The challenge of classified sharing: it is not just sending an email"))
+    st.markdown(T3(
+        "- 機密共享需要設施安全等級、人員安全調查、need-to-know（知悉必要）、安全通訊線路與 SCIF。\n"
+        "- 許多商業公司沒有含 **DD Form 254** 的合約，缺乏取得機密資訊的正式管道——這是 Orbital Watch 第二階段最關鍵的制度難題。\n"
+        "- **DARPA BRIDGES** 曾讓 19 家公司在沒有合約的情況下取得安全許可（來賓說法），太空軍正與商業太空辦公室（COMSO）研議擴大。\n"
+        "- 取得人員許可後，公司仍可能沒有 SCIF；市場上已有可租用的 SCIF 空間。\n"
+        "- **可擴展性**：參與者超過 900 家時，誰優先取得機密資訊、如何避免「有許可者／無許可者」的落差，都是待解問題。",
+        "- 機密共有には、施設のセキュリティ区分、人員の身元調査、need-to-know（知る必要性）、安全な通信回線、SCIF が必要である。\n"
+        "- 多くの商業企業は **DD Form 254** を含む契約を持たず、機密情報を得る正式な経路がない——これが Orbital Watch 第2段階の最大の制度的課題である。\n"
+        "- **DARPA BRIDGES** は契約なしで 19 社にクリアランスを付与した（ゲストの発言）。宇宙軍は商業宇宙室（COMSO）と拡大を検討している。\n"
+        "- 人員のクリアランスを得ても SCIF がない企業がある。市場には借りられる SCIF もすでにある。\n"
+        "- **拡張性**：参加者が 900 社を超えると、誰が優先的に機密情報を得るか、「クリアランスのある者／ない者」の格差をどう避けるかが課題となる。",
+        "- Classified sharing needs facility clearances, personnel investigations, need-to-know, secure communication lines and a SCIF.\n"
+        "- Many commercial companies have no contract with a **DD Form 254**, so they lack a formal path to classified information — the key institutional problem for Orbital Watch Phase 2.\n"
+        "- **DARPA BRIDGES** got 19 companies clearances without a contract (per the guest); the Space Force is working with the Commercial Space Office (COMSO) to expand the approach.\n"
+        "- Even with cleared staff, a company may have no SCIF; rentable SCIF space is now on the market.\n"
+        "- **Scale**: with more than 900 participants, who gets classified information first, and how to avoid a gap between cleared and uncleared companies, remain open questions.",
+    ))
+
+    # ── ⑧ TraCSS ─────────────────────────────────────────────────────────────
+    st.header(T3("⑧ TraCSS 與 Orbital Watch：「它在哪裡」vs「它為什麼這樣做」", "⑧ TraCSS と Orbital Watch：「どこにあるか」と「なぜそうするか」", "⑧ TraCSS vs Orbital Watch: \"where is it?\" vs \"why is it doing that?\""))
+    _case32_table(
+        [("項目", "項目", "Item"), ("TraCSS", "TraCSS", "TraCSS"), ("Orbital Watch", "Orbital Watch", "Orbital Watch")],
+        [[("主要目的", "主な目的", "Purpose"), ("太空交通安全、避免碰撞", "宇宙交通安全、衝突回避", "Space traffic safety, collision avoidance"),
+          ("威脅感知、意圖判讀與風險因應", "脅威の把握、意図の判読、リスク対応", "Threat awareness, intent assessment, risk response")],
+         [("資訊性質", "情報の性質", "Information"), ("位置資料、軌道與碰撞風險", "位置データ、軌道、衝突リスク", "Positions, orbits, collision risk"),
+          ("位置資料加上能力、行為與意圖評估", "位置データに加え能力・行動・意図の評価", "Positions plus capability, behavior and intent assessment")],
+         [("核心問題", "核心の問い", "Core question"), ("「它在哪裡？」", "「どこにあるか？」", "\"Where is it?\""),
+          ("「它為什麼這樣做？對我有什麼影響？」", "「なぜそうするのか？自分にどう影響するか？」", "\"Why is it doing that, and what does it mean for me?\"")],
+         [("主責定位", "責任の所在", "Owner"), ("民用太空安全", "民生の宇宙安全", "Civil space safety"),
+          ("太空軍的威脅資訊與國防任務支援", "宇宙軍の脅威情報と国防任務支援", "Space Force threat information and defense mission support")]],
+    )
+    st.markdown(T3(
+        "TraCSS 是美國的民用太空交通協調系統，類似太空版的空中交通管制。節目認為它未來可提供位置資料給太空軍作為威脅評估的輸入，但威脅判斷不是它的任務。",
+        "TraCSS は米国の民生宇宙交通調整システムで、宇宙版の航空交通管制に近い。番組は、将来 TraCSS が位置データを宇宙軍に脅威評価の入力として提供しうるが、脅威の判断はその任務ではないとみる。",
+        "TraCSS is the US civil space traffic coordination system, something like air traffic control for space. The episode sees it supplying position data to the Space Force as an input to threat assessment, but judging threats is not its job.",
+    ))
+
+    # ── ⑨ 意義與本專案的位置 ─────────────────────────────────────────────────
+    st.header(T3("⑨ 對商業業者與台灣的意義", "⑨ 商業事業者と台湾にとっての意味", "⑨ What it means for industry and for Taiwan"))
+    st.markdown(T3(
+        "- **對業者**：政府可能更主動提供非機密威脅簡報；更深層的共享則可能要求安全許可與安全設施。具備異常偵測、RF 干擾／欺騙識別、軌道機動分析與網安通報能力的業者，最能成為早期預警來源。\n"
+        "- **四者對應不同參與深度**：廣播通知（NOTSO）→ 商業資料整合（JCO）→ 邀請制機密協同（CIC）→ 付費資安與情資社群（Space ISAC）。\n"
+        "- **對台灣或盟邦**：重點不在直接複製美國制度，而是建立「**非機密早期預警 + 商業資料整合 + 盟邦資訊共享**」的分層架構。\n"
+        "- **本專案的位置**：以公開 TLE 偵測軌道機動、重建 RPO 序列（見案例三十一），屬於「非機密早期預警」這一層能提供的能力。限制也要說清楚：TLE 位置誤差約為公里級、更新間隔為數小時，因此只能作為提示與篩選，不能取代精密定軌或機密情資。",
+        "- **事業者にとって**：政府は非機密の脅威ブリーフをより積極的に提供する可能性があり、より深い共有にはクリアランスと安全施設が求められうる。異常検出、RF 妨害・なりすましの識別、軌道機動の分析、サイバー事象の報告ができる事業者ほど、早期警戒の情報源になりやすい。\n"
+        "- **4 つは参加の深さに対応**：一斉通知（NOTSO）→ 商業データ統合（JCO）→ 招待制の機密協同（CIC）→ 有料のサイバー・脅威情報コミュニティ（Space ISAC）。\n"
+        "- **台湾や同盟国にとって**：米国の制度をそのまま写すのではなく、「**非機密の早期警戒 + 商業データ統合 + 同盟国との情報共有**」という階層構造を築くことが要点である。\n"
+        "- **本プロジェクトの位置**：公開 TLE で軌道機動を検出し RPO の系列を再構成すること（事例三十一参照）は、「非機密の早期警戒」層が提供できる能力にあたる。限界も明示する：TLE の位置誤差はキロメートル級、更新間隔は数時間であり、ヒントと絞り込みにしか使えず、精密軌道決定や機密情報の代わりにはならない。",
+        "- **For industry**: governments may offer unclassified threat briefings more proactively, while deeper sharing may require clearances and secure facilities. Operators with anomaly detection, RF jamming/spoofing identification, orbital maneuver analysis and cyber reporting are best placed to become early-warning sources.\n"
+        "- **The four map to depths of participation**: broadcast notice (NOTSO) → commercial data integration (JCO) → invitation-only classified collaboration (CIC) → paid cyber and threat-intelligence community (Space ISAC).\n"
+        "- **For Taiwan and allies**: the point is not to copy the US system but to build a layered architecture of **unclassified early warning + commercial data integration + allied information sharing**.\n"
+        "- **Where this project fits**: detecting orbital maneuvers and reconstructing RPO sequences from public TLEs (see Case 31) is the kind of capability the unclassified early-warning layer can provide. The limits matter too: TLE position errors are on the order of a kilometer and updates come hours apart, so this can only cue and screen — it cannot replace precise orbit determination or classified intelligence.",
+    ))
+    st.success(T3(
+        "**判讀**：這幾個機制的差別，不在誰比較重要，而在**參與門檻與資訊等級**。對大多數商業業者而言，起點是非機密的通知與社群共享；能否走進機密協同圈，取決於合約、人員許可與設施，而不只是技術能力。",
+        "**判読**：これらの仕組みの違いは、どれが重要かではなく、**参加の条件と情報の区分**にある。多くの商業事業者にとって出発点は非機密の通知とコミュニティでの共有であり、機密の協同の輪に入れるかは技術力だけでなく、契約、人員のクリアランス、施設で決まる。",
+        "**Takeaway**: the difference between these mechanisms is not which matters most but their **entry bar and classification level**. For most commercial operators the starting point is unclassified notices and community sharing; getting into classified collaboration depends on contracts, cleared staff and facilities, not technical capability alone.",
+    ))
+    st.caption(T3(
+        f"外部來源：Elara Nova「The Elara Edge」第 30 集（{_CASE32_SRC_URL}）。同一份整理已加入 SSA-RAG 知識庫，可在分析工具頁「SSA-RAG 知識問答」詢問 NOTSO、JCO、CIC、Space ISAC 等問題。",
+        f"外部ソース：Elara Nova「The Elara Edge」第30回（{_CASE32_SRC_URL}）。同じ整理は SSA-RAG の知識ベースにも追加しており、分析ツール画面の「SSA-RAG ナレッジ Q&A」で NOTSO、JCO、CIC、Space ISAC などについて質問できる。",
+        f"External source: Elara Nova, The Elara Edge, Episode 30 ({_CASE32_SRC_URL}). The same summary has been added to the SSA-RAG knowledge base, so questions about NOTSO, JCO, CIC or Space ISAC can be asked in \"SSA-RAG Q&A\" on the analysis-tool page.",
+    ))
+
+
 # ── main ──────────────────────────────────────────────────────────────────────
 
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
@@ -13706,7 +14422,7 @@ if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
-        "case21", "case22", "case23", "case24", "case25", "case26", "case27", "case28", "case29", "case30"):
+        "case21", "case22", "case23", "case24", "case25", "case26", "case27", "case28", "case29", "case30", "case31", "case32"):
     st.session_state["storymap_case"] = _qp.get("case")
     st.session_state.setdefault("app_mode", "storymap")
 
@@ -13719,6 +14435,15 @@ if "tool_d0" not in st.session_state and _qp.get("d0"):
     st.session_state["tool_d0"] = _qp.get("d0")
 if "tool_d1" not in st.session_state and _qp.get("d1"):
     st.session_state["tool_d1"] = _qp.get("d1")
+# 以參數產出 PDF 報告（2026-10-30）：再加 &report=F1|F2 即自動展開「產出 PDF 報告」、選定格式並產製一次，
+# 頁面出現 PDF／CSV／Markdown 下載按鈕（Streamlit 無法以網址直接回傳檔案，需點一次下載）。
+# &lang=zh|ja|en 指定介面語言。例：?mode=tool&norad=69673&d0=2026-06-28&d1=2026-10-22&report=F2
+if _qp.get("report", "").upper() in ("F1", "F2") and "pdf_auto" not in st.session_state:
+    st.session_state["pdf_auto"] = _qp.get("report").upper()
+    st.session_state["pdf_report_fmt"] = st.session_state["pdf_auto"]
+    st.session_state.setdefault("app_mode", "tool")
+if "app_lang" not in st.session_state and _qp.get("lang") in LANG_LABELS:
+    st.session_state["app_lang"] = _qp.get("lang")
 
 with st.sidebar:
     st.selectbox("Language / 語言 / 言語", options=list(LANG_LABELS.keys()),
@@ -13789,6 +14514,10 @@ if st.session_state.get("app_mode") == "storymap":
         render_storymap_case29()
     elif _case == "case30":
         render_storymap_case30()
+    elif _case == "case31":
+        render_storymap_case31()
+    elif _case == "case32":
+        render_storymap_case32()
     else:
         render_storymap_landing()
     st.stop()
@@ -13884,11 +14613,623 @@ m3.metric(t("metric_orbit_class"), orbit_class)
 m4.metric(t("metric_inc_family"), fam)
 m5.metric(t("metric_tle_count"), len(df))
 
+
+# ── 🧭 系統偵測邏輯說明（2026-10-29 新增，回應使用者回饋：區分經驗法則與 AI 模型）──────
+# 五類方法標籤；頁面各區塊以 _method_badges() 標示，總表見下方 expander。
+_METHOD_KIND = {
+    "rule": ("📏", T3("經驗法則", "経験則（ルール）", "Rule-based")),
+    "stat": ("📊", T3("統計演算法", "統計アルゴリズム", "Statistical")),
+    "phys": ("🌍", T3("物理模型", "物理モデル", "Physics model")),
+    "ai": ("🤖", T3("AI 模型", "AI モデル", "AI model")),
+    "llm": ("💬", T3("生成式 AI（僅解說）", "生成AI（説明のみ）", "Generative AI (explanation only)")),
+}
+
+
+def _method_badges(*kinds: str, note: str = "") -> None:
+    """在區塊標題下方標示其判定方法類型（見「🧭 系統偵測邏輯說明」）。"""
+    tags = "　".join(f"{_METHOD_KIND[k][0]} {_METHOD_KIND[k][1]}" for k in kinds)
+    st.caption(T3("判定方法：", "判定方法：", "Method: ") + tags + (f"　｜　{note}" if note else ""))
+
+
+def _render_method_guide() -> None:
+    R, S_, P, A, L = (f"{_METHOD_KIND[k][0]} {_METHOD_KIND[k][1]}" for k in ("rule", "stat", "phys", "ai", "llm"))
+    no = T3("否", "いいえ", "No")
+    st.info(T3(
+        "**整體定位：混合式偵測系統，機器學習是其中一層，而不是全部。** 經驗法則屬於傳統的符號式 AI（專家系統），"
+        "統計演算法與物理模型則不從資料中學習，這三類都不屬於機器學習。真正經過資料訓練的只有三個 🤖 模型，"
+        "而且它們的輸入正是統計通道與物理殘差，也就是「由物理與統計提供特徵、再由機器學習判斷」的架構。",
+        "**全体の位置づけ：ハイブリッド型検出システムであり、機械学習はその一層にすぎない。** 経験則は従来の記号的 AI"
+        "（エキスパートシステム）、統計アルゴリズムと物理モデルはデータから学習しないため、いずれも機械学習ではない。"
+        "データで学習しているのは 3 つの 🤖 モデルのみで、その入力は統計チャネルと物理残差である"
+        "（物理・統計が特徴量を提供し、機械学習が判定する構成）。",
+        "**Overall: a hybrid detection system in which machine learning is one layer, not the whole.** Rules are "
+        "classic symbolic AI (expert-system style); the statistical and physics components do not learn from data, "
+        "so none of these three is machine learning. Only the three 🤖 models are trained on data, and their inputs "
+        "are the statistical channels and physics residuals — physics and statistics supply the features, machine "
+        "learning makes the call."))
+    det, sup, aux = T3("偵測", "検出", "Detect"), T3("抑制誤報", "誤報抑制", "Suppress"), T3("輔助", "補助", "Support")
+    st.markdown(T3(
+        "**五類方法**：📏 **經驗法則**＝依物理常識與歷史經驗**人工設定門檻**，不經資料訓練、可逐條追溯；"
+        "📊 **統計演算法**＝由該衛星自身序列即時計算變點／異常分數，無需訓練；"
+        "🌍 **物理模型**＝NRLMSIS 大氣密度模型預測阻力衰減，看扣除後的殘差；對持續以推力補償阻力的衛星，"
+        "殘差代表相對其常態的偏離；"
+        "🤖 **AI 模型**＝以 Starlink MEME 精密星曆真值**訓練**之機器學習（或無標籤之無監督學習）；"
+        "💬 **生成式 AI**＝大型語言模型撰寫文字解說，**不參與任何機動判定**。",
+        "**5種類の方法**：📏 **経験則**＝物理的常識と経験に基づき**人手で閾値を設定**（学習なし、根拠を追跡可能）；"
+        "📊 **統計アルゴリズム**＝衛星自身の時系列から変化点・異常スコアを即時計算（学習不要）；"
+        "🌍 **物理モデル**＝NRLMSIS 大気密度モデルで抗力減衰を予測し、差し引いた残差を見る（推力で抗力を常時補償する"
+        "衛星では、残差は平常状態からの偏差を表す）；"
+        "🤖 **AI モデル**＝Starlink MEME 精密暦の真値で**学習**した機械学習（またはラベルなしの教師なし学習）；"
+        "💬 **生成AI**＝大規模言語モデルによる文章説明で、**機動判定には一切関与しない**。",
+        "**Five method types**: 📏 **Rule-based** = thresholds **set by hand** from physics and experience "
+        "(no training, fully traceable); 📊 **Statistical** = change-point/anomaly scores computed on the "
+        "satellite's own series (no training); 🌍 **Physics model** = NRLMSIS atmospheric drag is predicted and "
+        "removed, and the residual is examined (for satellites that continuously thrust to offset drag, the "
+        "residual reflects departure from their usual behaviour); 🤖 **AI model** = machine learning **trained** on Starlink "
+        "MEME precise-ephemeris truth (or unsupervised, label-free); 💬 **Generative AI** = an LLM writes the "
+        "explanation and **takes no part in any maneuver decision**."))
+    rows = [
+        # (元件, 頁面位置, 類型, 方法, 是否經資料訓練, 角色)
+        (T3("軌域自動路由", "軌道域の自動ルーティング", "Regime routing"), "D", R,
+         T3("Starlink → AI 模型主判；非 Starlink → 物理殘差＋無監督模型主判",
+            "Starlink → AI モデルが主判定；それ以外 → 物理残差＋教師なしモデル",
+            "Starlink → AI model is primary; others → physics residual + unsupervised model"), no, aux),
+        (T3("再入守門", "再突入ゲート", "Re-entry gate"), "D", R,
+         T3("辨識自然再入衰減 → 機動判定歸零", "自然再突入の減衰を識別 → 機動判定をゼロに",
+            "Detects natural re-entry decay → maneuver flags set to zero"), no, sup),
+        ("P1 / P3", "C", R,
+         T3("P1 單調衰減、P3 B* 可解釋之衰減 → 判為阻力、剔除", "P1 単調減衰・P3 B* で説明可能な減衰 → 抗力として除外",
+            "P1 monotonic decay, P3 decay explained by B* → treated as drag, removed"), no, sup),
+        ("P2 / P4 / P5 / P6", "C", R,
+         T3("P2 隨高度變化之 |Δa| 門檻（拋物線，側欄可調）、P4 多窗口、P5 依 F10.7 太陽活動調倍率、P6 依傾角族群調倍率",
+            "P2 高度依存の |Δa| 閾値（放物線、サイドバーで調整可）、P4 複数窓、P5 F10.7 太陽活動倍率、P6 傾斜角グループ倍率",
+            "P2 altitude-dependent |Δa| threshold (parabola, adjustable in sidebar), P4 multi-window, "
+            "P5 F10.7 solar-activity multiplier, P6 inclination-family multiplier"), no, det),
+        ("CUSUM / BOCPD / SSA / 3σ-MAD", "D", S_,
+         T3("半長軸序列之變點／異常分數", "長半径時系列の変化点・異常スコア", "Change-point / anomaly scores on the SMA series"),
+         no, det),
+        (T3("NRLMSIS 阻力殘差", "NRLMSIS 抗力残差", "NRLMSIS drag residual"), "B · D · E", P,
+         T3("扣除大氣阻力預測後的殘差；|Δa 殘差| > 0.30 km 視為機動（① 綠色星號）。對持續以推力補償阻力的衛星，"
+            "殘差代表相對其常態的偏離",
+            "抗力予測を差し引いた残差；|Δa 残差| > 0.30 km を機動とみなす（① 緑の星印）。推力で抗力を常時補償する"
+            "衛星では、残差は平常状態からの偏差を表す",
+            "Residual after removing predicted drag; |Δa residual| > 0.30 km counts as a maneuver (green stars in ①). "
+            "For satellites that continuously thrust to offset drag, the residual reflects departure from their "
+            "usual behaviour"),
+         T3("否（僅擬合該星阻力係數）", "いいえ（衛星ごとの抗力係数のみ当てはめ）", "No (only fits the satellite's drag coefficient)"), det),
+        (T3("Model 1 機動偵測", "Model 1 機動検出", "Model 1 detection"), "D", f"{A} ＋ {P}",
+         T3("LightGBM 逐窗口機率；旗標須同時「機率 ≥ 門檻」且「|阻力殘差| > 0.30 km」（物理閘門）",
+            "LightGBM の窓ごとの確率；フラグは「確率 ≥ 閾値」かつ「|抗力残差| > 0.30 km」（物理ゲート）が必要",
+            "LightGBM per-window probability; a flag needs both probability ≥ threshold and |drag residual| > 0.30 km (physics gate)"),
+         T3("是（MEME 真值；僅 Starlink）", "はい（MEME 真値；Starlink のみ）", "Yes (MEME truth; Starlink only)"), det),
+        (T3("Model 1 機動預測", "Model 1 機動予測", "Model 1 forecast"), "D", A,
+         T3("LightGBM 依最新 TLE 估計近期機動機率", "LightGBM が最新 TLE から近い将来の機動確率を推定",
+            "LightGBM estimates near-term maneuver probability from the latest TLE"),
+         T3("是（MEME 真值；僅 Starlink）", "はい（MEME 真値；Starlink のみ）", "Yes (MEME truth; Starlink only)"), aux),
+        ("Model 2", "D", f"{A} ＋ {P}",
+         T3("Isolation Forest 以物理殘差等通道找異常；適用任何軌域",
+            "Isolation Forest が物理残差などのチャネルから異常を検出；全軌道域に適用",
+            "Isolation Forest finds anomalies in physics-residual channels; works for any regime"),
+         T3("是（無監督，不需標籤）", "はい（教師なし、ラベル不要）", "Yes (unsupervised, no labels)"), det),
+        (T3("L3 融合評分器", "L3 融合スコアラー", "L3 fusion scorer"), "B · D", A,
+         T3("HistGradientBoosting 融合 4 統計通道＋阻力通道之 ±24h 特徵 → 機動機率（門檻 0.659）",
+            "HistGradientBoosting が統計 4 チャネル＋抗力チャネルの ±24h 特徴を融合 → 機動確率（閾値 0.659）",
+            "HistGradientBoosting fuses ±24h features of 4 statistical + 1 drag channel → probability (threshold 0.659)"),
+         T3("是（MEME 真值；僅 Starlink）", "はい（MEME 真値；Starlink のみ）", "Yes (MEME truth; Starlink only)"), det),
+        (T3("資料品質稽核", "データ品質監査", "Data-quality audit"), T3("其他工具", "その他", "Other tools"), R,
+         T3("非物理值、時間缺口、Δi 跳變、極端 B* → good／suspect／rejected",
+            "非物理値・時間欠損・Δi 跳躍・極端な B* → good／suspect／rejected",
+            "Non-physical values, gaps, Δi jumps, extreme B* → good / suspect / rejected"), no, sup),
+        (T3("星系級異常", "コンステレーション異常", "Constellation anomalies"), T3("其他工具", "その他", "Other tools"), f"{S_} ＋ {R}",
+         T3("軌道面內 Δi 標準差、同日機動顆數 > K、相位偏離", "軌道面内の Δi 標準偏差、同日機動数 > K、位相ずれ",
+            "Δi spread within a plane, same-day maneuver count > K, phasing deviation"), no, det),
+        (T3("AI 解說／SSA-RAG", "AI 解説／SSA-RAG", "AI explanation / SSA-RAG"), "F", L,
+         T3("知識庫檢索＋大型語言模型撰寫解說；服務離線時退回規則式敘述",
+            "知識ベース検索＋大規模言語モデルが説明を作成；オフライン時はルールベースの文章に切替",
+            "Knowledge-base retrieval + LLM writes the explanation; falls back to rule-based text when offline"),
+         T3("否（不參與判定）", "いいえ（判定に関与しない）", "No (not used for decisions)"), aux),
+    ]
+    st.dataframe(pd.DataFrame(rows, columns=[
+        T3("元件", "構成要素", "Component"), T3("位置", "場所", "Where"), T3("類型", "種類", "Type"),
+        T3("方法", "方法", "Method"), T3("經資料訓練？", "データで学習？", "Trained on data?"),
+        T3("角色", "役割", "Role")]), hide_index=True, width="stretch")
+    st.markdown(T3(
+        "**最終結果怎麼來**：頁面順序與 PDF 技術完整版（F2）一致。結果摘要的**候選事件**完全由 📏 L1 經驗法則（P1–P6）"
+        "的規則候選點依時間合併產生；🌍 阻力殘差、🤖 L3 融合評分器、🤖 ML 窗口與 📊 L2 統計通道只作為每個事件的"
+        "**輔助通道**欄位，不增刪事件（C 節）。B 節的時間序列，Starlink 用 🤖 L3 融合評分器，其他衛星用 🌍 NRLMSIS 阻力殘差。"
+        "D 節的 🎯 統一偵測摘要則是**路由規則選出的主判偵測器**之輸出（Starlink 為 AI 模型，其他衛星為物理殘差加無監督模型），"
+        "屬於另一種檢視角度。AI 模型只在 Starlink 上訓練過，用在其他衛星時屬於訓練範圍外。",
+        "**最終結果の出し方**：ページ順は PDF 技術完全版（F2）と同じ。結果サマリーの**候補イベント**は 📏 L1 経験則（P1–P6）の"
+        "ルール候補点を時間で統合して作る。🌍 抗力残差、🤖 L3 融合スコア、🤖 ML 窓、📊 L2 統計チャネルは各イベントの"
+        "**補助チャネル**欄としてのみ使い、イベントを増減しない（C 節）。B 節の時系列は Starlink が 🤖 L3 融合スコア、"
+        "その他は 🌍 NRLMSIS 抗力残差。D 節の 🎯 統合検出サマリーは**ルーティング規則が選んだ主判定器**の出力で、別の見方である。"
+        "AI モデルは Starlink のみで学習しているため、他の衛星では学習範囲外となる。",
+        "**How the result is formed**: the page follows the order of the F2 technical PDF. The **candidate events** in "
+        "the summary come only from the 📏 L1 rules (P1–P6), merged in time; the 🌍 drag residual, 🤖 L3 fusion scorer, "
+        "🤖 ML windows and 📊 L2 statistical channels serve only as **supporting-channel** columns and never add or remove "
+        "events (section C). Section B's time series uses the 🤖 L3 fusion scorer for Starlink and the 🌍 NRLMSIS drag "
+        "residual for other satellites. The 🎯 unified summary in section D is the output of the **primary detector chosen "
+        "by the routing rule** — a different view. The AI models were trained on Starlink only, so other satellites are "
+        "outside their training range."))
+
+
+# ── 📄 PDF 報告（2026-10-29 新增）：以目前選定的 NORAD＋日期區間，直接呼叫
+# maneuver_report_builder 產出與 report_api.py 完全相同的 PDF，不需另外架設 API。
+# 產製含 L3/RAG 呼叫、需數十秒，故改為按鈕觸發；結果依 (NORAD, 區間, 格式) 存在
+# session_state，切換其他衛星或區間後自動失效，不會誤下載到舊報表。
+def _pdf_report_app_url(nid: int, a, b, report: str | None = None) -> str:
+    base = os.environ.get("APP_BASE_URL", "https://rhynowu-maneuver-detection-i18n.hf.space").rstrip("/")
+    return (f"{base}/?mode=tool&norad={nid}&d0={a.isoformat()}&d1={b.isoformat()}"
+            + (f"&report={report}" if report else ""))
+
+
+# 參數網址報表快取（2026-10-30）：相同 (NORAD, 區間, 格式) 且報表版本與分析流程版本相同者，48 小時內
+# 直接回覆既有 PDF／CSV／Markdown，不重跑（產製含 L3／SSA-RAG，需數十秒）。程式或模型更新時
+# 版本雜湊改變，舊快取自動不命中。手動按「產生 PDF」一律重新計算並更新快取。
+_PDF_CACHE_DIR = Path(os.environ.get("PDF_REPORT_CACHE", "data/cache/pdf_report"))
+_PDF_CACHE_TTL_S = 48 * 3600
+_PDF_CACHE_FILES = (("bytes", "report.pdf"), ("csv", "report.csv"), ("md", "report.md"))
+
+
+def _pdf_cache_dir(key: tuple) -> Path:
+    import hashlib
+    raw = "|".join(map(str, key)) + f"|{rb.REPORT_VERSION}|{rb._pipeline_version()}"
+    return _PDF_CACHE_DIR / hashlib.sha1(raw.encode("utf-8")).hexdigest()[:20]
+
+
+def _pdf_cache_get(key: tuple) -> dict | None:
+    import time as _time
+    d = _pdf_cache_dir(key)
+    try:
+        meta = json.loads((d / "meta.json").read_text(encoding="utf-8"))
+        if _time.time() - float(meta["created"]) > _PDF_CACHE_TTL_S:
+            return None
+        out = {k: (d / fn).read_bytes() for k, fn in _PDF_CACHE_FILES}
+        return {**out, "cached_at": meta["created_utc"]}
+    except Exception:
+        return None
+
+
+def _pdf_cache_put(key: tuple, saved: dict) -> None:
+    """寫入暫存檔後 os.replace，meta.json 最後寫——讀取端看到 meta 時三個檔必已完整。順手清除過期項目。"""
+    import shutil
+    import time as _time
+    try:
+        d = _pdf_cache_dir(key)
+        d.mkdir(parents=True, exist_ok=True)
+        for k, fn in _PDF_CACHE_FILES:
+            tmp = d / (fn + ".tmp")
+            tmp.write_bytes(saved[k])
+            os.replace(tmp, d / fn)
+        now = _time.time()
+        meta = {"created": now, "created_utc": _time.strftime("%Y-%m-%d %H:%M UTC", _time.gmtime(now)),
+                "key": list(map(str, key)), "report_version": rb.REPORT_VERSION, "pipeline": rb._pipeline_version()}
+        (d / "meta.json.tmp").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+        os.replace(d / "meta.json.tmp", d / "meta.json")
+        for old in _PDF_CACHE_DIR.iterdir():
+            m = old / "meta.json"
+            if old.is_dir() and m.exists() and now - m.stat().st_mtime > _PDF_CACHE_TTL_S:
+                shutil.rmtree(old, ignore_errors=True)
+    except Exception as e:
+        print(f"[pdf cache] 寫入失敗：{e}")
+
+
+# 網址帶 &report= 時只自動產製一次（之後的重跑交給使用者操作）
+_pdf_auto_go = bool(st.session_state.get("pdf_auto")) and not st.session_state.get("pdf_auto_done")
+with st.expander(T3("📄 產出 PDF 報告", "📄 PDF レポート出力", "📄 Export PDF report"),
+                 expanded=bool(st.session_state.get("pdf_auto"))):
+    st.caption(T3(
+        f"以目前選定的衛星（NORAD {norad}）與日期區間 {d0} ～ {d1} 產出機動偵測報告。"
+        "F1 摘要版＝一頁結果摘要（適合主管、業主與簡報）；F2 技術完整版＝摘要＋附錄"
+        "（完整事件清單、阻力殘差圖、計數口徑、各層原始輸出、根數圖、分析註記，適合分析與稽核）。",
+        f"現在選択中の衛星（NORAD {norad}）と期間 {d0} ～ {d1} でマヌーバ検出レポートを出力します。"
+        "F1＝1ページの結果サマリー、F2＝サマリー＋技術付録。",
+        f"Generates a maneuver-detection report for the selected satellite (NORAD {norad}), "
+        f"{d0} – {d1}. F1 = one-page summary (candidate events + SMA chart); "
+        "F2 = summary + technical appendices."))
+    _pc1, _pc2 = st.columns([1, 2])
+    _pdf_fmt = _pc1.radio(T3("格式", "形式", "Format"), ["F1", "F2"], horizontal=True, key="pdf_report_fmt",
+                          format_func=lambda f: {"F1": T3("F1 摘要版", "F1 サマリー版", "F1 Summary"),
+                                                 "F2": T3("F2 技術完整版", "F2 技術完全版", "F2 Technical")}[f])
+    _pdf_key = (int(norad), str(d0), str(d1), _pdf_fmt)
+    _pdf_clicked = _pc2.button(T3("產生 PDF", "PDF を生成", "Generate PDF"), type="primary", key="pdf_report_btn")
+    _pdf_hit = None
+    if _pdf_auto_go:
+        st.session_state["pdf_auto_done"] = True
+        if not _pdf_clicked:
+            _pdf_hit = _pdf_cache_get(_pdf_key)
+            if _pdf_hit:
+                st.session_state["pdf_report"] = {"key": _pdf_key, **_pdf_hit}
+    if _pdf_clicked or (_pdf_auto_go and not _pdf_hit):
+        with st.spinner(T3("產製報告中（含 L3 融合與 AI 解說，約需數十秒）…",
+                           "レポート生成中…", "Generating report…")):
+            try:
+                _rd = rb.build_report_data(int(norad), d0, d1)
+                # builder 只查 sat_n2yo_metadata／catalog，Starlink 等常查不到名稱；
+                # 改用本頁已解析的名稱（url_registry 優先），讓 PDF 標題帶出衛星名。
+                if not _rd.get("name") and str(sat_name) != str(norad):
+                    _rd["name"] = str(sat_name)
+                _pdf = rb.render_pdf(_rd, fmt=_pdf_fmt,
+                                     source_url=_pdf_report_app_url(int(norad), d0, d1, report=_pdf_fmt),
+                                     app_url=_pdf_report_app_url(int(norad), d0, d1))
+                st.session_state["pdf_report"] = {"key": _pdf_key, "bytes": _pdf, "csv": rb.report_csv(_rd),
+                                                  "md": rb.report_markdown(_rd).encode("utf-8")}
+                _pdf_cache_put(_pdf_key, st.session_state["pdf_report"])
+            except rb.ReportNotFoundError as _e:
+                st.session_state.pop("pdf_report", None)
+                st.warning(str(_e))
+            except Exception as _e:
+                st.session_state.pop("pdf_report", None)
+                st.error(T3(f"PDF 產製失敗：{_e}", f"PDF 生成失敗：{_e}", f"PDF generation failed: {_e}"))
+    _saved = st.session_state.get("pdf_report")
+    if _saved and _saved["key"] == _pdf_key:
+        st.success(T3("PDF 已產製完成，請按下方按鈕下載。", "PDF の生成が完了しました。下のボタンでダウンロードしてください。",
+                      "The PDF is ready — use the button below to download it."))
+        if _saved.get("cached_at"):
+            st.caption(T3(f"使用快取：相同參數於 {_saved['cached_at']} 產製（48 小時內有效）。如需最新結果，請按「產生 PDF」重新產製。",
+                          f"キャッシュを使用：同じ条件で {_saved['cached_at']} に生成（48 時間有効）。最新結果は「PDF を生成」で再生成。",
+                          f"Served from cache: generated with the same parameters at {_saved['cached_at']} (valid 48 h). "
+                          "Click “Generate PDF” for a fresh run."))
+        st.download_button(
+            T3("⬇️ 下載 PDF", "⬇️ PDF をダウンロード", "⬇️ Download PDF"), _saved["bytes"],
+            file_name=f"maneuver_report_{norad}_{d0:%Y%m%d}_{d1:%Y%m%d}_{_pdf_fmt}.pdf",
+            mime="application/pdf", key="pdf_report_dl")
+        if _saved.get("csv"):
+            st.download_button(
+                T3("⬇️ 下載 CSV（事件與評估明細）", "⬇️ CSV をダウンロード（イベントと評価の明細）",
+                   "⬇️ Download CSV (events & assessment)"), _saved["csv"],
+                file_name=f"maneuver_report_{norad}_{d0:%Y%m%d}_{d1:%Y%m%d}.csv",
+                mime="text/csv", key="pdf_report_csv_dl")
+        if _saved.get("md"):
+            st.download_button(
+                T3("⬇️ 下載 Markdown（.md 報告文字版）", "⬇️ Markdown をダウンロード（.md）",
+                   "⬇️ Download Markdown (.md)"), _saved["md"],
+                file_name=f"maneuver_report_{norad}_{d0:%Y%m%d}_{d1:%Y%m%d}.md",
+                mime="text/markdown", key="pdf_report_md_dl")
+        if _saved.get("csv") or _saved.get("md"):
+            st.caption("CSV／Markdown 與 PDF 同一份計算。CSV 的 record_type 欄區分 event（候選事件與評估）、"
+                       "segment（連續機動段）、low_conf（低置信複核項）、rule_point（規則候選點）；"
+                       "Markdown 含摘要、附錄 A 各表、附錄 C 口徑與附錄 F 註記。")
+
 f107 = load_f107()
 tr = ms.build_transitions(df, f107)
 res = ms.apply_strategies(tr, orbit_class, p2=p2, p5=p5, lang=_lang())
 combined = res["combined"] if len(tr) else np.array([], bool)
 
+
+# ── 📑 頁面順序與 F2 技術完整版一致（2026-10-29）──────────────────────────────
+# 結果摘要／A／B／C／F 直接取 maneuver_report_builder.build_report_data 的結果——與 PDF 同一份計算
+# （去重後 TLE、預設 P2/P5 門檻），D／E 為原有各層互動圖。with_ai=False：此處不觸發 SSA-RAG，
+# F 節的自動解說仍由側欄「自動解說」開關控制。ML／融合評分器結果在 builder 內依區間快取，與 D 節共用。
+@st.cache_data(show_spinner=False, ttl=3600)
+def _report_core(nid: int, a, b):
+    return rb.build_report_data(int(nid), a, b, with_ai=False)
+
+
+_REPORT_ZH_NOTE = T3("", "（本節の文章は PDF レポートと同一ソースで、現在は中国語のみです。）",
+                     "(Text in this section is shared with the PDF report and is currently in Chinese only.)")
+
+
+def _rep_text(txt: str) -> str:
+    """報告文字轉頁面 Markdown：「附錄 X」改稱「X 節」，保留換行。"""
+    return re.sub(r"附錄 ([A-F])", r"\1 節", txt).replace("\n", "  \n")
+
+
+def _report_unavailable() -> None:
+    st.caption(T3(f"本節需要報告摘要資料，本次無法計算：{_rep_err}",
+                  f"このセクションにはレポート要約が必要ですが、今回は計算できませんでした：{_rep_err}",
+                  f"This section needs the report summary, which could not be computed: {_rep_err}"))
+
+
+def _plot_report_alt(r: dict):
+    """遠地點／近地點高度歷史（參考 KeepTrack Altitude History）：藍＝遠地點、紅＝近地點，滑鼠提示同時列兩值；
+    淡色帶＝候選事件時段。數值由本系統 TLE 平均根數計算（與 PDF 第 2 頁同源）。"""
+    d = r["alt_history"]["daily"]
+    fig = go.Figure()
+    for e in r.get("events", []):
+        t0, t1 = pd.Timestamp(e["t_start"]), pd.Timestamp(e["t_end"])
+        fig.add_vrect(x0=t0, x1=max(t1, t0 + pd.Timedelta(hours=12)), fillcolor="#f5b041", opacity=0.18, line_width=0)
+    for col, color, lab in (("apogee_km", "#2563eb", T3("遠地點", "遠地点", "Apogee")),
+                            ("perigee_km", "#dc2626", T3("近地點", "近地点", "Perigee"))):
+        fig.add_trace(go.Scatter(x=d["day"], y=d[col], mode="lines", line=dict(color=color, width=2.2), name=lab,
+                                 hovertemplate=lab + " %{y:.0f} km<extra></extra>"))
+        fig.add_annotation(x=d["day"].iloc[-1], y=float(d[col].iloc[-1]), text=lab, showarrow=False,
+                           xanchor="left", xshift=8, font=dict(color=color, size=13))
+    fig.update_layout(height=380, margin=dict(l=10, r=70, t=10, b=10), hovermode="x unified",
+                      yaxis_title="km", legend=dict(orientation="h", y=-0.15), plot_bgcolor="white",
+                      xaxis=dict(hoverformat="%Y-%m-%d", showgrid=True, gridcolor="#eeeeee"),
+                      yaxis=dict(showgrid=True, gridcolor="#eeeeee"))
+    return fig
+
+
+def _plot_report_sma(r: dict):
+    """結果摘要主圖：與 PDF 主頁相同編碼——淡色帶＝事件時段、紫色虛線＝回跳型態、
+    上緣數字＝事件編號、底部灰色三角＝未與候選事件重疊的阻力殘差事件、標註單筆變化量最大的事件。"""
+    tle, evs = r["tle_df"], r["events"]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=tle["epoch"], y=tle["sma_km"], mode="lines", line=dict(color="#0072B2", width=2),
+                             name=T3("半長軸", "長半径", "SMA"),
+                             hovertemplate="%{x|%Y-%m-%d %H:%M}<br>%{y:.3f} km<extra></extra>"))
+    span = max((tle["epoch"].iloc[-1] - tle["epoch"].iloc[0]).total_seconds(), 1.0)
+    pad = pd.Timedelta(seconds=span * 0.002)
+    lane_last = [None, None, None]
+    for e in evs:
+        t0, t1, te = pd.Timestamp(e["t_start"]), pd.Timestamp(e["t_end"]), pd.Timestamp(e["main_epoch"])
+        spike = e["quality_note"] == rb.STATUS_SPIKE
+        col = "#8e44ad" if spike else "#999999"
+        fig.add_vrect(x0=t0 - pad, x1=t1 + pad, fillcolor="#f5b041", opacity=0.25, line_width=0, layer="below")
+        fig.add_shape(type="line", x0=te, x1=te, y0=0, y1=1, yref="paper",
+                      line=dict(color=col, width=1, dash="dash" if spike else "solid"))
+        gaps = [float("inf") if t is None else (te - t).total_seconds() / span for t in lane_last]
+        li = next((i for i, g in enumerate(gaps) if g > 0.025), int(np.argmax(gaps)))
+        lane_last[li] = te
+        fig.add_annotation(x=te, y=1.0 + 0.06 * (li + 1), yref="paper", text=f"#{e['no']}", showarrow=False,
+                           font=dict(size=10, color=col if spike else "#333333"))
+    sma_s = tle.set_index("epoch")["sma_km"]
+    annotated = []
+    for sg in r.get("segments") or []:
+        fig.add_shape(type="line", x0=pd.Timestamp(sg["t_start"]), x1=pd.Timestamp(sg["t_end"]), y0=0.97, y1=0.97,
+                      yref="paper", line=dict(color="#16a085", width=5))
+        fig.add_annotation(x=pd.Timestamp(sg["t_start"]), y=0.93, yref="paper", xanchor="left", showarrow=False,
+                           text=f"C{sg['no']} 累計 {sg['cum_da']:+.1f} km", font=dict(size=11, color="#16a085"))
+    for e in sorted(evs, key=lambda e: -abs(e["net_da"]))[:3]:
+        te = pd.Timestamp(e["main_epoch"])
+        if abs(e["net_da"]) < 1.0 or any(abs((te - t).total_seconds()) / span < 0.06 for t in annotated):
+            continue
+        tier = sum(abs((te - t).total_seconds()) / span < 0.25 for t in annotated)
+        annotated.append(te)
+        ya = float(sma_s.loc[sma_s.index <= te].iloc[-1]) if (sma_s.index <= te).any() else float(sma_s.iloc[0])
+        lab = f"#{e['no']} 淨 {rb._fmt_da(e['net_da'])} km"
+        if abs(e["net_da"] - e["main_da"]) > 0.1 * abs(e["net_da"]):
+            lab += f"（單筆 {rb._fmt_da(e['main_da'])}）"
+        fig.add_annotation(x=te, y=ya, text=lab, showarrow=True,
+                           arrowhead=0, ax=40, ay=(30 + 22 * tier) if e["net_da"] > 0 else -(30 + 22 * tier),
+                           bgcolor="rgba(255,255,255,0.85)", font=dict(size=11))
+    do = r["counts"].get("drag_only") or []
+    if do:
+        fig.add_trace(go.Scatter(
+            x=[pd.Timestamp(d, tz="UTC") + pd.Timedelta(hours=12) for d in do],
+            y=[float(tle["sma_km"].min())] * len(do), mode="markers",
+            marker=dict(symbol="triangle-up", size=11, color="#888888"),
+            name=T3("未與候選事件重疊的阻力殘差事件", "候補イベントと重ならない抗力残差イベント",
+                    "Drag-residual events not overlapping a candidate"),
+            hovertemplate="%{x|%Y-%m-%d}<extra></extra>"))
+    fig.update_layout(height=380, margin=dict(t=60, b=30, l=10, r=10), yaxis_title=T3("半長軸 (km)", "長半径 (km)", "SMA (km)"),
+                      showlegend=bool(do), legend=dict(orientation="h", y=-0.15))
+    return fig
+
+
+def _plot_report_timeline(r: dict):
+    """B 節：Starlink 用融合評分器分數、其他衛星用 NRLMSIS 阻力殘差（與 PDF 附錄 B 同一選擇規則與事件合併）。
+    回傳 (fig, n_events, 說明文字)；兩者皆無則回傳 (None, 0, 說明)。"""
+    import detection_timeline as dtl
+    name = (r.get("name") or "").upper()
+    fus, drag = r.get("fusion_df"), r.get("drag_df")
+    fig = go.Figure()
+    if "STARLINK" in name and fus is not None and len(fus):
+        thr = float(r["l3"]["fusion_thr"])
+        ts = fus[["epoch", "fusion"]].copy()
+        ts["thr"] = thr
+        reps = dtl.merge_episodes(ts, "fusion")
+        fig.add_trace(go.Scatter(x=ts["epoch"], y=ts["fusion"], mode="lines", line=dict(color="#555555", width=1.2),
+                                 name=T3("融合評分器分數", "融合スコア", "Fusion score")))
+        fig.add_hline(y=thr, line=dict(color="#c0392b", dash="dash"),
+                      annotation_text=T3(f"操作門檻 {thr:.3f}", f"運用閾値 {thr:.3f}", f"Operating threshold {thr:.3f}"))
+        if reps:
+            fig.add_trace(go.Scatter(x=[p["epoch"] for p in reps], y=[p["val"] for p in reps], mode="markers",
+                                     marker=dict(color="#D55E00", size=9), name=T3("超門檻候選事件", "閾値超え候補", "Above-threshold candidates")))
+        fig.update_layout(yaxis_range=[0, 1.02], yaxis_title=T3("融合評分器分數", "融合スコア", "Fusion score"))
+        note = ("序列：融合評分器（L3）逐 epoch 分數；門檻以上、相隔 48 小時內之點合併為一次候選事件，標示峰值。"
+                "分數為模型輸出，未經本族群校準，不代表機動發生機率。本節事件與上方「候選事件」（L1 規則式）口徑不同。")
+    elif drag is not None and len(drag):
+        reps = dtl.merge_episodes(drag, "drag")
+        y = drag["drag_resid_da"].abs().clip(lower=1e-3)
+        fig.add_trace(go.Scatter(x=drag["epoch"], y=y, mode="lines+markers", line=dict(color="#7fb3d5", width=1),
+                                 marker=dict(size=3), name=T3("|阻力殘差|", "|抗力残差|", "|Drag residual|")))
+        for lv in (rb.DRAG_EVENT_KM, 2.0):
+            fig.add_hline(y=lv, line=dict(color="#999999", dash="dot"))
+        if reps:
+            fig.add_trace(go.Scatter(x=[p["epoch"] for p in reps], y=[p["val"] for p in reps], mode="markers+text",
+                                     text=[pd.Timestamp(p["epoch"]).strftime("%m-%d") for p in reps],
+                                     textposition="top center", marker=dict(color="#D55E00", size=9),
+                                     name=T3("殘差候選事件", "残差候補イベント", "Residual candidates")))
+        fig.update_layout(yaxis_type="log", yaxis_title=T3("|Δa 殘差| (km，對數)", "|Δa 残差| (km、対数)", "|Δa residual| (km, log)"))
+        note = (f"序列：NRLMSIS 大氣阻力殘差（扣除阻力模型預測後之 Δa 殘差絕對值）；|殘差|＞{rb.DRAG_EVENT_KM:.2f} km、"
+                "相隔 48 小時內合併為一次殘差候選事件。殘差異常不等同推進機動。本節事件與上方「候選事件」（L1 規則式）口徑不同。")
+        if bool(drag["reentry"].iloc[0]):
+            note += "（偵測到自然再入衰減模式，物理閘門已抑制事件判定。）"
+    else:
+        return None, 0, "本區間無可用之融合評分器或阻力殘差序列（資料筆數不足或太空天氣資料缺漏）。"
+    fig.update_layout(height=340, margin=dict(t=30, b=30, l=10, r=10), legend=dict(orientation="h", y=1.12))
+    return fig, len(reps), note
+
+
+_rep, _rep_err = None, None
+with st.spinner(T3("計算報告摘要中（與 PDF 同一份計算）…", "レポート要約を計算中…", "Computing the report summary…")):
+    try:
+        _rep = _report_core(norad, d0, d1)
+        if not _rep.get("name") and str(sat_name) != str(norad):
+            _rep["name"] = str(sat_name)
+    except Exception as _e:
+        _rep_err = _e
+
+# ── 結果摘要（＝F2 第 1 頁）────────────────────────────────────────────────────
+st.header(T3("結果摘要", "結果サマリー", "Result summary"))
+if _rep is None:
+    _report_unavailable()
+else:
+    _dq, _c, _evs, _mj = _rep["data_quality"], _rep["counts"], _rep["events"], _rep.get("max_jump")
+    if _REPORT_ZH_NOTE:
+        st.caption(_REPORT_ZH_NOTE)
+    st.markdown(f"**NORAD {norad}｜{rb._display_name(_rep.get('name'))}**  \n"
+                f"分析期間：{_rep['start_date']}～{_rep['end_date']}｜軌道：{_rep['orbit_class']}｜"
+                f"平均高度：約 {_rep['alt_km_avg']:.0f} km  \n"
+                f"資料：{_dq['n_raw']} 筆原始 TLE → {_dq['n_tle']} 筆有效 TLE → {_dq['n_transitions']} 筆相鄰轉換")
+    _dq_note = ([f"同一 epoch 重複收錄 {_dq['n_dup']} 筆已去除"] if _dq["n_dup"] else []) + \
+               ([f"TLE 間隔中位數約 {_dq['dt_median_h']:.1f} 小時"] if _dq["dt_median_h"] is not None else [])
+    if _dq_note:
+        st.caption("（" + "；".join(_dq_note + ["細節見 C 節"]) + "）")
+    # 三個重點指標與 PDF 主頁同源（rb.kpi_tiles）
+    for _col, (_lab, _val, _sub) in zip(st.columns(3), rb.kpi_tiles(_rep)):
+        _col.metric(_lab, _val)
+        _col.caption(_sub)
+    for _s in rb.summary_sentences(_rep, appendix_ref="B 節"):
+        st.markdown(_s)
+    st.markdown("##### " + T3("半長軸時序與候選事件", "長半径の時系列と候補イベント", "SMA time series and candidate events"))
+    st.plotly_chart(_plot_report_sma(_rep), width="stretch")
+    if _rep.get("alt_history"):
+        st.markdown("##### " + T3("遠地點／近地點高度歷史", "遠地点／近地点高度の履歴", "Apogee / perigee altitude history"))
+        st.caption(rb.altitude_summary(_rep))
+        st.plotly_chart(_plot_report_alt(_rep), width="stretch")
+        st.caption(rb.alt_history_note(_rep) + "淡色帶＝候選事件時段。")
+    _info = _rep.get("sat_info")
+    with st.expander(T3("衛星基本資料（N2YO／KeepTrack 自動查詢）", "衛星基本情報（N2YO／KeepTrack 自動取得）",
+                        "Satellite info (auto-fetched from N2YO / KeepTrack)"), expanded=False):
+        import sat_info_fetch
+        _irows = sat_info_fetch.info_rows(_info)
+        if _irows:
+            st.dataframe(pd.DataFrame(_irows, columns=["欄位", "值", "來源"]), hide_index=True, width="stretch")
+        else:
+            st.caption("未取得外部基本資料。")
+        if _info:
+            st.caption(f"查詢狀態（{_info.get('fetched_at', '')}）："
+                       + "；".join(f"[{k}]({v['url']}) {v['status']}" for k, v in _info["sources"].items())
+                       + "。外部資料僅供識別參考，與本報表 TLE 分析結果無關。")
+    st.caption("淡色帶＝事件時段；紫色虛線＝回跳型態（資料品質待查）；上緣數字＝事件編號；"
+               "標註為事件淨 Δa 最大的事件（括號內為最大單筆相鄰 TLE Δa）"
+               + ("；青色橫條＝連續機動段" if _rep.get("segments") else "")
+               + ("；灰色三角＝未與候選事件重疊的阻力殘差事件" if _c.get("drag_only") else ""))
+    if _evs:
+        # 與 PDF 主頁相同：機動段以段為單位＋E2／E3 或 |淨 Δa| ≥ 1 km 的事件；其餘待觀察事件收合
+        _items, _n_rest = rb.focus_items(_rep)
+        st.markdown("##### " + T3(f"重點複核項目（{len(_items)} 項；候選事件共 {len(_evs)} 次）",
+                                  f"重点確認項目（{len(_items)} 件；候補イベント計 {len(_evs)} 件）",
+                                  f"Priority review items ({len(_items)}; {len(_evs)} candidate events)"))
+        if _items:
+            # 依優先序：D 資料品質／P1 立即／P2 排程（P2 主表上限同 PDF、Markdown）
+            _main, _over = rb.focus_split(_items)
+            _cols, _rows = rb.focus_table(_main)
+            st.dataframe(pd.DataFrame(_rows, columns=_cols), hide_index=True, width="stretch")
+            if _over:
+                st.caption(f"另有 P2 {len(_over)} 項（{'、'.join(x['id'] for x in _over)}）未列入主表，見完整清單。")
+        else:
+            st.caption("本期無重點複核項目。")
+        with st.expander(T3(f"完整候選事件清單（{len(_evs)} 筆；其餘待觀察 {_n_rest} 筆）",
+                            f"候補イベント全件（{len(_evs)} 件）", f"All candidate events ({len(_evs)})"), expanded=False):
+            _cols, _rows = rb.event_table(_evs)
+            st.dataframe(pd.DataFrame(_rows, columns=_cols), hide_index=True, width="stretch")
+    elif _rep.get("low_conf"):
+        st.markdown("##### " + T3("候選事件（共 0 次）", "候補イベント（0 件）", "Candidate events (0)"))
+        _cols, _rows = rb.low_conf_table(_rep)
+        st.caption(f"本期間無候選事件。低置信複核項（未列為候選事件，{len(_rows)} 筆）：")
+        st.dataframe(pd.DataFrame(_rows, columns=_cols), hide_index=True, width="stretch")
+        st.caption(f"檢查步驟：{rb.LOW_CONF_STEP}。")
+    else:
+        st.caption("本期間無候選事件。")
+    st.caption("限制說明：未取得營運者公告或獨立精密星曆，所有事件皆為候選、非已確認推進機動，證據等級僅代表複核優先順序；"
+               "各輔助通道可能共享資料與特徵，多通道一致觸發不代表獨立觀測驗證；依公開 TLE 分析，時間解析度受 TLE "
+               "更新頻率限制，TLE 相對真實軌道的誤差可達數百公尺以上，SNR 只衡量相鄰 TLE 間的隨機起伏。"
+               "本節使用預設門檻（與 PDF 相同），不受側欄 P2／P5 調整影響。")
+
+# ── A　候選事件與規則候選點清單（＝F2 附錄 A）────────────────────────────────────
+st.subheader(T3("A　候選事件與規則候選點清單", "A　候補イベントとルール候補点の一覧",
+                "A  Candidate events and rule candidate points"))
+if _rep is None:
+    _report_unavailable()
+else:
+    st.caption("事件淨 Δa＝事件首個候選轉換前至末個候選轉換後的半長軸變化；候選點相隔 ≤ 48 小時連鎖合併為同一事件。")
+    _cols, _rows = rb.event_table(_rep["events"], full=True)
+    if _rows:
+        st.markdown("###### A-1 " + T3("候選事件", "候補イベント", "Candidate events"))
+        st.dataframe(pd.DataFrame(_rows, columns=_cols), hide_index=True, width="stretch")
+        _cols, _rows = rb.assessment_table(_rep["events"])
+        st.markdown("###### A-2 " + T3("事件評估", "イベント評価", "Event assessment"))
+        st.caption("定義見 C 節；外部複核狀態（營運者公告／精密星曆／接近事件資料）：均為「無」。")
+        st.dataframe(pd.DataFrame(_rows, columns=_cols), hide_index=True, width="stretch")
+        if _rep.get("segments"):
+            _cols, _rows = rb.segment_table(_rep["segments"])
+            st.markdown("###### A-3 " + T3("連續機動段", "連続機動区間", "Maneuver campaigns"))
+            st.caption("同向、相鄰事件合併；累計 Δa 含段間漂移。")
+            st.dataframe(pd.DataFrame(_rows, columns=_cols), hide_index=True, width="stretch")
+        if _rep.get("station_keeping"):
+            _cols, _rows = rb.station_keeping_table(_rep["station_keeping"])
+            st.markdown("###### " + T3("GEO 位置保持段", "GEO 位置保持区間", "GEO station-keeping groups"))
+            st.caption("東西段＝同向、相鄰的小幅 Δa 事件群組（可能是經度漂移累積或小幅推進序列，段間方向轉折為候選東西修正時點）；"
+                       "南北線索＝Δi 同步事件。")
+            st.dataframe(pd.DataFrame(_rows, columns=_cols), hide_index=True, width="stretch")
+        _cols, _rows = rb.catalog_review_table(_rep["events"])
+        if _rows:
+            st.markdown("###### " + T3("編目複核紀錄", "カタログ確認記録", "Catalog review log"))
+            st.caption("編目檢查狀態初始為「待檢查」；人工核對後更新為「已排除」「疑似交叉標記」或「維持候選」。")
+            st.dataframe(pd.DataFrame(_rows, columns=_cols), hide_index=True, width="stretch")
+    _pts = pd.DataFrame([{"時間 (UTC)": f"{pd.Timestamp(p['epoch']):%Y-%m-%d %H:%M}",
+                          "Δa (km)": round(float(p["sma_delta"]), 3),
+                          "事件": f"#{p['event_no']}" if p.get("event_no") else "—"} for p in _rep["landing_events"]])
+    with st.expander(T3(f"規則候選點（L1 標記之相鄰 TLE 轉換，{len(_pts)} 筆）",
+                        f"ルール候補点（L1 が検出した隣接 TLE 遷移、{len(_pts)} 件）",
+                        f"Rule candidate points (adjacent-TLE transitions flagged by L1, {len(_pts)})"), expanded=False):
+        st.dataframe(_pts, hide_index=True, width="stretch", height=min(420, 38 + 35 * max(len(_pts), 1)))
+
+# ── B　阻力模型殘差／融合評分器與候選事件（＝F2 附錄 B）─────────────────────────────
+st.subheader(T3("B　阻力模型殘差／融合評分器與候選事件", "B　抗力モデル残差／融合スコアと候補イベント",
+                "B  Drag-model residual / fusion score and candidate events"))
+if _rep is None:
+    _report_unavailable()
+else:
+    _figB, _nB, _noteB = _plot_report_timeline(_rep)
+    if _figB is not None:
+        st.caption(T3(f"共 {_nB} 次候選事件", f"候補イベント {_nB} 件", f"{_nB} candidate events"))
+        st.plotly_chart(_figB, width="stretch")
+    st.caption(_noteB)
+
+# ── C　計數口徑與判定流程（＝F2 附錄 C）──────────────────────────────────────────
+st.subheader(T3("C　計數口徑與判定流程", "C　カウントの定義と判定フロー", "C  What each count means and how decisions are made"))
+if _rep is None:
+    _report_unavailable()
+else:
+    st.markdown(_rep_text(rb.build_method_text(_rep)))
+
+# ── 🧭 系統偵測邏輯說明（哪些是經驗法則、哪些是 AI 模型）──────────────────────
+with st.expander(T3("🧭 系統偵測邏輯說明：哪些是經驗法則，哪些是 AI 模型？",
+                    "🧭 検出ロジックの説明：どれが経験則で、どれが AI モデルか？",
+                    "🧭 How detection works: which parts are rules and which are AI models?"), expanded=False):
+    _render_method_guide()
+
+
+# ── ② P1–P6 ─────────────────────────────────────────────────────────────────
+st.markdown("##### " + t("sec2_title"))
+st.caption(T3("本表可用側欄調整 P2／P5 門檻做互動檢視；上方結果摘要與 PDF 固定使用預設門檻。",
+              "この表はサイドバーで P2／P5 閾値を調整できる。上の結果サマリーと PDF は既定の閾値を使用。",
+              "This table follows the sidebar P2/P5 thresholds; the summary above and the PDF use the defaults."))
+_method_badges("rule", note=T3("P1–P6 皆為人工設定門檻，不經資料訓練", "P1–P6 はすべて人手で設定した閾値（学習なし）", "P1–P6 are hand-set thresholds (no training)"))
+if len(tr):
+    rows = [{"strategy": k, "n_flags": int(v.sum()),
+             "kind": t("tbl_kind_suppress") if "suppress" in k else t("tbl_kind_detect")}
+            for k, v in res["per_strategy"].items()]
+    rows.append({"strategy": t("tbl_strategy_combined"), "n_flags": int(combined.sum()),
+                 "kind": t("tbl_kind_final")})
+    cL, cR = st.columns([1, 1.4])
+    cL.dataframe(tcols(pd.DataFrame(rows)), hide_index=True, width="stretch")
+    with cR:
+        for k, note in res["notes"].items():
+            st.caption(f"**{k}** — {note}")
+    # 閾值曲線預覽
+    with st.expander(t("exp_p2p5_preview")):
+        gx = np.linspace(300, 1000, 100)
+        fx = np.linspace(60, 260, 100)
+        fig2 = make_subplots(rows=1, cols=2, subplot_titles=(t("plot_p2_curve"),
+                                                             t("plot_p5_curve")))
+        fig2.add_trace(go.Scatter(x=gx, y=p2(gx), line=dict(color="#0072B2")), row=1, col=1)
+        fig2.add_trace(go.Scatter(x=fx, y=p5(fx), line=dict(color="#E69F00")), row=1, col=2)
+        fig2.update_layout(height=280, showlegend=False, margin=dict(t=30, b=20))
+        st.plotly_chart(fig2, width="stretch")
+
+
+# ── D　各層偵測器原始輸出（＝F2 附錄 D）────────────────────────────────────────
+st.subheader(T3("D　各層偵測器原始輸出", "D　各層検出器の生出力", "D  Raw outputs of each detection layer"))
+st.caption(T3("依軌域自動路由的統一偵測摘要、L2 統計通道、ML／Model 2、L3 融合評分器的互動檢視。",
+              "軌道域ルーティングによる統合検出サマリー、L2 統計チャネル、ML／Model 2、L3 融合スコアの対話的表示。",
+              "Interactive view of the regime-routed unified summary, L2 statistical channels, ML / Model 2 and the L3 fusion scorer."))
 
 # ── 🎯 統一偵測摘要（orbit_anomaly_detector，依軌域自動路由）──────────────────
 @st.cache_resource(show_spinner=False)
@@ -13927,51 +15268,9 @@ with st.container(border=True):
     else:
         st.caption(t("caption_unified_unavailable", err=ur.get("err", ur.get("status"))))
 
-# ── ① 根數與差值 ─────────────────────────────────────────────────────────────
-st.subheader(t("sec1_title"))
-if len(tr):
-    _c_ttl, _c_tog = st.columns([3, 1.1])
-    with _c_tog:
-        _y_mode = st.radio(
-            t("radio_left_y"), ["sma", "alt"],
-            format_func=lambda k: t("plot_sma_km") if k == "sma" else t("plot_alt_km"),
-            horizontal=True, key="elem_a_ymode",
-            help=t("help_left_y"))
-    _show_alt = (_y_mode == "alt")
-    _nm1 = compute_nrlmsis_maneuvers(norad, d0, d1)
-    _mv = _nm1[_nm1["is_maneuver"]] if _nm1 is not None else None
-    st.plotly_chart(plot_elements_and_deltas(df, tr, combined, nrlmsis_mv=_mv,
-                                             show_altitude=_show_alt),
-                    width="stretch")
-    if _mv is not None:
-        st.caption(t("caption_green_star", n=len(_mv)))
-
-# ── ② P1–P6 ─────────────────────────────────────────────────────────────────
-st.subheader(t("sec2_title"))
-if len(tr):
-    rows = [{"strategy": k, "n_flags": int(v.sum()),
-             "kind": t("tbl_kind_suppress") if "suppress" in k else t("tbl_kind_detect")}
-            for k, v in res["per_strategy"].items()]
-    rows.append({"strategy": t("tbl_strategy_combined"), "n_flags": int(combined.sum()),
-                 "kind": t("tbl_kind_final")})
-    cL, cR = st.columns([1, 1.4])
-    cL.dataframe(tcols(pd.DataFrame(rows)), hide_index=True, width="stretch")
-    with cR:
-        for k, note in res["notes"].items():
-            st.caption(f"**{k}** — {note}")
-    # 閾值曲線預覽
-    with st.expander(t("exp_p2p5_preview")):
-        gx = np.linspace(300, 1000, 100)
-        fx = np.linspace(60, 260, 100)
-        fig2 = make_subplots(rows=1, cols=2, subplot_titles=(t("plot_p2_curve"),
-                                                             t("plot_p5_curve")))
-        fig2.add_trace(go.Scatter(x=gx, y=p2(gx), line=dict(color="#0072B2")), row=1, col=1)
-        fig2.add_trace(go.Scatter(x=fx, y=p5(fx), line=dict(color="#E69F00")), row=1, col=2)
-        fig2.update_layout(height=280, showlegend=False, margin=dict(t=30, b=20))
-        st.plotly_chart(fig2, width="stretch")
-
 # ── ③ 統計層 + ML ────────────────────────────────────────────────────────────
-st.subheader(t("sec3_title"))
+st.markdown("##### " + t("sec3_title"))
+_method_badges("stat", "phys", "ai", note=T3("本區混合多種方法，下方各小節分別標示", "本セクションは複数の方法を含む（各小節に表示）", "Mixed methods; each subsection is labelled below"))
 
 # ── 自動路由：Starlink → Model 1 主判；非 Starlink → Model 2 / NRLMSIS 殘差 ──
 _in_domain = is_starlink_domain(sat_name)
@@ -13979,6 +15278,7 @@ if _in_domain:
     st.success(t("succ_starlink_domain", sat=sat_name))
 else:
     st.warning(t("warn_ood_domain", sat=sat_name))
+_method_badges("rule", note=T3("自動路由：依衛星是否為 Starlink 決定由哪一個偵測器主判", "自動ルーティング：Starlink か否かで主判定器を決定", "Routing: whether the satellite is Starlink decides the primary detector"))
 
 # 主判結果卡（依路由選擇的偵測器）
 with st.container():
@@ -14006,6 +15306,7 @@ with st.container():
                 for e, v in zip(mv["epoch"], mv["drag_resid_da"])))
 
 if len(df) >= 8:
+    _method_badges("stat", note="CUSUM / BOCPD / SSA / 3σ-MAD")
     sr = sd.run_all(df["sma_km"].to_numpy(float))
     fig3 = make_subplots(rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.05,
                          subplot_titles=(t("plot_cusum"), t("plot_bocpd"),
@@ -14029,6 +15330,7 @@ if len(df) >= 8:
 
     # ML forecast（若模型與特徵可得）
     with st.expander(t("exp_ml_forecast")):
+        _method_badges("ai", note=T3("LightGBM，MEME 真值訓練（僅 Starlink）", "LightGBM、MEME 真値で学習（Starlink のみ）", "LightGBM trained on MEME truth (Starlink only)"))
         try:
             import joblib, json
             mdir = Path("Orbital_Maneuver_V2/models_meme_forecast")
@@ -14056,6 +15358,7 @@ if len(df) >= 8:
 
     # ML 機動偵測（每窗口，非預測）
     st.markdown(t("md_ml_detection"))
+    _method_badges("ai", "phys", note=T3("LightGBM 機率，須通過物理閘門（|阻力殘差| > 0.30 km）才成立", "LightGBM の確率＋物理ゲート（|抗力残差| > 0.30 km）", "LightGBM probability, valid only if it passes the physics gate (|drag residual| > 0.30 km)"))
     with st.spinner(t("spinner_ml_detect")):
         det = compute_ml_detection(norad, d0, d1)
     if det is not None:
@@ -14089,6 +15392,7 @@ if len(df) >= 8:
 
     # ── Model 2：regime-agnostic 無監督（NRLMSIS 物理殘差 + Isolation Forest）──
     st.markdown(t("md_model2"))
+    _method_badges("ai", "phys", note=T3("Isolation Forest 無監督模型，輸入為物理殘差等通道", "教師なし Isolation Forest（入力は物理残差など）", "Unsupervised Isolation Forest on physics-residual channels"))
     with st.spinner(t("spinner_model2")):
         m2 = compute_model2_detection(norad, d0, d1)
     if m2 is not None:
@@ -14113,6 +15417,7 @@ if len(df) >= 8:
 
     # ── 連續融合評分器（CUSUM/BOCPD/SSA/MAD + NRLMSIS drag → 單一機率）──────────
     st.markdown(t("md_fusion"))
+    _method_badges("ai", note=T3("HistGradientBoosting，MEME 真值訓練（僅 Starlink）", "HistGradientBoosting、MEME 真値で学習（Starlink のみ）", "HistGradientBoosting trained on MEME truth (Starlink only)"))
     with st.spinner(t("spinner_fusion")):
         fus = compute_fusion_detection(norad, d0, d1)
     if fus is not None:
@@ -14135,33 +15440,44 @@ if len(df) >= 8:
     else:
         st.caption(t("caption_fusion_unavailable"))
 
-    # ── 🤖 SSA-RAG 自動解說（③ 偵測結果 → 自然語言 → RAG）───────────────────────
+
+# ── E　軌道根數連續變化與差值（＝F2 附錄 E）──────────────────────────────────────
+st.subheader(T3("E　軌道根數連續變化與差值", "E　軌道要素の連続変化と差分", "E  Orbital elements and their differences"))
+# ── ① 根數與差值 ─────────────────────────────────────────────────────────────
+_method_badges("phys", note=T3("根數曲線為資料呈現；綠色星號＝NRLMSIS 阻力殘差判定之機動", "要素の曲線はデータ表示；緑の星印＝NRLMSIS 抗力残差による機動", "Element curves are data; green stars = maneuvers from the NRLMSIS drag residual"))
+if len(tr):
+    _c_ttl, _c_tog = st.columns([3, 1.1])
+    with _c_tog:
+        _y_mode = st.radio(
+            t("radio_left_y"), ["sma", "alt"],
+            format_func=lambda k: t("plot_sma_km") if k == "sma" else t("plot_alt_km"),
+            horizontal=True, key="elem_a_ymode",
+            help=t("help_left_y"))
+    _show_alt = (_y_mode == "alt")
+    _nm1 = compute_nrlmsis_maneuvers(norad, d0, d1)
+    _mv = _nm1[_nm1["is_maneuver"]] if _nm1 is not None else None
+    st.plotly_chart(plot_elements_and_deltas(df, tr, combined, nrlmsis_mv=_mv,
+                                             show_altitude=_show_alt),
+                    width="stretch")
+    if _mv is not None:
+        st.caption(t("caption_green_star", n=len(_mv)))
+
+
+# ── F　分析註記（＝F2 附錄 F）──────────────────────────────────────────────────
+st.subheader(T3("F　分析註記", "F　分析ノート", "F  Analysis notes"))
+if _rep is None:
+    _report_unavailable()
+else:
+    st.caption(T3("以下三段由系統依本頁數字以固定規則產生，不經大型語言模型。",
+                  "以下の 3 段はシステムが本ページの数値から固定ルールで生成（大規模言語モデル不使用）。",
+                  "The three parts below are generated from this page's numbers by fixed rules, without an LLM."))
+    st.markdown(_rep_text(_rep["analysis_notes"]))
     if rag_auto:
-        _ev = pd.DataFrame()
-        if len(tr) and combined.any():
-            _et = tr[combined].copy()
-            _ev = pd.DataFrame({
-                "epoch": _et["epoch"].to_numpy(),
-                "sma_delta": _et["da_km"].abs().to_numpy(),
-                "sma_direction": np.where(_et["da_km"].to_numpy() > 0, "raise", "lower"),
-            })
-        _alt_avg = float(tr["alt_km"].mean()) if len(tr) else None
-        _narr = build_tle_maneuver_narrative(norad, _alt_avg, str(d0), str(d1), _ev)
-        # Starlink（Model 1 分布內）額外附 ML 偵測敘述
-        if _in_domain and det is not None:
-            _ddf = det[0]
-            _p_ml = float(_ddf.loc[_ddf["flag"], "prob"].max()) if _ddf["flag"].any() \
-                else float(_ddf["prob"].max())
-            _feat = {
-                "alt_km": _alt_avg if _alt_avg is not None else float("nan"),
-                "net_da_km": float(_ddf["da_km"].sum()),
-                "max_da_km": float(_ddf["da_km"].abs().max()),
-                "flag_rate": float(_ddf["flag"].mean()),
-                "dv_net_ms": float(_ddf["da_km"].sum()) / 2 * 0.0011 * 1000,
-            }
-            _narr += "\n\n" + build_ml_maneuver_narrative(
-                norad, _p_ml, _feat, str(d0), str(d1), alert=bool(_ddf["flag"].any()))
-        render_rag_auto_explain(_narr, base_url=rag_url)
+        _method_badges("llm", note=T3("僅撰寫解說文字，不參與機動判定", "説明文のみ作成、判定には関与しない", "Writes text only; not used for decisions"))
+        render_rag_auto_explain(_rep["narrative"], base_url=rag_url)
+
+# ── 其他分析工具（F2 報告未收錄）─────────────────────────────────────────────
+st.header(T3("其他分析工具", "その他の分析ツール", "Other analysis tools"))
 
 # ── ⑤ MEME vs TLE（72h 模型）────────────────────────────────────────────────
 st.subheader(t("sec5_title"))
@@ -14194,6 +15510,7 @@ except Exception as e:
 
 # ── ⑥ 資料品質稽核 (quality_flag) ─────────────────────────────────────────────
 st.subheader(t("sec6_title"))
+_method_badges("rule", note=T3("物理不可能值、時間缺口、Δi 跳變、極端 B* 等門檻", "非物理値・時間欠損・Δi 跳躍・極端 B* の閾値", "Thresholds on non-physical values, gaps, Δi jumps, extreme B*"))
 au = dqa.audit_tles(df)
 qs = dqa.summarize(au)
 qc = st.columns(5)
@@ -14257,6 +15574,7 @@ def _detect_constellation(name: str):
 
 
 st.subheader(t("sec7_title"))
+_method_badges("stat", "rule", note=T3("軌道面統計量加人工門檻（如同日機動顆數 > K）", "軌道面の統計量＋人手の閾値（同日機動数 > K など）", "Plane statistics plus hand-set thresholds (e.g. same-day maneuvers > K)"))
 _cn = _detect_constellation(sat_name)
 if _cn is None:
     st.caption(t("caption_not_constellation", sat=sat_name,
@@ -14371,6 +15689,7 @@ with st.expander(t("exp_synth")):
 
 # ── ⑧ SSA-RAG 知識問答 ────────────────────────────────────────────────────────
 st.subheader(t("sec8_title"))
+_method_badges("llm", note=T3("知識庫檢索＋大型語言模型問答，不參與機動判定", "知識ベース検索＋大規模言語モデル、判定には関与しない", "Retrieval + LLM Q&A; not used for maneuver decisions"))
 with st.expander(t("exp_rag_qa"), expanded=False):
     render_ssa_rag_page(base_url=rag_url)
 

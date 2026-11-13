@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import colorsys
 import glob
+import json
 import os
 from datetime import timezone
 from pathlib import Path
@@ -2661,6 +2662,20 @@ def load_case5_real_data() -> dict:
     return out
 
 
+@st.cache_data(show_spinner=False)
+def load_case5_meme_sawtooth() -> dict:
+    """案例五第二節之凍結資料：MEME 檔內預報之軌道平均半長軸鋸齒＋各星 MEME 阻力 vs 本專案模型。
+    MEME 原始星曆（data/raw）未上傳 HF Space，故預先計算；產生器見
+    research_202610/validation_20261029/scripts/case5_meme_sawtooth_data.py。缺檔回傳空 dict。"""
+    p1 = DATA / "benchmark" / "case5_meme_sawtooth_series_20261029.csv"
+    p2 = DATA / "benchmark" / "case5_meme_drag_vs_model_20261029.csv"
+    if not (p1.exists() and p2.exists()):
+        return {}
+    s = pd.read_csv(p1)
+    s["t"] = pd.to_datetime(s["t"], utc=True, format="mixed")
+    return {"series": s, "table": pd.read_csv(p2)}
+
+
 # --- render_storymap_case5 ---
 def render_storymap_case5():
     if st.button(t("storymap_back"), key="back_from_case5"):
@@ -2772,6 +2787,158 @@ def render_storymap_case5():
                     "directly determines \"natural reentry, maneuver = 0,\" so the number of points flagged "
                     "as a maneuver in the chart above is correctly **0**.",
                 ))
+
+    # ── 第二節（2026-10-29 新增）：MEME 預報裡看得到推力 ───────────────────────
+    msaw = load_case5_meme_sawtooth()
+    if msaw:
+        st.markdown("---")
+        st.header(T3(
+            "MEME 預報裡看得到推力：滑行被阻力拉低，推力再推回去",
+            "MEME 予報に見える推力：滑空中は抵抗で下がり、推力で押し戻される",
+            "Thrust Is Visible in the MEME Forecasts: Drag Pulls the Orbit Down, Thrust Pushes It Back",
+        ))
+        st.markdown(T3(
+            "上面的殘差都是從 TLE 算出來的。TLE 大約每 8 小時才一筆，看到的只是兩筆之間的**淨變化**；"
+            "如果推力和阻力在中間互相抵銷，TLE 就看不出來。\n\n"
+            "SpaceX 公開的 **MEME 星曆**不一樣：每份檔是他們對未來 3 天、每分鐘一筆的預報軌道，"
+            "裡面包含他們預定的推力。我們把半長軸**每繞一圈取一次平均**，扣掉地球重力場（J2）造成的每圈數公里起伏。"
+            "J2 不會讓平均半長軸長期升降，所以剩下的變化只可能有兩個來源：**阻力只會讓它下降，要上升就必須有推力。**",
+            "上の残差はすべて TLE から算出したものである。TLE はおよそ 8 時間に 1 件しかなく、見えるのは 2 件間の"
+            "**正味の変化**だけである。推力と抵抗がその間で打ち消し合えば、TLE からは見えない。\n\n"
+            "SpaceX が公開する **MEME 暦**は異なる：各ファイルは今後 3 日間・1 分ごとの予報軌道であり、予定された推力を"
+            "含む。軌道長半径を**1 周ごとに平均**し、地球重力場（J2）による 1 周あたり数 km の揺らぎを取り除く。"
+            "J2 は平均長半径を長期的に上下させないため、残る変化の原因は 2 つしかない：**抵抗は下げるだけで、"
+            "上げるには推力が必要である。**",
+            "The residuals above are all computed from TLEs. A TLE arrives only about every 8 hours, so it shows "
+            "only the **net change** between two sets; if thrust and drag cancel in between, the TLE cannot see it.\n\n"
+            "SpaceX's public **MEME ephemerides** are different: each file is their 3-day, one-point-per-minute "
+            "forecast orbit, including their planned thrust. We **average the semi-major axis over each orbit**, "
+            "removing the few-km per-orbit ripple caused by Earth's gravity field (J2). J2 does not raise or lower "
+            "the orbit-averaged semi-major axis over time, so what remains can come from only two sources: "
+            "**drag can only lower it; raising it requires thrust.**",
+        ))
+        s, tab = msaw["series"], msaw["table"]
+        kind_txt = {"V3": T3("V3 新星", "V3 新衛星", "new V3"), "mature": T3("成熟星", "成熟衛星", "mature"),
+                    "low": T3("低軌星", "低軌道衛星", "low-orbit")}
+        ccols = st.columns(2)
+        for i, (nid, g) in enumerate(s.groupby("norad", sort=False)):
+            k = g["kind"].iloc[0]; alt_s = f"{g['alt_km'].mean():.0f}"; fdate = g["file"].iloc[0][:10]
+            # 只畫逐圈點（分析即以每圈一點為準）；5 分鐘平滑線含移動平均窗與真實週期不完全對齊之殘餘震盪，不呈現
+            po = g[g["point"].str.startswith("orbit")].sort_values("t")
+            dn = po[po["point"] == "orbit_down"]; up = po[po["point"] == "orbit_up"]
+            with ccols[i % 2]:
+                st.subheader(f"{g['name'].iloc[0]}（NORAD {nid}，{kind_txt[k]}，~{alt_s} km）")
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=po["t"], y=po["dalt_m"], mode="lines", line=dict(color="#90A4AE", width=1.2),
+                                         name=T3("軌道平均半長軸（每圈一點）", "軌道平均長半径（1 周 1 点）",
+                                                 "Orbit-averaged SMA (one point per orbit)")))
+                fig.add_trace(go.Scatter(x=dn["t"], y=dn["dalt_m"], mode="markers", marker=dict(color="#64B5F6", size=6),
+                                         name=T3("下降圈（滑行，阻力）", "下降周回（滑空・抵抗）", "Falling orbit (coast, drag)")))
+                fig.add_trace(go.Scatter(x=up["t"], y=up["dalt_m"], mode="markers",
+                                         marker=dict(color="#FFA726", size=7, symbol="triangle-up"),
+                                         name=T3("上升圈（推力）", "上昇周回（推力）", "Rising orbit (thrust)")))
+                tail = po[po["in_tail"]] if "in_tail" in po else po.iloc[0:0]
+                if len(tail):   # 預報尾段：逐圈變化僅數公尺、非物理預報，不納入統計
+                    fig.add_vrect(x0=tail["t"].min(), x1=tail["t"].max(), fillcolor="#9E9E9E", opacity=0.15,
+                                  line_width=0, annotation_text=T3("預報尾段（未納入計算）", "予報末尾（計算対象外）",
+                                                                   "Forecast tail (excluded)"),
+                                  annotation_position="top left", annotation_font_size=10)
+                fig.update_layout(height=280, margin=dict(l=10, r=10, t=10, b=10), plot_bgcolor="rgba(0,0,0,0)",
+                                  yaxis_title=T3("相對檔首變化 (m)", "ファイル開始からの変化 (m)", "Change from file start (m)"),
+                                  legend=dict(orientation="h", y=-0.25))
+                st.plotly_chart(fig, use_container_width=True, key=f"case5_meme_{nid}")
+                st.caption(T3(f"MEME 檔：{fdate}（3 天預報）", f"MEME ファイル：{fdate}（3 日予報）",
+                              f"MEME file: {fdate} (3-day forecast)"))
+
+        def _m(x):
+            return f"{x:+.0f}".replace("-", "−")
+        coast_rng = f"{_m(tab['meme_coast_drag_m_per_day'].max())}～{_m(tab['meme_coast_drag_m_per_day'].min())}"
+        net_rng = f"{_m(tab['meme_net_m_per_day'].min())}～{_m(tab['meme_net_m_per_day'].max())}"
+        v3 = tab[tab["kind"] == "V3"]; mat = tab[tab["kind"] == "mature"]
+        v3_model = f"{_m(v3['model_drag_m_per_day'].max())}～{_m(v3['model_drag_m_per_day'].min())}"
+        v3_err = f"{(v3['model_drag_m_per_day'] / v3['meme_coast_drag_m_per_day'] - 1).abs().max():.0%}"
+        mat_model = f"{_m(mat['model_drag_m_per_day'].max())}～{_m(mat['model_drag_m_per_day'].min())}"
+        mat_coast = f"{_m(mat['meme_coast_drag_m_per_day'].max())}～{_m(mat['meme_coast_drag_m_per_day'].min())}"
+        mat_x = f"{(mat['meme_coast_drag_m_per_day'] / mat['model_drag_m_per_day']).mean():.0f}"
+        mat_names = "、".join(str(n) for n in mat["norad"])
+
+        st.markdown(T3(
+            f"10-20 之後的每份檔都出現一樣的**鋸齒**：滑行時被阻力拉低，推力再推回去，三天下來淨變化幾乎是 0"
+            f"（各星 {net_rng} m／日）。逐圈拆開後，滑行段的阻力衰減約 {coast_rng} m／日：",
+            f"10-20 以降のどのファイルにも同じ**のこぎり波**が現れる：滑空中は抵抗で下がり、推力で押し戻され、"
+            f"3 日間の正味の変化はほぼ 0（各衛星 {net_rng} m／日）。周回ごとに分解すると、滑空区間の抵抗減衰は"
+            f"約 {coast_rng} m／日：",
+            f"Every file after 10-20 shows the same **sawtooth**: drag pulls the orbit down while coasting, thrust "
+            f"pushes it back, and over three days the net change is almost zero ({net_rng} m/day per satellite). "
+            f"Broken down orbit by orbit, the drag decay during coasting is about {coast_rng} m/day:",
+        ))
+        show = tab.assign(kind=tab["kind"].map(kind_txt))[
+            ["name", "norad", "kind", "alt_km", "meme_coast_drag_m_per_day", "model_drag_m_per_day",
+             "meme_net_m_per_day", "B_eff"]]
+        show.columns = [T3("衛星", "衛星", "Satellite"), "NORAD", T3("類型", "種類", "Type"),
+                        T3("高度 (km)", "高度 (km)", "Altitude (km)"),
+                        T3("MEME 滑行段阻力 (m/日)", "MEME 滑空区間の抵抗 (m/日)", "MEME coasting drag (m/day)"),
+                        T3("本專案模型預測 (m/日)", "本プロジェクトのモデル予測 (m/日)", "Our model's prediction (m/day)"),
+                        T3("MEME 淨變化 (m/日)", "MEME 正味の変化 (m/日)", "MEME net change (m/day)"), "B_eff"]
+        st.dataframe(show, hide_index=True, use_container_width=True)
+        st.success(T3(
+            f"**判讀**：\n\n"
+            f"- **V3 新星**：本專案的阻力模型預測 {v3_model} m／日，與 MEME 滑行段相差在 {v3_err} 以內。"
+            f"所以 TLE 上看到的殘差偏正，是推力在補償阻力，**物理模型是對的**。但 MEME 真值只把淨變化 ≥ 5 km 算成機動，"
+            f"這些時段被標成「安靜」，阻力殘差因此看起來像誤報。\n"
+            f"- **成熟星**（{mat_names}）：真實阻力和 V3 差不多（{mat_coast} m／日），我們的模型卻只預測 {mat_model} m／日，"
+            f"**低估約 {mat_x} 倍**。原因是它們長期補償阻力，TLE 上的半長軸幾乎不變，逐衛星自我校準的 B 只抓到雜訊而被壓得很小。"
+            f"殘差剛好接近 0，是「錯得剛好」。\n"
+            f"- **本案例的啟示**：對持續以推力補償阻力的衛星，自我校準的 B 不是物理阻力係數，殘差代表的是"
+            f"「相對這顆星常態的偏離」，而不是推力大小。這和案例三十「推力被藏進 B*」是同一類現象："
+            f"TLE 的阻力參數會把持續的推力吸收進去。",
+            f"**判読**：\n\n"
+            f"- **V3 新衛星**：本プロジェクトの抵抗モデルの予測は {v3_model} m／日で、MEME の滑空区間との差は {v3_err} 以内。"
+            f"したがって TLE で見える残差のプラス偏りは推力による抵抗補償であり、**物理モデルは正しい**。ただし MEME の真値は"
+            f"正味の変化 5 km 以上のみを機動とするため、これらの期間は「静穏」とされ、抵抗残差は誤報のように見える。\n"
+            f"- **成熟衛星**（{mat_names}）：実際の抵抗は V3 とほぼ同じ（{mat_coast} m／日）なのに、本モデルの予測は"
+            f" {mat_model} m／日にすぎず、**約 {mat_x} 倍の過小評価**である。長期間抵抗を補償しているため TLE の長半径は"
+            f"ほぼ変わらず、衛星ごとに自己較正される B はノイズしか捉えず非常に小さくなる。残差がちょうど 0 付近になるのは"
+            f"「偶然うまく間違えている」からである。\n"
+            f"- **本事例の教訓**：推力で抵抗を常時補償する衛星では、自己較正された B は物理的な抵抗係数ではなく、"
+            f"残差が表すのは推力の大きさではなく「その衛星の平常状態からの偏差」である。これは事例三十「推力が B* に"
+            f"隠れる」と同類の現象である：TLE の抵抗パラメータは持続的な推力を吸収してしまう。",
+            f"**Verdict**:\n\n"
+            f"- **New V3 satellites**: our drag model predicts {v3_model} m/day, within {v3_err} of MEME's coasting "
+            f"drag. So the positive residual seen in the TLEs is thrust offsetting drag, and **the physics model is "
+            f"right**. But the MEME truth counts only a net change of ≥ 5 km as a maneuver, so these periods are labelled "
+            f"\"quiet\" and the drag residual looks like a false alarm.\n"
+            f"- **Mature satellites** ({mat_names}): their real drag is about the same as V3's ({mat_coast} m/day), yet "
+            f"our model predicts only {mat_model} m/day, **an underestimate of about {mat_x}×**. Because they offset drag "
+            f"all the time, their TLE semi-major axis barely changes, and the per-satellite self-calibrated B captures "
+            f"only noise and ends up very small. The residual sits near zero because the model is \"wrong in just the "
+            f"right way.\"\n"
+            f"- **Lesson of this case**: for satellites that continuously thrust to offset drag, the self-calibrated "
+            f"B is not a physical drag coefficient, and the residual reflects \"departure from that satellite's usual "
+            f"behaviour\" rather than the size of the thrust. This is the same kind of effect as Case 30 (\"thrust "
+            f"hidden in B*\"): the TLE's drag parameter absorbs sustained thrust.",
+        ))
+        st.caption(T3(
+            "每份 MEME 檔約第 50 小時之後（圖中灰底）逐圈只變化數公尺，不像真實的阻力衰減，應是預報尾段改用了不同的外推方式，"
+            "統計時已排除；若納入，滑行段阻力會被低估約 5～15%。"
+            "MEME 是 SpaceX 自身的力模型與預報，不是量測真值，但與本專案模型彼此獨立。MEME 原始星曆未上傳到本站，"
+            "本節使用預先計算的凍結資料（`data/benchmark/case5_meme_*_20261029.csv`；產生器 "
+            "`research_202610/validation_20261029/scripts/case5_meme_sawtooth_data.py`）。10-06～10-20 MEME 無資料。",
+            "各 MEME ファイルの約 50 時間目以降（図の灰色部分）は 1 周あたりの変化が数メートルしかなく、実際の抵抗減衰とは"
+            "考えにくいため、予報末尾で別の外挿方法に切り替わっていると見られ、統計から除外した（含めると滑空区間の抵抗を"
+            "約 5～15% 過小評価する）。"
+            "MEME は SpaceX 自身の力学モデルによる予報であり、計測された真値ではないが、本プロジェクトのモデルとは独立している。"
+            "MEME の元データは本サイトにアップロードしていないため、本節は事前計算した固定データを使用する"
+            "（`data/benchmark/case5_meme_*_20261029.csv`；生成スクリプト "
+            "`research_202610/validation_20261029/scripts/case5_meme_sawtooth_data.py`）。10-06～10-20 は MEME データなし。",
+            "After roughly hour 50 of each MEME file (grey band), the per-orbit change is only a few metres, unlike real "
+            "drag decay, so the forecast tail appears to switch to a different extrapolation; it is excluded from the "
+            "statistics (including it would understate coasting drag by about 5–15%). "
+            "MEME is SpaceX's own force-model forecast, not measured truth, but it is independent of our model. The raw "
+            "MEME ephemerides are not uploaded to this site, so this section uses precomputed frozen data "
+            "(`data/benchmark/case5_meme_*_20261029.csv`; generator "
+            "`research_202610/validation_20261029/scripts/case5_meme_sawtooth_data.py`). No MEME data for 10-06 to 10-20.",
+        ))
 
     st.markdown("---")
     st.success(T3(
@@ -14159,6 +14326,194 @@ m3.metric(t("metric_orbit_class"), orbit_class)
 m4.metric(t("metric_inc_family"), fam)
 m5.metric(t("metric_tle_count"), len(df))
 
+
+# ── 🧭 系統偵測邏輯說明（2026-10-29 新增，回應使用者回饋：區分經驗法則與 AI 模型）──────
+# 五類方法標籤；頁面各區塊以 _method_badges() 標示，總表見下方 expander。
+_METHOD_KIND = {
+    "rule": ("📏", T3("經驗法則", "経験則（ルール）", "Rule-based")),
+    "stat": ("📊", T3("統計演算法", "統計アルゴリズム", "Statistical")),
+    "phys": ("🌍", T3("物理模型", "物理モデル", "Physics model")),
+    "ai": ("🤖", T3("AI 模型", "AI モデル", "AI model")),
+    "llm": ("💬", T3("生成式 AI（僅解說）", "生成AI（説明のみ）", "Generative AI (explanation only)")),
+}
+
+
+def _method_badges(*kinds: str, note: str = "") -> None:
+    """在區塊標題下方標示其判定方法類型（見「🧭 系統偵測邏輯說明」）。"""
+    tags = "　".join(f"{_METHOD_KIND[k][0]} {_METHOD_KIND[k][1]}" for k in kinds)
+    st.caption(T3("判定方法：", "判定方法：", "Method: ") + tags + (f"　｜　{note}" if note else ""))
+
+
+def _render_method_guide() -> None:
+    R, S_, P, A, L = (f"{_METHOD_KIND[k][0]} {_METHOD_KIND[k][1]}" for k in ("rule", "stat", "phys", "ai", "llm"))
+    no = T3("否", "いいえ", "No")
+    st.info(T3(
+        "**整體定位：混合式偵測系統，機器學習是其中一層，而不是全部。** 經驗法則屬於傳統的符號式 AI（專家系統），"
+        "統計演算法與物理模型則不從資料中學習，這三類都不屬於機器學習。真正經過資料訓練的只有三個 🤖 模型，"
+        "而且它們的輸入正是統計通道與物理殘差，也就是「由物理與統計提供特徵、再由機器學習判斷」的架構。",
+        "**全体の位置づけ：ハイブリッド型検出システムであり、機械学習はその一層にすぎない。** 経験則は従来の記号的 AI"
+        "（エキスパートシステム）、統計アルゴリズムと物理モデルはデータから学習しないため、いずれも機械学習ではない。"
+        "データで学習しているのは 3 つの 🤖 モデルのみで、その入力は統計チャネルと物理残差である"
+        "（物理・統計が特徴量を提供し、機械学習が判定する構成）。",
+        "**Overall: a hybrid detection system in which machine learning is one layer, not the whole.** Rules are "
+        "classic symbolic AI (expert-system style); the statistical and physics components do not learn from data, "
+        "so none of these three is machine learning. Only the three 🤖 models are trained on data, and their inputs "
+        "are the statistical channels and physics residuals — physics and statistics supply the features, machine "
+        "learning makes the call."))
+    det, sup, aux = T3("偵測", "検出", "Detect"), T3("抑制誤報", "誤報抑制", "Suppress"), T3("輔助", "補助", "Support")
+    st.markdown(T3(
+        "**五類方法**：📏 **經驗法則**＝依物理常識與歷史經驗**人工設定門檻**，不經資料訓練、可逐條追溯；"
+        "📊 **統計演算法**＝由該衛星自身序列即時計算變點／異常分數，無需訓練；"
+        "🌍 **物理模型**＝NRLMSIS 大氣密度模型預測阻力衰減，看扣除後的殘差；對持續以推力補償阻力的衛星，"
+        "殘差代表相對其常態的偏離；"
+        "🤖 **AI 模型**＝以 Starlink MEME 精密星曆真值**訓練**之機器學習（或無標籤之無監督學習）；"
+        "💬 **生成式 AI**＝大型語言模型撰寫文字解說，**不參與任何機動判定**。",
+        "**5種類の方法**：📏 **経験則**＝物理的常識と経験に基づき**人手で閾値を設定**（学習なし、根拠を追跡可能）；"
+        "📊 **統計アルゴリズム**＝衛星自身の時系列から変化点・異常スコアを即時計算（学習不要）；"
+        "🌍 **物理モデル**＝NRLMSIS 大気密度モデルで抗力減衰を予測し、差し引いた残差を見る（推力で抗力を常時補償する"
+        "衛星では、残差は平常状態からの偏差を表す）；"
+        "🤖 **AI モデル**＝Starlink MEME 精密暦の真値で**学習**した機械学習（またはラベルなしの教師なし学習）；"
+        "💬 **生成AI**＝大規模言語モデルによる文章説明で、**機動判定には一切関与しない**。",
+        "**Five method types**: 📏 **Rule-based** = thresholds **set by hand** from physics and experience "
+        "(no training, fully traceable); 📊 **Statistical** = change-point/anomaly scores computed on the "
+        "satellite's own series (no training); 🌍 **Physics model** = NRLMSIS atmospheric drag is predicted and "
+        "removed, and the residual is examined (for satellites that continuously thrust to offset drag, the "
+        "residual reflects departure from their usual behaviour); 🤖 **AI model** = machine learning **trained** on Starlink "
+        "MEME precise-ephemeris truth (or unsupervised, label-free); 💬 **Generative AI** = an LLM writes the "
+        "explanation and **takes no part in any maneuver decision**."))
+    rows = [
+        # (元件, 頁面位置, 類型, 方法, 是否經資料訓練, 角色)
+        (T3("軌域自動路由", "軌道域の自動ルーティング", "Regime routing"), "🎯 ③", R,
+         T3("Starlink → AI 模型主判；非 Starlink → 物理殘差＋無監督模型主判",
+            "Starlink → AI モデルが主判定；それ以外 → 物理残差＋教師なしモデル",
+            "Starlink → AI model is primary; others → physics residual + unsupervised model"), no, aux),
+        (T3("再入守門", "再突入ゲート", "Re-entry gate"), "🎯 ③", R,
+         T3("辨識自然再入衰減 → 機動判定歸零", "自然再突入の減衰を識別 → 機動判定をゼロに",
+            "Detects natural re-entry decay → maneuver flags set to zero"), no, sup),
+        ("P1 / P3", "②", R,
+         T3("P1 單調衰減、P3 B* 可解釋之衰減 → 判為阻力、剔除", "P1 単調減衰・P3 B* で説明可能な減衰 → 抗力として除外",
+            "P1 monotonic decay, P3 decay explained by B* → treated as drag, removed"), no, sup),
+        ("P2 / P4 / P5 / P6", "②", R,
+         T3("P2 隨高度變化之 |Δa| 門檻（拋物線，側欄可調）、P4 多窗口、P5 依 F10.7 太陽活動調倍率、P6 依傾角族群調倍率",
+            "P2 高度依存の |Δa| 閾値（放物線、サイドバーで調整可）、P4 複数窓、P5 F10.7 太陽活動倍率、P6 傾斜角グループ倍率",
+            "P2 altitude-dependent |Δa| threshold (parabola, adjustable in sidebar), P4 multi-window, "
+            "P5 F10.7 solar-activity multiplier, P6 inclination-family multiplier"), no, det),
+        ("CUSUM / BOCPD / SSA / 3σ-MAD", "③", S_,
+         T3("半長軸序列之變點／異常分數", "長半径時系列の変化点・異常スコア", "Change-point / anomaly scores on the SMA series"),
+         no, det),
+        (T3("NRLMSIS 阻力殘差", "NRLMSIS 抗力残差", "NRLMSIS drag residual"), "① ③", P,
+         T3("扣除大氣阻力預測後的殘差；|Δa 殘差| > 0.30 km 視為機動（① 綠色星號）。對持續以推力補償阻力的衛星，"
+            "殘差代表相對其常態的偏離",
+            "抗力予測を差し引いた残差；|Δa 残差| > 0.30 km を機動とみなす（① 緑の星印）。推力で抗力を常時補償する"
+            "衛星では、残差は平常状態からの偏差を表す",
+            "Residual after removing predicted drag; |Δa residual| > 0.30 km counts as a maneuver (green stars in ①). "
+            "For satellites that continuously thrust to offset drag, the residual reflects departure from their "
+            "usual behaviour"),
+         T3("否（僅擬合該星阻力係數）", "いいえ（衛星ごとの抗力係数のみ当てはめ）", "No (only fits the satellite's drag coefficient)"), det),
+        (T3("Model 1 機動偵測", "Model 1 機動検出", "Model 1 detection"), "③", f"{A} ＋ {P}",
+         T3("LightGBM 逐窗口機率；旗標須同時「機率 ≥ 門檻」且「|阻力殘差| > 0.30 km」（物理閘門）",
+            "LightGBM の窓ごとの確率；フラグは「確率 ≥ 閾値」かつ「|抗力残差| > 0.30 km」（物理ゲート）が必要",
+            "LightGBM per-window probability; a flag needs both probability ≥ threshold and |drag residual| > 0.30 km (physics gate)"),
+         T3("是（MEME 真值；僅 Starlink）", "はい（MEME 真値；Starlink のみ）", "Yes (MEME truth; Starlink only)"), det),
+        (T3("Model 1 機動預測", "Model 1 機動予測", "Model 1 forecast"), "③", A,
+         T3("LightGBM 依最新 TLE 估計近期機動機率", "LightGBM が最新 TLE から近い将来の機動確率を推定",
+            "LightGBM estimates near-term maneuver probability from the latest TLE"),
+         T3("是（MEME 真值；僅 Starlink）", "はい（MEME 真値；Starlink のみ）", "Yes (MEME truth; Starlink only)"), aux),
+        ("Model 2", "🎯 ③", f"{A} ＋ {P}",
+         T3("Isolation Forest 以物理殘差等通道找異常；適用任何軌域",
+            "Isolation Forest が物理残差などのチャネルから異常を検出；全軌道域に適用",
+            "Isolation Forest finds anomalies in physics-residual channels; works for any regime"),
+         T3("是（無監督，不需標籤）", "はい（教師なし、ラベル不要）", "Yes (unsupervised, no labels)"), det),
+        (T3("L3 融合評分器", "L3 融合スコアラー", "L3 fusion scorer"), "③ · PDF", A,
+         T3("HistGradientBoosting 融合 4 統計通道＋阻力通道之 ±24h 特徵 → 機動機率（門檻 0.659）",
+            "HistGradientBoosting が統計 4 チャネル＋抗力チャネルの ±24h 特徴を融合 → 機動確率（閾値 0.659）",
+            "HistGradientBoosting fuses ±24h features of 4 statistical + 1 drag channel → probability (threshold 0.659)"),
+         T3("是（MEME 真值；僅 Starlink）", "はい（MEME 真値；Starlink のみ）", "Yes (MEME truth; Starlink only)"), det),
+        (T3("資料品質稽核", "データ品質監査", "Data-quality audit"), "⑥", R,
+         T3("非物理值、時間缺口、Δi 跳變、極端 B* → good／suspect／rejected",
+            "非物理値・時間欠損・Δi 跳躍・極端な B* → good／suspect／rejected",
+            "Non-physical values, gaps, Δi jumps, extreme B* → good / suspect / rejected"), no, sup),
+        (T3("星系級異常", "コンステレーション異常", "Constellation anomalies"), "⑦", f"{S_} ＋ {R}",
+         T3("軌道面內 Δi 標準差、同日機動顆數 > K、相位偏離", "軌道面内の Δi 標準偏差、同日機動数 > K、位相ずれ",
+            "Δi spread within a plane, same-day maneuver count > K, phasing deviation"), no, det),
+        (T3("AI 解說／SSA-RAG", "AI 解説／SSA-RAG", "AI explanation / SSA-RAG"), "③ ⑧ · PDF", L,
+         T3("知識庫檢索＋大型語言模型撰寫解說；服務離線時退回規則式敘述",
+            "知識ベース検索＋大規模言語モデルが説明を作成；オフライン時はルールベースの文章に切替",
+            "Knowledge-base retrieval + LLM writes the explanation; falls back to rule-based text when offline"),
+         T3("否（不參與判定）", "いいえ（判定に関与しない）", "No (not used for decisions)"), aux),
+    ]
+    st.dataframe(pd.DataFrame(rows, columns=[
+        T3("元件", "構成要素", "Component"), T3("位置", "場所", "Where"), T3("類型", "種類", "Type"),
+        T3("方法", "方法", "Method"), T3("經資料訓練？", "データで学習？", "Trained on data?"),
+        T3("角色", "役割", "Role")]), hide_index=True, width="stretch")
+    st.markdown(T3(
+        "**最終結果怎麼來**：本頁並列各層的獨立結果，不把它們合成單一分數。🎯 統一偵測摘要的結論，是**路由規則選出的主判偵測器**之輸出："
+        "Starlink 為 AI 模型，其他衛星為物理殘差加無監督模型。"
+        "PDF 報告的「機動偵測落點」清單取自 **📏 L1 經驗法則（P1–P6 合併）**；F2 的時間序列頁，Starlink 用 🤖 L3 融合評分器，"
+        "其他衛星用 🌍 NRLMSIS 阻力殘差。AI 模型只在 Starlink 上訓練過，用在其他衛星時屬於訓練範圍外，因此系統改由物理模型主判。",
+        "**最終結果の出し方**：本ページは各層の独立した結果を並べて示し、単一のスコアには統合しない。🎯 統合検出サマリーの結論は"
+        "**ルーティング規則が選んだ主判定器**の出力（Starlink は AI モデル、その他は物理残差＋教師なしモデル）。"
+        "PDF レポートの「機動検出時点」一覧は **📏 L1 経験則（P1–P6 統合）** に基づく。F2 の時系列ページは Starlink が 🤖 L3 融合スコアラー、"
+        "その他は 🌍 NRLMSIS 抗力残差。AI モデルは Starlink のみで学習しているため、他の衛星では学習範囲外となり物理モデルが主判定となる。",
+        "**How the final result is formed**: this page shows each layer's result side by side rather than merging them "
+        "into one score. The 🎯 unified summary reports the **primary detector chosen by the routing rule** (AI model "
+        "for Starlink; physics residual + unsupervised model for others). The PDF's maneuver-epoch list comes from the "
+        "**📏 L1 rules (P1–P6 combined)**; the F2 time-series page uses the 🤖 L3 fusion scorer for Starlink and the "
+        "🌍 NRLMSIS drag residual for other satellites. The AI models were trained on Starlink only, so for other "
+        "satellites the physics model takes the lead."))
+
+
+# ── 📄 PDF 報告（2026-10-29 新增）：以目前選定的 NORAD＋日期區間，直接呼叫
+# maneuver_report_builder 產出與 report_api.py 完全相同的 PDF，不需另外架設 API。
+# 產製含 L3/RAG 呼叫、需數十秒，故改為按鈕觸發；結果依 (NORAD, 區間, 格式) 存在
+# session_state，切換其他衛星或區間後自動失效，不會誤下載到舊報表。
+def _pdf_report_app_url(nid: int, a, b) -> str:
+    base = os.environ.get("APP_BASE_URL", "https://rhynowu-maneuver-detection-i18n.hf.space").rstrip("/")
+    return f"{base}/?mode=tool&norad={nid}&d0={a.isoformat()}&d1={b.isoformat()}"
+
+
+with st.expander(T3("📄 產出 PDF 報告", "📄 PDF レポート出力", "📄 Export PDF report"), expanded=False):
+    st.caption(T3(
+        f"以目前選定的衛星（NORAD {norad}）與日期區間 {d0} ～ {d1} 產出機動偵測報告。"
+        "F1 摘要版＝一頁結果摘要（適合主管、業主與簡報）；F2 技術完整版＝摘要＋附錄"
+        "（完整事件清單、阻力殘差圖、計數口徑、各層原始輸出、根數圖、分析註記，適合分析與稽核）。",
+        f"現在選択中の衛星（NORAD {norad}）と期間 {d0} ～ {d1} でマヌーバ検出レポートを出力します。"
+        "F1＝1ページの結果サマリー、F2＝サマリー＋技術付録。",
+        f"Generates a maneuver-detection report for the selected satellite (NORAD {norad}), "
+        f"{d0} – {d1}. F1 = one-page summary (candidate events + SMA chart); "
+        "F2 = summary + technical appendices."))
+    _pc1, _pc2 = st.columns([1, 2])
+    _pdf_fmt = _pc1.radio(T3("格式", "形式", "Format"), ["F1", "F2"], horizontal=True, key="pdf_report_fmt",
+                          format_func=lambda f: {"F1": T3("F1 摘要版", "F1 サマリー版", "F1 Summary"),
+                                                 "F2": T3("F2 技術完整版", "F2 技術完全版", "F2 Technical")}[f])
+    _pdf_key = (int(norad), str(d0), str(d1), _pdf_fmt)
+    if _pc2.button(T3("產生 PDF", "PDF を生成", "Generate PDF"), type="primary", key="pdf_report_btn"):
+        with st.spinner(T3("產製報告中（含 L3 融合與 AI 解說，約需數十秒）…",
+                           "レポート生成中…", "Generating report…")):
+            try:
+                _rd = rb.build_report_data(int(norad), d0, d1)
+                # builder 只查 sat_n2yo_metadata／catalog，Starlink 等常查不到名稱；
+                # 改用本頁已解析的名稱（url_registry 優先），讓 PDF 標題帶出衛星名。
+                if not _rd.get("name") and str(sat_name) != str(norad):
+                    _rd["name"] = str(sat_name)
+                _pdf = rb.render_pdf(_rd, fmt=_pdf_fmt,
+                                     app_url=_pdf_report_app_url(int(norad), d0, d1))
+                st.session_state["pdf_report"] = {"key": _pdf_key, "bytes": _pdf}
+            except rb.ReportNotFoundError as _e:
+                st.session_state.pop("pdf_report", None)
+                st.warning(str(_e))
+            except Exception as _e:
+                st.session_state.pop("pdf_report", None)
+                st.error(T3(f"PDF 產製失敗：{_e}", f"PDF 生成失敗：{_e}", f"PDF generation failed: {_e}"))
+    _saved = st.session_state.get("pdf_report")
+    if _saved and _saved["key"] == _pdf_key:
+        st.success(T3("PDF 已產製完成，請按下方按鈕下載。", "PDF の生成が完了しました。下のボタンでダウンロードしてください。",
+                      "The PDF is ready — use the button below to download it."))
+        st.download_button(
+            T3("⬇️ 下載 PDF", "⬇️ PDF をダウンロード", "⬇️ Download PDF"), _saved["bytes"],
+            file_name=f"maneuver_report_{norad}_{d0:%Y%m%d}_{d1:%Y%m%d}_{_pdf_fmt}.pdf",
+            mime="application/pdf", key="pdf_report_dl")
+
 f107 = load_f107()
 tr = ms.build_transitions(df, f107)
 res = ms.apply_strategies(tr, orbit_class, p2=p2, p5=p5, lang=_lang())
@@ -14202,8 +14557,16 @@ with st.container(border=True):
     else:
         st.caption(t("caption_unified_unavailable", err=ur.get("err", ur.get("status"))))
 
+# ── 🧭 系統偵測邏輯說明（哪些是經驗法則、哪些是 AI 模型）──────────────────────
+with st.expander(T3("🧭 系統偵測邏輯說明：哪些是經驗法則，哪些是 AI 模型？",
+                    "🧭 検出ロジックの説明：どれが経験則で、どれが AI モデルか？",
+                    "🧭 How detection works: which parts are rules and which are AI models?"), expanded=False):
+    _render_method_guide()
+
+
 # ── ① 根數與差值 ─────────────────────────────────────────────────────────────
 st.subheader(t("sec1_title"))
+_method_badges("phys", note=T3("根數曲線為資料呈現；綠色星號＝NRLMSIS 阻力殘差判定之機動", "要素の曲線はデータ表示；緑の星印＝NRLMSIS 抗力残差による機動", "Element curves are data; green stars = maneuvers from the NRLMSIS drag residual"))
 if len(tr):
     _c_ttl, _c_tog = st.columns([3, 1.1])
     with _c_tog:
@@ -14223,6 +14586,7 @@ if len(tr):
 
 # ── ② P1–P6 ─────────────────────────────────────────────────────────────────
 st.subheader(t("sec2_title"))
+_method_badges("rule", note=T3("P1–P6 皆為人工設定門檻，不經資料訓練", "P1–P6 はすべて人手で設定した閾値（学習なし）", "P1–P6 are hand-set thresholds (no training)"))
 if len(tr):
     rows = [{"strategy": k, "n_flags": int(v.sum()),
              "kind": t("tbl_kind_suppress") if "suppress" in k else t("tbl_kind_detect")}
@@ -14247,6 +14611,7 @@ if len(tr):
 
 # ── ③ 統計層 + ML ────────────────────────────────────────────────────────────
 st.subheader(t("sec3_title"))
+_method_badges("stat", "phys", "ai", note=T3("本區混合多種方法，下方各小節分別標示", "本セクションは複数の方法を含む（各小節に表示）", "Mixed methods; each subsection is labelled below"))
 
 # ── 自動路由：Starlink → Model 1 主判；非 Starlink → Model 2 / NRLMSIS 殘差 ──
 _in_domain = is_starlink_domain(sat_name)
@@ -14254,6 +14619,7 @@ if _in_domain:
     st.success(t("succ_starlink_domain", sat=sat_name))
 else:
     st.warning(t("warn_ood_domain", sat=sat_name))
+_method_badges("rule", note=T3("自動路由：依衛星是否為 Starlink 決定由哪一個偵測器主判", "自動ルーティング：Starlink か否かで主判定器を決定", "Routing: whether the satellite is Starlink decides the primary detector"))
 
 # 主判結果卡（依路由選擇的偵測器）
 with st.container():
@@ -14281,6 +14647,7 @@ with st.container():
                 for e, v in zip(mv["epoch"], mv["drag_resid_da"])))
 
 if len(df) >= 8:
+    _method_badges("stat", note="CUSUM / BOCPD / SSA / 3σ-MAD")
     sr = sd.run_all(df["sma_km"].to_numpy(float))
     fig3 = make_subplots(rows=4, cols=1, shared_xaxes=True, vertical_spacing=0.05,
                          subplot_titles=(t("plot_cusum"), t("plot_bocpd"),
@@ -14304,6 +14671,7 @@ if len(df) >= 8:
 
     # ML forecast（若模型與特徵可得）
     with st.expander(t("exp_ml_forecast")):
+        _method_badges("ai", note=T3("LightGBM，MEME 真值訓練（僅 Starlink）", "LightGBM、MEME 真値で学習（Starlink のみ）", "LightGBM trained on MEME truth (Starlink only)"))
         try:
             import joblib, json
             mdir = Path("Orbital_Maneuver_V2/models_meme_forecast")
@@ -14331,6 +14699,7 @@ if len(df) >= 8:
 
     # ML 機動偵測（每窗口，非預測）
     st.markdown(t("md_ml_detection"))
+    _method_badges("ai", "phys", note=T3("LightGBM 機率，須通過物理閘門（|阻力殘差| > 0.30 km）才成立", "LightGBM の確率＋物理ゲート（|抗力残差| > 0.30 km）", "LightGBM probability, valid only if it passes the physics gate (|drag residual| > 0.30 km)"))
     with st.spinner(t("spinner_ml_detect")):
         det = compute_ml_detection(norad, d0, d1)
     if det is not None:
@@ -14364,6 +14733,7 @@ if len(df) >= 8:
 
     # ── Model 2：regime-agnostic 無監督（NRLMSIS 物理殘差 + Isolation Forest）──
     st.markdown(t("md_model2"))
+    _method_badges("ai", "phys", note=T3("Isolation Forest 無監督模型，輸入為物理殘差等通道", "教師なし Isolation Forest（入力は物理残差など）", "Unsupervised Isolation Forest on physics-residual channels"))
     with st.spinner(t("spinner_model2")):
         m2 = compute_model2_detection(norad, d0, d1)
     if m2 is not None:
@@ -14388,6 +14758,7 @@ if len(df) >= 8:
 
     # ── 連續融合評分器（CUSUM/BOCPD/SSA/MAD + NRLMSIS drag → 單一機率）──────────
     st.markdown(t("md_fusion"))
+    _method_badges("ai", note=T3("HistGradientBoosting，MEME 真值訓練（僅 Starlink）", "HistGradientBoosting、MEME 真値で学習（Starlink のみ）", "HistGradientBoosting trained on MEME truth (Starlink only)"))
     with st.spinner(t("spinner_fusion")):
         fus = compute_fusion_detection(norad, d0, d1)
     if fus is not None:
@@ -14436,6 +14807,7 @@ if len(df) >= 8:
             }
             _narr += "\n\n" + build_ml_maneuver_narrative(
                 norad, _p_ml, _feat, str(d0), str(d1), alert=bool(_ddf["flag"].any()))
+        _method_badges("llm", note=T3("僅撰寫解說文字，不參與機動判定", "説明文のみ作成、判定には関与しない", "Writes text only; not used for decisions"))
         render_rag_auto_explain(_narr, base_url=rag_url)
 
 # ── ⑤ MEME vs TLE（72h 模型）────────────────────────────────────────────────
@@ -14469,6 +14841,7 @@ except Exception as e:
 
 # ── ⑥ 資料品質稽核 (quality_flag) ─────────────────────────────────────────────
 st.subheader(t("sec6_title"))
+_method_badges("rule", note=T3("物理不可能值、時間缺口、Δi 跳變、極端 B* 等門檻", "非物理値・時間欠損・Δi 跳躍・極端 B* の閾値", "Thresholds on non-physical values, gaps, Δi jumps, extreme B*"))
 au = dqa.audit_tles(df)
 qs = dqa.summarize(au)
 qc = st.columns(5)
@@ -14532,6 +14905,7 @@ def _detect_constellation(name: str):
 
 
 st.subheader(t("sec7_title"))
+_method_badges("stat", "rule", note=T3("軌道面統計量加人工門檻（如同日機動顆數 > K）", "軌道面の統計量＋人手の閾値（同日機動数 > K など）", "Plane statistics plus hand-set thresholds (e.g. same-day maneuvers > K)"))
 _cn = _detect_constellation(sat_name)
 if _cn is None:
     st.caption(t("caption_not_constellation", sat=sat_name,
@@ -14646,6 +15020,7 @@ with st.expander(t("exp_synth")):
 
 # ── ⑧ SSA-RAG 知識問答 ────────────────────────────────────────────────────────
 st.subheader(t("sec8_title"))
+_method_badges("llm", note=T3("知識庫檢索＋大型語言模型問答，不參與機動判定", "知識ベース検索＋大規模言語モデル、判定には関与しない", "Retrieval + LLM Q&A; not used for maneuver decisions"))
 with st.expander(t("exp_rag_qa"), expanded=False):
     render_ssa_rag_page(base_url=rag_url)
 

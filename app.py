@@ -2,8 +2,12 @@
 """
 app.py — HuggingFace Space 進入點（Streamlit）。
 =====================================================
-薄殼:每次 Streamlit rerun 以 __main__ 重新執行 maneuver_app_2026SOctober.py，
+薄殼:每次 Streamlit rerun 以 __main__ 重新執行 maneuver_app_2026November.py，
 維持單一真相來源(避免 import 只跑一次、UI 不再更新的問題)。
+
+2026-10-29：進入點由 maneuver_app_2026SOctober.py 切換為 maneuver_app_2026November.py
+（以當日 2026-10 版全文為底：PDF 報告改版為 F1 摘要版／F2 技術完整版、移除 about:blank 空白分頁；
+資料端 starlink-maneuver-db 已去重。舊版檔案保留於 Space 作為回退用）。
 
 2026-09-18：進入點由 maneuver_app_2026September.py 切換為 maneuver_app_2026SOctober.py
 （4 個函式改呼叫共用模組 maneuver_report_builder.py，另新增 ?mode=tool&norad=&d0=&d1=
@@ -19,7 +23,7 @@ from __future__ import annotations
 import runpy
 from pathlib import Path
 
-APP = Path(__file__).with_name("maneuver_app_2026SOctober.py")
+APP = Path(__file__).with_name("maneuver_app_2026November.py")
 
 if not APP.exists():
     import streamlit as st
