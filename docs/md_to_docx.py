@@ -470,7 +470,11 @@ def convert(md_path, out_path, lang):
         if s.startswith("|"):
             rows = []
             while i < n and lines[i].strip().startswith("|"):
-                cells = [c for c in lines[i].strip().strip("|").split("|")]
+                # 只在未跳脫的 | 切欄；儲存格內的 \| 還原為 |（如 |Δa|、mean|Δp|）
+                row = lines[i].strip()
+                row = row[1:] if row.startswith("|") else row
+                row = row[:-1] if row.endswith("|") and not row.endswith("\\|") else row
+                cells = [c.replace("\\|", "|") for c in re.split(r"(?<!\\)\|", row)]
                 rows.append(cells)
                 i += 1
             if len(rows) >= 2:
