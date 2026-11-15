@@ -110,6 +110,9 @@ L: dict[str, dict[str, str]] = {
     # ── StoryMap（2026-09-10 新增）─────────────────────────────────────────────
     "mode_tool": {"zh": "🛠️ 分析工具", "ja": "🛠️ 分析ツール", "en": "🛠️ Analysis Tool"},
     "mode_storymap": {"zh": "📖 StoryMap", "ja": "📖 StoryMap", "en": "📖 StoryMap"},
+    # 專書線上版（2026-11-15）：書稿只有中文；英文介面只換選項標籤
+    "mode_book": {"zh": "📚 太空態勢感知的基礎：智慧化低軌通訊衛星軌道異常與太空事件偵測",
+                  "en": "📚 Foundations of Space Situational Awareness (book, Traditional Chinese)"},
     "storymap_lang_note": {"zh": "", "ja": "",
                            "en": ""},
     "storymap_landing_title": {"zh": "📖 太空態勢感知 StoryMap", "ja": "📖 SSA StoryMap", "en": "📖 SSA StoryMap"},
@@ -9950,18 +9953,27 @@ def render_storymap_case17():
                           legend=dict(orientation="h", y=1.12))
         st.plotly_chart(fig, use_container_width=True, key="case17_sweep")
         st.caption(T3(
-            "低阻力環境下，注入 **20 公尺**已有約 50～58% 偵測率、**100～150 公尺**即可逼近 100%；"
-            "高阻力環境下，同樣的偵測率要到 **1～1.5 公里**量級才達得到——"
-            "**同一套系統的「最小可偵測門檻」可以相差 10～70 倍，完全取決於當下的大氣阻力狀態**。",
-            "低抵抗環境では、**20メートル**の注入ですでに約50〜58%の検知率があり、**100〜150メートル**で"
-            "ほぼ100%に達する；高抵抗環境では、同じ検知率に達するには **1〜1.5キロメートル**級が必要である"
-            "——**同一システムの「最小検知可能閾値」は、その時々の大気抵抗の状態によって10〜70倍もの差が"
-            "生じうる**。",
-            "Under low-drag conditions, injecting **20 meters** already yields about 50–58% detection, and "
-            "**100–150 meters** is enough to approach 100%; under high-drag conditions, the same detection "
-            "rate isn't reached until magnitudes of **1–1.5 km** — **the same system's \"minimum detectable "
-            "threshold\" can differ by a factor of 10–70×, entirely depending on the atmospheric-drag "
-            "conditions at the time.**",
+            "（圖為原始更新頻率）低阻力環境下，注入 **20 公尺**已有約 58% 偵測率、**50 公尺**即達 99%；"
+            "高阻力環境下，50 公尺僅約 15%，100 公尺約 64%，要到 **150～200 公尺**才達 89～98%——"
+            "**要達到約 90% 偵測率，高阻力所需的機動量約為低阻力的 3～4 倍**。若再把 TLE 更新間隔拉長為 4 倍，"
+            "高阻力下要約 **500 公尺**才達 92%，與低阻力、原始頻率相比差距擴大到約 10 倍。"
+            "門檻高低取決於當下的大氣阻力狀態與資料更新頻率，而非機動量級本身。"
+            "（2026-11-14 依 v4 輸出 `fs7_injection_sweep.csv` 更正：舊版「10～70 倍、1～1.5 公里」無法由 v4 數據重現。）",
+            "（図は元の更新頻度）低抵抗環境では、**20メートル**の注入ですでに約58%、**50メートル**で99%の"
+            "検知率に達する；高抵抗環境では、50メートルは約15%、100メートルは約64%にとどまり、"
+            "**150〜200メートル**でようやく89〜98%に達する——**約90%の検知率に必要な機動量は、高抵抗時が"
+            "低抵抗時の約3〜4倍である**。さらにTLE更新間隔を4倍に延ばすと、高抵抗下では約**500メートル**で"
+            "ようやく92%となり、低抵抗・元の頻度との差は約10倍に広がる。閾値は機動量級そのものではなく、"
+            "その時々の大気抵抗状態とデータ更新頻度で決まる。"
+            "（2026-11-14、v4出力 `fs7_injection_sweep.csv` に基づき訂正：旧版の「10〜70倍、1〜1.5km」はv4データで再現できない。）",
+            "(Chart shows native update cadence.) Under low drag, a **20 m** injection already yields about 58% "
+            "detection and **50 m** reaches 99%; under high drag, 50 m gives only about 15% and 100 m about 64%, "
+            "and it takes **150–200 m** to reach 89–98% — **to reach roughly 90% detection, high drag needs about "
+            "3–4× the maneuver size that low drag does.** If the TLE update interval is also stretched 4×, high "
+            "drag needs about **500 m** to reach 92%, widening the gap to roughly 10× versus low drag at native "
+            "cadence. The threshold is set by the drag state and data cadence at the time, not by the maneuver "
+            "magnitude itself. (Corrected 2026-11-14 against the v4 output `fs7_injection_sweep.csv`: the earlier "
+            "\"10–70×, 1–1.5 km\" claim cannot be reproduced from v4 data.)",
         ))
 
     smear = data.get("smear", pd.DataFrame())
@@ -10151,17 +10163,20 @@ def render_storymap_case18():
             "LEO帶（Stella、Starlette、Ajisai、LARES，800～1,488km）：σ = **0.17～0.46公尺**，"
             "與 DORIS 認證安靜期實測（中位≈0.2公尺）高度吻合——用完全不同的衛星類別，"
             "獨立驗證了同一個雜訊地板數字。LAGEOS-1/2（~5,800km）：σ = 0.34～0.40公尺。"
-            "Etalon-1/2（~19,100km）：σ 一度看起來高達 **6.2～7.7公尺**——比 LEO 帶高了 30～40 倍。",
+            "Etalon-1/2（~19,100km）：σ 一度看起來高達 **6.2～7.7公尺**——約為 LEO 帶中位值的 30～40 倍。"
+            "（本段 σ 皆為同一口徑：90 天視窗內多項式去趨勢後的殘差 σ_resid。）",
             "LEO帯（Stella、Starlette、Ajisai、LARES、800〜1,488km）：σ＝**0.17〜0.46メートル**であり、"
             "DORIS認証済みの静穏期実測値（中央値≈0.2メートル）と高い一致を示す——まったく異なる衛星"
             "クラスを用いて、同じ雑音床の数値を独立に検証したことになる。LAGEOS-1/2（~5,800km）："
             "σ＝0.34〜0.40メートル。Etalon-1/2（~19,100km）：σは一見すると**6.2〜7.7メートル**という"
-            "高い値に達し——LEO帯の30〜40倍にもなる。",
+            "高い値に達し——LEO帯の中央値の約30〜40倍にもなる。"
+            "（本段のσはすべて同一の定義：90日ウィンドウ内で多項式トレンドを除去した残差σ_resid。）",
             "LEO band (Stella, Starlette, Ajisai, LARES, 800–1,488 km): σ = **0.17–0.46 m**, closely "
             "matching the DORIS-certified quiet-period measurement (median ≈0.2 m) — an independent "
             "confirmation of the same noise-floor figure using a completely different satellite class. "
             "LAGEOS-1/2 (~5,800 km): σ = 0.34–0.40 m. Etalon-1/2 (~19,100 km): σ initially appears as high "
-            "as **6.2–7.7 m** — 30–40 times higher than the LEO band.",
+            "as **6.2–7.7 m** — roughly 30–40 times the LEO-band median. "
+            "(All σ values here share one definition: residual σ_resid after polynomial detrending within 90-day windows.)",
         ))
 
     st.header(T3(
@@ -10175,7 +10190,8 @@ def render_storymap_case18():
         "第一眼看很像是「MEO/高軌本質上就是比較雜」。但把 Etalon 的殘差拿去對月球第三體攝動建模"
         "（主週期 27.49～27.59 天，**精準對上恆星月週期 27.32 天**）之後——"
         "**Etalon-1 的 σ 從 7.42 公尺，扣除主週期後降到 1.16 公尺，再扣除次諧波週期後降到 0.89 公尺；"
-        "Etalon-2 從 8.80 公尺降到 0.50 公尺、再到 0.35 公尺**——大部分原本以為的「MEO雜訊」，"
+        "Etalon-2 從 8.80 公尺降到 0.50 公尺、再到 0.35 公尺**（此處起點是月球建模用的口徑：整段序列去線性"
+        "趨勢後的 σ，因未分視窗，略高於上段的 6.2／7.7 公尺）——大部分原本以為的「MEO雜訊」，"
         "其實是**可預測、可建模的月球攝動訊號，不是隨機雜訊**。",
         "800〜19,126kmにわたって、生の σ_resid は高度とともに上昇する（Spearman ρ=+0.79、p=0.02）——"
         "**この方向は、LEO帯内部の「高度が高いほど大気抵抗が小さくなり、雑音がよりクリーンになる」"
@@ -10183,7 +10199,9 @@ def render_storymap_case18():
         "見える。しかしEtalonの残差を月の第三体摂動としてモデル化したところ（主周期27.49〜27.59日、"
         "**恒星月の周期27.32日と正確に一致**）——**Etalon-1のσは7.42メートルから、主周期を除去した後"
         "1.16メートルに、さらに副次的な調和周期を除去した後0.89メートルまで低下した；Etalon-2は"
-        "8.80メートルから0.50メートル、さらに0.35メートルまで低下した**——もともと「MEOの雑音」だと"
+        "8.80メートルから0.50メートル、さらに0.35メートルまで低下した**（ここでの起点は月モデル化用の定義："
+        "全系列の線形トレンド除去後のσであり、ウィンドウ分割しないため上段の6.2／7.7メートルよりやや高い）"
+        "——もともと「MEOの雑音」だと"
         "思われていたものの大半は、実は**予測可能でモデル化可能な月の摂動信号であり、ランダムな雑音"
         "ではなかった**のである。",
         "Across 800–19,126 km, the raw σ_resid rises with altitude (Spearman ρ=+0.79, p=0.02) — **the "
@@ -10193,7 +10211,9 @@ def render_storymap_case18():
         "(a primary period of 27.49–27.59 days, **precisely matching the sidereal month of 27.32 days**) — "
         "**Etalon-1's σ dropped from 7.42 m to 1.16 m after removing the primary period, and further to "
         "0.89 m after removing a secondary harmonic; Etalon-2 dropped from 8.80 m to 0.50 m, then to "
-        "0.35 m** — most of what was originally thought to be \"MEO noise\" turned out to be **a "
+        "0.35 m** (the starting point here uses the lunar-modeling definition — σ after removing a single "
+        "linear trend from the whole series, without windowing — so it is slightly above the 6.2/7.7 m above) "
+        "— most of what was originally thought to be \"MEO noise\" turned out to be **a "
         "predictable, modelable lunar-perturbation signal, not random noise**.",
     ))
     st.success(T3(
@@ -11875,26 +11895,29 @@ def render_storymap_case24():
         "案例三對已知靜止衛星做穩健雜訊估計，得到 LEO 帶（如 Starlink 高度）之 σ 約落在數十公尺量級；"
         "案例十八進一步橫跨 8 顆被動測地球體、800–19,126 公里做全景掃描：LEO 段（800–1,488 km）"
         "σ = 0.17–0.46 m，中軌 LAGEOS（~5,800 km）σ = 0.34–0.40 m，看似合理的單調上升趨勢。"
-        "但最外側的 Etalon（~19,100 km）初始量測 σ 高達 6.2–7.7 m——差點被誤讀成「MEO 本質上雜訊"
+        "但最外側的 Etalon（~19,100 km）初始量測 σ 高達 6.2–7.7 m（90 天視窗去趨勢口徑）——差點被誤讀成「MEO 本質上雜訊"
         "高 30–40 倍」。深入追查後發現，這其實是**月球攝動的週期性訊號被誤算進雜訊裡**：以 27.49–27.59 "
-        "天週期（吻合 27.32 天恆星月）之三體攝動模型扣除後，Etalon 之 σ 修正為 0.35–0.89 m。",
+        "天週期（吻合 27.32 天恆星月）之三體攝動模型扣除後，Etalon 之 σ 修正為 0.35–0.89 m"
+        "（月球建模以整段序列去線性為起點，扣除前為 7.42／8.80 m）。",
         "事例3は既知の静止衛星に対してロバストな雑音推定を行い、LEO帯（Starlink相当高度）のσは"
         "数十メートル程度と得られた。事例18はさらに8個の受動測地球体を用い、800～19,126 kmに"
         "わたる全景走査を行った：LEO区間（800～1,488 km）ではσ=0.17～0.46 m、中軌道のLAGEOS"
         "（～5,800 km）ではσ=0.34～0.40 mと、一見妥当な単調増加傾向を示した。しかし最も外側の"
-        "Etalon（～19,100 km）では初期測定でσが6.2～7.7 mにも達し——「MEOは本質的に雑音が"
+        "Etalon（～19,100 km）では初期測定でσが6.2～7.7 m（90日ウィンドウでのトレンド除去）にも達し——「MEOは本質的に雑音が"
         "30～40倍高い」と誤読されかけた。詳しく調べると、これは**月の摂動による周期信号が雑音として"
         "誤って計上されていた**ことが判明した：27.49～27.59日周期（27.32日の恒星月と一致）の"
-        "三体摂動モデルで差し引いた後、Etalonのσは0.35～0.89 mに修正された。",
+        "三体摂動モデルで差し引いた後、Etalonのσは0.35～0.89 mに修正された"
+        "（月モデル化は全系列の線形トレンド除去を起点とし、除去前は7.42／8.80 m）。",
         "Case 3 performs a robust noise estimate on known-stationary satellites, finding σ on the order of "
         "tens of meters in the LEO band (Starlink-like altitudes). Case 18 goes further, scanning across 8 "
         "passive geodetic spheres from 800–19,126 km: the LEO band (800–1,488 km) gives σ = 0.17–0.46 m, "
         "mid-orbit LAGEOS (~5,800 km) gives σ = 0.34–0.40 m — an apparently sensible monotonic rise. But the "
-        "outermost Etalon spheres (~19,100 km) initially measured σ as high as 6.2–7.7 m — nearly "
+        "outermost Etalon spheres (~19,100 km) initially measured σ as high as 6.2–7.7 m (90-day-window detrending) — nearly "
         "misread as \"MEO is inherently 30–40× noisier.\" Closer investigation found this was actually "
         "**a periodic lunar-perturbation signal miscounted as noise**: after modeling and subtracting a "
         "third-body term with a 27.49–27.59-day period (matching the 27.32-day sidereal month), Etalon's σ "
-        "corrected down to 0.35–0.89 m.",
+        "corrected down to 0.35–0.89 m (the lunar model starts from a single whole-series linear detrend, "
+        "7.42/8.80 m before subtraction).",
     ))
     st.success(T3(
         "修正後的誠實結論：TLE 雜訊地板從 LEO（~0.2 公尺）到 MEO（~0.5–1 公尺）**只是溫和上升，"
@@ -11912,29 +11935,29 @@ def render_storymap_case24():
     ))
 
     st.header(T3(
-        "③ 極限二：大氣阻力狀態主宰偵測門檻，同一套系統可以相差 10～70 倍",
-        "③限界②：大気抵抗状態が検知閾値を支配し、同一システムでも10～70倍の差が生じる",
-        "③ Limit 2: atmospheric-drag state dominates the detection threshold — the same system can vary by 10–70×",
+        "③ 極限二：大氣阻力狀態主宰偵測門檻，同一套系統可以相差 3～10 倍",
+        "③限界②：大気抵抗状態が検知閾値を支配し、同一システムでも3～10倍の差が生じる",
+        "③ Limit 2: atmospheric-drag state dominates the detection threshold — the same system can vary by 3–10×",
     ))
     st.markdown(T3(
-        "案例十七以 FORMOSAT-7／COSMIC-2 做了 15,775 次機動注入實驗（478 組衛星×窗口）。核心發現：**低"
-        "阻力狀態下注入 20 公尺已有 50–58% 偵測率、100–150 公尺就逼近 100%；但高阻力狀態下，要達到同樣"
-        "偵測率得注入 1–1.5 公里**——同一套系統的「最小可偵測門檻」可以相差 10～70 倍，完全取決於當下的"
-        "大氣阻力狀態，而非機動量級本身。此外，即使淨位移相同，機動若被拉長分散（如持續半天的低推力"
+        "案例十七以 FORMOSAT-7／COSMIC-2 做了 15,775 次機動注入實驗（478 組衛星×窗口）。核心發現：**原始"
+        "更新頻率下，低阻力狀態注入 20 公尺已有約 58% 偵測率、50 公尺達 99%；高阻力狀態下要 150–200 公尺"
+        "才達約 90%**——約 3～4 倍；若再疊加 TLE 更新間隔拉長 4 倍，高阻力下需約 500 公尺才達 92%，差距擴大"
+        "到約 10 倍。門檻取決於當下的大氣阻力狀態與資料頻率，而非機動量級本身。此外，即使淨位移相同，機動若被拉長分散（如持續半天的低推力"
         "點火，而非瞬間脈衝），偵測率也會從 55.4% 降到 43.3%——「多快做完」與「做了多少」同樣重要。",
         "事例17はFORMOSAT-7／COSMIC-2を用いて15,775回の機動注入実験（478組の衛星×ウィンドウ）を"
-        "行った。核心的な発見：**低抵抗状態では20 mの注入で50～58%の検知率、100～150 mでほぼ100%に"
-        "達するが、高抵抗状態では同じ検知率に達するのに1～1.5 kmの注入が必要**——同一システムの"
-        "「最小検知可能閾値」は、機動の大きさそのものではなく、その時点の大気抵抗状態によって"
-        "10～70倍も変わりうる。さらに、正味の変位が同じでも、機動が（瞬間的なパルスではなく半日続く"
+        "行った。核心的な発見：**元の更新頻度では、低抵抗状態で20 mの注入で約58%、50 mで99%の検知率に"
+        "達するが、高抵抗状態では約90%に達するのに150～200 mが必要**——約3～4倍である。さらにTLE更新"
+        "間隔を4倍に延ばすと、高抵抗下では約500 mでようやく92%となり、差は約10倍に広がる。閾値は機動の"
+        "大きさそのものではなく、その時点の大気抵抗状態とデータ頻度で決まる。さらに、正味の変位が同じでも、機動が（瞬間的なパルスではなく半日続く"
         "低推力噴射のように）引き延ばされて分散していると、検知率は55.4%から43.3%へ低下する——"
         "「どれだけ速く終えたか」も「どれだけ動いたか」と同じくらい重要である。",
         "Case 17 ran 15,775 maneuver-injection trials (478 satellite×window combinations) on "
-        "FORMOSAT-7/COSMIC-2. Core finding: **under low drag, a 20 m injection already gives 50–58% "
-        "detection and 100–150 m approaches 100%; under high drag, reaching the same detection rate needs "
-        "a 1–1.5 km injection** — the same system's minimum detectable threshold can differ by a factor of "
-        "10–70×, entirely depending on the atmospheric-drag conditions at the time, not the maneuver's own "
-        "magnitude. On top of that, even with identical net displacement, smearing a maneuver out (e.g. a "
+        "FORMOSAT-7/COSMIC-2. Core finding: **at native update cadence, a 20 m injection under low drag already "
+        "gives about 58% detection and 50 m reaches 99%; under high drag it takes 150–200 m to reach about "
+        "90%** — roughly 3–4×. If the TLE update interval is also stretched 4×, high drag needs about 500 m "
+        "to reach 92%, widening the gap to roughly 10×. The threshold is set by the drag state and data "
+        "cadence at the time, not by the maneuver's own magnitude. On top of that, even with identical net displacement, smearing a maneuver out (e.g. a "
         "half-day-long low-thrust burn instead of an instantaneous impulse) drops detection from 55.4% to "
         "43.3% — how fast a maneuver happens matters almost as much as how big it is.",
     ))
@@ -12037,9 +12060,9 @@ def render_storymap_case24():
             T3("極限類型", "限界の種類", "Limit type"):
                 T3("② 大氣阻力狀態主宰門檻", "②大気抵抗状態が閾値を支配", "② Drag state dominates the threshold"),
             T3("量化證據", "定量的証拠", "Quantitative evidence"):
-                T3("同系統最小可偵測門檻依阻力狀態相差 10–70 倍（20 m ↔ 1–1.5 km）",
-                   "同一システムの最小検知閾値は抵抗状態により10～70倍変動（20 m ↔ 1～1.5 km）",
-                   "Same system's minimum detectable threshold varies 10–70× with drag state (20 m ↔ 1–1.5 km)"),
+                T3("達約 90% 偵測率所需機動量依阻力狀態相差 3–4 倍（約 50 m ↔ 150–200 m）；疊加更新間隔 ×4 時約 10 倍（↔ 約 500 m）",
+                   "約90%検知に必要な機動量は抵抗状態により3～4倍変動（約50 m ↔ 150～200 m）；更新間隔×4を重ねると約10倍（↔ 約500 m）",
+                   "Maneuver size needed for ~90% detection varies 3–4× with drag state (~50 m ↔ 150–200 m); ~10× when the update interval is also stretched 4× (↔ ~500 m)"),
             T3("起源案例", "出典事例", "Originating case(s)"): "Case 17",
             T3("能否靠演算法改進解決", "アルゴリズム改良で解決可能か", "Fixable by better algorithms?"):
                 T3("部分——可用自適應閾值（P2/P5/P6）緩解，無法消除",
@@ -12271,14 +12294,14 @@ def render_storymap_case25():
         "**這正是回答「TLE 雜訊底是否有時間因素」最乾淨的答案**：不是隨日曆日期單純漂移（週序本身"
         "不顯著），而是被**太陽活動強度**驅動——F10.7 太陽通量與誤差之相關性達統計顯著（p=0.008），"
         "地磁 Kp 指數邊緣顯著。這與案例十七用 FORMOSAT-7 注入實驗發現的「大氣阻力狀態主宰偵測門檻，"
-        "同一系統可差 10-70 倍」完全呼應——這次是用完全不同的方法（獨立 MEME 真值比對而非合成注入）"
+        "同一系統可差 3–10 倍」完全呼應——這次是用完全不同的方法（獨立 MEME 真值比對而非合成注入）"
         "獨立得到、互相印證的結論。物理機制一致：太陽活動越強→熱層加熱、大氣密度上升→阻力增加→"
         "軌道未建模擾動增加→TLE 擬合與外推誤差同步變大。",
         "**これこそが「TLE雑音床に時間的要因があるか」という問いに対する最も明快な答えである**："
         "暦日に沿って単純にドリフトするのではなく（週順自体は有意でない）、**太陽活動の強さ**に"
         "よって駆動されている——F10.7太陽フラックスと誤差の相関は統計的に有意（p=0.008）であり、"
         "地磁気Kp指数も境界的に有意であった。これは事例17でFORMOSAT-7の注入実験によって発見された"
-        "「大気抵抗状態が検知閾値を支配し、同一システムでも10～70倍の差が生じる」という結果と"
+        "「大気抵抗状態が検知閾値を支配し、同一システムでも3～10倍の差が生じる」という結果と"
         "完全に呼応している——今回は全く異なる手法（合成注入ではなく独立したMEME真値比較）によって"
         "独立に得られ、互いに裏付け合う結論となった。物理的機構も一致している：太陽活動が強いほど"
         "→熱圏が加熱され大気密度が上昇→抵抗が増加→軌道の未モデル化擾乱が増加→TLEのフィッティング"
@@ -12288,7 +12311,7 @@ def render_storymap_case25():
         "driven by **solar-activity strength** — the correlation between F10.7 solar flux and error is "
         "statistically significant (p=0.008), with the Kp geomagnetic index borderline significant. This "
         "echoes exactly what Case 17's FORMOSAT-7 injection experiment found — \"atmospheric-drag state "
-        "dominates the detection threshold, the same system can vary by 10–70×\" — now independently "
+        "dominates the detection threshold, the same system can vary by 3–10×\" — now independently "
         "obtained and cross-confirmed by a completely different method (independent MEME ground-truth "
         "comparison rather than synthetic injection). The physical mechanism is consistent: stronger "
         "solar activity → thermosphere heating → higher atmospheric density → more drag → more "
@@ -14417,7 +14440,7 @@ def render_storymap_case32():
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
 # 即可直接落地到 StoryMap（或指定案例），免手動切換側欄——供對外分享單一連結用。
 _qp = st.query_params
-if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap"):
+if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap", "book"):
     st.session_state["app_mode"] = _qp.get("mode")
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
@@ -14448,9 +14471,15 @@ if "app_lang" not in st.session_state and _qp.get("lang") in LANG_LABELS:
 with st.sidebar:
     st.selectbox("Language / 語言 / 言語", options=list(LANG_LABELS.keys()),
                  format_func=lambda k: LANG_LABELS[k], key="app_lang")
-    st.radio(" ", options=["tool", "storymap"], key="app_mode",
-             format_func=lambda k: t("mode_tool") if k == "tool" else t("mode_storymap"),
+    st.radio(" ", options=["tool", "storymap", "book"], key="app_mode",
+             format_func=lambda k: t({"tool": "mode_tool", "storymap": "mode_storymap", "book": "mode_book"}[k]),
              label_visibility="collapsed")
+
+# 專書線上版（2026-11-15）：?mode=book&ch=05 深連結；內容見 data/book/（docs/book/web/_export_web.py 匯出）
+if st.session_state.get("app_mode") == "book":
+    import book_reader
+    book_reader.render_book()
+    st.stop()
 
 if st.session_state.get("app_mode") == "storymap":
     _case = st.session_state.get("storymap_case")
