@@ -134,12 +134,11 @@ def render_book():
         st.selectbox("章節", options=ids, key="book_ch", format_func=lambda k: names.get(k, k))
         st.caption(f"{meta['author']}｜{meta['version']}｜{meta['date']} {meta['copyright']}")
     cid = st.session_state["book_ch"]
-    st.query_params["mode"] = "book"
+    # 不回寫 st.query_params：在 huggingface.co 外層頁中，iframe 改網址會被外層同步回來，
+    # 形成不斷重新載入與自動換章（看起來像左右抖動）。深連結只在首次載入時讀取 ?ch=。
     if cid == "cover":
-        st.query_params.pop("ch", None)
         _render_cover(meta)
         return
-    st.query_params["ch"] = cid
     _render_chapter(cid)
     st.markdown("---")
     k = ids.index(cid)
