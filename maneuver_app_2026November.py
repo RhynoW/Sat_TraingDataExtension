@@ -14441,14 +14441,14 @@ def render_storymap_case32():
 # StoryMap 獨立進入點（2026-09-10 新增）：網址帶 ?mode=storymap（可選 &case=case3..case7）
 # 即可直接落地到 StoryMap（或指定案例），免手動切換側欄——供對外分享單一連結用。
 _qp = st.query_params
-if "app_mode" not in st.session_state and _qp.get("mode") in ("tool", "storymap", "book"):
-    st.session_state["app_mode"] = _qp.get("mode")
+if "app_mode_v" not in st.session_state and _qp.get("mode") in ("tool", "storymap", "book"):
+    st.session_state["app_mode_v"] = _qp.get("mode")
 if "storymap_case" not in st.session_state and _qp.get("case") in (
         "case3", "case4", "case5", "case6", "case7", "case8", "case9", "case10", "case1", "case2",
         "case11", "case12", "case13", "case14", "case15", "case16", "case17", "case18", "case19", "case20",
         "case21", "case22", "case23", "case24", "case25", "case26", "case27", "case28", "case29", "case30", "case31", "case32"):
     st.session_state["storymap_case"] = _qp.get("case")
-    st.session_state.setdefault("app_mode", "storymap")
+    st.session_state.setdefault("app_mode_v", "storymap")
 
 # 工具頁深連結（2026-09-18 新增）：網址帶 ?mode=tool&norad=<id>&d0=<YYYY-MM-DD>&d1=<YYYY-MM-DD>
 # 即可直接落地到工具頁並預填衛星與日期區間——供 PDF 報表（report_api.py）內的連結／QR code 使用。
@@ -14465,24 +14465,36 @@ if "tool_d1" not in st.session_state and _qp.get("d1"):
 if _qp.get("report", "").upper() in ("F1", "F2") and "pdf_auto" not in st.session_state:
     st.session_state["pdf_auto"] = _qp.get("report").upper()
     st.session_state["pdf_report_fmt"] = st.session_state["pdf_auto"]
-    st.session_state.setdefault("app_mode", "tool")
+    st.session_state.setdefault("app_mode_v", "tool")
 if "app_lang" not in st.session_state and _qp.get("lang") in LANG_LABELS:
     st.session_state["app_lang"] = _qp.get("lang")
+
+# 模式選單的標籤隨語言改變；若共用同一個 key，Streamlit 會把換了標籤的選單當成新元件而重設選擇
+# （切兩次語言就跳回「分析工具」）。改為：模式值存在 app_mode_v，選單元件的 key 依語言而定，
+# 建立時以 app_mode_v 決定預設選項；程式其他地方一律讀 app_mode_v。
+_MODES = ["tool", "storymap", "book"]
+
+
+def _set_app_mode():
+    st.session_state["app_mode_v"] = st.session_state[f"app_mode_{_lang()}"]
+
 
 with st.sidebar:
     st.selectbox("Language / 語言 / 言語", options=list(LANG_LABELS.keys()),
                  format_func=lambda k: LANG_LABELS[k], key="app_lang")
-    st.radio(" ", options=["tool", "storymap", "book"], key="app_mode",
+    st.radio(" ", options=_MODES, key=f"app_mode_{_lang()}",
+             index=_MODES.index(st.session_state.get("app_mode_v", "tool")),
              format_func=lambda k: t({"tool": "mode_tool", "storymap": "mode_storymap", "book": "mode_book"}[k]),
-             label_visibility="collapsed")
+             label_visibility="collapsed", on_change=_set_app_mode)
+st.session_state.setdefault("app_mode_v", "tool")
 
 # 專書線上版（2026-11-15）：?mode=book&ch=05 深連結；內容見 data/book/（docs/book/web/_export_web.py 匯出）
-if st.session_state.get("app_mode") == "book":
+if st.session_state.get("app_mode_v") == "book":
     import book_reader
     book_reader.render_book()
     st.stop()
 
-if st.session_state.get("app_mode") == "storymap":
+if st.session_state.get("app_mode_v") == "storymap":
     _case = st.session_state.get("storymap_case")
     if _case == "case3":
         render_storymap_case3()

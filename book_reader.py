@@ -117,7 +117,7 @@ def _render_chapter(cid: str):
     lang = _lang()
     md, translated = _chapter(cid, lang)
     title, body = md.split("\n", 1) if "\n" in md else (md, "")
-    st.title(title.lstrip("# ").strip())
+    st.title(title.lstrip("# ").strip(), anchor=False)
     if lang != "zh" and not translated:
         st.info(_u("fallback"))
     for kind, payload in _blocks(body):
@@ -148,7 +148,13 @@ def _render_chapter(cid: str):
 
 
 def _goto(cid: str | None):
-    st.session_state["book_ch"] = cid or "cover"
+    # 章節值存在 book_ch_v；同時更新目前語言的章節選單（callback 內可寫入元件狀態）
+    st.session_state["book_ch_v"] = cid or "cover"
+    st.session_state[f"book_ch_{_lang()}"] = cid or "cover"
+
+
+def _set_ch():
+    st.session_state["book_ch_v"] = st.session_state[f"book_ch_{_lang()}"]
 
 
 def _texts(meta: dict) -> tuple[str, str, str, dict]:
@@ -163,8 +169,8 @@ def _texts(meta: dict) -> tuple[str, str, str, dict]:
 
 def _render_cover(meta: dict):
     title, sub, cred, names = _texts(meta)
-    st.title(title)
-    st.subheader(sub)
+    st.title(title, anchor=False)
+    st.subheader(sub, anchor=False)
     cov = BOOK_DIR / "img" / "cover.jpg"
     if cov.exists():
         st.image(str(cov), width="stretch", caption=cred)
@@ -183,13 +189,17 @@ def render_book():
     ids = ["cover"] + [c["id"] for c in meta["chapters"]]
     names = {"cover": _u("cover"), **chap_names}
     qp = st.query_params.get("ch")
-    if "book_ch" not in st.session_state:
-        st.session_state["book_ch"] = qp if qp in ids else ("0" + qp if qp and ("0" + qp) in ids else "cover")
+    if "book_ch_v" not in st.session_state:
+        st.session_state["book_ch_v"] = qp if qp in ids else ("0" + qp if qp and ("0" + qp) in ids else "cover")
+    # 標題後的錨點連結（#雜湊）在中文標題下無意義、各語言不同，且在 HF 外層頁點擊會改網址：閱讀模式隱藏
+    st.markdown("<style>[data-testid='stHeaderActionElements']{display:none !important}</style>", unsafe_allow_html=True)
     with st.sidebar:
         st.markdown(f"**{title}**  \n{sub}")
-        st.selectbox(_u("chapter"), options=ids, key="book_ch", format_func=lambda k: names.get(k, k))
+        # 章名隨語言改變；元件 key 依語言而定，避免換語言時被視為新元件而重設（同主程式模式選單）
+        st.selectbox(_u("chapter"), options=ids, key=f"book_ch_{_lang()}", index=ids.index(st.session_state["book_ch_v"]),
+                     format_func=lambda k: names.get(k, k), on_change=_set_ch)
         st.caption(f"{meta['author']}｜{meta['version']}｜{meta['date']} {meta['copyright']}")
-    cid = st.session_state["book_ch"]
+    cid = st.session_state["book_ch_v"]
     # 不回寫 st.query_params：在 huggingface.co 外層頁中，iframe 改網址會被外層同步回來，
     # 形成不斷重新載入與自動換章（看起來像左右抖動）。深連結只在首次載入時讀取 ?ch=。
     if cid == "cover":
