@@ -79,6 +79,8 @@ def tex_to_mathtext(tex):
                  (r"\le}", r"\leq}"), (r"\ne ", r"\neq ")):
         tex = tex.replace(a, b)
     tex = tex.replace("\\,", r"\ ").replace("\\;", r"\ ").replace("\\!", "")
+    tex = re.sub(r"\\[lr]vert\b", "|", tex)          # mathtext 無 \lvert／\rvert
+    tex = re.sub(r"\\sqrt\s*([0-9A-Za-z])", r"\\sqrt{\1}", tex)   # \sqrt2 → \sqrt{2}
     return tex, tag
 
 

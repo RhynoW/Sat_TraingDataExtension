@@ -552,7 +552,9 @@ def build_rule_based_explanation(alt_km_avg, events: list[dict],
     if events and "grade" in events[0]:
         obs.append("‧ 證據等級：" + "、".join(
             f"{GRADE_TEXT[g]} {n} 件" for g in ("E3", "E2", "E1", "D")
-            if (n := sum(e['grade'] == g for e in events)) or g != "D") + "。")
+            if (n := sum(e['grade'] == g for e in events)) or g != "D")
+            + (f"（E2 中 {k} 件為非 Starlink 衛星因 ML 輔助由 E3 改列）" if (k := sum(bool(e.get("ml_capped")) for e in events))
+               else "") + "。")
     for sg in segments or []:
         obs.append(f"‧ 事件 #{sg['events'][0]}–#{sg['events'][-1]} 為同向連續機動段 C{sg['no']}："
                    f"{pd.Timestamp(sg['t_start']):%Y-%m-%d}～{pd.Timestamp(sg['t_end']):%Y-%m-%d}，"
@@ -809,7 +811,8 @@ def _robust_sigma(x: np.ndarray) -> float:
     return float(1.4826 * np.median(np.abs(x - np.median(x)))) if len(x) >= 5 else float("nan")
 
 
-def assess_events(events: list[dict], tr: pd.DataFrame, combined, drag_df: pd.DataFrame | None = None) -> None:
+def assess_events(events: list[dict], tr: pd.DataFrame, combined, drag_df: pd.DataFrame | None = None,
+                  in_domain: bool = True) -> None:
     """就地為每個事件補上 R3 評估欄位。SNR＝|事件淨 Δa| ÷ (σΔa·√k)：σΔa 為事件前後
     SNR_WIN_D 天內「未被標記」相鄰轉換 Δa 的穩健標準差（1.4826·MAD），k 為事件涵蓋的轉換數
     （淨 Δa 是 k 筆轉換的加總，隨機雜訊依 √k 累積）。"""
@@ -861,10 +864,19 @@ def assess_events(events: list[dict], tr: pd.DataFrame, combined, drag_df: pd.Da
         nch = len(e["evidence"])
         model_ch = bool({"fusion", "ml"} & set(e["evidence"]))
         big = abs(e["net_da"]) >= E3_BIG_KM
+        # R7：E3 判定依據分開記錄（rule＝連續機動段或 |淨 Δa| ≥ E3_BIG_KM；ml_assisted＝靠 ≥3 類輔助通道且含
+        # ML／融合）。ML 窗口模型與融合評分器只以 Starlink 訓練，非 Starlink 衛星（in_domain=False）之
+        # ml_assisted E3 改列 E2 並標 ml_capped——審查意見：未經非 Starlink 真值驗證之模型不應決定 E3。
+        e3_basis, ml_capped = None, False
         if e["quality_note"] == STATUS_NOISE or sigf == "低":
             base = "E1"
-        elif sigf == "高" and ((nch >= 3 and model_ch) or ev_type == TYPE_SEG or big):
-            base = "E3"
+        elif sigf == "高" and (ev_type == TYPE_SEG or big):
+            base, e3_basis = "E3", "rule"
+        elif sigf == "高" and nch >= 3 and model_ch:
+            if in_domain:
+                base, e3_basis = "E3", "ml_assisted"
+            else:
+                base, ml_capped = "E2", True
         elif nch >= 2:
             base = "E2"
         else:
@@ -880,7 +892,7 @@ def assess_events(events: list[dict], tr: pd.DataFrame, combined, drag_df: pd.Da
         if gap_drag:
             base = "E1"
         elif gap_d >= GAP_LONG_D and base == "E3":
-            base = "E2"
+            base, e3_basis = "E2", None
         spike = e["quality_note"] == STATUS_SPIKE
         grade = "D" if spike else base
         state = (STATE_DQ if spike else STATE_CAND if base in ("E2", "E3")
@@ -888,15 +900,17 @@ def assess_events(events: list[dict], tr: pd.DataFrame, combined, drag_df: pd.Da
         if spike:
             action = ACTION_SPIKE
         elif abs(e["main_da"]) >= BIG_JUMP_KM:
-            action = "先查編目／定軌＋更新碰撞評估"
+            action = "先查編目／定軌；確認後再評估碰撞風險"
         elif grade == "E3":
-            action = "提高監視頻率＋更新碰撞評估" if ev_type == TYPE_SEG else "人工複核＋更新碰撞評估"
+            action = "提高監視頻率；確認後再評估碰撞風險" if ev_type == TYPE_SEG else "立即複核；確認後再評估碰撞風險"
+        elif ml_capped:
+            action = "優先人工複核（ML 輔助）"
         else:
             action = "人工複核" if grade == "E2" else "觀察"
         e.update(span_d=span_d, active_days=active, rate_km_d=e["net_da"] / span_d if span_d >= 0.5 else None,
                  sigma_km=sig, snr=float(snr), significance=sigf, same_sign=same, elements=elems,
                  ev_type=ev_type, grade=grade, grade_if_ok=base, state=state, action=action,
-                 gap_d=gap_d, gap_drag=gap_drag)
+                 gap_d=gap_d, gap_drag=gap_drag, e3_basis=e3_basis, ml_capped=ml_capped)
 
 
 def _sma_span(df: pd.DataFrame, t0, t1) -> tuple[float, float, float]:
@@ -1132,10 +1146,15 @@ def suppression_stats(per_strategy: dict, tr: pd.DataFrame, drag_df: pd.DataFram
 
 
 def low_conf_items(drag_df: pd.DataFrame | None, fus_ts: pd.DataFrame | None, events: list[dict],
-                   high_orbit: bool = False) -> list[dict]:
+                   high_orbit: bool = False, df: pd.DataFrame | None = None,
+                   l2_raw: dict | None = None, min_net_km: float | None = None,
+                   in_domain: bool = True, suppressed: dict | None = None) -> list[dict]:
     """低置信複核項：阻力殘差事件與 L3 融合超門檻事件中，未與任何候選事件重疊者（主頁無候選事件時
     以表格列出，避免「0 次」被讀成「沒有任何值得看的變化」——2026-10-30 第三輪審閱，NORAD 58214）。
-    R5：每項帶優先序（殘差峰值 ≥ LOW_CONF_P1_KM 列 P1）、複核期限與狀態，形成可追蹤的複核清單。"""
+    R5：每項帶優先序（殘差峰值 ≥ LOW_CONF_P1_KM 列 P1）、複核期限與狀態，形成可追蹤的複核清單。
+    R7：非 Starlink 衛星（in_domain=False）之 L3 融合超門檻時點不列入——2026-11-15 以 IDS 營運方認證
+    安靜期驗證（docs/validate_lowconf_full.py），9 顆非 Starlink 衛星 38 項全數落在安靜期、補回點火 0 次；
+    略去之筆數記入 suppressed["fusion_non_starlink"]，供報表交代。"""
     try:
         import detection_timeline as dtl
     except Exception:
@@ -1149,13 +1168,142 @@ def low_conf_items(drag_df: pd.DataFrame | None, fus_ts: pd.DataFrame | None, ev
         for rp in dtl.merge_episodes(ts, kind):
             if any(e["t_start"] - pad <= rp["epoch"] <= e["t_end"] + pad for e in events):
                 continue
+            if kind == "fusion" and not in_domain:
+                if suppressed is not None:
+                    suppressed["fusion_non_starlink"] = suppressed.get("fusion_non_starlink", 0) + 1
+                continue
             v = float(rp["val"])
             accum = kind == "drag" and _drag_episode_is_accum(ts, rp)
             out.append({"source": src + ("（預期累積）" if accum else ""), "epoch": pd.Timestamp(rp["epoch"]),
                         "value": f"{v:.3f} km" if unit else f"{v:.3f}", "peak": v,
                         "priority": "P1" if unit and abs(v) >= LOW_CONF_P1_KM and not accum else "P2",
                         "due": REVIEW_DUE, "status": "待複核"})
+    out += _l2_only_items(df, l2_raw, events, min_net_km=min_net_km)
     return sorted(out, key=lambda x: x["epoch"])
+
+
+L2_LABEL = {"cusum": "CUSUM", "bocpd": "BOCPD", "ssa": "SSA", "mad3sig": "MAD3σ"}
+
+
+L2_BG_DAYS = 7.0          # 背景變化率（阻力衰減）：本段前後各 7 天 sma 對時間之線性斜率
+L2_MAX_SPAN_D = 3.0       # 單一 L2 觸發段最長 3 天：持續數週的漂移（如高 B* 衛星之快速衰減）會被 48 小時
+                          # 連鎖串成長鏈、淨 Δa 虛增（2026-11-15 HAISHAO 1 實例：三週連續下降被列為 −57 km），
+                          # 多日漂移交由阻力殘差與連續機動段處理
+
+
+def _l2_only_items(df: pd.DataFrame | None, l2_raw: dict | None, events: list[dict],
+                   min_net_km: float | None = None) -> list[dict]:
+    """L2 統計變點補漏（R7）：L1 規則未標記的時段，若 ≥2 種 L2 方法在 48 小時連鎖內同時觸發，
+    且扣除背景變化率（主要為阻力衰減，取前後 7 天、不含候選事件之線性斜率）後之淨 Δa，
+    達該星高顯著下限（min_net_km，20σ）與 L1 單步門檻（P2）兩者之較大值，
+    列為低置信複核項（P2）。L1 以單步變化量判定，對分散在數筆轉換的變化較不敏感；此項讓這類
+    「單步不大、累積明顯」的變化進入複核清單，但不併入候選事件、不影響證據等級。
+    只要求 ≥2 種方法同時觸發時，15 顆測試衛星共約 500 項，多為雜訊；僅以 20σ 為下限仍有約 100 項，
+    多為高阻力衛星衰減率變動。以 L1 單步門檻為下限，對應「每步皆未達 L1 門檻、合計已超過」之漏偵情境。"""
+    if df is None or not l2_raw or not len(df) or min_net_km is None or not np.isfinite(min_net_km):
+        return []
+    hits = []
+    for ch, v in l2_raw.items():
+        idx = np.asarray(v.get("events", []), int)
+        for i in idx[(idx >= 0) & (idx < len(df))]:
+            hits.append((pd.Timestamp(df["epoch"].iloc[i]), ch, int(i)))
+    if not hits:
+        return []
+    hits.sort(key=lambda h: h[0])
+    pad = pd.Timedelta(hours=EVIDENCE_PAD_H)
+    gap = pd.Timedelta(hours=48)
+    span = pd.Timedelta(days=L2_MAX_SPAN_D)
+    groups, cur = [], [hits[0]]
+    for h in hits[1:]:
+        if h[0] - cur[-1][0] <= gap and h[0] - cur[0][0] <= span:
+            cur.append(h)
+        else:
+            groups.append(cur)
+            cur = [h]
+    groups.append(cur)
+    sma = df["sma_km"].to_numpy(float)
+    tday = (df["epoch"] - df["epoch"].iloc[0]).dt.total_seconds().to_numpy(float) / 86400.0
+    ep = df["epoch"]
+    in_event = np.zeros(len(df), bool)       # 背景斜率不採候選事件前後之資料，避免機動本身拉偏背景
+    for e in events:
+        in_event |= ((ep >= e["t_start"] - pad) & (ep <= e["t_end"] + pad)).to_numpy()
+    out = []
+    for g in groups:
+        chans = sorted({h[1] for h in g}, key=list(L2_LABEL).index)
+        if len(chans) < 2:
+            continue
+        t0, t1 = g[0][0], g[-1][0]
+        if any(e["t_start"] - pad <= t1 and t0 <= e["t_end"] + pad for e in events):
+            continue
+        rows = sorted({h[2] for h in g})
+        lo, hi = max(rows[0] - 1, 0), rows[-1]
+        # 背景變化率（km/天）：本段之前、之後各 L2_BG_DAYS 天分別做 sma 對時間之線性迴歸，取兩斜率平均。
+        # 前後分開擬合：若合併成一條直線，本段內的高度跳變會被斜率吸收而抵銷訊號；
+        # 兩側皆不跨越候選事件：跨越機動後高度位準不同，斜率失真（2026-11-15 SJ-26 01-22 實例）。
+        t_lo, t_hi = tday[lo], tday[hi]
+        b_lo = max([tday[ep <= e["t_end"] + pad].max() for e in events
+                    if (ep <= e["t_end"] + pad).any() and tday[ep <= e["t_end"] + pad].max() < t_lo],
+                   default=-np.inf)
+        b_hi = min([tday[ep >= e["t_start"] - pad].min() for e in events
+                    if (ep >= e["t_start"] - pad).any() and tday[ep >= e["t_start"] - pad].min() > t_hi],
+                   default=np.inf)
+        slopes = []
+        for sel in (((tday >= max(t_lo - L2_BG_DAYS, b_lo)) & (tday < t_lo) & ~in_event),
+                    ((tday > t_hi) & (tday <= min(t_hi + L2_BG_DAYS, b_hi)) & ~in_event)):
+            if sel.sum() >= 4:
+                slopes.append(float(np.polyfit(tday[sel], sma[sel], 1)[0]))
+        bg_rate = float(np.mean(slopes)) if slopes else 0.0
+        da = float(sma[hi] - sma[lo])
+        floor = max(min_net_km, float(ms.DEFAULT_P2(np.array([sma[lo] - R_E]))[0]))
+        net = da - bg_rate * (t_hi - t_lo)       # 扣除背景變化（阻力衰減）後之淨變化
+        if abs(net) < floor:
+            continue
+        steps = np.diff(sma[lo:hi + 1]) if hi > lo else np.array([0.0])
+        k = lo + 1 + int(np.argmax(np.abs(steps))) if hi > lo else rows[0]
+        out.append({"source": "L2 統計變點（" + "＋".join(L2_LABEL.get(c, c) for c in chans) + "）",
+                    "epoch": pd.Timestamp(df["epoch"].iloc[k]),
+                    "value": f"{da:+.3f} km（扣除背景 {net:+.3f} km）", "peak": abs(net),
+                    "priority": "P2", "due": REVIEW_DUE, "status": "待複核"})
+    return out
+
+
+LC_CASE_GAP_H = 72          # 低置信複核項相隔 ≤ 72 小時者合併為同一複核案件
+LC_GAP_D = 2.0              # 項目前一筆 TLE 間隔 ≥ 2 天：標「資料缺口」
+LC_BSTAR_HIGH = 5e-4        # 與 P3 之 B* 下限相同：標「高阻力」
+LC_F107_HIGH = 150.0        # F10.7 ≥ 150 sfu：標「太陽活躍」
+
+
+def annotate_low_conf(items: list[dict], df: pd.DataFrame, f107: dict | None) -> list[dict]:
+    """R7：低置信複核項加診斷欄位並合併為複核案件（審查意見：以「項」計會高估人工複核量，且應能看出觸發原因）。
+    每項加 tle_gap_d（與前一筆 TLE 間隔）、bstar、f107、tags；相隔 ≤ LC_CASE_GAP_H 者同屬一案件（case）。
+    案件標「連續段」＝同案件 ≥3 項且跨度 > 3 天，常見於高阻力衛星之持續衰減。"""
+    if not items:
+        return items
+    ep = df["epoch"]
+    bst = df["bstar"].to_numpy(float) if "bstar" in df.columns else np.full(len(df), np.nan)
+    for x in items:
+        k = min(max(int((ep <= x["epoch"]).sum()) - 1, 0), len(df) - 1)     # 項目時點（含）之前最後一筆 TLE
+        gap = float((ep.iloc[k] - ep.iloc[k - 1]).total_seconds() / 86400) if k >= 1 else np.nan
+        b = float(bst[k]) if np.isfinite(bst[k]) else np.nan
+        fv = (f107 or {}).get(pd.Timestamp(x["epoch"]).strftime("%Y-%m-%d"))
+        fv = float(fv) if fv is not None and np.isfinite(fv) else np.nan
+        tags = [t for t, c in (("資料缺口", np.isfinite(gap) and gap >= LC_GAP_D),
+                               ("高阻力", np.isfinite(b) and b >= LC_BSTAR_HIGH),
+                               ("太陽活躍", np.isfinite(fv) and fv >= LC_F107_HIGH)) if c]
+        x.update(tle_gap_d=gap, bstar=b, f107=fv, tags=tags)
+    items = sorted(items, key=lambda x: x["epoch"])
+    cid, last = 0, None
+    for x in items:
+        if last is None or (x["epoch"] - last).total_seconds() / 3600 > LC_CASE_GAP_H:
+            cid += 1
+        x["case"] = f"K{cid}"
+        last = x["epoch"]
+    for c in {x["case"] for x in items}:
+        mem = [x for x in items if x["case"] == c]
+        if len(mem) >= 3 and (mem[-1]["epoch"] - mem[0]["epoch"]).days > 3:
+            for x in mem:
+                x["tags"] = x["tags"] + ["連續段"]
+    return items
 
 
 def _geodetic_alt_range(line1: str, line2: str, step_min: float = 0.5) -> tuple[float, float] | None:
@@ -1358,7 +1506,8 @@ def build_method_text(r: dict) -> str:
         "Δi★ 獨立意義較高（需平面外分量）；Δe 與切向推進相容、ΔΩ 可能為 Δa 改變節點進動率所致，皆非獨立證據。"
         "僅列為資訊、不計入證據等級，也不能作為機動確認。",
         "‧ 證據等級：E3 高優先複核＝顯著性高，且（至少 3 類輔助通道一致並含 L3 融合或 ML 模型通道、或屬連續機動段、"
-        f"或 |淨 Δa| ≥ {E3_BIG_KM:.0f} km）；E2 人工複核＝顯著性中以上且至少 2 類輔助通道一致，但未達 E3；"
+        f"或 |淨 Δa| ≥ {E3_BIG_KM:.0f} km）；ML 窗口模型與 L3 融合評分器只以 Starlink 訓練，非 Starlink 衛星僅因"
+        "「≥3 類輔助通道含 ML／融合」而達 E3 者改列 E2 並標「ML 輔助」；E2 人工複核＝顯著性中以上且至少 2 類輔助通道一致，但未達 E3；"
         "E1 待觀察＝其餘（含顯著性低、量級近 TLE 雜訊或輔助通道不足者）；"
         f"D 資料品質待查＝呈「{STATUS_SPIKE.split('，')[0]}」者——可能是 TLE 擬合異常、編目交叉標記或定軌更新，"
         "也可能是真實且劇烈的軌道變化，故不與低顯著性事件同列 E1，並附「資料確認後等級」（假設資料無誤時依上列規則重算）。"
@@ -1372,7 +1521,11 @@ def build_method_text(r: dict) -> str:
         "‧ 編目複核紀錄：有編目疑點的事件記錄觸發原因、編目檢查狀態（初始「待檢查」）、自動檢查結果與判讀狀態；"
         "自動檢查命中編號類硬證據者「暫停機動解釋」，僅有大幅跳變或對稱升降者「暫列候選機動」。"
         "人工核對後應將狀態更新為「已排除」「疑似交叉標記」或「維持候選」。",
-        f"‧ 低置信複核項：殘差峰值 ≥ {LOW_CONF_P1_KM:.0f} km 列 P1、其餘 P2；複核期限預設「{REVIEW_DUE}」，狀態初始為「待複核」。",
+        f"‧ 低置信複核項：殘差峰值 ≥ {LOW_CONF_P1_KM:.0f} km 列 P1、其餘 P2；複核期限預設「{REVIEW_DUE}」，狀態初始為「待複核」。"
+        "相隔 72 小時內者合併為同一複核案件，並標註資料缺口、高阻力、太陽活躍、連續段。"
+        "非 Starlink 衛星之 L3 融合評分器超門檻時點不列入（真值驗證於營運方認證安靜期內全為誤報）"
+        + (f"，本期略去 {r['low_conf_suppressed']['fusion_non_starlink']} 筆" if (r.get("low_conf_suppressed") or {}).get("fusion_non_starlink") else "")
+        + "。",
         "‧ 偵測能力：σΔa 中位數＝未標記轉換逐月穩健標準差的中位數；單次可辨識量級＝"
         f"{SNR_HIGH:.0f} × σΔa（單筆轉換 SNR ≥ {SNR_HIGH:.0f}）；近 90 天 P95＝期末 90 天未標記轉換 |Δa| 的 95 百分位。"
         "量級低於此界限的機動，本方法可能無法與 TLE 雜訊區分。",
@@ -1611,7 +1764,8 @@ def build_report_data(norad: int, start_date: date, end_date: date, lang: str = 
     high_orbit = alt_km_avg > HIGH_ORBIT_KM
     for e in events:
         e["high_orbit"] = high_orbit
-    assess_events(events, tr, combined, drag_series)
+    in_domain = bool(name) and str(name).upper().startswith("STARLINK")   # ML／融合之訓練範圍（Starlink）
+    assess_events(events, tr, combined, drag_series, in_domain=in_domain)
     catalog = catalog_checks(df, tr, combined, events)
     segments = build_segments(events, df)
     station_keeping = build_station_keeping(events, df, tr, l1["orbit_class"])
@@ -1650,8 +1804,12 @@ def build_report_data(norad: int, start_date: date, end_date: date, lang: str = 
         "fusion_events": _episode_count(fus_ts, "fusion"),
         "grades": {g: sum(e["grade"] == g for e in events) for g in ("E3", "E2", "E1", "D")},
     }
-    low_conf = low_conf_items(drag_series, fus_ts, events, high_orbit=high_orbit)
     detect_cap = detection_capability(tr, combined, events)
+    lc_suppressed: dict = {}
+    low_conf = low_conf_items(drag_series, fus_ts, events, high_orbit=high_orbit, df=df, l2_raw=l2_raw,
+                              min_net_km=detect_cap["min_detect_m"] / 1000 if detect_cap else None,
+                              in_domain=in_domain, suppressed=lc_suppressed)
+    low_conf = annotate_low_conf(low_conf, df, f107)
     alt_history = altitude_history(df)
     dt_h = df["epoch"].diff().dt.total_seconds().dropna() / 3600
     data_quality = {"n_raw": len(df_raw), "n_dup": len(df_raw) - len(df), "n_tle": len(df),
@@ -1700,6 +1858,7 @@ def build_report_data(norad: int, start_date: date, end_date: date, lang: str = 
         "period_days": max((pd.Timestamp(d1) - pd.Timestamp(d0)).days + 1, 1),
         "tle_span_days": max((df["epoch"].iloc[-1] - df["epoch"].iloc[0]).total_seconds() / 86400, 1.0),
         "low_conf": low_conf,
+        "low_conf_suppressed": lc_suppressed,
         "operator_prior": prior,
         "suppression": suppression,
         "drag_pctl": drag_pctl,
@@ -1815,7 +1974,7 @@ def _wrap_display(text: str, width_pt: float, size: float) -> str:
 # PDF 一律以 72 DPI（＝PDF 點數單位）建圖，並以鎖序列化產製：pyplot 全域狀態非執行緒安全，
 # Streamlit 多工作階段同時繪圖時，曾在 HF Space 觀察到整頁座標被放大 100/72 倍、正文跑到
 # 頁面外（2026-10-29，同一請求重跑即正常＝偶發競態）。fig.dpi 與 PDF 單位一致即無換算可錯。
-REPORT_VERSION = "R6（2026-10-31）"
+REPORT_VERSION = "R7（2026-11-15）"
 _PDF_DPI = 72
 _RENDER_LOCK = threading.Lock()
 _A4_PORTRAIT = (8.27, 11.69)
@@ -1910,7 +2069,7 @@ def focus_items(r: dict) -> tuple[list[dict], int]:
         items.append({"id": f"C{g['no']}", "t": pd.Timestamp(g["t_start"]), "seg": g, "net": g["cum_da"],
                       "grade": g["grade"], "tier": "P1" if g["high"] else "P2",
                       "checks": f"機動段 #{g['events'][0]}–#{g['events'][-1]}，{g['rate_km_d']:+.2f} km/天",
-                      "action": "提高監視頻率＋更新碰撞評估" if g["high"] else "觀察", "status": "待複核"})
+                      "action": "提高監視頻率；確認後再評估碰撞風險" if g["high"] else "觀察", "status": "待複核"})
     n_rest = 0
     for e in r.get("events", []):
         if e.get("segment"):
@@ -1956,7 +2115,8 @@ def focus_table(items: list[dict], iso: bool = False, short: int | None = None,
         if compact and pd.Timestamp(e["t_end"]) != pd.Timestamp(e["t_start"]):
             return f"{pd.Timestamp(e['t_start']):%Y-%m-%d}～{pd.Timestamp(e['t_end']):%m-%d}"
         return ev_when(e, iso)
-    tail = lambda x: [when(x), _fmt_da(x["net"]), GRADE_TEXT.get(x["grade"], "—"), cut(x["checks"]), x["action"],
+    tail = lambda x: [when(x), _fmt_da(x["net"]), grade_label(x["ev"]) if "ev" in x else GRADE_TEXT.get(x["grade"], "—"),
+                      cut(x["checks"]), x["action"],
                       x["status"]]
     rest = ["時間 (UTC)", "淨 Δa (km)", "證據等級", "主要疑點", "建議行動", "複核狀態"]
     if compact:
@@ -2007,9 +2167,16 @@ def _ev_groups(e: dict) -> str:
     return "／".join(g) or "—"
 
 
+def grade_label(e: dict) -> str:
+    """證據等級顯示文字；非 Starlink 因 ML 輔助而由 E3 改列 E2 者加註（R7）。"""
+    if e.get("ml_capped"):
+        return "E2（ML輔助）"           # 表格欄寬有限：不接「人工複核」
+    return GRADE_TEXT.get(e.get("grade"), "—")
+
+
 def _grade_cell(e: dict) -> str:
     g = e.get("grade")
-    t = GRADE_TEXT.get(g, "—")
+    t = grade_label(e)
     return t + (f"（確認後 {e['grade_if_ok']}）" if g == "D" and e.get("grade_if_ok") else "")
 
 
@@ -2024,7 +2191,7 @@ def event_table(events: list[dict], full: bool = False, iso: bool = False) -> tu
     else:
         cols = ["事件", "偵測時段 (UTC)", "類型", "淨 Δa (km)", "證據等級", "建議行動"]
         rows = [[f"#{e['no']}", ev_when(e, iso), e.get("ev_type", "—"), _fmt_da(e["net_da"]),
-                 GRADE_TEXT.get(e.get("grade"), "—"), e.get("action", "—")] for e in events]
+                 grade_label(e), e.get("action", "—")] for e in events]
     return cols, rows
 
 
@@ -2059,9 +2226,9 @@ def low_conf_table(r: dict, iso: bool = False) -> tuple[list[str], list[list[str
     """低置信複核項（R5）：項目、來源、時間、峰值、優先序、複核期限、狀態；檢查步驟統一為 LOW_CONF_STEP，
     於表下說明（每列重複同一句沒有資訊量）。"""
     f = "%Y-%m-%dT%H:%MZ" if iso else "%Y-%m-%d %H:%M"
-    cols = ["項目", "來源", "時間 (UTC)", "峰值", "優先序", "複核期限", "狀態"]
-    rows = [[f"R{i}", x["source"], f"{x['epoch']:{f}}", x["value"], x.get("priority", "P2"),
-             x.get("due", REVIEW_DUE), x.get("status", "待複核")]
+    cols = ["項目", "案件", "來源", "時間 (UTC)", "峰值", "優先序", "診斷標記", "狀態"]
+    rows = [[f"R{i}", x.get("case", "—"), x["source"], f"{x['epoch']:{f}}", x["value"], x.get("priority", "P2"),
+             "、".join(x.get("tags") or []) or "—", x.get("status", "待複核")]
             for i, x in enumerate(r.get("low_conf") or [], 1)]
     return cols, rows
 
@@ -2134,7 +2301,7 @@ def summary_sentences(r: dict, appendix_ref: str = "附錄 B") -> list[str]:
             desc = "、".join(f"C{x['no']} {_fmt_da(x['cum_da'])} km" for x in segs) + "；起訖與速率見附錄 A-3"
         out.append(f"主要分析單位：連續機動段 {len(segs)} 段（{desc}），涵蓋 {n_in} 個候選事件"
                    + (f"；高優先機動段：{'、'.join(hi)}" if hi else "")
-                   + "。建議以機動段而非離散事件解讀，並據以更新碰撞評估。")
+                   + "。建議以機動段而非離散事件解讀；經人工確認後，再評估是否更新碰撞風險產品。")
     top = max(events, key=lambda e: abs(e["net_da"]))
     out.append(f"最大事件淨 Δa {_fmt_da(top['net_da'])} km（{pd.Timestamp(top['t_start']):%Y-%m-%d}，事件 #{top['no']}）；"
                f"全期間首末半長軸差 {r['first_last_da']:+.2f} km。")
@@ -2219,6 +2386,7 @@ def report_csv(r: dict) -> bytes:
                      "sigma_da_m": round(e["sigma_km"] * 1000, 2) if "sigma_km" in e else None,
                      "snr": round(e["snr"], 1) if "snr" in e else None, "significance": e.get("significance", ""),
                      "elements_sync": "|".join(e.get("elements", [])), "grade": e.get("grade", ""),
+                     "e3_basis": e.get("e3_basis") or "", "ml_capped": bool(e.get("ml_capped")),
                      "action": e.get("action", ""), "segment": f"C{e['segment']}" if e.get("segment") else "",
                      "checks": "|".join(e.get("checks", [])), "catalog_suspect": bool(e.get("catalog_suspect")),
                      "focus": is_focus(e) and not e.get("segment"), "priority": pid.get(f"#{e['no']}", ""),
@@ -2243,7 +2411,9 @@ def report_csv(r: dict) -> bytes:
         rows.append({**base, "record_type": "low_conf", "id": f"R{i}", "t_start_utc": ts(x["epoch"]),
                      "aux_channels": x["source"], "value": x["value"], "action": LOW_CONF_STEP,
                      "priority": x.get("priority", "P2"), "review_due": x.get("due", REVIEW_DUE),
-                     "review_status": x.get("status", "待複核")})
+                     "review_status": x.get("status", "待複核"), "case": x.get("case", ""),
+                     "tags": "|".join(x.get("tags") or []), "tle_gap_d": x.get("tle_gap_d"),
+                     "bstar": x.get("bstar"), "f107": x.get("f107")})
     ah = r.get("alt_history")
     if ah:
         for _, a in ah["daily"].iterrows():
@@ -2285,6 +2455,10 @@ def report_csv(r: dict) -> bytes:
 
 
 VERSION_NOTES = [
+    "R7（2026-11-15）：非 Starlink 衛星之 ML 輔助 E3 改列 E2（ML 輔助）；非 Starlink 衛星之 L3 融合評分器不列入低置信複核項；"
+    "低置信複核項合併為複核案件並加診斷標記；E3 建議處置改為確認後再評估碰撞風險；低置信複核項新增「L2 統計變點」來源——L1 規則未標記的時段，若 ≥2 種 L2 方法"
+    "（CUSUM／BOCPD／SSA／MAD3σ）在 48 小時內同時觸發，且扣除背景衰減後淨 Δa 達該星 20σ 與 L1 單步門檻之較大值，"
+    "列為 P2 待複核，不併入候選事件、不影響證據等級。",
     "R6（2026-10-31）：ML 窗口可能標記的時點一律評分（舊版超過 220 筆時僅等距抽樣，長期間會漏掉 ML 通道、等級偏低）；"
     "阻力殘差事件區分「實測有變化」與「預期累積」；事件密度改為件數／TLE 涵蓋天數＋次/月；"
     f"候選轉換跨 {GAP_LONG_D:.0f} 天以上 TLE 空窗的事件不列 E3 並加註，主頁主圖隨摘要長度縮放。",
@@ -2666,7 +2840,7 @@ def _render_pdf_unlocked(report_data: dict, fmt: str = "F1", source_url: str | N
             lc_rows = lc_rows[:max(max_rows - 1, 1)]
             tab_h = row_h * (len(lc_rows) + 1)
             _draw_table(fig, [0.06, y - tab_h, 0.88, tab_h], lc_cols, lc_rows,
-                        [0.07, 0.17, 0.20, 0.12, 0.08, 0.20, 0.16])
+                        [0.06, 0.06, 0.20, 0.16, 0.18, 0.07, 0.15, 0.12])
             y -= tab_h + 0.006
             fig.text(0.06, y, f"檢查步驟：{LOW_CONF_STEP}。", va="top", fontsize=7.5, color=_MUTE_COLOR)
         else:
