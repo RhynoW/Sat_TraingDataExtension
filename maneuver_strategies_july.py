@@ -79,6 +79,9 @@ DEFAULT_P2 = ParabolaParams(vertex=700.0, floor=0.4, ref_x=400.0, ref_y=2.0)
 DEFAULT_P5 = ParabolaParams(vertex=70.0, floor=1.0, ref_x=200.0, ref_y=1.6)
 # P6 星座感知基準倍率（依傾角族群）
 DEFAULT_P6 = {"53deg": 1.0, "SSO": 1.2, "mid-inc": 1.1, "other": 1.0}
+# P5 倍率上限（2026-11-15）：拋物線在 F10.7 > 200 sfu 時無上限（250 sfu → ×2.15），
+# 極端太陽活動會使門檻過高、漏掉真實機動，故夾在 1.0–P5_MULT_MAX。
+P5_MULT_MAX = 1.8
 
 # ── P1–P6 說明文字三語樣板（zh/ja/en）─────────────────────────────────────────
 # {n}/{total} 為旗標數量、{vertex}/{mult}/{p6mult} 為策略參數、{fam} 為 inc_family()
@@ -95,9 +98,9 @@ NOTE_TEMPLATES: dict[str, dict[str, str]] = {
         "en": "Altitude-adaptive threshold (left branch of parabola, vertex={vertex:.0f} km): {n} flags",
     },
     "P3": {
-        "zh": "B* 輔助抑制：{n} 筆由阻力解釋",
-        "ja": "B* 補助抑制：{n} 件を大気抵抗で説明",
-        "en": "B*-assisted suppression: {n} explained by drag",
+        "zh": "B* 輔助抑制：2026-11-15 起停用（消融驗證無作用）",
+        "ja": "B* 補助抑制：2026-11-15 から停止（アブレーションで効果なし）",
+        "en": "B*-assisted suppression: disabled since 2026-11-15 (no effect in ablation)",
     },
     "P4": {
         "zh": "多窗口補充：{n} 旗標",
@@ -223,8 +226,9 @@ def apply_strategies(tr: pd.DataFrame, orbit_class: str,
     thr_p2 = p2(alt)
     flag_p2 = np.abs(da) > thr_p2
 
-    # ── P5：F10.7 倍率（拋物線）調整 P2 閾值 ─────────────────────────────────
+    # ── P5：F10.7 倍率（拋物線，夾在 1.0–P5_MULT_MAX）調整 P2 閾值 ────────────
     mult = np.where(np.isnan(f107), 1.0, p5(np.nan_to_num(f107, nan=p5.vertex)))
+    mult = np.clip(mult, 1.0, P5_MULT_MAX)
     thr_p5 = thr_p2 * mult
     flag_p5 = np.abs(da) > thr_p5
 
@@ -238,8 +242,21 @@ def apply_strategies(tr: pd.DataFrame, orbit_class: str,
         thr_p6 = thr_p2 * p6_mult
     flag_p6 = np.abs(da) > thr_p6
 
-    # 其他指標（di/de/draan）於任何策略皆可觸發
-    flag_other = (np.abs(di) > THR_DI) | (np.abs(de) > THR_DE) | (np.abs(dr) > THR_DRAAN)
+    # ── 有效門檻（2026-11-15 修正）──────────────────────────────────────────
+    # 舊版以 P2∪P5∪P6 聯集判定，而 P5、P6（LEO）門檻＝P2 門檻×倍率≥1，標到的點必已被 P2 標記，
+    # 兩者對最終結果完全無作用。改為 P2 門檻依序乘 P5（F10.7）與 P6（族群）倍率後作為唯一 Δa 門檻；
+    # MEO/GEO/HEO 無大氣阻力，維持 0.05 km。per_strategy 之 P2／P5／P6 仍各自計算，供 App 比較圖使用。
+    if orbit_class in ("MEO", "GEO", "GEO+", "HEO"):
+        thr_eff = np.full(n, 0.05)
+    else:
+        thr_eff = thr_p2 * mult * p6_mult
+    flag_main = np.abs(da) > thr_eff
+
+    # 其他指標（Δi／Δe）於任何策略皆可觸發。
+    # 2026-11-15 移除 ΔΩ（J2 修正後 RAAN 殘差）：大樣本消融（docs/eval_rule_ablation.py）顯示移除後
+    # Starlink（MEME 283 顆）與 IDS 召回不變、LEO 火箭箭體誤報 −40%，福衛七號精密真值驗證
+    # （docs/validate_fs7_rules.py）召回不變、無對應真值之事件 −5 件。THR_DRAAN 保留供診斷。
+    flag_other = (np.abs(di) > THR_DI) | (np.abs(de) > THR_DE)
 
     # ── P1：單調衰減抑制（純大氣阻力，非機動）──────────────────────────────
     # 連續多筆小幅負 da、無大跳變、正 B* → 阻力衰減，抑制誤報。
@@ -255,31 +272,28 @@ def apply_strategies(tr: pd.DataFrame, orbit_class: str,
             if frac_small_neg >= 0.85 and no_jump and bs_ok:
                 suppress_p1[i] = True
 
-    # ── P3：B* 輔助抑制（da 可由高 B* 阻力解釋）────────────────────────────
+    # ── P3：B* 輔助抑制——2026-11-15 移除 ──────────────────────────────────────
+    # 消融與福衛七號真值驗證皆顯示 P3 對召回與誤報無作用（IDS 誤報 41→40、其餘樣本完全相同），
+    # 故不再參與抑制；per_strategy["P3_suppress"] 保留為全 False，維持輸出結構相容。
     suppress_p3 = np.zeros(n, bool)
-    valid_bs = bstar[~np.isnan(bstar)]
-    bs_hi = np.nanmedian(valid_bs) + 2 * np.nanstd(valid_bs) if len(valid_bs) else np.inf
-    for i in range(n):
-        if (not np.isnan(bstar[i])) and bstar[i] > max(bs_hi, 5e-4) and da[i] < 0 and abs(da[i]) < 1.5:
-            suppress_p3[i] = True
 
     # ── 大幅步階護欄（2026-09-21）──────────────────────────────────────────
     # P1／P3 以「小幅負 Δa」判斷阻力衰減，但其容許值（P1 為 2 km、P3 為 1.5 km）遠大於 P2 高度門檻，
     # 會把向下的降軌機動誤當成衰減擋掉（福衛五號 2026-04-14 的 −519 m 即為一例）。
     # 本身已超過 P2 高度門檻的步階，不得被抑制規則擋下。
-    suppress_p1 &= ~flag_p2
-    suppress_p3 &= ~flag_p2
+    suppress_p1 &= ~flag_main
+    suppress_p3 &= ~flag_main
 
     # ── P4：多窗口補充偵測（滑動 3 筆內出現超閾值即補旗標）──────────────────
-    base_detect = flag_p2 | flag_other
+    base_detect = flag_main | flag_other
     flag_p4 = np.zeros(n, bool)
     for i in range(n):
         lo = max(0, i - 2)
         if base_detect[lo:i + 1].any():
             flag_p4[i] = True
 
-    # ── 合併：偵測(P2/P5/P6/other/P4) 取聯集，再扣除抑制(P1/P3) ─────────────
-    detect = flag_p2 | flag_p5 | flag_p6 | flag_other | flag_p4
+    # ── 合併：有效門檻（P2×P5×P6）∪ other ∪ P4，再扣除抑制(P1/P3) ───────────
+    detect = flag_main | flag_other | flag_p4
     combined = detect & ~(suppress_p1 | suppress_p3)
 
     return {
@@ -293,7 +307,7 @@ def apply_strategies(tr: pd.DataFrame, orbit_class: str,
             "other(di/de/dΩ)": flag_other,
         },
         "combined": combined,
-        "thr_da": thr_p5,       # 實務採用（含 F10.7 調整）
+        "thr_da": thr_eff,      # 實務採用之有效門檻（P2×P5×P6；MEO/GEO 0.05 km）
         "notes": {
             "P1": _note("P1", lang, n=int(suppress_p1.sum())),
             "P2": _note("P2", lang, vertex=p2.vertex, n=int(flag_p2.sum())),

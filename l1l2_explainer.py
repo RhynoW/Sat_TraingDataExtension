@@ -110,9 +110,8 @@ def fig_l1(P: dict, T) -> go.Figure:
              ("P5", "P5", T("P5 F10.7 倍率", "P5 F10.7倍率", "P5 F10.7 scaling")),
              ("P6", "P6", T("P6 星座基準", "P6 星座基準", "P6 constellation")),
              ("P4", "P4", T("P4 多窗口補漏", "P4 多窓補完", "P4 multi-window")),
-             ("other(di/de/dΩ)", "other", T("傾角/離心率/升交點", "傾斜角/離心率/RAAN", "inc/ecc/RAAN")),
-             ("P1_suppress", "P1", T("P1 衰減抑制", "P1 減衰抑制", "P1 decay suppress")),
-             ("P3_suppress", "P3", T("P3 B*抑制", "P3 B*抑制", "P3 B* suppress"))]
+             ("other(di/de/dΩ)", "other", T("傾角/離心率", "傾斜角/離心率", "inc/ecc")),
+             ("P1_suppress", "P1", T("P1 衰減抑制", "P1 減衰抑制", "P1 decay suppress"))]   # P3 於 2026-11-15 停用
     n = len(tr)
     bar_col = np.where(comb, COL_FLAG, COL_OK)
     sma_m = pd.Series(d["sma_km"].to_numpy(float), index=pd.DatetimeIndex(_naive(d["epoch"])))

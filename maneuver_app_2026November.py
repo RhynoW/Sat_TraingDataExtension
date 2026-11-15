@@ -11422,10 +11422,10 @@ def render_storymap_case22():
                 st.markdown(desc[0])
             else:
                 st.markdown(T3(
-                    "B* 值異常偏高時，Δa 的變化多半可由阻力本身解釋，作為 P1 之外的第二道抑制條件。（2026-10-21 補註：對持續推進的星系，降軌推力也會讓 B* 異常偏高，P3 因此可能誤擋真實降軌；實測影響很小，詳見案例三十。）",
-                    "B*値が異常に高い場合、Δaの変化の多くは抵抗自体で説明でき、P1に次ぐ第2の抑制条件となる。（2026-10-21 補足：推進を続けるコンステレーションでは、降下の推力もB*を異常に高くするため、P3が実際の降下を誤って抑制しうる。実測での影響はごく小さい。詳細は事例三十を参照。）",
+                    "B* 值異常偏高時，Δa 的變化多半可由阻力本身解釋，作為 P1 之外的第二道抑制條件。（2026-10-21 補註：對持續推進的星系，降軌推力也會讓 B* 異常偏高，P3 因此可能誤擋真實降軌；實測影響很小，詳見案例三十。）（2026-11-15 更新：逐條消融與福衛七號精密真值驗證顯示 P3 對召回與誤報皆無作用，R7 起已停用；ΔΩ 殘差標記則只增加誤報，同時移除。）",
+                    "B*値が異常に高い場合、Δaの変化の多くは抵抗自体で説明でき、P1に次ぐ第2の抑制条件となる。（2026-10-21 補足：推進を続けるコンステレーションでは、降下の推力もB*を異常に高くするため、P3が実際の降下を誤って抑制しうる。実測での影響はごく小さい。詳細は事例三十を参照。）（2026-11-15 更新：ルールごとのアブレーションと福衛七号の精密真値による検証で、P3は再現率にも誤報にも効果がないことが分かり、R7から停止した。ΔΩ残差フラグは誤報を増やすだけだったため、同時に削除した。）",
                     "When B* is unusually high, most of the Δa change can be explained by drag alone — a "
-                    "second suppression condition alongside P1. (Note added 2026-10-21: for continuously thrusting constellations, lowering thrust also drives B* abnormally high, so P3 can wrongly suppress a real lowering; the measured impact is small — see Case 30.)",
+                    "second suppression condition alongside P1. (Note added 2026-10-21: for continuously thrusting constellations, lowering thrust also drives B* abnormally high, so P3 can wrongly suppress a real lowering; the measured impact is small — see Case 30.) (Update 2026-11-15: rule-by-rule ablation and validation against FORMOSAT-7 precise-orbit truth showed P3 has no effect on recall or false alarms, so it is disabled from R7; the ΔΩ-residual flag only added false alarms and was removed at the same time.)",
                 ))
 
     st.header(T3(
@@ -12986,13 +12986,13 @@ def render_storymap_case27():
             ev = sm["l2_events"]
             st.markdown(T3(
                 f"共 **{sm['n_tle']}** 筆 TLE（已稀釋近重複 epoch，最小間隔 12 h）；平均高度 **{sm['alt_km']:.0f} km**。"
-                f"L1 最終旗標 **{sm['l1_flags']}** / {sm['l1_transitions']} 個轉換（被 P1/P3 抑制 {sm['l1_suppressed']} 個）；"
+                f"L1 最終旗標 **{sm['l1_flags']}** / {sm['l1_transitions']} 個轉換（被 P1 抑制 {sm['l1_suppressed']} 個）；"
                 f"L2 各通道事件數：CUSUM {ev['cusum']}、BOCPD {ev['bocpd']}、SSA {ev['ssa']}、MAD 3σ {ev['mad3sig']}。",
                 f"TLE **{sm['n_tle']}** 件（近重複epochを間引き、最小間隔12 h）；平均高度 **{sm['alt_km']:.0f} km**。"
-                f"L1最終フラグ **{sm['l1_flags']}** / {sm['l1_transitions']} 遷移（P1/P3が抑制 {sm['l1_suppressed']}）；"
+                f"L1最終フラグ **{sm['l1_flags']}** / {sm['l1_transitions']} 遷移（P1が抑制 {sm['l1_suppressed']}）；"
                 f"L2各チャネルのイベント数：CUSUM {ev['cusum']}、BOCPD {ev['bocpd']}、SSA {ev['ssa']}、MAD 3σ {ev['mad3sig']}。",
                 f"**{sm['n_tle']}** TLEs (near-duplicate epochs thinned, min gap 12 h); mean altitude **{sm['alt_km']:.0f} km**. "
-                f"L1 final flags **{sm['l1_flags']}** of {sm['l1_transitions']} transitions ({sm['l1_suppressed']} suppressed by P1/P3); "
+                f"L1 final flags **{sm['l1_flags']}** of {sm['l1_transitions']} transitions ({sm['l1_suppressed']} suppressed by P1); "
                 f"L2 events per channel: CUSUM {ev['cusum']}, BOCPD {ev['bocpd']}, SSA {ev['ssa']}, MAD 3σ {ev['mad3sig']}."))
 
             st.header(T3("② L1：規則閘門——一道道關卡，全部通過才算機動",
@@ -13001,15 +13001,15 @@ def render_storymap_case27():
             st.markdown(T3(
                 "**怎麼看**：上圖是半長軸；中圖每根柱子是「相鄰兩筆 TLE 的 |Δa|」，黑色虛線是**該高度、該太陽活動下的門檻**"
                 "（P2 依高度、P5 依 F10.7、P6 依星座族群調整）；柱子**越過虛線、且沒被抑制規則擋下**就變紅並在上圖打星號。"
-                "下圖是各規則的亮燈紀錄：紅方塊＝偵測型規則（P2/P4/P5/P6/其他）觸發，灰叉＝抑制型規則（P1 純大氣衰減、P3 高 B\\* 阻力）把誤報擋掉。",
+                "下圖是各規則的亮燈紀錄：紅方塊＝偵測型規則（P2/P4/P5/P6/其他）觸發，灰叉＝抑制型規則（P1 純大氣衰減）把誤報擋掉。P3 高 B\\* 抑制與 ΔΩ 殘差標記已於 2026-11-15 停用。",
                 "**見方**：上図は長半径。中図の各棒は「隣接する2件のTLEの|Δa|」、黒の点線は**その高度・太陽活動でのしきい値**"
                 "（P2は高度、P5はF10.7、P6は星座群で調整）。棒が**点線を超え、かつ抑制ルールに止められなければ**赤くなり、上図に星印が付く。"
-                "下図は各ルールの点灯記録：赤い四角＝検出型（P2/P4/P5/P6/その他）が発火、灰の×＝抑制型（P1 純粋な大気減衰、P3 高B*抵抗）が誤報を止めた。",
+                "下図は各ルールの点灯記録：赤い四角＝検出型（P2/P4/P5/P6/その他）が発火、灰の×＝抑制型（P1 純粋な大気減衰）が誤報を止めた。P3 高B*抑制とΔΩ残差フラグは2026-11-15に停止した。",
                 "**How to read**: the top panel is the semi-major axis. In the middle panel each bar is |Δa| between two adjacent TLEs; "
                 "the dotted black line is the **threshold for that altitude and solar-activity level** (P2 scales with altitude, P5 with F10.7, "
                 "P6 with constellation family). A bar that **crosses the line and is not vetoed by a suppressor** turns red and gets a star on top. "
                 "The bottom panel logs rule activity: red squares = detector rules (P2/P4/P5/P6/other) firing; grey crosses = suppressor rules "
-                "(P1 pure atmospheric decay, P3 high-B* drag) blocking a false alarm."))
+                "(P1 pure atmospheric decay) blocking a false alarm. P3 high-B* suppression and the ΔΩ-residual flag were disabled on 2026-11-15."))
             st.plotly_chart(X.fig_l1(P, T3), use_container_width=True, key=f"c27_l1_{nid}")
 
             st.header(T3("③ L2：統計通道——不看物理，只問「這條曲線的行為變了嗎」",
@@ -13803,6 +13803,9 @@ def render_storymap_case30():
         "The L1 rule layer **does not use ndot at all**, and B\\* is **not used for detection** — only in two **suppression** rules: P1 \"positive B\\* plus a run of small decreases → drag decay\" and P3 \"high B\\* plus a small decrease → caused by drag\". Both assume \"B\\* = atmospheric drag\".\n\n"
         f"That assumption does break on thrusting constellations: of P3's {p3_n} firings, **{s_p3_real}** were real maneuvers per MEME (versus {s_base} overall). But the actual damage is small — across {s_tot} transitions the suppression rules cancelled only **{n_cancel}** detections: {n_cancel_real} real maneuvers ({n_cancel_down} lowerings) and {n_cancel_quiet} correctly removed false alarms; recall on {s_man} real maneuvers dropped only from {s_rec_raw} to {s_rec_final}. The reason is the guardrail added on 2026-09-21: **a step larger than the P2 altitude threshold cannot be suppressed**.",
     ))
+    st.caption(T3("2026-11-15 更新：本案例之數字以當時規則計算。其後之逐條消融（MEME、IDS、火箭箭體三組樣本）與福衛七號精密真值驗證顯示 P3 對召回與誤報皆無作用，R7 起已停用 P3，抑制規則僅剩 P1。",
+                  "2026-11-15 更新：本事例の数値は当時の規則で計算したもの。その後のルール別アブレーション（MEME、IDS、ロケット機体の3サンプル）と福衛七号の精密真値による検証で、P3は再現率にも誤報にも効果がないことが分かり、R7からP3を停止し、抑制規則はP1のみとなった。",
+                  "Update 2026-11-15: the numbers in this case use the rules in force at the time. Later rule-by-rule ablation (MEME, IDS and rocket-body samples) and validation against FORMOSAT-7 precise-orbit truth showed P3 has no effect on recall or false alarms; P3 is disabled from R7, leaving P1 as the only suppressor."))
 
     st.subheader(T3("推測二：碎片誤報來自 B\\* 跳動？——不是", "推測二：破片の誤報はB\\*の変動から？——違う",
                     "Guess 2: do debris false alarms come from B\\* jumps? — No"))
@@ -15245,7 +15248,8 @@ st.caption(T3("本表可用側欄調整 P2／P5 門檻做互動檢視；上方�
               "This table follows the sidebar P2/P5 thresholds; the summary above and the PDF use the defaults."))
 _method_badges("rule", note=T3("P1–P6 皆為人工設定門檻，不經資料訓練", "P1–P6 はすべて人手で設定した閾値（学習なし）", "P1–P6 are hand-set thresholds (no training)"))
 if len(tr):
-    rows = [{"strategy": k, "n_flags": int(v.sum()),
+    _disp = {"other(di/de/dΩ)": "other(Δi/Δe)", "P3_suppress": T3("P3_suppress（已停用）", "P3_suppress（停止）", "P3_suppress (disabled)")}
+    rows = [{"strategy": _disp.get(k, k), "n_flags": int(v.sum()),
              "kind": t("tbl_kind_suppress") if "suppress" in k else t("tbl_kind_detect")}
             for k, v in res["per_strategy"].items()]
     rows.append({"strategy": t("tbl_strategy_combined"), "n_flags": int(combined.sum()),

@@ -52,8 +52,8 @@ LAT = "Calibri"
 TYPES = [
     ("A", "軌道轉移型", [64199, 62190, 58651]),
     ("B", "星系營運型", [53056, 59711]),
-    ("C", "小幅調整型", [69018, 60548, 41634]),
-    ("D", "無超過下限事件", [68831, 61871, 43081, 43797, 56193, 60507, 65316]),
+    ("C", "小幅調整型", [69018, 60548]),
+    ("D", "無超過下限事件", [68831, 61871, 43081, 43797, 56193, 60507, 65316, 41634]),
 ]
 COUNTRY = {"United States (US)": "US", "People's Republic of China (PRC)": "PRC"}
 APP_URL = "https://rhynowu-maneuver-detection-i18n.hf.space"
@@ -122,7 +122,7 @@ def build_timeline(R: dict[int, dict]) -> None:
         (64199, "2025-05-29", "−38.7 km", 0, -0.30, "center"),
         (64199, "2026-11-09", "+9.8 km（11/09）", -12, -0.30, "right"),
         (58651, "2024-03-15", "+39.8 km", 0, -0.30, "center"),
-        (62190, "2025-04-04", "5 次累計 +32.2 km", 0, 0.42, "center"),
+        (62190, "2025-04-25", "三件累計 +25.1 km", 0, 0.42, "left"),
         (53056, "2026-07-20", "26 天連續降軌 −83.8 km", 0, -0.30, "center"),
         (69018, "2026-10-19", "−1.6 km", -10, -0.30, "right"),
         (68831, "2026-06-01", "D：回跳型態（資料品質）", 0, 0, "right"),
@@ -224,6 +224,7 @@ def frame(prs, title: str, page: int):
     ln.line.color.rgb, ln.line.width = NAVY, Pt(1)
     text(s, 0.764, 0.56, 10.5, 0.5, title, size=24, bold=True, color=NAVY)
     s.shapes.add_picture(str(TPL / "logo_header.png"), Inches(11.70), Inches(0.60), width=Inches(0.87))
+    page = len(prs.slides._sldIdLst)
     text(s, 12.30, 7.10, 0.3, 0.2, str(page), size=10, color=NAVY, align=PP_ALIGN.RIGHT)
     return s
 
@@ -304,12 +305,14 @@ def build_qa(prs, R: dict[int, dict], l1: int, g: dict) -> None:
     n_case = sum(len({x.get("case") for x in r.get("low_conf") or []}) for r in R.values())
     n_ml = sum("ml" in e["evidence"] for r in R.values() for e in r["events"])
     n_cap = sum(bool(e.get("ml_capped")) for r in R.values() for e in r["events"])
+    n_ev = sum(len(r["events"]) for r in R.values())
+    n_none = sum(1 for r in R.values() if not r["events"])
 
     # 8 名詞說明（Q1–Q3）
     s = frame(prs, "TASA 提問說明 ① 候選點、候選事件與證據等級", 8)
     flow(s, 0.78, 1.12, 11.8, 1.55, [
         (f"規則候選點　{l1} 個", "L1 規則（P1–P6）逐筆檢查相鄰兩筆 TLE 的半長軸變化，超過門檻即標一點", False),
-        ("候選事件　25 件", "相隔 48 小時內的候選點連鎖合併；一次機動常留下多個點，合併後才是一件事件", False),
+        (f"候選事件　{n_ev} 件", "相隔 48 小時內的候選點連鎖合併；一次機動常留下多個點，合併後才是一件事件", False),
         ("證據等級", f"依顯著性與輔助通道數排定複核優先序：E3 {g['E3']}／E2 {g['E2']}（ML 輔助 {n_cap}）／E1 {g['E1']}／D {g['D']}", False),
     ])
     bullets(s, 0.86, 2.92, 4.3, 3.6, [
@@ -337,7 +340,7 @@ def build_qa(prs, R: dict[int, dict], l1: int, g: dict) -> None:
         rows.append([str(n), disp(n, r), tcode[n], str(r["counts"]["l1_points"]), str(len(ev)),
                      str(c["E3"]), str(c["E2"]), str(c["E1"]), str(c["D"]),
                      str(sum(bool(e.get("ml_capped")) for e in ev)) if ev else "—"])
-    rows.append(["合計", "", "", str(l1), "25", str(g["E3"]), str(g["E2"]), str(g["E1"]), str(g["D"]), str(n_cap)])
+    rows.append(["合計", "", "", str(l1), str(n_ev), str(g["E3"]), str(g["E2"]), str(g["E1"]), str(g["D"]), str(n_cap)])
     cw = [0.95, 2.3, 0.7, 1.25, 1.1, 0.62, 0.62, 0.62, 0.62, 1.2]
     table(s, 0.62, 1.1, sum(cw), cw, rows,
           ["NORAD", "Name", "類型", "規則候選點", "候選事件", "E3", "E2", "E1", "D", "E2 中 ML 輔助"],
@@ -348,7 +351,7 @@ def build_qa(prs, R: dict[int, dict], l1: int, g: dict) -> None:
     text(s, 10.98, 1.25, 1.55, 5.2, [
         [("E3（依規則）", H)], [(f"{g['E3']} 件", {"size": 30, "bold": True, "color": NAVY, "after": 4})],
         [(f"E2 {g['E2']} 件，其中 ML 輔助 {n_cap} 件", {"size": 12})], [("", {"after": 8})],
-        [("無超過下限事件", H)], [("7 顆", {"size": 30, "bold": True, "color": NAVY, "after": 4})],
+        [("無超過下限事件", H)], [(f"{n_none} 顆", {"size": 30, "bold": True, "color": NAVY, "after": 4})],
         [("期間內無超過該星 5σ 下限之候選事件；不排除低於下限之機動", {"size": 12})],
     ], size=14)
 
@@ -448,7 +451,9 @@ def build(R: dict[int, dict]) -> None:
     allev = [(n, e) for n, r in R.items() for e in (r.get("events") or [])]
     g = {k: sum(1 for _, e in allev if e["grade"] == k) for k in ("E3", "E2", "E1", "D")}
     n_with = sum(1 for r in R.values() if r.get("events"))
+    n_ev = len(allev)
     l1 = sum(r["counts"]["l1_points"] for r in R.values())
+    red = f"−{(1 - n_ev / max(l1, 1)) * 100:.0f}%"
     floors = sorted(r["detect_cap"]["min_detect_m"] for r in R.values())
 
     # 1 封面
@@ -482,8 +487,8 @@ def build(R: dict[int, dict]) -> None:
 
     # 3 檢測結果總覽
     s = frame(prs, "檢測結果總覽", 3)
-    stats = [("15", "顆衛星全數完成分析"), ("8", "顆偵測到候選事件"), ("25", "件候選機動事件"),
-             (f"{l1}→25", "規則候選點自動合併（−83%）")]
+    stats = [("15", "顆衛星全數完成分析"), (str(n_with), "顆偵測到候選事件"), (str(n_ev), "件候選機動事件"),
+             (f"{l1}→{n_ev}", f"規則候選點自動合併（{red}）")]
     for i, (big, small) in enumerate(stats):
         x = 0.78 + i * 3.03
         b = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(x), Inches(1.15), Inches(2.83), Inches(1.45))
@@ -524,13 +529,13 @@ def build(R: dict[int, dict]) -> None:
          "依營運模式長期控制：多日連續同向降軌，或以低於偵測下限的小推力持續補償大氣阻力（推定）",
          ["STARLINK-4314：26 天連續降軌 −83.8 km", f"STARLINK-11082：360 km 高度 7 個月首末差僅 {R[59711]['first_last_da']:+.2f} km"]],
         [tcell("C", "小幅調整型"),
-         ["PELICAN-8 300F、", "ICEYE-X33、SJ 16-02"],
+         ["PELICAN-8 300F、", "ICEYE-X33"],
          "偶發單次、公里級以下為主的軌道調整，型態單純",
-         "事件 |淨 Δa| 0.37～3.3 km，均為 E2（ML 輔助）"],
+         "事件 |淨 Δa| 1.3～3.3 km，均為 E2（ML 輔助）"],
         [tcell("D", "無超過下限事件"),
-         ["TANAGER-1、PELICAN-4 300B、SKYSAT C12、", "HAWK-7B、OBJECT C、YAOGAN-30 G、HJS-9A"],
+         ["TANAGER-1、HAWK-7B、", "PELICAN-4 300B、", "SKYSAT C12、OBJECT C、", "YAOGAN-30 G、SJ 16-02、", "HJS-9A"],
          "期間僅見自然阻力衰減，無超過該星 5σ 偵測下限之候選事件；不排除低於下限之機動",
-         ["首末差 −1.2～−40.4 km 為阻力衰減", "HJS-9A 僅 1 件 D 級（資料品質，不列機動）"]],
+         ["首末差 −1.2～−40.5 km 為阻力衰減", "HJS-9A 僅 1 件 D 級（資料品質，不列機動）"]],
     ], ["類型", "衛星", "行為特徵", "代表數據"], size=14, row_h=1.18,
         align=[PP_ALIGN.CENTER, PP_ALIGN.LEFT, PP_ALIGN.LEFT, PP_ALIGN.LEFT])
     text(s, 0.62, 6.60, 12.0, 0.4, "分類依本系統偵測到之軌道行為歸納，不代表衛星任務性質；所有事件皆為候選，非已確認推進機動。",
@@ -542,11 +547,10 @@ def build(R: dict[int, dict]) -> None:
         ["A", "SJ-26", "2026-11-09～11-10", "+9.76", "E2", "交付後唯一新事件；跨 5.3 天 TLE 空窗，時間無法細分"],
         ["A", "SJ-26", "2025-05-29～05-31", "−38.66", "E3", "入軌初期大幅降軌，伴隨傾角變化"],
         ["A", "SHIYAN 24C 02", "2024-03-15～03-20", "+39.79", "E3", "15 顆中最大單一事件"],
-        ["A", "HAISHAO 1", "2025-03-21～04-22", "+32.2", "E3/E2", "一個月內 5 次逐步抬升（合併呈現；E2 中 2 件 ML 輔助）"],
+        ["A", "HAISHAO 1", "2025-04-11～04-22", "+25.1", "E3/E2", "三件逐步抬升（合併呈現；2 件 E2 皆為 ML 輔助）"],
         ["B", "STARLINK-4314", "2026-08-15～09-09", "−83.8", "E3", "連續機動段：26 天、約 −3.2 km/天"],
         ["C", "PELICAN-8 300F", "2026-10-19", "−1.60", "E2＊", "交付前 11 天之單次調整"],
         ["C", "ICEYE-X33", "2026-04-17～04-18", "+1.33", "E2＊", "單次小幅抬升"],
-        ["C", "SJ 16-02", "2026-01-03～01-04", "−0.37", "E2＊", "偵測下限 51 m，可辨識次公里級調整"],
         ["D", "HJS-9A", "2026-06-15～06-17", "+0.12", "D", "回跳型態，判為資料品質而非機動"],
     ]
     table(s, 0.62, 1.12, 12.1, [0.72, 2.0, 2.35, 1.1, 0.95, 4.98], ev_rows,
@@ -559,7 +563,7 @@ def build(R: dict[int, dict]) -> None:
     s = frame(prs, "系統優點", 7)
     cards = [
         ("一套流程涵蓋多種任務", "通訊、光學、SAR、RF、高光譜、實驗與遙感衛星；太陽同步、中傾角、53° 軌道皆同一流程自動分析，每顆約 10 秒內完成"),
-        ("自動降噪、事件化", f"{l1} 個規則候選點自動合併為 25 個事件（−83%）；連續多日機動整段呈現（STARLINK-4314 26 天降軌）"),
+        ("自動降噪、事件化", f"{l1} 個規則候選點自動合併為 {n_ev} 個事件（{red}）；連續多日機動整段呈現（STARLINK-4314 26 天降軌）"),
         ("證據分級＋複核優先序", "E3／E2／E1／D 對應明確行動建議；D 級辨識 TLE 資料異常（HJS-9A），不誤報為機動"),
         ("「未偵測」可量化", f"每顆衛星給出偵測下限（{floors[0]:.0f}–{floors[-1]:.0f} m），可具體陳述「期間無超過 X m 之候選事件」"),
         ("主動標示限制", "TLE 空窗（SJ-26 5.3 天、SHIYAN 24C 02 93 天）時間無法定位即明示；傾角（平面外）同步變化自動標註"),
@@ -577,10 +581,134 @@ def build(R: dict[int, dict]) -> None:
         text(s, cx + 0.85, cy + 0.25, 2.85, 0.5, h, size=17, bold=True, color=NAVY, anchor=MSO_ANCHOR.MIDDLE)
         text(s, cx + 0.22, cy + 0.92, 3.42, 1.3, body, size=15, color=BLACK)
 
+    # ── 系統架構說明（委員建議：釐清 Model 1／2、App 與 R6／R7）────────────────
+    H = {"bold": True, "color": NAVY}
+    s = frame(prs, "系統執行架構：App 即時查詢與 R7 單星報表", 0)
+    s.shapes.add_picture(str(DOCS / "fig_sys_app_vs_r7.png"), Inches(0.97), Inches(1.0), width=Inches(11.4))
+    table(s, 0.62, 5.95, 12.1, [2.2, 9.9], [
+        ["R6、R7", "報表程式之版本號（Revision），不是模型或規則名稱；本次 15 顆衛星以 R7 產生"],
+        ["Model 1、Model 2", "App 即時查詢依衛星類型選用之機器學習模型；R7 報表不分流、不使用 Model 2"],
+    ], ["名詞", "意義"], size=11, row_h=0.32, head_h=0.3, align=[PP_ALIGN.LEFT, PP_ALIGN.LEFT], bold_cols=(0,))
+
+    s = frame(prs, "R7 單星報表判定流程（TASA 15 顆衛星採用）", 0)
+    s.shapes.add_picture(str(DOCS / "fig_sys_r7_flow.png"), Inches(0.45), Inches(1.0), height=Inches(5.95))
+    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(9.9), Inches(1.15), Inches(2.75), Inches(5.6))
+    box.fill.solid(); box.fill.fore_color.rgb = GRAY_ROW2; box.line.color.rgb = GRAY_ROW
+    text(s, 10.05, 1.25, 2.5, 0.4, "三個重點", size=16, bold=True, color=NAVY)
+    bullets(s, 10.05, 1.75, 2.5, 4.9, [
+        [("事件由規則產生：", H), ("候選事件只由步驟 1、2 之 L1 規則決定，非 AI。", {})],
+        [("AI 只影響等級：", H), ("輔助通道不新增、不刪除事件；非 Starlink 衛星之 AI 通道不決定 E3。", {})],
+        [("L1 漏看者另列：", H), ("L1 未標記、其他方法有反應之時段，列為低置信複核項（下頁）。", {})],
+    ], size=12, after=10)
+
+    s = frame(prs, "L1 未標記、L2 才發現的變化：R7 如何處理", 0)
+    text(s, 0.78, 1.0, 11.8, 0.5, [[("L1 看不到的變化不會被丟棄：", H),
+                                   ("列為「低置信複核項」，不計入候選事件、不給證據等級，由分析人員判讀。", {"bold": True})]], size=16)
+    flow(s, 0.62, 1.6, 3.86, 1.55, [("阻力殘差", "L1 未標記，但扣除 NRLMSIS 阻力預期後之殘差超過 0.3 km（R6 起）", False)])
+    flow(s, 4.69, 1.6, 3.86, 1.55, [("融合評分器", "L1 未標記，但融合評分器超過門檻（R6 起；R7 起限 Starlink）", True)])
+    flow(s, 8.76, 1.6, 3.86, 1.55, [("L2 統計變點", "≥ 2 種 L2 方法於 3 天內同時觸發，且扣除背景衰減後之淨變化超過 L1 單步門檻（R7 新增）", False)])
+    table(s, 0.62, 3.4, 7.3, [1.9, 5.4], [
+        ["Starlink（MEME 真值）", "L1 未涵蓋之 54 件中 33 件（61%）出現在複核項；主要來自融合評分器（29 件）與阻力殘差（13 件）"],
+        ["非 Starlink（IDS 點火紀錄）", "阻力殘差項補回 L1 未偵測之點火 9 次、L2 項 1 次；融合評分器項全落在安靜期（誤報），R7 已不列入"],
+        ["L2 項單獨", "誤報少，但補回之 L1 漏偵不到 3%；每一步都很小、分散多筆之變化仍為已知限制"],
+    ], ["真值驗證", "結果"], size=11.5, row_h=0.78, align=[PP_ALIGN.LEFT, PP_ALIGN.LEFT], bold_cols=(0,))
+    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.15), Inches(3.4), Inches(4.47), Inches(2.85))
+    box.fill.solid(); box.fill.fore_color.rgb = GRAY_ROW2; box.line.color.rgb = GRAY_ROW
+    text(s, 8.3, 3.5, 4.2, 0.4, "本次 15 顆之實例", size=15, bold=True, color=NAVY)
+    bullets(s, 8.3, 3.95, 4.2, 2.3, [
+        [("HAISHAO 1　2025-04-04：", H), ("各單步未達 L1 門檻，三種 L2 方法同時觸發；扣除背景衰減後淨上升 +3.5 km", {})],
+        [("SHIYAN 24C 02　2024-05-08：", H), ("單步 +0.55 km、離心率同步上升，L1 未標記，由 L2 列出", {})],
+    ], size=12, after=8)
+    text(s, 0.62, 6.45, 12.0, 0.4, f"15 顆合計低置信複核項 {sum(len(r.get('low_conf') or []) for r in R.values())} 項"
+         f"（阻力殘差、融合評分器、L2），合併為 {sum(len({x.get('case') for x in r.get('low_conf') or []}) for r in R.values())} 個複核案件，逐星列於 F2 報表。",
+         size=12, color=MUTED)
+
+    s = frame(prs, "證據等級是複核優先順序，不是機動判定", 0)
+    text(s, 0.78, 1.05, 11.8, 0.9, [[("系統自動為候選事件標上優先順序標籤，提示分析人員應先處理哪些事件；", H),
+                                    ("機動是否存在，由分析人員複核後確認。", {"bold": True})]], size=19)
+    table(s, 0.62, 2.1, 7.4, [1.1, 1.6, 4.7], [
+        ["E3", "高優先複核", "證據最強，建議立即複核；確認後再評估碰撞風險"],
+        ["E2", "人工複核", "證據中等，排程複核；「ML 輔助」者優先"],
+        ["E1", "待觀察", "證據不足，持續觀察"],
+        ["D", "資料品質待查", "回跳型態，先核對原始 TLE 與編目"],
+        ["複核項", "低置信", "L1 未標記之可疑時段，不計入候選事件"],
+    ], ["標籤", "名稱", "對分析人員的意義"], size=13, row_h=0.6, align=[PP_ALIGN.CENTER, PP_ALIGN.CENTER, PP_ALIGN.LEFT], bold_cols=(0,))
+    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.3), Inches(2.1), Inches(4.32), Inches(3.62))
+    box.fill.solid(); box.fill.fore_color.rgb = GRAY_ROW2; box.line.color.rgb = GRAY_ROW
+    text(s, 8.45, 2.2, 4.0, 0.4, "類比：碰撞預警", size=16, bold=True, color=NAVY)
+    bullets(s, 8.45, 2.7, 4.05, 3.0, [
+        [("碰撞機率高，", H), ("代表應優先評估與處置，不代表必然碰撞。", {})],
+        [("E3 也一樣：", H), ("代表證據較強、應先複核，不代表已確認機動。", {})],
+        [("E1、D 不等於沒有機動：", H), ("只代表目前證據不足或資料需先查核。", {})],
+    ], size=13, after=10)
+    text(s, 0.62, 6.0, 12.0, 0.8, "公開 TLE 不含推進紀錄，同樣的軌道變化也可能來自定軌更新、TLE 擬合異常或編目交叉標記；"
+         "因此報表一律稱「候選事件」，等級只排定複核順序。", size=13, color=MUTED)
+
     build_qa(prs, R, l1, g)
 
-    # 14 Appendix
-    s = frame(prs, "Appendix — 名詞與資料說明", 14)
+    # 14 與 2026-11-13 版（R6）之差異
+    s = frame(prs, "與 2026-11-13 版（R6）之差異", 14)
+    text(s, 0.78, 1.0, 11.8, 0.5, [[("E3 5 件不變；候選事件 25 → 23 件，", {"bold": True, "color": NAVY}),
+                                   ("差異來自 L1 門檻修正與證據等級規則調整，衛星與分析期間相同。", {"bold": True})]], size=17)
+    table(s, 0.62, 1.62, 7.35, [1.55, 2.6, 3.2], [
+        ["候選事件", "25 件：E3 5／E2 14／E1 5／D 1", f"{n_ev} 件：E3 {g['E3']}／E2 {g['E2']}（ML 輔助 {sum(bool(e.get('ml_capped')) for _, e in allev)}）／E1 {g['E1']}／D {g['D']}"],
+        ["規則候選點", "145 個", f"{l1} 個"],
+        ["L1 門檻", "P2、P5、P6 取聯集（P5、P6 實際無作用）", "P2 × P5 × P6 有效門檻；移除 ΔΩ 標記與 P3 抑制（驗證無作用或只增誤報）"],
+        ["阻力殘差通道", "未計入", "計入（NRLMSIS 大氣模型）"],
+        ["非 Starlink 之 AI 通道", "可使事件達 E3", "不決定 E3，改列「E2（ML 輔助）」"],
+        ["低置信複核項", "2 項（融合評分器）", f"{sum(len(r.get('low_conf') or []) for r in R.values())} 項；新增 L2 來源；非 Starlink 之融合評分器項不列入"],
+        ["Model 2 說明", "「兩者皆為 AI」，未交代角色", "更正：非 Starlink 只作佐證，主判為物理模型（第 14 頁）"],
+    ], ["項目", "11/13 版（R6）", "本版（R7）"], size=12, row_h=0.6,
+        align=[PP_ALIGN.LEFT, PP_ALIGN.LEFT, PP_ALIGN.LEFT], bold_cols=(0,))
+    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.2), Inches(1.62), Inches(4.42), Inches(4.85))
+    box.fill.solid(); box.fill.fore_color.rgb = GRAY_ROW2; box.line.color.rgb = GRAY_ROW
+    text(s, 8.4, 1.75, 4.0, 0.4, "事件層級之變動", size=16, bold=True, color=NAVY)
+    bullets(s, 8.4, 2.25, 4.05, 4.1, [
+        [("SJ 16-02　", {"bold": True}), ("2026-01-03 −0.37 km 不再超過門檻；類型 C 改列 D", {})],
+        [("HAISHAO 1　", {"bold": True}), ("2025-04-04 +1.6 km 改列 L2 低置信複核項（扣除背景衰減後 +3.5 km）", {})],
+        [("HAISHAO 1　", {"bold": True}), ("2025-04-14 事件起點順延為 04-15（+9.5 → +5.2 km）", {})],
+        [("STARLINK-4314　", {"bold": True}), ("2026-06-04 由 E1 改為 D（回跳型態）", {})],
+        [("其餘 21 件　", {"bold": True}), ("起始時間相同，淨 Δa 小幅修正（最大 1.0 km）；等級依 R7 規則重給", {})],
+    ], size=13, after=8)
+    text(s, 0.62, 6.6, 12.0, 0.4, "L1 門檻修正與規則移除，依 Starlink（MEME 283 顆）、IDS 營運方點火紀錄、火箭箭體負對照與福衛七號精密定軌真值驗證；"
+         "11/13 版檔案保留未覆蓋。", size=11, color=MUTED)
+
+    # 15 NRLMSIS 大氣模型：辨識被動（自然）軌道變化
+    s = frame(prs, "NRLMSIS 大氣模型：辨識被動的軌道變化", 15)
+    text(s, 0.78, 1.0, 11.8, 0.5, [[("不點火，半長軸也會因阻力下降；", {"bold": True, "color": NAVY}),
+                                   ("以物理模型估算應下降多少，與實測相減，剩下的才可能是主動變化。", {"bold": True})]], size=16)
+    flow(s, 0.62, 1.62, 12.0, 1.62, [
+        ("① 實測 Δa", "相鄰兩筆公開 TLE 之半長軸差，包含阻力衰減與可能之機動", False),
+        ("② 預期阻力衰減", "NRLMSIS 2.1 依 F10.7 與每 3 小時 Ap 算大氣密度，沿軌道平均並逐時積分；彈道係數逐星以中位數自我校準", False),
+        ("③ 阻力殘差", "殘差＝實測 Δa − 預期衰減。純阻力衰減時殘差接近 0；有機動時殘差約等於機動量", False),
+        ("④ 判讀", "|殘差| ≤ 0.3 km：變化可由大氣解釋，傾向被動；> 0.3 km：計為輔助通道，支持主動變化", False),
+    ])
+    table(s, 0.62, 3.5, 12.0, [2.55, 5.2, 4.25], [
+        ["事件之輔助證據", "L1 候選事件前後 24 小時內，阻力殘差未超過 0.3 km 者，不計入阻力通道，證據等級隨之降低", "15 星 23 件事件中 21 件有阻力殘差佐證"],
+        ["長空窗之下降", "跨 7 天以上 TLE 空窗之下降，若實測量與阻力預期相當（殘差 < 實測之 50%），列 E1", "SHIYAN 24C 02 2026-09-18：跨 93 天 −1.28 km，阻力預期 −1.5～−1.8 km，列 E1"],
+        ["預期累積", "殘差超門檻但實測 Δa 很小，殘差主要來自預期值隨空窗累積，註明不代表離散變化", f"STARLINK-4314：{'、'.join(R[53056]['counts'].get('drag_accum') or [])} 兩次"],
+        ["自然再入", "近地點 < 150 km，或 < 350 km 且每日下降 > 2 km，判為自然再入，機動數輸出 0", "Van Allen 探測器（近地點 109 km）不誤判為連續機動"],
+    ], ["用途", "判定方式", "實例"], size=12, row_h=0.6,
+        align=[PP_ALIGN.LEFT, PP_ALIGN.LEFT, PP_ALIGN.LEFT], bold_cols=(0,))
+    text(s, 0.62, 6.45, 12.0, 0.55, "ML 窗口模型也須阻力殘差超過 0.3 km 才計入，避免把阻力衰減誤判為機動。限制：彈道係數固定，姿態改變或磁暴期間"
+         "密度誤差會使殘差偏大；0.3 km 門檻未依各星雜訊調整，低軌衛星（如 HAISHAO 1）複核項偏多。P1 衰減抑制只依 TLE 本身之單調衰減與 B*，不使用 NRLMSIS。",
+         size=11, color=MUTED)
+
+    # 16 NRLMSIS 預期自然衰減率（高度 × 時間）
+    s = frame(prs, "NRLMSIS 預期之自然軌道衰減率（300–1000 km）", 16)
+    s.shapes.add_picture(str(DOCS / "fig_nrlmsis_decay_expect.png"), Inches(0.45), Inches(1.0), height=Inches(5.95))
+    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(9.35), Inches(1.15), Inches(3.3), Inches(5.6))
+    box.fill.solid(); box.fill.fore_color.rgb = GRAY_ROW2; box.line.color.rgb = GRAY_ROW
+    text(s, 9.5, 1.25, 3.0, 0.4, "判讀重點", size=16, bold=True, color=NAVY)
+    bullets(s, 9.5, 1.75, 3.05, 4.9, [
+        [("高度主導：", H := {"bold": True, "color": NAVY}), ("300 km 每日約 1–5 km，1000 km 不到 1 m，相差約 4 個數量級", {})],
+        [("太陽活動：", H), ("2024 年太陽活動高峰期之衰減率約為 2026 年的 2–4 倍；磁暴期間短時再升高。", {})],
+        [("實測比對：", H), ("福衛七號（576 km）預期約 12 m／日，TLE 實測 2026-10 中旬後約 11.5–12.3 m／日。", {})],
+        [("系統用途：", H), ("此預期值即阻力殘差中被扣除之「被動變化」；扣除後超過 0.3 km 才視為可能之主動變化。", {})],
+    ], size=12, after=8)
+
+    # 17 Appendix
+    s = frame(prs, "Appendix — 名詞與資料說明", 17)
     bullets(s, 0.86, 1.15, 11.7, 5.6, [
         [("候選事件：", {"bold": True, "color": NAVY}),
          ("由 L1 規則（P1–P6）候選點依時間相鄰合併而成，L2 統計通道與 L3 融合／ML 模型作為輔助證據；所有事件皆為候選，非已確認推進機動。", {})],
@@ -590,14 +718,14 @@ def build(R: dict[int, dict]) -> None:
          ("依各星 TLE 相鄰轉換之雜訊水準估計之最小可偵測 |Δa|；低於下限之小推力（如持續補償阻力）無法逐次辨識。", {})],
         [("淨 Δa：", {"bold": True, "color": NAVY}), ("事件前後半長軸（a）淨變化；正值為抬升、負值為降低。", {})],
         [("資料與版本：", {"bold": True, "color": NAVY}),
-         (f"Space-Track.org 公開 TLE（至 {DATA_END}）；報表版本 R7（2026-11-15），含 NRLMSIS 阻力殘差通道；R6 版簡報（2026-11-13）之證據等級已由本版取代。", {})],
+         (f"Space-Track.org 公開 TLE（至 {DATA_END}）；報表版本 R7（2026-11-15），含 NRLMSIS 阻力殘差通道；R6 版簡報（2026-11-13）已由本版取代，差異見第 18 頁。", {})],
         [("附件：", {"bold": True, "color": NAVY}),
          ("15 顆衛星逐星 PDF 報告（摘要版 F1、技術完整版 F2，共 30 份），含半長軸時序、候選事件清單與複核建議；"
           "各星線上 F2 報告連結見下頁。", {})],
     ], size=17, after=12)
 
     # 9 附件：線上 F2 報告連結
-    s = frame(prs, "附件 — 15 顆衛星線上 F2 報告連結", 15)
+    s = frame(prs, "附件 — 15 顆衛星線上 F2 報告連結", 18)
     bullets(s, 0.86, 1.12, 11.6, 0.9, [
         "點選連結即開啟線上機動偵測儀表板，自動產出該星 F2 技術完整版 PDF（期間與本簡報分析相同）；"
         "首次開啟需載入資料，約需數十秒。"], size=16)

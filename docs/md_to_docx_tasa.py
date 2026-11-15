@@ -239,7 +239,7 @@ def style_run(run, lang, size=12, bold=False, italic=False, code=False, color=BL
     if rf is None:
         rf = rpr.makeelement(qn("w:rFonts"), {})
         rpr.insert(0, rf)
-    rf.set(qn("w:eastAsia"), m.CODE_FONT if code else EA_FONT)
+    rf.set(qn("w:eastAsia"), EA_FONT)   # 程式碼字串內之中文亦用標楷體（Consolas 無中文字形，會退回細明體）
     rf.set(qn("w:ascii"), lat)
     rf.set(qn("w:hAnsi"), lat)
     return run
@@ -432,8 +432,55 @@ def _convert_body(md_path, out_path):
     fill_front_matter(d)
     strip_school(d)
     _drop_empty_lists(d)
+    unify_cjk_font(d)
     d.save(str(out_path))
     return stats
+
+
+_CJK_OTHER = {"BiauKai", "新細明體", "PMingLiU", "細明體", "MingLiU", "微軟正黑體", "Microsoft JhengHei", "Yu Mincho",
+              "MS Mincho", "MS Gothic", "Consolas"}
+
+
+def unify_cjk_font(doc) -> None:
+    """全冊中文字形統一為標楷體：內文、表格、頁首頁尾、樣式、文件預設與佈景主題字型。
+    （Word 更新目錄時之 TOC 樣式取佈景主題之東亞字型＝新細明體，會造成標楷體與細明體夾雜。）"""
+    def fix(root):
+        for rf in root.iter(qn("w:rFonts")):
+            for att in ("w:eastAsiaTheme",):
+                if rf.get(qn(att)) is not None:
+                    del rf.attrib[qn(att)]
+                    rf.set(qn("w:eastAsia"), EA_FONT)
+            if rf.get(qn("w:eastAsia")) in _CJK_OTHER:
+                rf.set(qn("w:eastAsia"), EA_FONT)
+            for att in ("w:ascii", "w:hAnsi"):          # Mac 字型名 BiauKai 在 Windows 不存在，會退回細明體
+                if rf.get(qn(att)) in ("BiauKai", EA_FONT, "Calibri"):
+                    rf.set(qn(att), LAT_FONT)
+    fix(doc.element.body)
+    fix(doc.styles.element)
+    for sec in doc.sections:
+        for hf in (sec.header, sec.footer, sec.first_page_header, sec.first_page_footer):
+            fix(hf._element)
+    st = doc.styles.element
+    dd = st.find(qn("w:docDefaults"))
+    if dd is None:
+        dd = st.makeelement(qn("w:docDefaults"), {}); st.insert(0, dd)
+    rpd = dd.find(qn("w:rPrDefault"))
+    if rpd is None:
+        rpd = dd.makeelement(qn("w:rPrDefault"), {}); dd.insert(0, rpd)
+    rpr = rpd.find(qn("w:rPr"))
+    if rpr is None:
+        rpr = rpd.makeelement(qn("w:rPr"), {}); rpd.append(rpr)
+    rf = rpr.find(qn("w:rFonts"))
+    if rf is None:
+        rf = rpr.makeelement(qn("w:rFonts"), {}); rpr.insert(0, rf)
+    for att in list(rf.attrib):
+        if att.endswith("Theme"):
+            del rf.attrib[att]
+    rf.set(qn("w:eastAsia"), EA_FONT); rf.set(qn("w:ascii"), LAT_FONT); rf.set(qn("w:hAnsi"), LAT_FONT)
+    for rel in doc.part.rels.values():
+        if rel.reltype.endswith("/theme"):
+            part = rel.target_part
+            part._blob = part.blob.replace("新細明體".encode("utf-8"), EA_FONT.encode("utf-8"))                                   .replace(b'typeface="PMingLiU"', f'typeface="{EA_FONT}"'.encode("utf-8"))                                   .replace(b'<a:latin typeface="Calibri Light"', f'<a:latin typeface="{LAT_FONT}"'.encode())                                   .replace(b'<a:latin typeface="Calibri"', f'<a:latin typeface="{LAT_FONT}"'.encode())                                   .replace(b'<a:latin typeface="Cambria"', f'<a:latin typeface="{LAT_FONT}"'.encode())
 
 
 def _drop_empty_lists(doc) -> None:

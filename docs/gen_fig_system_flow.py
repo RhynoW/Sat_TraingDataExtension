@@ -139,11 +139,11 @@ def fig_r7_flow():
     xs = [0.025, 0.215, 0.405, 0.595, 0.785]
     box(ax, xs[0], y, w - 0.02, h, "輸入", "單顆衛星\n指定期間的 TLE\n（品質稽核後）", C_DATA)
     box(ax, xs[1], y, w, h, "步驟 1　L1 規則標點",
-        "P2 高度自適應門檻\nP5 太陽活動調整\nP6 軌道族群倍率\nP4 相鄰窗口補標\nP1、P3 排除阻力衰減", C_RULE, body_size=8.8)
+        "有效門檻＝P2 高度門檻\n× P5 太陽活動倍率\n× P6 軌道族群倍率\nP4 相鄰窗口補標\nP1 排除阻力衰減", C_RULE, body_size=8.8)
     box(ax, xs[2], y, w, h, "步驟 2　合併為候選事件",
         "相隔 48 小時內的\n規則候選點連鎖合併\n\n連續多日同向者\n再合併為連續機動段", C_RULE, body_size=8.8)
     box(ax, xs[3], y, w, h, "步驟 3　比對輔助通道",
-        "事件前後 24 小時內：\nML 窗口模型（AI）\n融合評分器（AI）\n阻力殘差 > 0.3 km\nL2 ≥ 2 種方法觸發", C_RULE, body_size=8.8)
+        "事件前後 24 小時內：\nML 窗口模型（AI）\n融合評分器（AI）\n阻力殘差 > 0.3 km\nL2 ≥ 2 種方法觸發\n非 Starlink：AI 不決定 E3", C_AI, body_size=8.8)
     box(ax, xs[4], y, w, h, "步驟 4　給證據等級",
         "依顯著性（SNR）、\n輔助通道數、事件型態\n\nE3 高優先複核\nE2 人工複核\nE1 待觀察　D 資料待查", C_OUT, body_size=8.8)
     for a, b in zip(xs[:-1], xs[1:]):
@@ -214,11 +214,15 @@ def fig_app_vs_r7():
     box(ax, xs[1], ya, w, h, "是否 Starlink", "編目名稱規則\n（非 AI）", C_RULE, 10.5, 9)
     bx, bw = xs[2], w * 2 + g
     box(ax, bx, ya + h / 2 + 0.01, bw, h / 2 - 0.01, "是 → 主判：Model 1＋融合評分器（AI）", col=C_AI, title_size=9.8)
-    box(ax, bx, ya, bw, h / 2 - 0.01, "否 → 主判：NRLMSIS 阻力殘差（物理模型）", col=C_RULE, title_size=9.8)
+    box(ax, bx, ya, bw, h / 2 - 0.01, "否 → 主判：NRLMSIS 阻力殘差（物理模型）；Model 2（AI）只作佐證", col=C_RULE, title_size=9.8)
     for x0, x1 in ((0.17, xs[0]), (xs[0] + w, xs[1]), (xs[1] + w, bx)):
         arrow(ax, (x0 + 0.003, ya + h / 2), (x1 - 0.004, ya + h / 2), color=INK)
+    ax.text(0.02, ya + h + 0.03, "Model 1、Model 2 只用於 App 即時查詢", fontsize=9.6, color=C_AI[1],
+            fontweight="bold", va="bottom")
     # R7：四步
     yr = 0.2
+    ax.text(0.02, yr + h + 0.03, "R6、R7 是報表程式版本號（Revision），不是模型；R7 不分流、不使用 Model 2", fontsize=9.6,
+            color=C_RULE[1], fontweight="bold", va="bottom")
     box(ax, 0.02, yr, 0.15, h, "R7 單星報表\n（正式交付）", col=C_OUT, title_size=11)
     steps = [("L1 規則標點", "P1–P6\n（非 AI）", C_RULE), ("合併候選事件", "48 小時連鎖\n（非 AI）", C_RULE),
              ("比對輔助通道", "含 ML／融合（AI）\n非 Starlink 不決定 E3", C_AI),

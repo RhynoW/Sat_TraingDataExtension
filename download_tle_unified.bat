@@ -17,23 +17,27 @@ setlocal
 set PYTHONIOENCODING=utf-8
 cd /d "%~dp0"
 
-echo [%TIME:~0,8%] [1/4] Update space weather files from CelesTrak ...
+echo [%TIME:~0,8%] [1/5] Update space weather files from CelesTrak ...
 python scenario-advanced01\tools\fetch_space_weather.py
 if not "%errorlevel%"=="0" echo [WARN] space weather update failed - keeping previous files
 
-echo [%TIME:~0,8%] [2/4] Download TLE from Space-Track, rebuild slim DB and parquet ...
+echo [%TIME:~0,8%] [2/5] Download TLE from Space-Track, rebuild slim DB and parquet ...
 python download_TLE_unified.py --mode spacetrack --rebuild-slim --rebuild-parquet --keep-lines --recent-days 14
 if not "%errorlevel%"=="0" goto :fail
 
+echo [%TIME:~0,8%] [3/5] Archive operator ephemeris (CelesTrak SupGP OneWeb/Kuiper, Space-Track Kuiper public files) ...
+python ci\archive_operator_ephemeris.py
+if not "%errorlevel%"=="0" echo [WARN] operator ephemeris archive incomplete - rerun later: python ci\archive_operator_ephemeris.py
+
 if /i not "%~1"=="publish" (
-  echo [%TIME:~0,8%] [3/4] skipped publish - run with "publish" to deploy to HF
+  echo [%TIME:~0,8%] [4/5] skipped publish - run with "publish" to deploy to HF
   goto :ok
 )
-echo [%TIME:~0,8%] [3/4] Publish slim DB and space weather to HF ...
+echo [%TIME:~0,8%] [4/5] Publish slim DB and space weather to HF ...
 call "%~dp0scenario-advanced01\update_slim_publish_hf.bat" skipbuild
 if not "%errorlevel%"=="0" goto :fail
 
-echo [%TIME:~0,8%] [4/4] Sync new TLE into HF dataset starlink-maneuver-db ...
+echo [%TIME:~0,8%] [5/5] Sync new TLE into HF dataset starlink-maneuver-db ...
 python ci\sync_maneuver_dataset.py
 if not "%errorlevel%"=="0" echo [WARN] starlink-maneuver-db sync failed - rerun: python ci\sync_maneuver_dataset.py
 
