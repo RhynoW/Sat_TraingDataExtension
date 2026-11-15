@@ -25,6 +25,14 @@ def _chapter(cid: str) -> str:
     return (BOOK_DIR / "chapters" / f"{cid}.md").read_text(encoding="utf-8")
 
 
+_BOLD = re.compile(r"\*\*(?=\S)(.+?)(?<=\S)\*\*")
+
+
+def _md(s: str) -> str:
+    """粗體改為 <strong>：CommonMark 規則下，「？**」後接上標或中文字時 ** 不會閉合，中文書稿常見。"""
+    return _BOLD.sub(r"<strong>\1</strong>", s)
+
+
 def _blocks(md: str):
     """把章節 Markdown 切成 (kind, payload)：text／image／aside。"""
     lines = md.split("\n")
@@ -73,12 +81,12 @@ def _render_chapter(cid: str):
     for kind, payload in _blocks(body):
         if kind == "text":
             if payload.strip():
-                st.markdown(payload)
+                st.markdown(_md(payload), unsafe_allow_html=True)
         elif kind == "aside":
             head, para = payload
             with st.container(border=True):
-                st.markdown(f"**{head}**　<span style='font-size:0.8em;color:#8A96A6'>{ASIDE_TAG}</span>", unsafe_allow_html=True)
-                st.markdown(para)
+                st.markdown(f"<strong>{head}</strong>　<span style='font-size:0.8em;color:#8A96A6'>{ASIDE_TAG}</span>", unsafe_allow_html=True)
+                st.markdown(_md(para), unsafe_allow_html=True)
         elif kind == "image":
             src, cap = payload
             p = BOOK_DIR / src
@@ -94,7 +102,7 @@ def _render_chapter(cid: str):
                 else:
                     st.image(str(p), width="stretch")
             if cap:
-                st.caption("  \n".join(c.rstrip() for c in cap))
+                st.caption(_md("  \n".join(c.rstrip() for c in cap)), unsafe_allow_html=True)
 
 
 def _goto(cid: str | None):
