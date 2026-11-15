@@ -110,9 +110,10 @@ L: dict[str, dict[str, str]] = {
     # ── StoryMap（2026-09-10 新增）─────────────────────────────────────────────
     "mode_tool": {"zh": "🛠️ 分析工具", "ja": "🛠️ 分析ツール", "en": "🛠️ Analysis Tool"},
     "mode_storymap": {"zh": "📖 StoryMap", "ja": "📖 StoryMap", "en": "📖 StoryMap"},
-    # 專書線上版（2026-11-15）：書稿只有中文；英文介面只換選項標籤
+    # 專書線上版（2026-11-15）：繁中原稿＋英、日 AI 輔助譯文（data/book/en|ja）
     "mode_book": {"zh": "📚 太空態勢感知的基礎：智慧化低軌通訊衛星軌道異常與太空事件偵測",
-                  "en": "📚 Foundations of Space Situational Awareness (book, Traditional Chinese)"},
+                  "ja": "📚 宇宙状況把握の基礎：低軌道通信衛星の軌道異常と宇宙事象の検出",
+                  "en": "📚 Foundations of Space Situational Awareness (book)"},
     "storymap_lang_note": {"zh": "", "ja": "",
                            "en": ""},
     "storymap_landing_title": {"zh": "📖 太空態勢感知 StoryMap", "ja": "📖 SSA StoryMap", "en": "📖 SSA StoryMap"},

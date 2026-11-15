@@ -100,5 +100,67 @@
    "title": "附錄　參考文獻與延伸閱讀"
   }
  ],
- "cover_credit": "封面照片：NASA（iss036e024096），國際太空站 Expedition 36 組員 Karen Nyberg 攝，2013-07-22 16:44:23 UTC，台灣夜間"
+ "cover_credit": "封面照片：NASA（iss036e024096），國際太空站 Expedition 36 組員 Karen Nyberg 攝，2013-07-22 16:44:23 UTC，台灣夜間",
+ "i18n": {
+  "en": {
+   "title": "National Security from Satellite Orbits",
+   "subtitle": "Foundations of Space Situational Awareness: Intelligent Detection of Orbital Anomalies and Space Events for LEO Communication Satellites",
+   "cover_credit": "Cover photo: NASA (iss036e024096), taken by Expedition 36 crew member Karen Nyberg aboard the International Space Station, 2013-07-22 16:44:23 UTC, Taiwan at night",
+   "chapters": {
+    "01": "Chapter 1　Space Has Become a National Security Domain",
+    "02": "Chapter 2　Reading Satellite Orbits: From Altitude to Orbital Elements",
+    "03": "Chapter 3　The World of Low-Earth-Orbit Mega-Constellations",
+    "04": "Chapter 4　The Physics and Mission Logic of Satellite Maneuvers",
+    "05": "Chapter 5　Atmospheric Drag, Space Weather, and False Maneuvers",
+    "06": "Chapter 6　Tracking Gaps, Data Quality, and False Alarms",
+    "07": "Chapter 7　A Three-Layer Detection Architecture: Rules, Statistics, and Machine Learning",
+    "08": "Chapter 8　The Rule Layer: A Reason for Every Alert",
+    "09": "Chapter 9　The Statistical Layer: Judging \"How Unusual\"",
+    "10": "Chapter 10　The Fusion Scorer: Five Witnesses, One Confidence Score",
+    "11": "Chapter 11　Physics as a Third-Party Witness: NRLMSIS and Drag Residuals",
+    "12": "Chapter 12　The Reentry Gate: Knowing When Not to Use the Model",
+    "13": "Chapter 13　From Single-Satellite Monitoring to Constellation-Level Analysis",
+    "14": "Chapter 14　Maneuver Timing Detection: Knowing Not Just \"Whether,\" but \"When\"",
+    "15": "Chapter 15　Detection Limits: Which Maneuvers Go Unseen",
+    "16": "Chapter 16　Routing, Degradation, and Out-of-Scope Scenarios",
+    "17": "Chapter 17　Reproducible, Auditable, and Maintainable AI Systems",
+    "18": "Chapter 18　Field Validation: FORMOSAT, Starlink, and Non-Cooperative Targets",
+    "19": "Chapter 19　From Orbital Anomalies to National-Security Decisions",
+    "20": "Chapter 20　The Future: Autonomous Space Situational Awareness and Digital Twins",
+    "21": "Chapter 21　Epilogue",
+    "A1": "Appendix　Case Map",
+    "A2": "Appendix　References and Further Reading"
+   }
+  },
+  "ja": {
+   "title": "衛星軌道から考える国家安全保障",
+   "subtitle": "宇宙状況把握の基礎：低軌道通信衛星の軌道異常と宇宙事象のインテリジェント検出",
+   "cover_credit": "表紙写真：NASA（iss036e024096）、国際宇宙ステーション第36次長期滞在クルー Karen Nyberg 撮影、2013-07-22 16:44:23 UTC、夜の台湾",
+   "chapters": {
+    "01": "第1章　宇宙は国家安全保障の領域となった",
+    "02": "第2章　衛星軌道を読み解く：高度から軌道要素まで",
+    "03": "第3章　低軌道巨大コンステレーションの世界",
+    "04": "第4章　衛星マヌーバの物理とミッションのロジック",
+    "05": "第5章　大気抵抗、宇宙天気と偽のマヌーバ",
+    "06": "第6章　追跡の空白、データ品質と誤警報",
+    "07": "第7章　三層検知アーキテクチャ：ルール、統計と機械学習",
+    "08": "第8章　ルール層：すべての警報に理由を持たせる",
+    "09": "第9章　統計層：「どれほど異常か」を判断する",
+    "10": "第10章　融合スコアラー：五人の証人、一つの信頼スコア",
+    "11": "第11章　第三者の証人としての物理：NRLMSIS と抗力残差",
+    "12": "第12章　再突入ゲート：モデルを使うべきでないときを知る",
+    "13": "第13章　単一衛星の監視からコンステレーション・レベルの分析へ",
+    "14": "第14章　マヌーバ時刻の検出：「あった」だけでなく「いつ」まで知る",
+    "15": "第15章　検出限界：どのようなマヌーバが見えないのか",
+    "16": "第16章　ルーティング、格下げと適用外の場面",
+    "17": "第17章　再現可能、審査可能、運用可能なAIシステム",
+    "18": "第18章　実戦検証：FORMOSAT、Starlinkと非協力対象",
+    "19": "第19章　軌道異常から国家安全保障上の意思決定へ",
+    "20": "第20章　未来：自律的な宇宙状況把握とデジタルツイン",
+    "21": "第21章　結語",
+    "A1": "付録　事例マップ",
+    "A2": "付録　参考文献と関連文献"
+   }
+  }
+ }
 }

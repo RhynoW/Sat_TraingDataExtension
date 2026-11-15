@@ -21,6 +21,14 @@ MAXW = 1600
 
 TITLE = "從衛星軌道論國家安全"
 SUBTITLE = "太空態勢感知的基礎：智慧化低軌通訊衛星軌道異常與太空事件偵測"
+I18N_META = {
+    "en": ("National Security from Satellite Orbits",
+           "Foundations of Space Situational Awareness: Intelligent Detection of Orbital Anomalies and Space Events for LEO Communication Satellites",
+           "Cover photo: NASA (iss036e024096), taken by Expedition 36 crew member Karen Nyberg aboard the International Space Station, 2013-07-22 16:44:23 UTC, Taiwan at night"),
+    "ja": ("衛星軌道から考える国家安全保障",
+           "宇宙状況把握の基礎：低軌道通信衛星の軌道異常と宇宙事象のインテリジェント検出",
+           "表紙写真：NASA（iss036e024096）、国際宇宙ステーション第36次長期滞在クルー Karen Nyberg 撮影、2013-07-22 16:44:23 UTC、夜の台湾"),
+}
 META = {"author": "Sat_Dashboard", "version": "v1.2", "date": "2026.11.15", "copyright": "©Sat_Dashboard", "license": "請來信洽詢"}
 
 
@@ -71,9 +79,9 @@ def convert(md: str) -> str:
 
 
 def main():
-    if OUT.exists():
-        shutil.rmtree(OUT)
-    (OUT / "chapters").mkdir(parents=True)
+    # 不整個刪除 OUT：翻譯時會有程式同時讀取 chapters/，Windows 下 rmtree 會中途失敗而留下殘缺目錄。
+    # 改為直接覆寫；章節與圖片檔名固定，不會留下過期檔。
+    (OUT / "chapters").mkdir(parents=True, exist_ok=True)
     text = SRC.read_text(encoding="utf-8")
     k = re.search(r"^# 附錄", text, re.M).start()
     body, appx = text[:k], text[k:]
@@ -94,8 +102,23 @@ def main():
     im = im.resize((MAXW, round(im.height * MAXW / im.width)), Image.LANCZOS)
     (OUT / "img").mkdir(exist_ok=True)
     im.convert("RGB").save(OUT / "img" / "cover.jpg", quality=85, optimize=True)
+    # 譯文（docs/book/web/i18n/{en,ja}/NN.md，AI 輔助翻譯，中文原稿為準）
+    i18n = {}
+    for lang, (t, sub, cred) in I18N_META.items():
+        src_dir = Path(__file__).resolve().parent / "i18n" / lang
+        titles = {}
+        for c in toc:
+            f = src_dir / f"{c['id']}.md"
+            if f.exists():
+                (OUT / lang / "chapters").mkdir(parents=True, exist_ok=True)
+                body = f.read_text(encoding="utf-8")
+                (OUT / lang / "chapters" / f.name).write_text(body, encoding="utf-8")
+                titles[c["id"]] = body.split("\n", 1)[0].lstrip("# ").strip()
+        i18n[lang] = {"title": t, "subtitle": sub, "cover_credit": cred, "chapters": titles}
+        print(f"{lang}: {len(titles)}/{len(toc)} chapters translated")
     json.dump({"title": TITLE, "subtitle": SUBTITLE, **META, "chapters": toc,
-               "cover_credit": "封面照片：NASA（iss036e024096），國際太空站 Expedition 36 組員 Karen Nyberg 攝，2013-07-22 16:44:23 UTC，台灣夜間"},
+               "cover_credit": "封面照片：NASA（iss036e024096），國際太空站 Expedition 36 組員 Karen Nyberg 攝，2013-07-22 16:44:23 UTC，台灣夜間",
+               "i18n": i18n},
               open(OUT / "book.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     n_img = sum(1 for _ in (OUT / "img").rglob("*.*"))
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file())
