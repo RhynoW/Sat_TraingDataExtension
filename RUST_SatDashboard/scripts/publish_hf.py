@@ -94,6 +94,9 @@ pretty_name: ATRDC SatDashboard Rust 單機版
 - Intel／AMD 電腦：[SatDashboard-x64.exe](https://huggingface.co/datasets/RhynoWu/Rust_SatDashboard/resolve/main/exe/SatDashboard-x64.exe)
 - ARM64（Snapdragon 等）電腦：[SatDashboard-arm64.exe](https://huggingface.co/datasets/RhynoWu/Rust_SatDashboard/resolve/main/exe/SatDashboard-arm64.exe)
 
+> 如果您對於 EXE 檔案有疑慮，也可以用網頁開啟線上版：**https://rhynowu-atrdc-satdashboard-i18n.hf.space/**
+> 不需下載安裝，直接在瀏覽器使用；「衛星任務規劃」（地面站過頂預報、雲量預報）目前只有單機版提供。
+
 ## 第一次使用
 
 1. 把 exe 放進一個新資料夾，雙擊執行（Windows 若跳出 SmartScreen：「其他資訊」→「仍要執行」）。
