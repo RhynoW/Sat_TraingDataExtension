@@ -1,7 +1,7 @@
 /* Rust 單機版前端補充（不屬於 Python 版同步檔；sync_web.py 把本檔掛進 globe、taipei、cable、rpo3d 頁，mission.html 直接引用）
  * 1. 啟動預設視角：台灣上空（Cesium.Camera.DEFAULT_VIEW_RECTANGLE；Home 鍵也回到這裡）
  * 2. 地球儀頂端工具列「🛰 任務規劃」按鈕：亮黃、高對比
- * 3. 版本日期與聯絡資訊（/api/about）：頁面有 #about-slot 就放進去，否則顯示在右下角 Logo 左側
+ * 3. 版本日期與聯絡資訊（/api/about）：頁面有 #about-slot 就放進去，否則顯示在右下角 Logo 左側（沒有 Logo 時貼齊右下角）
  * 4. 預設底圖：地形+海底地形 5.4K（後端 /api/globe_texture/default），地球儀的底圖選單隱藏。
  *    Python 版同步來的 globe.js、taipei.js、rpo3d.js、cable.html 以 Viewer 的 imageryProvider 選項指定底圖，
  *    CesiumJS 1.104 起已移除該選項（內附 1.114），而且 Viewer 看到 imageryProvider 會把 baseLayer 設成 false，
@@ -57,6 +57,7 @@
     ".sd-about a{color:#58a6ff;text-decoration:none}.sd-about a:hover{text-decoration:underline}" +
     ".sd-about.float{position:fixed;right:170px;bottom:8px;z-index:20;background:rgba(1,4,9,.78);border:1px solid #30363d;" +
     "border-radius:6px;padding:3px 9px}" +
+    "body:has(#logo-overlay[style*=none]) .sd-about.float{right:8px}" +
     ".sd-upd{margin-left:8px}.sd-upd b{color:#f2cc60;font-weight:600}.sd-upd .ok{color:#3fb950}.sd-upd .err{color:#ff7b72}" +
     ".sd-upd button{font:inherit;background:#238636;color:#fff;border:0;border-radius:4px;padding:0 6px;margin-left:4px;cursor:pointer}" +
     ".sd-upd button.sec{background:#30363d}" +

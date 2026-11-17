@@ -294,6 +294,8 @@ async fn api_rpo_scene(State(st): St, Path((p, s)): Path<(u32, u32)>, Query(q): 
             .ok()
             .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
         {
+            let mut v = v;
+            rpo::refresh_meta(&mut v, &rpo::preset_for(p, s, variant.as_deref()));
             let v = Arc::new(v);
             st.rpo_cache.lock().insert(key, v.clone());
             return Json(&*v).into_response();

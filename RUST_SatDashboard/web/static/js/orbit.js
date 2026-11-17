@@ -16,6 +16,7 @@ const I18N = {
     q_placeholder: '衛星名稱或 NORAD ID（至少 2 字元）',
     lbl_start: '起', lbl_end: '迄', btn_load: '載入',
     status_default: '請先搜尋並選取衛星（預設日期範圍：最近 1 年）',
+    range_note: '本站資料庫只保留近 {n} 天的 TLE（{start} 起），且未設定 Space-Track 帳密無法補抓更早的資料；預設區間已改為這 {n} 天。',
     status_select_first: '請先搜尋並選取衛星',
     status_loading: '載入中…',
     status_load_fail: '載入失敗：{error}',
@@ -50,6 +51,7 @@ const I18N = {
     q_placeholder: 'Satellite name or NORAD ID (2+ characters)',
     lbl_start: 'From', lbl_end: 'To', btn_load: 'Load',
     status_default: 'Please search and select a satellite first (default range: last 1 year)',
+    range_note: 'This site keeps only the last {n} days of TLEs (since {start}), and without Space-Track credentials older data cannot be fetched; the default range has been set to these {n} days.',
     status_select_first: 'Please search and select a satellite first',
     status_loading: 'Loading…',
     status_load_fail: 'Load failed: {error}',
@@ -84,6 +86,7 @@ const I18N = {
     q_placeholder: '衛星名または NORAD ID（2文字以上）',
     lbl_start: '開始', lbl_end: '終了', btn_load: '読み込み',
     status_default: 'まず衛星を検索して選択してください（デフォルト期間：直近1年）',
+    range_note: '本サイトのデータベースは直近 {n} 日分の TLE（{start} 以降）のみ保持しており、Space-Track の認証情報が未設定のため、それ以前のデータは取得できません。デフォルト期間をこの {n} 日間に変更しました。',
     status_select_first: 'まず衛星を検索して選択してください',
     status_loading: '読み込み中…',
     status_load_fail: '読み込みに失敗しました：{error}',
@@ -165,6 +168,7 @@ function setLang(lang){
     b.classList.toggle('active', b.dataset.lang === lang);
   });
 
+  renderRangeNote();
   // 若已載入資料，重繪所有用到語系字串的動態內容
   if(SATS.length){
     renderLoadedStatus();
@@ -562,6 +566,33 @@ function bindSearch(){
   });
 }
 
+// 本地資料保留範圍（/api/orbit/limits）：沒有 Space-Track 帳密且資料不足 1 年時，提示並把預設區間改成本地範圍
+let LIMITS = null;
+function renderRangeNote(){
+  const el = document.getElementById('range-note');
+  if(!el || !LIMITS) return;
+  el.textContent = tpl('range_note', {n: LIMITS.local_days, start: LIMITS.local_start});
+}
+function applyLimits(qs){
+  fetch('/api/orbit/limits').then(r => r.json()).then(L => {
+    if(!L || L.spacetrack || !L.local_start || !(L.local_days < 365)) return;
+    LIMITS = L;
+    let el = document.getElementById('range-note');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'range-note';
+      el.style.cssText = 'padding:0 22px 6px;font-size:12.5px;color:#d29922';
+      $('status').parentNode.insertBefore(el, $('status'));
+    }
+    renderRangeNote();
+    // 使用者用網址指定了區間或已開始載入時，不改日期
+    if(!qs.get('start') && !qs.get('norad') && !SATS.length){
+      $('d0').value = L.local_start;
+      if(L.local_end && !qs.get('end')) $('d1').value = L.local_end;
+    }
+  }).catch(() => {});
+}
+
 function init(){
   setLang(LANG);
   const today = new Date();
@@ -587,6 +618,7 @@ function init(){
   const D = /^\d{4}-\d{2}-\d{2}$/;
   if(D.test(qs.get('start') || '')) $('d0').value = qs.get('start');
   if(D.test(qs.get('end') || ''))   $('d1').value = qs.get('end');
+  applyLimits(qs);
   // ?norad=58573 單星；?norad=58573,59884 雙星比較
   if(setSelsFromList(qs.get('norad'))){
     if(SELS.length > 1) $('q').value = SELS.map(o => o.norad).join(',');

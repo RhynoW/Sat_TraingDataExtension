@@ -36,7 +36,13 @@
   #map-wrap{flex:1;position:relative}
   #cesiumContainer{width:100%;height:100%}
   #map-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-    color:#8b949e;font-size:13px;z-index:4}
+    color:#e6edf3;font-size:15px;z-index:6;background:rgba(13,17,23,.9);border:1px solid #30363d;
+    border-radius:10px;padding:16px 22px 16px 52px;box-shadow:0 4px 18px rgba(0,0,0,.5);min-width:240px}
+  #map-loading::before{content:"";position:absolute;left:18px;top:50%;width:20px;height:20px;margin-top:-10px;
+    border:3px solid #30363d;border-top-color:#58a6ff;border-radius:50%;animation:mlspin 0.9s linear infinite}
+  #map-loading.err::before{display:none}
+  #map-loading-sec{display:block;font-size:11.5px;color:#8b949e;margin-top:4px}
+  @keyframes mlspin{to{transform:rotate(360deg)}}
   #legend{position:absolute;right:12px;top:12px;background:rgba(22,27,34,.92);
     border:1px solid #30363d;border-radius:6px;padding:8px 12px;font-size:12px;z-index:5}
   #legend label{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
@@ -79,11 +85,12 @@ window.loadCesium=function(ok,fail){
 (function(){
   function _css(h){var l=document.createElement('link');l.rel='stylesheet';l.href=h;document.head.appendChild(l);}
   function _err(m){
-    var el=document.getElementById('map-loading');
+    var el=document.getElementById('map-loading-msg'),box=document.getElementById('map-loading');
     if(el){
       el.setAttribute('data-i18n','cesium_missing_err');
       el.textContent=(window.t?window.t('cesium_missing_err'):m);
-      el.style.color='#f44336';
+      box.style.color='#f44336';box.classList.add('err');
+      if(window._mapLoadTimer)clearInterval(window._mapLoadTimer);
     }
   }
   window.addEventListener('DOMContentLoaded',function(){
@@ -123,10 +130,10 @@ window.loadCesium=function(ok,fail){
   </div>
   <div id="map-wrap">
     <div id="cesiumContainer"></div>
-    <div id="map-loading" data-i18n="map_loading_init">初始化地圖...</div>
+    <div id="map-loading"><span id="map-loading-msg" data-i18n="map_loading_init">初始化地圖...</span><span id="map-loading-sec"></span></div>
     <div id="legend">
       <label><input type="checkbox" id="lyr-glb" checked onchange="applyLayers()">
-        <span class="lg-line" style="background:#8b949e"></span><span data-i18n="legend_glb">全球海纜（728 系統）</span></label>
+        <span class="lg-line" style="background:#8b949e"></span><span data-i18n="legend_glb">全球海纜</span><span id="legend-glb-n"></span></label>
       <label><input type="checkbox" id="lyr-tw" onchange="applyLayers()">
         <span class="lg-line" style="background:#58a6ff"></span><span data-i18n="legend_twonly">僅顯示台灣相關</span></label>
       <label><input type="checkbox" id="lyr-inc" checked onchange="applyLayers()">
@@ -162,8 +169,10 @@ const I18N = {
     map_loading_init: '初始化地圖...',
     map_loading_cable: '載入全球海纜圖資…',
     map_loading_fail: '海纜圖資載入失敗',
+    map_loading_sec: '已等待 {s} 秒，首次開啟約需 10～20 秒',
     cesium_missing_err: '本機 Cesium 未安裝，請將 CesiumJS 解壓至 data/cesium/',
-    legend_glb: '全球海纜（728 系統）',
+    legend_glb: '全球海纜',
+    legend_glb_n: '（{n} 系統）',
     legend_twonly: '僅顯示台灣相關',
     legend_inc: '斷纜事件（2023–2025）',
     legend_lnd: '全球登陸點',
@@ -194,8 +203,10 @@ const I18N = {
     map_loading_init: 'Initializing map...',
     map_loading_cable: 'Loading global submarine cable data…',
     map_loading_fail: 'Failed to load submarine cable data',
+    map_loading_sec: '{s} s elapsed; the first load takes about 10–20 s',
     cesium_missing_err: 'Local Cesium installation not found. Please extract CesiumJS into data/cesium/',
-    legend_glb: 'Global Submarine Cable Systems (728)',
+    legend_glb: 'Global Submarine Cable Systems',
+    legend_glb_n: ' ({n})',
     legend_twonly: 'Show Taiwan-related Cables Only',
     legend_inc: 'Cable Faults (2023–2025)',
     legend_lnd: 'Global Cable Landing Stations',
@@ -226,8 +237,10 @@ const I18N = {
     map_loading_init: '地図を初期化中...',
     map_loading_cable: '世界の海底ケーブルデータを読み込み中…',
     map_loading_fail: '海底ケーブルデータの読み込みに失敗しました',
+    map_loading_sec: '{s} 秒経過（初回は約 10〜20 秒かかります）',
     cesium_missing_err: 'ローカルのCesiumが未インストールです。CesiumJSをdata/cesium/に展開してください',
-    legend_glb: '世界の海底ケーブル（728系統）',
+    legend_glb: '世界の海底ケーブル',
+    legend_glb_n: '（{n}系統）',
     legend_twonly: '台湾関連のみ表示',
     legend_inc: '海底ケーブル障害（2023–2025）',
     legend_lnd: '世界の海底ケーブル陸揚げ局',
@@ -262,9 +275,21 @@ function tpl(key, vars){
 let _lastDetail = null;  // {kind:'sys'|'incident'|'landing'|'admin', ref}
 
 function _setMapMsg(key){
-  const el = document.getElementById('map-loading');
+  const el = document.getElementById('map-loading-msg');
   if(el){ el.setAttribute('data-i18n', key); el.textContent = t(key); }
+  if(key === 'map_loading_fail'){
+    document.getElementById('map-loading').classList.add('err');
+    if(window._mapLoadTimer) clearInterval(window._mapLoadTimer);
+  }
 }
+/* 載入中顯示已等待秒數（海纜圖資約 0.7 MB、需 10～20 秒，避免被誤認為當掉） */
+(function(){
+  const t0 = Date.now();
+  window._mapLoadTimer = setInterval(function(){
+    const el = document.getElementById('map-loading-sec');
+    if(el) el.textContent = tpl('map_loading_sec', {s: Math.round((Date.now() - t0) / 1000)});
+  }, 1000);
+}());
 
 function setLang(lang){
   if(!I18N[lang]) return;
@@ -410,6 +435,7 @@ function startApp(){
       });
       addIncidents();buildPanel();applyLayers();
       document.getElementById('map-loading').style.display='none';
+      if(window._mapLoadTimer) clearInterval(window._mapLoadTimer);
     })
     .catch(()=>{_setMapMsg('map_loading_fail');});
 
@@ -497,6 +523,7 @@ function buildPanel(){
   const keys=Object.keys(SYS);
   const twKeys=keys.filter(k=>SYS[k].tw);
   document.getElementById('gstat').innerHTML=tpl('gstat_tpl',{n:keys.length,tw:twKeys.length});
+  document.getElementById('legend-glb-n').textContent=tpl('legend_glb_n',{n:keys.length});
   document.getElementById('list-tw').innerHTML=twKeys
     .sort((a,b)=>SYS[a].zh.localeCompare(SYS[b].zh,'zh-Hant'))
     .map(k=>'<div class="crow" id="row_'+k+'" onclick="selectSys(\''+k+'\')">'+

@@ -126,6 +126,21 @@ D:\SatDashboard\
 - 要指定別的位置：`--db <檔案路徑>` 指定資料庫檔，或 `--data <資料夾>` 指定資料根目錄（資料庫在其下的 `DB\`）。
 - 手動放資料庫也可以：放成 exe 旁的 `data\DB\space_db_slim.duckdb` 或 `DB\space_db_slim.duckdb` 都找得到。
 
+### 自訂右下角 Logo（v0.1.5 起）
+
+地球儀首頁右下角可以顯示您自己的單位 Logo：把圖檔命名為 `logo.png` 或 `logo.jpg`，放在 exe 同一個資料夾，重新整理頁面即可，不必重開程式。
+
+```
+D:\SatDashboard\
+  SatDashboard-x64.exe
+  logo.png                      ← 自訂 Logo（或 logo.jpg）
+  data\
+```
+
+- 沒有這個檔案就不顯示 Logo，右下角只留版本列。
+- 兩個都有時優先用 `logo.png`；建議用正方形、透明背景的 PNG（顯示區約 120×120 像素，會等比例縮放）。
+- 要換 Logo 就直接覆蓋檔案，要拿掉就刪除檔案；程式自動更新時不會動到它。
+
 ## 功能
 
 - 3D 地球儀：全目錄衛星即時位置、搜尋、近距離配對篩選、NORAD 監測

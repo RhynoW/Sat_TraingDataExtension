@@ -45,7 +45,7 @@ def render_templates() -> None:
     rest = [c for c in cases if c is not featured]
 
     jobs = {
-        "globe.html": {},
+        "globe.html": {"has_logo": True},                  # Rust 版：/api/logo 讀 exe 旁 logo.png／jpg，沒有就 404 隱藏
         "taipei.html": {"cesium_token": ""},
         "cable.html": {"cesium_token": ""},
         "rpo3d.html": {"default_primary": "__PRIMARY__", "default_secondary": "__SECONDARY__",

@@ -29,6 +29,39 @@ pub fn extend(r: Router<Arc<AppState>>) -> Router<Arc<AppState>> {
     r.route("/orbit", get(|| async { page("templates/orbit.html") }))
         .route("/track", get(|| async { page("templates/track.html") }))
         .route("/api/orbit/history", get(history))
+        .route("/api/orbit/limits", get(limits))
+}
+
+/// 本地資料保留範圍（多數衛星的保留天數中位數）；單機版不向 Space-Track 補抓。
+/// /orbit 頁據此把預設區間改成本地範圍並提示使用者。
+async fn limits(State(st): State<Arc<AppState>>) -> Json<Value> {
+    let r = tokio::task::spawn_blocking(move || -> anyhow::Result<Option<(i64, String)>> {
+        let Some(db) = history_db(&st) else { return Ok(None) };
+        let con = open_ro(&db)?;
+        let row = con.query_row(
+            "SELECT CAST(median(d) AS BIGINT), (SELECT CAST(CAST(max(epoch_utc) AS DATE) AS VARCHAR)
+                 FROM raw_tle_archive WHERE epoch_utc <= now())
+             FROM (SELECT datediff('day', min(epoch_utc), max(epoch_utc)) + 1 AS d
+                   FROM raw_tle_archive GROUP BY norad_id)",
+            [],
+            |r| Ok((r.get::<_, Option<i64>>(0)?, r.get::<_, Option<String>>(1)?)),
+        )?;
+        Ok(match row {
+            (Some(d), Some(hi)) => Some((d, hi)),
+            _ => None,
+        })
+    })
+    .await;
+    let mut out = json!({"spacetrack": false, "local_start": null, "local_end": null, "local_days": null});
+    if let Ok(Ok(Some((days, hi)))) = r {
+        if let Ok(end) = NaiveDate::parse_from_str(&hi, "%Y-%m-%d") {
+            let start = end - Duration::days(days.max(1) - 1);
+            out["local_start"] = json!(start.format("%Y-%m-%d").to_string());
+            out["local_end"] = json!(hi);
+            out["local_days"] = json!(days);
+        }
+    }
+    Json(out)
 }
 
 fn page(path: &str) -> Html<String> {

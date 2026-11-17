@@ -200,13 +200,18 @@ async fn fallback(uri: axum::http::Uri) -> Resp {
     }
 }
 
-async fn api_logo(State(st): St) -> Resp {
-    for p in [st.cfg.home.join("Logo_ATRDC.png"), st.cfg.home.join("logo.png")] {
-        if let Ok(b) = std::fs::read(&p) {
-            return assets::bytes_response(b, "image/png", 86400);
+/// 右下角 Logo：讀取執行檔同一資料夾的 logo.png 或 logo.jpg（可隨時替換，不快取）；
+/// 都沒有就回 404，前端 onerror 隱藏 Logo 區塊。
+async fn api_logo() -> Resp {
+    let dir = std::env::current_exe().ok().and_then(|e| e.parent().map(|d| d.to_path_buf()));
+    if let Some(dir) = dir {
+        for (name, ct) in [("logo.png", "image/png"), ("logo.jpg", "image/jpeg"), ("logo.jpeg", "image/jpeg")] {
+            if let Ok(b) = std::fs::read(dir.join(name)) {
+                return assets::bytes_response(b, ct, 0);
+            }
         }
     }
-    assets::serve("assets/logo.png", 86400)
+    StatusCode::NOT_FOUND.into_response()
 }
 
 async fn api_health(State(st): St) -> Json<Value> {
@@ -544,7 +549,13 @@ fn build_conjunctions(st: &Arc<AppState>, threshold: f64, max_pairs: usize) -> V
     let props: Vec<_> = list.iter().map(|s| s.prop.as_ref()).collect();
     let t = Utc::now();
     let t0 = Instant::now();
-    let res = physics::scan_pairs(&props, &t, threshold, max_pairs);
+    let anchors: Vec<usize> = list
+        .iter()
+        .enumerate()
+        .filter(|(_, s)| physics::STATION_ANCHORS.contains(&s.norad_id))
+        .map(|(i, _)| i)
+        .collect();
+    let res = physics::scan_pairs(&props, &t, threshold, max_pairs, &anchors);
     tracing::info!(
         "接近事件掃描：{} 有效衛星，閾值 {threshold:.0} km，配對 {}，SGP4 {:.3} s，KD {:.3} s",
         res.total_scanned,
@@ -586,6 +597,7 @@ fn build_conjunctions(st: &Arc<AppState>, threshold: f64, max_pairs: usize) -> V
         "max_pairs": max_pairs,
         "pairs": pairs,
         "total_scanned": res.total_scanned,
+        "docked_excluded": res.docked_excluded,
         "elapsed_sec": round_to(t0.elapsed().as_secs_f64(), 3),
         "sgp4_sec": round_to(res.t_sgp4, 4),
         "kdtree_sec": round_to(res.t_kd, 4),

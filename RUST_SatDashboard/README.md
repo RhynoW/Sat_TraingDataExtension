@@ -1,6 +1,8 @@
 # ATRDC SatDashboard — Rust 單機版
 
-`scenario-advanced01`（Flask + CesiumJS）的 Rust 改寫版。產出 **Windows x86_64 / ARM64 單一執行檔**，前端（CesiumJS、底圖、Logo）全部內嵌在 exe 裡，離線也能跑，不需要 Python。
+`scenario-advanced01`（Flask + CesiumJS）的 Rust 改寫版。產出 **Windows x86_64 / ARM64 單一執行檔**，前端（CesiumJS、底圖）全部內嵌在 exe 裡，離線也能跑，不需要 Python。
+
+右下角 Logo 可自行更換：把 `logo.png` 或 `logo.jpg` 放在執行檔同一個資料夾即可（重新整理頁面就生效）；沒有這個檔案就不顯示 Logo。
 
 ## 使用方式
 

@@ -250,16 +250,25 @@ pub struct ScanResult {
     pub pairs: Vec<(usize, usize, f64)>,
     pub llh: Vec<[f64; 3]>,
     pub total_scanned: usize,
+    /// 兩端屬同一座太空站（艙段／對接中太空船）而排除的配對數
+    pub docked_excluded: usize,
     pub t_sgp4: f64,
     pub t_kd: f64,
 }
 
+/// 太空站核心艙 NORAD（ISS ZARYA、天宮 天和）：其 STATION_RADIUS_KM 內的物件視為同一座太空站
+pub const STATION_ANCHORS: [u32; 2] = [25544, 48274];
+pub const STATION_RADIUS_KM: f64 = 1.0;
+
 /// 全目錄瞬時鄰近篩選：平行 SGP4 → 高度過濾 → 不可變 KD-tree → 平行半徑查詢
+/// `anchors`：太空站核心艙在 `props` 中的索引；位於其 STATION_RADIUS_KM 內的物件歸為同一群組，
+/// 兩端同群組的配對（常共用同一組 TLE、距離 0 km）不是接近事件，不列入。
 pub fn scan_pairs(
     props: &[Option<&Propagator>],
     t: &DateTime<Utc>,
     threshold_km: f64,
     max_pairs: usize,
+    anchors: &[usize],
 ) -> ScanResult {
     let t0 = std::time::Instant::now();
     let g = gmst_rad(t);
@@ -289,6 +298,7 @@ pub fn scan_pairs(
             pairs: vec![],
             llh,
             total_scanned: total,
+            docked_excluded: 0,
             t_sgp4,
             t_kd: 0.0,
         };
@@ -311,6 +321,22 @@ pub fn scan_pairs(
         .collect();
     let t_kd = t1.elapsed().as_secs_f64();
 
+    // 太空站群組（pts 索引 → 群組編號）
+    let mut group: std::collections::HashMap<usize, usize> = std::collections::HashMap::new();
+    for (g, &ai) in anchors.iter().enumerate() {
+        let Some(a) = map.iter().position(|&m| m == ai) else { continue };
+        let pa = pts[a];
+        for (k, p) in pts.iter().enumerate() {
+            let d2 = (p[0] - pa[0]).powi(2) + (p[1] - pa[1]).powi(2) + (p[2] - pa[2]).powi(2);
+            if d2 <= STATION_RADIUS_KM * STATION_RADIUS_KM {
+                group.insert(k, g);
+            }
+        }
+    }
+    let before = pairs.len();
+    pairs.retain(|&(a, b, _)| !matches!((group.get(&a), group.get(&b)), (Some(x), Some(y)) if x == y));
+    let docked_excluded = before - pairs.len();
+
     pairs.sort_by(|x, y| x.2.total_cmp(&y.2));
     pairs.truncate(max_pairs);
     let pairs = pairs.into_iter().map(|(a, b, d)| (map[a], map[b], d)).collect();
@@ -318,6 +344,7 @@ pub fn scan_pairs(
         pairs,
         llh,
         total_scanned: total,
+        docked_excluded,
         t_sgp4,
         t_kd,
     }

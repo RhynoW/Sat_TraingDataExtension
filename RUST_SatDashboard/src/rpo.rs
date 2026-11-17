@@ -36,6 +36,16 @@ pub fn preset_for(p: u32, s: u32, variant: Option<&str>) -> Value {
         .unwrap_or_else(|| json!({}))
 }
 
+/// 檔案快取的說明文字（標題、事件、時間軸）改用目前的案例預設：修改文字後不必刪快取重算
+pub fn refresh_meta(data: &mut Value, preset: &Value) {
+    let Some(meta) = data.get_mut("meta").and_then(|m| m.as_object_mut()) else { return };
+    for k in ["title", "subtitle", "events", "timeline", "phases"] {
+        if let Some(x) = preset.get(k) {
+            meta.insert(k.to_string(), x.clone());
+        }
+    }
+}
+
 pub fn valid_variant(p: u32, s: u32, variant: Option<&str>) -> Option<String> {
     let v = variant?;
     PRESETS["variants"].get(key(p, s))?.get(v).map(|_| v.to_string())

@@ -70,7 +70,7 @@ const I18N = {
     card1_4_title: '遮蔽模擬',
     card1_4_desc: '點選天空格子描繪地形 / 建物遮蔽，即時計算扣除遮蔽後的幾何可用率與空窗變化。',
     card1_5_title: '傳播延遲下限估計',
-    card1_5_desc: '由最近可見衛星斜距計算光速往返時間（RTT floor）。Starlink 在台灣典型約 4–9 ms，加上閘道路由後實際約 25–45 ms。',
+    card1_5_desc: '由最近可見衛星斜距計算光速往返時間（RTT floor）。只計入作業殼層（近地點 ≥ 330 km）的衛星：殼層高度約 340–560 km，衛星在天頂時往返約 2.3–3.7 ms，仰角越低越長；加上閘道路由後實際約 25–45 ms。',
     layer2_title: '第二層 — 進階網路品質分析（重度用戶 / 企業 / 研究者）',
     card2_1_title: '換手頻率估計',
     card2_1_desc: '追蹤「最高仰角衛星」隨時間的切換次數，換手密集時段對應較高的 jitter。',
@@ -84,7 +84,7 @@ const I18N = {
     card3_2_title: '世代 / 機型篩選',
     card3_2_desc: '依發射日期啟發式區分 v1.0／v1.5／v2 Mini／V3 世代子集合分析可用性；並自動排除近期偵測為離軌中的衛星（詳見「離軌名單」分頁）。',
     status_note_label: '現況說明',
-    status_note_body: '《電信管理法》第 36 條修正案已於 2026 年 7 月 21 日三讀通過，取消外資持股上限，改由主管機關依國家安全等 7 項標準逐案審核核准；惟截至目前 Starlink 尚未取得正式核准、也還未在台灣商轉。本工具基於公開 TLE 資料計算純幾何可用性，供技術評估與政策討論參考。',
+    status_note_body: '《電信管理法》第 36 條修正案於 2026 年 7 月 21 日三讀、8 月 5 日公布：以衛星通信技術申請者，經主管機關依國家安全等 7 款事項審酌核准後，得不受外資持股上限與董事長國籍限制；但該條第 9、10 項的施行日期由行政院另定，截至本頁更新時尚未施行；惟截至目前 Starlink 尚未取得正式核准、也還未在台灣商轉。本工具基於公開 TLE 資料計算純幾何可用性，供技術評估與政策討論參考。',
   },
   en: {
     doc_title: 'Starlink Taiwan Service Availability Analysis',
@@ -140,7 +140,7 @@ const I18N = {
     card1_4_title: 'Obstruction Simulation',
     card1_4_desc: 'Click sky cells to sketch terrain / building obstruction and instantly compute the resulting change in geometric availability and gaps.',
     card1_5_title: 'Propagation Latency Floor Estimate',
-    card1_5_desc: "Computes speed-of-light round-trip time (RTT floor) from the nearest visible satellite's slant range. Starlink in Taiwan is typically ~4–9 ms geometrically, with actual RTT around 25–45 ms once gateway routing is included.",
+    card1_5_desc: "Computes speed-of-light round-trip time (RTT floor) from the nearest visible satellite's slant range. Only satellites in operational shells (perigee ≥ 330 km) are counted: shells sit at about 340–560 km, giving ~2.3–3.7 ms at zenith and longer at lower elevations; actual RTT is around 25–45 ms once gateway routing is included.",
     layer2_title: 'Layer 2 — Advanced Network Quality Analysis (Power users / Enterprise / Researchers)',
     card2_1_title: 'Handover Frequency Estimate',
     card2_1_desc: "Tracks how often the 'highest-elevation satellite' switches over time; periods of frequent handover correspond to higher jitter.",
@@ -154,7 +154,7 @@ const I18N = {
     card3_2_title: 'Generation / Model Filtering',
     card3_2_desc: 'Splits the constellation into v1.0 / v1.5 / v2 Mini / V3 subsets by a launch-date heuristic, and automatically excludes satellites currently detected as deorbiting (see the "Deorbiting" tab).',
     status_note_label: 'Current Status',
-    status_note_body: "An amendment to Article 36 of the Telecommunications Management Act passed its third reading on July 21, 2026, removing the foreign-ownership cap and replacing it with a case-by-case review against 7 criteria (including national security) by the competent authority; however, as of now Starlink has not yet obtained formal approval or launched commercial service in Taiwan. This tool computes pure geometric availability from public TLE data, for technical evaluation and policy discussion reference only.",
+    status_note_body: "An amendment to Article 36 of the Telecommunications Management Act passed its third reading on July 21, 2026 and was promulgated on August 5, 2026: applicants using satellite communications technology may, once reviewed and approved by the competent authority against 7 criteria (including national security), be exempted from the foreign-ownership caps and the chairperson-nationality requirement. The caps themselves remain in force, and Paragraphs 9 and 10 of the article take effect on a date to be set by the Executive Yuan, which had not happened as of this page's last update. In addition, as of now Starlink has not yet obtained formal approval or launched commercial service in Taiwan. This tool computes pure geometric availability from public TLE data, for technical evaluation and policy discussion reference only.",
   },
   ja: {
     doc_title: 'Starlink 台湾サービス可用性分析',
@@ -210,7 +210,7 @@ const I18N = {
     card1_4_title: '遮蔽シミュレーション',
     card1_4_desc: '天空セルをクリックして地形・建物の遮蔽を描画し、遮蔽後の幾何学的可用率とギャップの変化をリアルタイムで計算。',
     card1_5_title: '伝搬遅延下限推定',
-    card1_5_desc: '最も近い可視衛星のスラントレンジから光速往復時間（RTT floor）を計算。台湾でのStarlinkは幾何学的には約4〜9msだが、ゲートウェイ経由の実際のRTTは約25〜45ms。',
+    card1_5_desc: '最も近い可視衛星のスラントレンジから光速往復時間（RTT floor）を計算。運用シェル（近地点 330 km 以上）の衛星のみを対象とする。シェル高度は約 340〜560 km で、天頂では往復約 2.3〜3.7 ms、仰角が低いほど長くなる。ゲートウェイ経由の実際のRTTは約25〜45ms。',
     layer2_title: 'レイヤー2 — 高度なネットワーク品質分析（ヘビーユーザー・企業・研究者向け）',
     card2_1_title: 'ハンドオーバー頻度推定',
     card2_1_desc: '「最高仰角衛星」の時間経過による切替回数を追跡。ハンドオーバーが頻繁な時間帯はジッターが高くなる傾向。',
@@ -224,7 +224,7 @@ const I18N = {
     card3_2_title: '世代・機種フィルタリング',
     card3_2_desc: '打ち上げ日による推定でv1.0／v1.5／v2 Mini／V3世代のサブセットに分けて可用性を分析し、直近で離軌中と判定された衛星を自動的に除外（「離軌リスト」タブを参照）。',
     status_note_label: '現状説明',
-    status_note_body: '電信管理法第36条の改正案は2026年7月21日に第三読会を通過し、外資持株比率の上限が撤廃され、国家安全保障など7つの基準に基づく主務官庁による個別審査・承認制に変更された。ただし現時点でStarlinkはまだ正式な認可を取得しておらず、台湾での商用サービスも開始していない。本ツールは公開TLEデータに基づく純粋な幾何学的可用性を計算するものであり、技術評価および政策議論の参考情報として提供する。',
+    status_note_body: '電信管理法第36条の改正案は2026年7月21日に第三読会を通過し、8月5日に公布された。衛星通信技術による申請者は、国家安全保障など7項目に基づく主務官庁の審査・承認を受ければ、外資持株比率の上限および董事長の国籍要件の適用を受けないことができる（上限自体は存続）。ただし同条第9項・第10項の施行日は行政院が別途定めるとされ、本ページ更新時点では未施行である。また現時点でStarlinkはまだ正式な認可を取得しておらず、台湾での商用サービスも開始していない。本ツールは公開TLEデータに基づく純粋な幾何学的可用性を計算するものであり、技術評価および政策議論の参考情報として提供する。',
   },
 };
 const LOCALE_MAP = {zh:'zh-TW', en:'en-US', ja:'ja-JP'};
