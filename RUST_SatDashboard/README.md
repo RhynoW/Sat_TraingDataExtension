@@ -22,6 +22,9 @@ dist\SatDashboard-arm64.exe      ← Snapdragon 等 ARM64
 
 ### 資料位置
 
+- **客戶端只需要 exe 與資料庫**：衛星名稱／國別／用途（`sat_metadata.csv`）、台灣行政區界、全球機場、海底電纜圖層都內嵌在 exe；
+  資料目錄有同名檔案時優先使用檔案（`<資料目錄>\DB\sat_metadata.csv`、`<資料目錄>\geojson\*.geojson`）。`scripts/sync_web.py` 會一併更新內建版。
+
 - **DuckDB**：預設使用相對路徑 `..\scenario-advanced01\DB\space_db_slim.duckdb`，從執行檔所在目錄開始逐層往上找，所以 exe 放在 `dist\`、`target\release\` 或專案根目錄都找得到。`--db` 給相對路徑時也用同樣的規則。
 - **使用者資料**：自動尋找 `scenario-advanced01\scenario04\`，沿用 Python 版的 `user_defined_TLE\`、`user_defined_SaTCatalogue\`、`user_defined_tracking_NORAD\`、`geojson\`、`config\classification_rules.yaml`，放檔案即生效（索引每 10 分鐘或 DB 檔更新時自動重建，也可以 `POST /api/admin/reload_cats`）。
 - **sat_metadata.csv**：依序找 DB 同目錄 → `<data>\DB\` → `<data>\`。

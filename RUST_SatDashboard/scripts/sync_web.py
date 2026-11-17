@@ -113,7 +113,18 @@ def export_config() -> None:
     print("export config/rpo_presets.json, config/overpass_cats.yaml")
 
 
+def copy_embedded_data() -> None:
+    """內嵌到 exe 的資料檔（客戶端資料夾沒有時使用）：衛星名稱與分類、向量圖層。"""
+    shutil.copy2(PKG / "DB" / "sat_metadata.csv", ROOT / "config" / "sat_metadata.csv")
+    dst = WEB / "assets" / "geojson"
+    dst.mkdir(parents=True, exist_ok=True)
+    for f in ("Taiwan-admin-ploygon.geojson", "openflights-airports.geojson", "submarine-cables.geojson"):
+        shutil.copy2(PKG / "geojson" / f, dst / f)
+    print("copy config/sat_metadata.csv, web/assets/geojson/*")
+
+
 if __name__ == "__main__":
+    copy_embedded_data()
     render_templates()
     copy_static()
     copy_tile_catalog()

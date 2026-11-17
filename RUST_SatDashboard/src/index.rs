@@ -159,11 +159,20 @@ fn query_latest_tles(db: &Path, extra_where: Option<&str>) -> anyhow::Result<Vec
     Ok(rows)
 }
 
-/// sat_metadata.csv：{norad_id: {欄位: 值}}
+/// 內建 sat_metadata.csv（衛星英文名、國別、用途、星座；scripts/sync_web.py 自 Python 版同步）。
+/// 客戶端通常只有 exe 與資料庫，沒有這個檔：少了它衛星名稱會變成 NORAD-xxxxx，
+/// 台北覆蓋分析以名稱關鍵字分類就找不到任何衛星。
+const EMBED_META_CSV: &str = include_str!("../config/sat_metadata.csv");
+
+/// sat_metadata.csv：{norad_id: {欄位: 值}}；磁碟上有檔案就用檔案，否則用內建版
 fn load_meta_csv(p: &Path) -> HashMap<u32, HashMap<String, String>> {
     let mut out = HashMap::new();
-    let Ok(text) = std::fs::read_to_string(p) else {
-        return out;
+    let text = match std::fs::read_to_string(p) {
+        Ok(t) => t,
+        Err(_) => {
+            tracing::info!("使用內建 sat_metadata.csv（{} 不存在）", p.display());
+            EMBED_META_CSV.to_string()
+        }
     };
     let text = text.trim_start_matches('\u{feff}');
     let mut rdr = csv::ReaderBuilder::new()

@@ -769,7 +769,7 @@ async fn api_layer_borders(State(st): St) -> Resp {
                 .unwrap_or_else(|| br#"{"type":"FeatureCollection","features":[]}"#.to_vec());
             let mut v: Value = serde_json::from_slice(&raw)
                 .unwrap_or_else(|_| json!({"type": "FeatureCollection", "features": []}));
-            if st.cfg.taiwan_admin_file().is_file() {
+            if st.cfg.taiwan_admin_file().is_file() || assets::get(EMBED_TW_ADMIN).is_some() {
                 if let Some(feats) = v.get_mut("features").and_then(Value::as_array_mut) {
                     let before = feats.len();
                     feats.retain(|f| !feature_contains_taiwan(f));
@@ -790,20 +790,39 @@ async fn api_layer_ssn(State(st): St) -> Resp {
     assets::bytes_response(data, "application/json; charset=utf-8", 3600)
 }
 
+/// 內建向量圖層（資料目錄 geojson\ 沒有同名檔時使用；scripts/sync_web.py 自 Python 版同步）
+const EMBED_GEOJSON: [&str; 3] = [
+    "Taiwan-admin-ploygon.geojson",
+    "openflights-airports.geojson",
+    "submarine-cables.geojson",
+];
+const EMBED_TW_ADMIN: &str = "assets/geojson/Taiwan-admin-ploygon.geojson";
+
+fn geojson_bytes(st: &AppState, name: &str) -> Option<Vec<u8>> {
+    std::fs::read(st.cfg.user_geojson_dir().join(name))
+        .ok()
+        .or_else(|| EMBED_GEOJSON.contains(&name).then(|| assets::get(&format!("assets/geojson/{name}"))).flatten())
+}
+
 async fn api_user_geojson_list(State(st): St) -> Json<Value> {
     let dir = st.cfg.user_geojson_dir();
-    let mut files: Vec<_> = std::fs::read_dir(&dir)
-        .map(|rd| rd.filter_map(|e| e.ok().map(|e| e.path())).collect())
+    let mut names: Vec<String> = std::fs::read_dir(&dir)
+        .map(|rd| rd.filter_map(|e| e.ok().map(|e| e.file_name().to_string_lossy().into_owned())).collect())
         .unwrap_or_else(|_| Vec::new());
-    files.retain(|p| p.extension().map(|e| e == "geojson").unwrap_or(false));
-    files.sort();
-    let items: Vec<Value> = files
+    names.retain(|n| n.ends_with(".geojson"));
+    for e in EMBED_GEOJSON {
+        if !names.iter().any(|n| n == e) {
+            names.push(e.to_string());
+        }
+    }
+    names.sort();
+    let items: Vec<Value> = names
         .iter()
-        .map(|p| {
-            let name = p.file_name().unwrap().to_string_lossy().into_owned();
-            let size = std::fs::metadata(p).map(|m| m.len()).unwrap_or(0);
+        .map(|name| {
+            let bytes = geojson_bytes(&st, name);
+            let size = bytes.as_ref().map(|b| b.len()).unwrap_or(0);
             let mut m = json!({"name": name, "size_kb": round_to(size as f64 / 1024.0, 1)});
-            match std::fs::read(p).ok().and_then(|b| {
+            match bytes.and_then(|b| {
                 let b = b.strip_prefix(b"\xef\xbb\xbf").map(<[u8]>::to_vec).unwrap_or(b);
                 serde_json::from_slice::<Value>(&b).ok()
             }) {
@@ -826,9 +845,9 @@ async fn api_user_geojson_file(State(st): St, Path(name): Path<String>) -> Resp 
     if name.contains(['/', '\\']) || name.contains("..") || !name.ends_with(".geojson") {
         return assets::text(StatusCode::BAD_REQUEST, "無效檔名");
     }
-    match std::fs::read(st.cfg.user_geojson_dir().join(&name)) {
-        Ok(b) => assets::bytes_response(b, "application/json; charset=utf-8", 300),
-        Err(_) => assets::text(StatusCode::NOT_FOUND, format!("找不到圖層檔: {name}")),
+    match geojson_bytes(&st, &name) {
+        Some(b) => assets::bytes_response(b, "application/json; charset=utf-8", 300),
+        None => assets::text(StatusCode::NOT_FOUND, format!("找不到圖層檔: {name}")),
     }
 }
 
