@@ -85,7 +85,7 @@ dist\SatDashboard-arm64.exe      ← Snapdragon 等 ARM64
 
 ### 線上更新（資料庫與程式）
 
-客戶端只需要 exe（第一次啟動沒有資料庫時，按頁面右下角「檢查更新」→「更新」即可下載）。
+客戶端只需要 exe：第一次啟動沒有資料庫時會**自動下載**（主控台每 10% 顯示進度，完成後頁面自動重新整理）；`--no-update` 時改為在頁面右下角按「檢查更新」→「更新」。
 
 - 來源：HuggingFace dataset [`RhynoWu/Rust_SatDashboard`](https://huggingface.co/datasets/RhynoWu/Rust_SatDashboard) 的 `manifest.json`；
   `--update-manifest <網址或檔案>`（或 `SATDASH_UPDATE_MANIFEST`）可改來源，`--no-update`（或 `SATDASH_NO_UPDATE`）關閉自動檢查。

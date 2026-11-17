@@ -285,6 +285,62 @@ async fn status_json(st: &Arc<AppState>) -> Value {
     })
 }
 
+/// 第一次執行（找不到資料庫）：立即檢查並自動下載資料庫，主控台每 10% 顯示一次進度
+pub fn spawn_first_run(st: Arc<AppState>) {
+    if !st.cfg.update_auto || st.cfg.resolve_db().is_some() {
+        return;
+    }
+    tokio::spawn(async move {
+        let v = check(st.clone()).await;
+        if let Some(e) = v["error"].as_str() {
+            tracing::warn!("無法取得資料庫下載資訊：{e}（連上網路後在頁面右下角按「檢查更新」→「更新」）");
+            return;
+        }
+        if v["db"].is_null() {
+            tracing::warn!("更新來源沒有資料庫可下載");
+            return;
+        }
+        if start_job("db").is_err() {
+            return;
+        }
+        let mb = |b: u64| b as f64 / 1e6;
+        let printer = tokio::spawn(async move {
+            let mut last = (String::new(), -1i64);
+            loop {
+                tokio::time::sleep(Duration::from_secs(2)).await;
+                let (phase, done, total, running) = {
+                    let s = STATUS.lock();
+                    (s.job.phase.clone(), s.job.done, s.job.total, s.job.running)
+                };
+                if !running {
+                    break;
+                }
+                let pct = if total > 0 { (done * 100 / total) as i64 } else { 0 };
+                let step = pct / 10;
+                if phase != last.0 || step != last.1 {
+                    match phase.as_str() {
+                        "download" => tracing::info!("下載資料庫 {pct}%（{:.0} / {:.0} MB）", mb(done), mb(total)),
+                        "verify" => tracing::info!("驗證下載檔…"),
+                        "decompress" => tracing::info!("解壓縮 {pct}%"),
+                        "install" => tracing::info!("放置資料庫、建立衛星索引…"),
+                        _ => {}
+                    }
+                    last = (phase, step);
+                }
+            }
+        });
+        let r = run_db(st.clone()).await;
+        let ok = r.is_ok();
+        finish_job(r);
+        let _ = printer.await;
+        if ok {
+            tracing::info!("資料庫已就緒：{} 顆衛星（頁面會自動重新整理）", st.index().sats.len());
+        } else {
+            tracing::warn!("資料庫下載失敗：{}（在頁面右下角按「更新」會從中斷處續傳）", STATUS.lock().job.message);
+        }
+    });
+}
+
 /// 背景自動檢查：啟動 30 秒後一次，之後每 6 小時
 pub fn spawn_auto_check(st: Arc<AppState>) {
     if !st.cfg.update_auto {

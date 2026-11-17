@@ -86,7 +86,7 @@
   function mb(n) { return n ? (n / 1e6).toFixed(0) + " MB" : ""; }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function updater(box, about0) {
-    var timer = null;
+    var timer = null, firstRun = null;   // firstRun：載入頁面時還沒有資料庫 → 下載完成後自動重新整理
     function post(path) {
       return fetch("/api/update/" + path, { method: "POST" }).then(function (r) { return r.json(); }).then(function (d) {
         if (d.error) alert(d.error);
@@ -96,6 +96,13 @@
     function schedule(ms) { clearTimeout(timer); timer = setTimeout(load, ms); }
     function render(s) {
       var j = s.job || {}, h = [];
+      if (firstRun === null) firstRun = !(s.current && s.current.db_path);
+      if (firstRun && j.kind === "db" && j.phase === "done" && s.current && s.current.db_path) {
+        box.innerHTML = '・<b>資料庫已就緒，重新整理中…</b>';
+        setTimeout(function () { location.reload(); }, 1500);
+        return;
+      }
+      if (!j.running && s.current && !s.current.db_path) h.push("<b>尚未有衛星資料庫</b>");
       if (j.running) {
         var pct = j.total ? Math.floor(100 * j.done / j.total) + "%" : "";
         h.push("<b>" + (j.kind === "app" ? "程式" : "資料庫") + "更新：" + esc(j.message) + " " + pct + "</b>");
@@ -121,7 +128,7 @@
           post(act).then(function () { schedule(300); });
         };
       });
-      schedule(j.running || s.checking ? 1000 : 600000);
+      schedule(j.running || s.checking ? 1000 : (s.current && !s.current.db_path) ? 2000 : 600000);
     }
     function load() {
       fetch("/api/update/status").then(function (r) { return r.json(); }).then(render).catch(function () { schedule(600000); });

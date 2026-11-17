@@ -47,9 +47,12 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("資料目錄：{}", cfg.home.display());
     match cfg.resolve_db() {
         Some(db) => tracing::info!("資料庫：{}", db.display()),
-        None => {
-            tracing::warn!("找不到資料庫：請以 --db 指定，或將 space_db_slim.duckdb 放到 <資料目錄>\\DB\\")
-        }
+        None if cfg.update_auto => tracing::info!(
+            "第一次執行：尚未有衛星資料庫，啟動後自動從 HuggingFace 下載（約 237 MB，一般網路約 1 分鐘）"
+        ),
+        None => tracing::warn!(
+            "尚未有衛星資料庫：請在頁面右下角按「檢查更新」→「更新」下載，或以 --db 指定、放到 <資料目錄>\\DB\\"
+        ),
     }
 
     update::cleanup_old_exe();
@@ -59,6 +62,7 @@ async fn main() -> anyhow::Result<()> {
         tokio::task::spawn_blocking(move || st.rebuild_index_now()).await?;
     }
 
+    update::spawn_first_run(state.clone());
     update::spawn_auto_check(state.clone());
     let app = api::router(state).layer(CorsLayer::new().allow_origin(Any));
 

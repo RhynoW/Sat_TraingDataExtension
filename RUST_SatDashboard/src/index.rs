@@ -275,10 +275,7 @@ pub fn build_index(cfg: &Config, rules: &Rules) -> SatIndex {
             Err(e) => tracing::error!("建立索引失敗：{e:#}"),
         }
     } else {
-        tracing::error!(
-            "找不到 DuckDB 資料庫（資料目錄：{}）；僅顯示使用者自訂 TLE",
-            cfg.home.display()
-        );
+        tracing::info!("尚未有衛星資料庫（資料目錄：{}）；目前只有使用者自訂 TLE", cfg.home.display());
     }
 
     merge_user_defined(cfg, rules, &mut sats);
