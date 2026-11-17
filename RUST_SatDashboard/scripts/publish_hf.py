@@ -80,7 +80,7 @@ def signer():
     return k
 
 
-README = """---
+README = r"""---
 license: other
 pretty_name: ATRDC SatDashboard Rust 單機版
 ---
@@ -99,6 +99,27 @@ pretty_name: ATRDC SatDashboard Rust 單機版
 1. 把 exe 放進一個新資料夾，雙擊執行（Windows 若跳出 SmartScreen：「其他資訊」→「仍要執行」）。
 2. 瀏覽器會自動開啟儀表板。按右下角「檢查更新」→ 資料庫旁的「更新」，下載衛星資料庫（約 237 MB，下載後自動解壓並載入）。
 3. 之後程式每 6 小時自動檢查新版資料庫與新版程式，有新版時右下角會出現「更新」按鈕。
+
+下載時間取決於網速：一般家用網路約 1 分鐘內完成（約 237 MB，另加 5～10 秒驗證與解壓）。中斷時再按一次「更新」會從中斷處續傳。
+
+### 資料庫存放位置
+
+資料庫會放在 exe 所在資料夾底下的 `data\DB\space_db_slim.duckdb`，例如 exe 放在 `D:\SatDashboard\`：
+
+```
+D:\SatDashboard\
+  SatDashboard-x64.exe
+  data\
+    DB\
+      space_db_slim.duckdb        ← 資料庫（約 453 MB）
+```
+
+- 下載中會有暫存檔 `space_db_slim.duckdb.download.zst`（續傳用），完成後自動刪除。
+- 之後每次更新，舊版改名為 `space_db_slim.duckdb.bak`（只保留上一版），`data\DB\` 最多約 900 MB。
+- 不要放在 `C:\Program Files\` 等需要管理員權限的資料夾，否則資料庫寫不進去、程式也無法自我更新；放在桌面、文件或 D 槽的新資料夾即可。
+- 搬移時整個資料夾一起搬（exe 啟動時會在自己旁邊找 `data\DB\`）。
+- 要指定別的位置：`--db <檔案路徑>` 指定資料庫檔，或 `--data <資料夾>` 指定資料根目錄（資料庫在其下的 `DB\`）。
+- 手動放資料庫也可以：放成 exe 旁的 `data\DB\space_db_slim.duckdb` 或 `DB\space_db_slim.duckdb` 都找得到。
 
 ## 功能
 
