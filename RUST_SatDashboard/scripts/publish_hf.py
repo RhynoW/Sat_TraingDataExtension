@@ -89,6 +89,8 @@ pretty_name: ATRDC SatDashboard Rust 單機版
 
 太空態勢儀表板的離線單機版：單一執行檔、不需安裝 Python，雙擊即可在瀏覽器開啟。
 
+__LATEST__
+
 ## 下載
 
 - Intel／AMD 電腦：[SatDashboard-x64.exe](https://huggingface.co/datasets/RhynoWu/Rust_SatDashboard/resolve/main/exe/SatDashboard-x64.exe)
@@ -139,6 +141,18 @@ D:\SatDashboard\
 
 聯絡：[Rhyno Wu（LinkedIn）](https://www.linkedin.com/in/rhyno-wu-6b766771/)
 """
+
+
+def render_readme(m: dict) -> str:
+    """README 的「最新版」一行取自 manifest（每次發布自動更新）。"""
+    app, db = m.get("app") or {}, m.get("db") or {}
+    parts = []
+    if app:
+        parts.append(f"版本 **v{app['version']}**・日期 **{app['build_date']}**")
+    if db:
+        parts.append(f"衛星資料庫 {db['version'].replace('T', ' ').replace('Z', ' UTC')}")
+    line = "**最新版**：" + "；".join(parts) if parts else ""
+    return README.replace("__LATEST__", line)
 
 
 def main() -> int:
@@ -220,7 +234,7 @@ def main() -> int:
         body = json.dumps(manifest, ensure_ascii=False, indent=1).encode("utf-8")
         (stage / "manifest.json").write_bytes(body)
         (stage / "manifest.json.sig").write_text(key.sign(body).hex() + "\n", encoding="ascii")
-        (stage / "README.md").write_text(README, encoding="utf-8")
+        (stage / "README.md").write_text(render_readme(manifest), encoding="utf-8")
         uploads += ["manifest.json", "manifest.json.sig", "README.md"]
         print("檔案：", ", ".join(uploads))
 
