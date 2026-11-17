@@ -1,0 +1,104 @@
+# 衛星分類規則（Phase 2.3）：country_map 與 constellation_rules 外部化。
+# 修改後呼叫 POST /api/admin/reload_cats 熱重載，不需重啟服務。
+# 檔案不存在或格式錯誤時，程式退回內建預設值（與本檔內容一致）。
+
+country_map:
+  "United States":                       "美國"
+  "Commonwealth of Independent States":  "俄羅斯/蘇聯"
+  "People's Republic of China":          "中國"
+  "United Kingdom":                      "英國"
+  "France":                              "法國"
+  "Japan":                               "日本"
+  "India":                               "印度"
+  "European Space Agency":               "ESA"
+  "Italy":                               "義大利"
+  "Canada":                              "加拿大"
+  "Germany":                             "德國"
+  "South Korea":                         "韓國"
+  "Israel":                              "以色列"
+  "Australia":                           "澳洲"
+  "Brazil":                              "巴西"
+  "Argentina":                           "阿根廷"
+  "United Arab Emirates":                "阿聯"
+  "Iran":                                "伊朗"
+  "North Korea":                         "朝鮮"
+  "Luxembourg":                          "盧森堡"
+  "Netherlands":                         "荷蘭"
+  "Spain":                               "西班牙"
+  "Sweden":                              "瑞典"
+  "Norway":                              "挪威"
+  "Denmark":                             "丹麥"
+  "Finland":                             "芬蘭"
+  "Austria":                             "奧地利"
+  "New Zealand":                         "紐西蘭"
+  "Mexico":                              "墨西哥"
+  "Singapore":                           "新加坡"
+  "Thailand":                            "泰國"
+  "Indonesia":                           "印尼"
+  "Turkey":                              "土耳其"
+  "Ukraine":                             "烏克蘭"
+  "Saudi Arabia":                        "沙烏地阿拉伯"
+  # 台灣（福爾摩沙/FORMOSAT 系列等）
+  "TAIWAN":                              "台灣"
+  "Republic of China":                   "台灣"
+  # 商業運營商 → 歸入所在國，不再單獨列為「國家」
+  "Globalstar":                          "美國"    # Globalstar Inc. 美國公司
+  "ORBCOMM":                             "美國"    # ORBCOMM Inc. 美國公司
+  "EUTELSAT":                            "法國"    # Eutelsat 法國公司
+  "International Telecommunications":   "美國"    # Intelsat 美國公司
+  "SOCIETE EUROPEENNE":                  "盧森堡"  # SES S.A. 盧森堡公司
+  "TBD":                                 "不明"
+
+# 依序比對衛星名稱（大寫）關鍵字，第一個命中的標籤生效
+# 排列依照 2026-08 CelesTrak SATCAT 在軌實測數降冪，確保大型星座優先命中
+constellation_rules:
+  - label: "Starlink"
+    keywords: ["STARLINK"]
+  - label: "OneWeb"
+    keywords: ["ONEWEB"]
+  - label: "Kuiper"
+    keywords: ["KUIPER"]
+  - label: "千帆/Qianfan"
+    keywords: ["QIANFAN", "SPACESAIL"]
+  - label: "國網/Guowang"
+    keywords: ["HULIANWANG", "GUOWANG", "SATNET"]  # 編目名 HULIANWANG DIGUI（互聯網低軌）
+  - label: "Starshield"
+    keywords: ["STARSHIELD"]                     # 目前以 USA ### 編目且 TLE 扣留；預留未來命名
+  - label: "Planet/Flock"
+    keywords: ["FLOCK", "DOVE", "SKYSAT", "PELICAN", "TANAGER"]
+  - label: "Spire"
+    keywords: ["LEMUR", "SPIRE"]
+  - label: "Iridium"
+    keywords: ["IRIDIUM"]
+  - label: "Globalstar"
+    keywords: ["GLOBALSTAR"]
+  - label: "PWSA/SDA"
+    keywords: ["PRAETORIAN", "CHECKMATE", "WILDFIRE", "BB3", "BB4"]  # SDA T0/T1 編目代號
+  - label: "GeeSat/Geespace"
+    keywords: ["GEESAT", "GEESPACE", "JIYUAN"]   # 吉利/吉空星座（編目名 GEESAT）
+  - label: "中國IoT(天啟/行雲)"
+    keywords: ["HONGYAN", "XINGYUN", "TIANQI"]   # 鴻雁/行雲/天啟 中國 LEO 物聯網星座群
+  - label: "Hawk"
+    keywords: ["HAWK"]                           # HawkEye 360
+  - label: "Orbcomm"
+    keywords: ["ORBCOMM"]
+  - label: "NuSat"
+    keywords: ["NUSAT", "SATELLOGIC"]            # Satellogic (阿根廷)
+  - label: "Skykraft"
+    keywords: ["SKYKRAFT"]                       # 澳洲
+  - label: "SpaceMobile"
+    keywords: ["BLUEBIRD", "SPACEMOBILE"]        # AST SpaceMobile
+  - label: "Lynk"
+    keywords: ["LYNK"]
+  - label: "Formosat-7"
+    keywords: ["FORMOSAT7", "FORMOSAT-7", "COSMIC-2", "COSMIC2"]  # 福衛七號/COSMIC-2 + 7R獵風者
+  - label: "Telesat LEO"
+    keywords: ["TELESAT"]
+  - label: "吉林/Jilin"
+    keywords: ["JILIN", "DONGPO", "LINGQIAO", "LQSAT"]  # 含長光衛星冠名星（東坡號/靈巧視頻星等）
+  - label: "遙感/Yaogan"
+    keywords: ["YAOGAN"]
+  - label: "高分"
+    keywords: ["GAOFEN"]
+  - label: "風雲"
+    keywords: ["FENGYUN", "FY-"]

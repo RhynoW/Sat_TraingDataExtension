@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8"/>
+
+<script>/* HF 代理暫時性 502/503/504：同源 GET fetch 自動重試 3 次（0.8/1.6/2.4 s） */(function(){var f=window.fetch;if(!f)return;window.fetch=function(input,init){var m=((init&&init.method)||(input&&input.method)||'GET').toUpperCase();var u=typeof input==='string'?input:(input&&input.url)||'';var same=u.charAt(0)==='/'||u.indexOf(location.origin)===0;if(m!=='GET'||!same)return f.apply(this,arguments);var self=this,args=arguments;return new Promise(function(res,rej){(function go(n){f.apply(self,args).then(function(r){if((r.status===502||r.status===503||r.status===504)&&n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{res(r);}},function(e){if(n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{rej(e);}});})(0);});};}());</script>
+<title>全球海纜態勢 — 互動地圖（台灣視角）</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  html,body{margin:0;height:100%;background:#0d1117;color:#c9d1d9;
+    font-family:"Segoe UI","Noto Sans TC",sans-serif;overflow:hidden}
+  #topbar{display:flex;align-items:center;gap:10px;padding:8px 14px;
+    background:#161b22;border-bottom:1px solid #21262d}
+  #topbar h1{font-size:15px;margin:0;color:#e6edf3;font-weight:600}
+  #topbar .sub{font-size:11px;color:#8b949e}
+  .tbtn{margin-left:auto;padding:4px 10px;font-size:12px;color:#58a6ff;
+    border:1px solid #30363d;border-radius:5px;text-decoration:none;background:#0d1117}
+  #main{display:flex;height:calc(100% - 42px)}
+  #panel{width:340px;min-width:340px;overflow-y:auto;background:#161b22;
+    border-right:1px solid #21262d;padding:10px 12px;box-sizing:border-box}
+  #panel h2{font-size:13px;color:#e6edf3;margin:10px 0 6px;border-bottom:1px solid #21262d;padding-bottom:4px}
+  #gstat{font-size:11.5px;color:#8b949e;line-height:1.6}
+  .crow{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;
+    cursor:pointer;font-size:12.5px}
+  .crow:hover{background:#1c2129}
+  .crow.on{background:#1a3a5c}
+  .cdot{width:14px;height:4px;border-radius:2px;flex-shrink:0}
+  .cbadge{margin-left:auto;font-size:10px;color:#f85149;flex-shrink:0}
+  #detail{margin-top:10px;padding:10px;background:#0d1117;border:1px solid #21262d;
+    border-radius:6px;font-size:12px;line-height:1.65;display:none}
+  #detail h3{margin:0 0 6px;font-size:13px;color:#e6edf3}
+  #detail .k{color:#8b949e}
+  #note{margin-top:12px;font-size:11px;color:#8b949e;line-height:1.6;
+    border-top:1px solid #21262d;padding-top:8px}
+  #note a{color:#58a6ff;text-decoration:none}
+  #map-wrap{flex:1;position:relative}
+  #cesiumContainer{width:100%;height:100%}
+  #map-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+    color:#8b949e;font-size:13px;z-index:4}
+  #legend{position:absolute;right:12px;top:12px;background:rgba(22,27,34,.92);
+    border:1px solid #30363d;border-radius:6px;padding:8px 12px;font-size:12px;z-index:5}
+  #legend label{display:flex;align-items:center;gap:7px;padding:3px 0;cursor:pointer}
+  #legend input{accent-color:#58a6ff}
+  .lg-line{width:16px;height:4px;border-radius:2px}
+  .zbtn{flex:1;padding:3px 0;font-size:11.5px;color:#58a6ff;background:#0d1117;
+    border:1px solid #30363d;border-radius:4px;cursor:pointer}
+  .zbtn:hover{background:#1a3a5c}
+  .cesium-viewer-bottom{display:none!important}
+  #lang-switcher{display:flex;gap:4px;flex-shrink:0}
+  .lang-btn{padding:3px 8px;background:#0d1117;color:#8b949e;border:1px solid #30363d;
+    border-radius:4px;font-size:11px;font-family:inherit;cursor:pointer;white-space:nowrap;transition:all .15s}
+  .lang-btn:hover{background:#1a3a5c;color:#c9d1d9}
+  .lang-btn.active{background:#58a6ff;color:#0d1117;border-color:#58a6ff}
+</style>
+<script>window.CESIUM_ION_TOKEN="";</script>
+
+<script>
+window.CESIUM_LOCAL='/cesium/';
+window.CESIUM_BASE_URL="/cesium/";
+/* Cesium 素材（JSON/貼圖/GeoJSON）遇 HF 代理 502/503/504 重試 3 次 */
+window._cesiumRetry=function(){try{var R=Cesium.Resource,o=R.prototype.retryOnError;R.prototype.retryOnError=function(e){var s=e&&e.statusCode,n=this._retryCount||0;if((s===502||s===503||s===504)&&n<3){this._retryCount=n+1;return new Promise(function(r){setTimeout(function(){r(true);},800*(n+1));});}return o.call(this,e);};}catch(err){}};
+window.loadCesium=function(ok,fail){
+  function css(h){var l=document.createElement('link');l.rel='stylesheet';l.href=h;document.head.appendChild(l);}
+  function js(src,good,bad,left){var s=document.createElement('script');s.src=src;
+    s.onload=good;s.onerror=function(){s.remove();if(left>0){setTimeout(function(){js(src,good,bad,left-1);},1500);}else{bad();}};
+    document.head.appendChild(s);}
+  function done(){window._cesiumRetry();ok();}
+  var base=window.CESIUM_BASE_URL;
+  css(base+'Widgets/widgets.css');
+  js(base+'Cesium.js',done,function(){
+    if(base===window.CESIUM_LOCAL){(fail||function(){})();return;}
+    window.CESIUM_BASE_URL=window.CESIUM_LOCAL;           /* CDN 失敗 → 本站 */
+    css(window.CESIUM_LOCAL+'Widgets/widgets.css');
+    js(window.CESIUM_LOCAL+'Cesium.js',done,fail||function(){},3);
+  },base===window.CESIUM_LOCAL?3:1);
+};
+</script>
+<script>
+(function(){
+  function _css(h){var l=document.createElement('link');l.rel='stylesheet';l.href=h;document.head.appendChild(l);}
+  function _err(m){
+    var el=document.getElementById('map-loading');
+    if(el){
+      el.setAttribute('data-i18n','cesium_missing_err');
+      el.textContent=(window.t?window.t('cesium_missing_err'):m);
+      el.style.color='#f44336';
+    }
+  }
+  window.addEventListener('DOMContentLoaded',function(){
+    window.loadCesium(function(){startApp();},function(){_err('本機 Cesium 未安裝，請將 CesiumJS 解壓至 data/cesium/');});
+  });
+}());
+</script>
+<script src="/static/js/map_layers.js?v=__BUILD__"></script><script src="/ext/net_tiles.js?v=__BUILD__"></script>
+<script src="/ext/standalone_ext.js?v=__BUILD__"></script>
+</head>
+<body>
+<div id="topbar">
+  <h1>🌐 <span data-i18n="header_title">全球海纜態勢 — 台灣視角</span></h1>
+  <div class="sub" data-i18n="header_sub">TeleGeography 公開圖資（路線為示意級） · 事件蒐整自公開新聞</div>
+  <a class="tbtn" href="/story/sea-land-space-sky">📖 <span data-i18n="nav_story">返回 StoryMap</span></a>
+  <div id="lang-switcher">
+    <button type="button" class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+    <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    <button type="button" class="lang-btn" data-lang="ja" onclick="setLang('ja')">日</button>
+  </div>
+</div>
+<div id="main">
+  <div id="panel">
+    <h2><span data-i18n="panel_global_title">全球概況</span></h2><div id="gstat" data-i18n="gstat_loading">載入中…</div>
+    <h2><span data-i18n="panel_tw_title">登陸／行經台灣之海纜</span></h2><div id="list-tw"></div>
+    <div id="detail"></div>
+    <div id="note" data-i18n-html="note_body">
+      口徑：海纜路線取自 <a href="https://www.submarinecablemap.com" target="_blank" rel="noopener">TeleGeography
+      submarinecablemap.com</a> 公開圖資（CC BY-NC-SA 3.0，2026-09-07 擷取），路線為示意級呈現，
+      非實際海圖座標；已除役系統（如 SeaMeWe-3）不在圖資內；2023 年受損之台馬二、三號屬較舊國內纜，
+      未收錄於該圖資，事件標記仍列。斷纜事件位置為新聞描述之近似海域，歸因以司法認定為準，
+      未定案者以「疑似」表述。底圖：Cesium Ion World Imagery（未設 token 時自動退用本機 Natural Earth II）。
+      行政界圖層：全球國界線取自 Natural Earth 50m（公眾領域），台灣縣市界取自
+      <a href="https://github.com/g0v/twgeojson" target="_blank" rel="noopener">g0v twgeojson</a>（2010 版縣市界）；
+      界線僅供視覺參考，不代表任何主權立場。
+    </div>
+  </div>
+  <div id="map-wrap">
+    <div id="cesiumContainer"></div>
+    <div id="map-loading" data-i18n="map_loading_init">初始化地圖...</div>
+    <div id="legend">
+      <label><input type="checkbox" id="lyr-glb" checked onchange="applyLayers()">
+        <span class="lg-line" style="background:#8b949e"></span><span data-i18n="legend_glb">全球海纜（728 系統）</span></label>
+      <label><input type="checkbox" id="lyr-tw" onchange="applyLayers()">
+        <span class="lg-line" style="background:#58a6ff"></span><span data-i18n="legend_twonly">僅顯示台灣相關</span></label>
+      <label><input type="checkbox" id="lyr-inc" checked onchange="applyLayers()">
+        <span style="color:#f85149">⚠</span><span data-i18n="legend_inc">斷纜事件（2023–2025）</span></label>
+      <label><input type="checkbox" id="lyr-lnd" onchange="toggleLandings(this.checked)">
+        <span style="color:#3fb950">●</span><span data-i18n="legend_lnd">全球登陸點</span></label>
+      <label><input type="checkbox" id="lyr-adm" checked onchange="applyLayers()">
+        <span class="lg-line" style="background:#f0f6fc"></span><span data-i18n="legend_adm">全球國界</span></label>
+      <label><input type="checkbox" id="lyr-twadm" checked onchange="applyLayers()">
+        <span class="lg-line" style="background:#3fb950"></span><span data-i18n="legend_twadm">台灣縣市界</span></label>
+      <div style="border-top:1px solid #30363d;margin-top:6px;padding-top:6px;display:flex;gap:6px">
+        <button class="zbtn" onclick="zoomTo('matsu')"><span data-i18n="zoom_matsu">馬祖</span></button>
+        <button class="zbtn" onclick="zoomTo('kinmen')"><span data-i18n="zoom_kinmen">金門</span></button>
+        <button class="zbtn" onclick="zoomTo('taiwan')"><span data-i18n="zoom_taiwan">全台</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+// ── 雙語字典（中／日）──────────────────────────────────────────────────────
+const I18N = {
+  zh: {
+    doc_title: '全球海纜態勢 — 互動地圖（台灣視角）',
+    header_title: '全球海纜態勢 — 台灣視角',
+    header_sub: 'TeleGeography 公開圖資（路線為示意級） · 事件蒐整自公開新聞',
+    nav_story: '返回 StoryMap',
+    panel_global_title: '全球概況',
+    gstat_loading: '載入中…',
+    panel_tw_title: '登陸／行經台灣之海纜',
+    gstat_tpl: '海纜系統 <b style="color:#e6edf3">{n}</b> 條 ・ 其中登陸／行經台灣 <b style="color:#58a6ff">{tw}</b> 條<br>點選地圖任一纜線或下方清單看詳情。',
+    label_incident: '事件',
+    note_body: '口徑：海纜路線取自 <a href="https://www.submarinecablemap.com" target="_blank" rel="noopener">TeleGeography submarinecablemap.com</a> 公開圖資（CC BY-NC-SA 3.0，2026-09-07 擷取），路線為示意級呈現，非實際海圖座標；已除役系統（如 SeaMeWe-3）不在圖資內；2023 年受損之台馬二、三號屬較舊國內纜，未收錄於該圖資，事件標記仍列。斷纜事件位置為新聞描述之近似海域，歸因以司法認定為準，未定案者以「疑似」表述。底圖：Cesium Ion World Imagery（未設 token 時自動退用本機 Natural Earth II）。行政界圖層：全球國界線取自 Natural Earth 50m（公眾領域），台灣縣市界取自 <a href="https://github.com/g0v/twgeojson" target="_blank" rel="noopener">g0v twgeojson</a>（2010 版縣市界）；界線僅供視覺參考，不代表任何主權立場。',
+    map_loading_init: '初始化地圖...',
+    map_loading_cable: '載入全球海纜圖資…',
+    map_loading_fail: '海纜圖資載入失敗',
+    cesium_missing_err: '本機 Cesium 未安裝，請將 CesiumJS 解壓至 data/cesium/',
+    legend_glb: '全球海纜（728 系統）',
+    legend_twonly: '僅顯示台灣相關',
+    legend_inc: '斷纜事件（2023–2025）',
+    legend_lnd: '全球登陸點',
+    legend_adm: '全球國界',
+    legend_twadm: '台灣縣市界',
+    zoom_matsu: '馬祖',
+    zoom_kinmen: '金門',
+    zoom_taiwan: '全台',
+    lbl_system_name: '系統名：',
+    lbl_desc: '說明：',
+    lbl_data_source: '資料：TeleGeography 公開圖資',
+    lbl_incident: '事件：',
+    lbl_name: '名稱：',
+    title_landing: '● 登陸點',
+    title_admin: '🗺 行政區界',
+  },
+  en: {
+    doc_title: 'Global Submarine Cable Overview — Interactive Map (Taiwan Perspective)',
+    header_title: 'Global Submarine Cable Overview — Taiwan Perspective',
+    header_sub: 'TeleGeography public data (routes are schematic) · Fault information compiled from public news reports',
+    nav_story: 'Back to StoryMap',
+    panel_global_title: 'Global Overview',
+    gstat_loading: 'Loading…',
+    panel_tw_title: 'Submarine Cables Landing in or Passing Through Taiwan',
+    gstat_tpl: 'Submarine cable systems: <b style="color:#e6edf3">{n}</b> ・ Landing in / passing through Taiwan: <b style="color:#58a6ff">{tw}</b><br>Click any cable on the map or an item in the list below for details.',
+    label_incident: 'Cable Fault',
+    note_body: 'Methodology: Submarine cable routes are sourced from <a href="https://www.submarinecablemap.com" target="_blank" rel="noopener">TeleGeography submarinecablemap.com</a> public data (CC BY-NC-SA 3.0, retrieved 2026-09-07); routes are shown schematically and do not reflect actual nautical chart coordinates. Decommissioned systems (e.g. SeaMeWe-3) are not included in this dataset. The Taiwan–Matsu No. 2 and No. 3 cables damaged in 2023 are older domestic systems not covered by this dataset, but their incident markers are still shown. Cable-fault locations are approximate sea areas as described in news reports; attribution follows judicial findings, and unresolved cases are labeled "alleged." Basemap: Cesium Ion World Imagery (automatically falls back to a local Natural Earth II layer when no access token is configured). Administrative boundary layers: global country borders are from Natural Earth 50m (public domain); Taiwan county/city boundaries are from <a href="https://github.com/g0v/twgeojson" target="_blank" rel="noopener">g0v twgeojson</a> (2010 county/city boundaries). Boundaries are shown for visual reference only and do not represent any position on sovereignty.',
+    map_loading_init: 'Initializing map...',
+    map_loading_cable: 'Loading global submarine cable data…',
+    map_loading_fail: 'Failed to load submarine cable data',
+    cesium_missing_err: 'Local Cesium installation not found. Please extract CesiumJS into data/cesium/',
+    legend_glb: 'Global Submarine Cable Systems (728)',
+    legend_twonly: 'Show Taiwan-related Cables Only',
+    legend_inc: 'Cable Faults (2023–2025)',
+    legend_lnd: 'Global Cable Landing Stations',
+    legend_adm: 'Global Borders',
+    legend_twadm: 'Taiwan County/City Boundaries',
+    zoom_matsu: 'Matsu',
+    zoom_kinmen: 'Kinmen',
+    zoom_taiwan: 'All Taiwan',
+    lbl_system_name: 'System Name: ',
+    lbl_desc: 'Description: ',
+    lbl_data_source: 'Source: TeleGeography public data',
+    lbl_incident: 'Cable Fault: ',
+    lbl_name: 'Name: ',
+    title_landing: '● Cable Landing Station',
+    title_admin: '🗺 Administrative Boundaries',
+  },
+  ja: {
+    doc_title: '世界の海底ケーブル概況 — インタラクティブマップ（台湾視点）',
+    header_title: '世界の海底ケーブル概況 — 台湾視点',
+    header_sub: 'TeleGeography 公開データ（ルートは模式図） ・ 障害情報は公開報道に基づき収集',
+    nav_story: 'StoryMapに戻る',
+    panel_global_title: '世界概況',
+    gstat_loading: '読み込み中…',
+    panel_tw_title: '台湾に陸揚げされる／台湾を経由する海底ケーブル',
+    gstat_tpl: '海底ケーブルシステム <b style="color:#e6edf3">{n}</b> 本 ・ うち台湾に陸揚げ／経由するもの <b style="color:#58a6ff">{tw}</b> 本<br>地図上のケーブルまたは下記リストをクリックすると詳細が表示されます。',
+    label_incident: '障害',
+    note_body: '出典：海底ケーブルの航路は <a href="https://www.submarinecablemap.com" target="_blank" rel="noopener">TeleGeography submarinecablemap.com</a> の公開データ（CC BY-NC-SA 3.0、2026-09-07取得）に基づく模式的な表示であり、実際の海図座標ではありません。廃止済みシステム（SeaMeWe-3など）はデータに含まれていません。2023年に損傷した台馬二号・三号は比較的旧式の国内ケーブルのため同データには収録されていませんが、障害マーカーは表示しています。障害の位置は報道に基づく近似海域であり、原因の認定は司法判断によるものとし、未確定の事案は「疑い」として表記しています。ベースマップ：Cesium Ion World Imagery（token未設定時はローカルのNatural Earth IIに自動フォールバック）。行政境界レイヤー：世界の国境線はNatural Earth 50m（パブリックドメイン）、台湾の県市境界は <a href="https://github.com/g0v/twgeojson" target="_blank" rel="noopener">g0v twgeojson</a>（2010年版県市境界）を使用。境界線は視覚的参考のみを目的とし、いかなる主権的立場も示すものではありません。',
+    map_loading_init: '地図を初期化中...',
+    map_loading_cable: '世界の海底ケーブルデータを読み込み中…',
+    map_loading_fail: '海底ケーブルデータの読み込みに失敗しました',
+    cesium_missing_err: 'ローカルのCesiumが未インストールです。CesiumJSをdata/cesium/に展開してください',
+    legend_glb: '世界の海底ケーブル（728系統）',
+    legend_twonly: '台湾関連のみ表示',
+    legend_inc: '海底ケーブル障害（2023–2025）',
+    legend_lnd: '世界の海底ケーブル陸揚げ局',
+    legend_adm: '世界の国境線',
+    legend_twadm: '台湾の県・市境界',
+    zoom_matsu: '馬祖',
+    zoom_kinmen: '金門',
+    zoom_taiwan: '台湾全域',
+    lbl_system_name: 'システム名：',
+    lbl_desc: '説明：',
+    lbl_data_source: 'データ：TeleGeography 公開データ',
+    lbl_incident: '障害：',
+    lbl_name: '名称：',
+    title_landing: '● 海底ケーブル陸揚げ局',
+    title_admin: '🗺 行政区境界',
+  },
+};
+const LOCALE_MAP = {zh:'zh-TW', en:'en-US', ja:'ja-JP'};
+let LANG = localStorage.getItem('cable_lang') || 'zh';
+if(!I18N[LANG]) LANG = 'zh';
+
+function t(key){
+  const d = I18N[LANG] || I18N.zh;
+  return (key in d) ? d[key] : (I18N.zh[key] !== undefined ? I18N.zh[key] : key);
+}
+function tpl(key, vars){
+  let s = t(key);
+  Object.keys(vars || {}).forEach(k => { s = s.replace(new RegExp('\\{' + k + '\\}', 'g'), vars[k]); });
+  return s;
+}
+
+let _lastDetail = null;  // {kind:'sys'|'incident'|'landing'|'admin', ref}
+
+function _setMapMsg(key){
+  const el = document.getElementById('map-loading');
+  if(el){ el.setAttribute('data-i18n', key); el.textContent = t(key); }
+}
+
+function setLang(lang){
+  if(!I18N[lang]) return;
+  LANG = lang;
+  localStorage.setItem('cable_lang', lang);
+  document.documentElement.lang = LOCALE_MAP[lang] || 'zh-TW';
+  document.title = t('doc_title');
+
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.getAttribute('data-i18n'));
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    el.innerHTML = t(el.getAttribute('data-i18n-html'));
+  });
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === lang);
+  });
+
+  if(Object.keys(SYS).length) buildPanel();
+  _renderDetail();
+}
+
+/* ── 台灣相關海纜之補充說明（比對 TeleGeography 系統名；蒐整自公開報導）──── */
+const TW_CURATED=[
+ {m:'trans-pacific express',zh:'TPE 跨太平洋快線',inc:true,
+  d:'2008 年啟用之跨太平洋幹線，淡水登陸。2025-01-03 於野柳東北海域疑遭權宜輪「順興39」拖錨損壞。'},
+ {m:'asia pacific gateway',zh:'APG 亞太直達',
+  d:'2016 年啟用之亞太大容量幹線，頭城登陸，中華電信為聯盟成員。'},
+ {m:'apcn-2',zh:'APCN-2 亞太二號',
+  d:'2001 年啟用之亞太環狀系統，淡水登陸，具自我修復繞送設計。'},
+ {m:'southeast asia-japan cable 2',zh:'SJC2 東南亞—日本二號',
+  d:'新世代區域幹線，頭城登陸，強化東北亞—東南亞路由多樣性。'},
+ {m:'new cross pacific',zh:'NCP 新跨太平洋',
+  d:'2018 年啟用之跨太平洋幹線，頭城登陸。'},
+ {m:'eac-c2c',zh:'EAC-C2C 東亞環狀',
+  d:'區域環狀系統，北（淡水）南（枋山）雙登陸增加路由韌性。'},
+ {m:'flag north asia',zh:'FNAL/REACH 北亞環',
+  d:'北亞環狀系統之台灣段，頭城登陸。'},
+ {m:'taiwan penghu kinmen matsu no.2',zh:'台澎金馬二號（TPKM2）',
+  d:'台灣本島—澎湖—金門—馬祖之國內幹線。'},
+ {m:'taiwan penghu kinmen matsu no.3',zh:'台澎金馬三號（TPKM3）',inc:true,
+  d:'國內幹線。2025-02-25 台灣—澎湖段遭多哥籍權宜輪「宏泰58」拖斷（媒體報導稱台澎三號）；船長同年 6 月遭判刑 3 年，為台灣首例斷纜刑事定罪。'},
+ {m:'taiwan-matsu no.4',zh:'台馬四號',
+  d:'馬祖連外海纜。2023-02 台馬二、三號一週內接連遭中國船隻拖斷（馬祖對外通訊受阻約 50 天）後，凸顯多路由與新纜之必要。'},
+ {m:'taiwan strait express',zh:'TSE-1 海峽快線',
+  d:'跨台灣海峽之兩岸直達纜。'},
+];
+const INCIDENTS=[
+ {id:'i2023a',lat:25.78,lon:120.55,t:'2023-02-02',cable:'台馬二號',
+  txt:'遭中國漁船拖斷；一週內台馬二、三號接連中斷，馬祖對外通訊受阻約 50 天，靠微波備援維持基本連線。'},
+ {id:'i2023b',lat:26.02,lon:120.85,t:'2023-02-08',cable:'台馬三號',
+  txt:'遭中國貨輪錨損，馬祖連外雪上加霜；催生微波與衛星備援強化。'},
+ {id:'i2025a',lat:25.35,lon:121.75,t:'2025-01-03',cable:'TPE（野柳東北海域）',
+  txt:'疑遭喀麥隆籍權宜輪「順興39」拖錨損壞；流量改由其他國際纜繞送。'},
+ {id:'i2025b',lat:23.42,lon:119.92,t:'2025-02-25',cable:'台澎三號（TPKM3 台澎段）',
+  txt:'多哥籍權宜輪「宏泰58」拖斷；扣船偵辦，船長判刑 3 年（首例定罪）。'},
+];
+
+let viewer,cableDS=null,landingDS=null,admDS=null,twDS=null,selKey=null;
+
+/* depthTestAgainstTerrain=true 之下，高度 0 的線面會沉入地表——
+   將各圖層微幅抬離（2–6 km，全球視角無感），近面可見、背面被地球正確遮擋 */
+function liftPolyline(pl,h){
+  const pos=pl.positions&&pl.positions.getValue(Cesium.JulianDate.now());
+  if(!pos)return;
+  pl.positions=pos.map(p=>{
+    const c=Cesium.Cartographic.fromCartesian(p);
+    return Cesium.Cartesian3.fromRadians(c.longitude,c.latitude,h);
+  });
+}
+const SYS={};          // key(properties.id) → {name, zh?, desc?, inc?, entities:[], color}
+
+function startApp(){
+  Cesium.Ion.defaultAccessToken=(window.CESIUM_ION_TOKEN||'');
+  let imagery;
+  try{
+    imagery=(window.CESIUM_ION_TOKEN)
+      ? Cesium.createWorldImagery()
+      : new Cesium.TileMapServiceImageryProvider({
+          url:(window.CESIUM_BASE_URL||'/cesium/')+'Assets/Textures/NaturalEarthII/',fileExtension:'jpg',credit:'Natural Earth II'});
+  }catch(e){
+    imagery=new Cesium.TileMapServiceImageryProvider({
+      url:(window.CESIUM_BASE_URL||'/cesium/')+'Assets/Textures/NaturalEarthII/',fileExtension:'jpg',credit:'Natural Earth II'});
+  }
+  viewer=new Cesium.Viewer('cesiumContainer',{
+    sceneMode:Cesium.SceneMode.SCENE3D,
+    animation:false,timeline:false,baseLayerPicker:false,
+    imageryProvider:imagery,
+    terrainProvider:new Cesium.EllipsoidTerrainProvider(),
+    sceneModePicker:false,infoBox:false,geocoder:false,homeButton:false,
+    navigationHelpButton:false,fullscreenButton:false,selectionIndicator:false});
+  viewer.scene.globe.enableLighting=false;
+  viewer.scene.globe.baseColor=Cesium.Color.fromCssColorString('#0b2a45');  /* 海洋底色 */
+  viewer.scene.globe.depthTestAgainstTerrain=true;  /* 地球本體遮擋背面圖資（防止透視到另一端） */
+  _setMapMsg('map_loading_cable');
+  viewer.camera.setView({destination:Cesium.Rectangle.fromDegrees(105,8,140,33)});
+
+  /* 行政界（自動載入）：全球國界線 Natural Earth 50m＋台灣縣市界 g0v TopoJSON */
+  Cesium.GeoJsonDataSource.load('/static/data/ne_50m_admin0_boundary_lines.json')
+    .then(ds=>{
+      admDS=ds;viewer.dataSources.add(ds);
+      const col=Cesium.Color.fromCssColorString('#f0f6fc').withAlpha(0.85);
+      ds.entities.values.forEach(e=>{
+        if(e.polyline){e.polyline.material=new Cesium.ColorMaterialProperty(col);e.polyline.width=2.2;
+          liftPolyline(e.polyline,4000);}
+      });
+      applyLayers();
+    }).catch(()=>{});
+  Cesium.GeoJsonDataSource.load('/static/data/tw_county.topo.json')
+    .then(ds=>{
+      twDS=ds;viewer.dataSources.add(ds);
+      const col=Cesium.Color.fromCssColorString('#3fb950').withAlpha(0.85);
+      ds.entities.values.forEach(e=>{
+        if(e.polygon){
+          e.polygon.fill=false;e.polygon.outline=true;
+          e.polygon.outlineColor=col;e.polygon.height=4000;
+          const pr=e.properties;
+          e._admName=(pr&&(pr.COUNTYNAME||pr.name))
+            ? (pr.COUNTYNAME?pr.COUNTYNAME.getValue():pr.name.getValue()) : '';
+        }
+      });
+      applyLayers();
+    }).catch(()=>{});
+
+  Cesium.GeoJsonDataSource.load('/static/data/cable-geo.json',{clampToGround:false})
+    .then(ds=>{
+      cableDS=ds;viewer.dataSources.add(ds);
+      ds.entities.values.forEach(e=>{
+        if(!e.polyline)return;
+        const pr=e.properties||{};
+        const key=pr.id?pr.id.getValue():('k'+Math.random());
+        const name=pr.name?pr.name.getValue():'(未命名)';
+        const col=(pr.color?pr.color.getValue():'')||'#8b949e';
+        if(!SYS[key]){
+          const cur=TW_CURATED.find(c=>name.toLowerCase().includes(c.m));
+          SYS[key]={name:name,color:col,entities:[],zh:cur?cur.zh:null,
+                    desc:cur?cur.d:null,inc:!!(cur&&cur.inc),tw:!!cur};
+        }
+        SYS[key].entities.push(e);
+        liftPolyline(e.polyline,6000);
+        styleEntity(e,SYS[key],false);
+        e._sysKey=key;
+      });
+      addIncidents();buildPanel();applyLayers();
+      document.getElementById('map-loading').style.display='none';
+    })
+    .catch(()=>{_setMapMsg('map_loading_fail');});
+
+  const handler=new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+  handler.setInputAction(mv=>{
+    /* drillPick：略過陸地填色等背景多邊形，取第一個有意義的目標 */
+    const picks=viewer.scene.drillPick(mv.position,6)||[];
+    for(const p of picks){
+      if(!p.id)continue;
+      if(p.id._sysKey){selectSys(p.id._sysKey);return;}
+      if(p.id._incRef){_lastDetail={kind:'incident',ref:p.id._incRef};_renderDetail();return;}
+      if(p.id._lndName){_lastDetail={kind:'landing',ref:p.id._lndName};_renderDetail();return;}
+      if(p.id._admName){_lastDetail={kind:'admin',ref:p.id._admName};_renderDetail();return;}
+    }
+  },Cesium.ScreenSpaceEventType.LEFT_CLICK);
+}
+
+function _renderDetail(){
+  if(!_lastDetail){
+    const d=document.getElementById('detail');
+    if(d) d.style.display='none';
+    return;
+  }
+  if(_lastDetail.kind==='sys'){
+    const s=SYS[_lastDetail.ref];
+    if(!s){_lastDetail=null;return;}
+    showDetail(s.zh||s.name,
+      '<span class="k">'+t('lbl_system_name')+'</span>'+s.name+'<br>'+
+      (s.desc?'<span class="k">'+t('lbl_desc')+'</span>'+s.desc:'<span class="k">'+t('lbl_data_source')+'</span>'));
+  }else if(_lastDetail.kind==='incident'){
+    const ev=INCIDENTS.find(x=>x.id===_lastDetail.ref);
+    if(!ev)return;
+    showDetail('⚠ '+ev.t+'｜'+ev.cable,'<span class="k">'+t('lbl_incident')+'</span>'+ev.txt);
+  }else if(_lastDetail.kind==='landing'){
+    showDetail(t('title_landing'),'<span class="k">'+t('lbl_name')+'</span>'+_lastDetail.ref);
+  }else if(_lastDetail.kind==='admin'){
+    showDetail(t('title_admin'),'<span class="k">'+t('lbl_name')+'</span>'+_lastDetail.ref);
+  }
+}
+
+function styleEntity(e,sys,selected){
+  const dimOther=(selKey!==null&&!selected);
+  const a=selected?1:(dimOther?0.10:(sys.tw?0.95:0.55));
+  const base=Cesium.Color.fromCssColorString(sys.tw?'#58a6ff':sys.color).withAlpha(a);
+  e.polyline.material=selected
+    ? new Cesium.PolylineGlowMaterialProperty({color:base,glowPower:0.25})
+    : new Cesium.ColorMaterialProperty(base);
+  e.polyline.width=selected?5:(sys.inc?3:(sys.tw?2.5:1.4));
+}
+
+function addIncidents(){
+  INCIDENTS.forEach(ev=>{
+    const e=viewer.entities.add({
+      position:Cesium.Cartesian3.fromDegrees(ev.lon,ev.lat,8000),
+      point:{pixelSize:9,color:Cesium.Color.fromCssColorString('#f85149'),
+        outlineColor:Cesium.Color.WHITE,outlineWidth:2},
+      label:{text:'⚠ '+ev.t,font:'11px "Noto Sans TC",sans-serif',
+        fillColor:Cesium.Color.fromCssColorString('#f85149'),
+        style:Cesium.LabelStyle.FILL_AND_OUTLINE,outlineColor:Cesium.Color.BLACK,outlineWidth:3,
+        pixelOffset:new Cesium.Cartesian2(0,14)}});
+    e._incRef=ev.id;e._isInc=true;
+  });
+}
+
+function toggleLandings(on){
+  if(on&&!landingDS){
+    Cesium.GeoJsonDataSource.load('/static/data/landing-point-geo.json').then(ds=>{
+      landingDS=ds;
+      ds.entities.values.forEach(e=>{
+        e.billboard=undefined;
+        const p=e.position&&e.position.getValue(Cesium.JulianDate.now());
+        if(p){const c=Cesium.Cartographic.fromCartesian(p);
+          e.position=Cesium.Cartesian3.fromRadians(c.longitude,c.latitude,5000);}
+        e.point=new Cesium.PointGraphics({pixelSize:4,
+          color:Cesium.Color.fromCssColorString('#3fb950')});
+        e._lndName=e.properties&&e.properties.name?e.properties.name.getValue():'';
+        e.label=undefined;
+      });
+      viewer.dataSources.add(ds);
+    });
+  }else if(landingDS)landingDS.show=on;
+}
+
+function buildPanel(){
+  const keys=Object.keys(SYS);
+  const twKeys=keys.filter(k=>SYS[k].tw);
+  document.getElementById('gstat').innerHTML=tpl('gstat_tpl',{n:keys.length,tw:twKeys.length});
+  document.getElementById('list-tw').innerHTML=twKeys
+    .sort((a,b)=>SYS[a].zh.localeCompare(SYS[b].zh,'zh-Hant'))
+    .map(k=>'<div class="crow" id="row_'+k+'" onclick="selectSys(\''+k+'\')">'+
+      '<div class="cdot" style="background:#58a6ff"></div>'+SYS[k].zh+
+      (SYS[k].inc?'<span class="cbadge">⚠ '+t('label_incident')+'</span>':'')+'</div>').join('');
+  document.querySelectorAll('.crow').forEach(r=>r.classList.toggle('on',r.id==='row_'+selKey));
+}
+
+function selectSys(key){
+  selKey=(selKey===key)?null:key;
+  document.querySelectorAll('.crow').forEach(r=>r.classList.toggle('on',r.id==='row_'+selKey));
+  Object.keys(SYS).forEach(k=>SYS[k].entities.forEach(e=>styleEntity(e,SYS[k],k===selKey)));
+  if(selKey){
+    _lastDetail={kind:'sys',ref:selKey};
+    _renderDetail();
+    viewer.flyTo(SYS[selKey].entities,{duration:1.2});
+  }else{
+    _lastDetail=null;
+    document.getElementById('detail').style.display='none';
+  }
+}
+
+function showDetail(title,html){
+  const d=document.getElementById('detail');
+  d.style.display='block';d.innerHTML='<h3>'+title+'</h3>'+html;
+}
+
+const VIEWS={
+  matsu:[119.4,25.6,121.2,26.6],
+  kinmen:[117.8,24.0,119.0,24.9],
+  taiwan:[117.2,20.8,125.2,27.4],
+};
+function zoomTo(k){
+  const v=VIEWS[k];if(!v||!viewer)return;
+  viewer.camera.flyTo({destination:Cesium.Rectangle.fromDegrees(v[0],v[1],v[2],v[3]),duration:1.2});
+}
+
+function applyLayers(){
+  const glb=document.getElementById('lyr-glb').checked;
+  const twOnly=document.getElementById('lyr-tw').checked;
+  const inc=document.getElementById('lyr-inc').checked;
+  Object.keys(SYS).forEach(k=>SYS[k].entities.forEach(e=>{
+    e.show=glb&&(!twOnly||SYS[k].tw);
+  }));
+  viewer.entities.values.forEach(e=>{if(e._isInc)e.show=inc;});
+  if(admDS)admDS.show=document.getElementById('lyr-adm').checked;
+  if(twDS)twDS.show=document.getElementById('lyr-twadm').checked;
+}
+
+document.addEventListener('DOMContentLoaded',()=>{ setLang(LANG); });
+</script>
+</body>
+</html>

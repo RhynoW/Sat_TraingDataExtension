@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+
+<script>/* HF 代理暫時性 502/503/504：同源 GET fetch 自動重試 3 次（0.8/1.6/2.4 s） */(function(){var f=window.fetch;if(!f)return;window.fetch=function(input,init){var m=((init&&init.method)||(input&&input.method)||'GET').toUpperCase();var u=typeof input==='string'?input:(input&&input.url)||'';var same=u.charAt(0)==='/'||u.indexOf(location.origin)===0;if(m!=='GET'||!same)return f.apply(this,arguments);var self=this,args=arguments;return new Promise(function(res,rej){(function go(n){f.apply(self,args).then(function(r){if((r.status===502||r.status===503||r.status===504)&&n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{res(r);}},function(e){if(n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{rej(e);}});})(0);});};}());</script>
+<title>2D 地面軌跡</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#0d1117;color:#c9d1d9;font-family:'Segoe UI',Tahoma,'Microsoft JhengHei',sans-serif;display:flex;flex-direction:column}
+#hdr{display:flex;align-items:center;gap:12px;padding:10px 18px;background:#161b22;border-bottom:1px solid #21262d;flex-wrap:wrap}
+#hdr h1{font-size:16px;color:#e6edf3;font-weight:600}
+#hdr .sub{font-size:12px;color:#8b949e}
+#hdr .sp{flex:1}
+#hdr a,#hdr button.nav{color:#58a6ff;font-size:12px;text-decoration:none;border:1px solid #30363d;border-radius:5px;padding:5px 10px;background:#21262d;cursor:pointer;font-family:inherit}
+#hdr a:hover{background:#30363d}
+#q{background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;padding:5px 8px;font-size:12px;width:130px}
+#lang-switcher{display:flex;gap:4px}
+.lang-btn{padding:4px 8px;background:#21262d;color:#8b949e;border:1px solid #30363d;border-radius:4px;font-size:11px;font-family:inherit;cursor:pointer}
+.lang-btn.active{background:#A855F7;color:#fff;border-color:#A855F7}
+#main{flex:1;display:flex;min-height:0}
+#mapwrap{flex:1;display:flex;flex-direction:column;min-width:0}
+#map{flex:1;min-height:360px;background:#0b0f14}
+#opts{display:flex;gap:18px;align-items:center;padding:7px 14px;font-size:12px;color:#8b949e;background:#161b22;border-top:1px solid #21262d;flex-wrap:wrap}
+#opts label{display:flex;gap:5px;align-items:center;cursor:pointer}
+#opts .hint{margin-left:auto;font-size:11px}
+#side{width:340px;flex:none;overflow-y:auto;background:#0d1117;border-left:1px solid #21262d;padding:12px 14px 24px}
+#side h2{font-size:15px;color:#e6edf3;margin-bottom:2px}
+#side .alt{font-size:11.5px;color:#8b949e;margin-bottom:8px}
+.box{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:8px 10px;margin-bottom:10px}
+.box h3{font-size:12px;color:#8b949e;font-weight:600;margin-bottom:5px;letter-spacing:.3px}
+table.kv{width:100%;border-collapse:collapse;font-size:12px}
+table.kv td{padding:2.5px 0;border-bottom:1px solid #1c2128}
+table.kv td:first-child{color:#8b949e;padding-right:8px;white-space:nowrap}
+table.kv td:last-child{text-align:right;color:#e6edf3;font-variant-numeric:tabular-nums}
+#sunlit{border-radius:6px;padding:6px 8px;text-align:center;font-size:12.5px;font-weight:600;margin:8px 0 2px}
+#sunlit.lit{background:#3b3209;color:#f2cc60;border:1px solid #9e6a03}
+#sunlit.ecl{background:#161b22;color:#8b949e;border:1px solid #30363d}
+.el-up{color:#3fb950!important}
+table.pass{width:100%;border-collapse:collapse;font-size:11.5px}
+table.pass th{color:#8b949e;font-weight:500;text-align:right;padding:3px 0;border-bottom:1px solid #21262d}
+table.pass th:first-child,table.pass td:first-child{text-align:left}
+table.pass td{text-align:right;padding:3px 0;border-bottom:1px solid #1c2128;font-variant-numeric:tabular-nums}
+table.pass tr.vis td{color:#f2cc60}
+.note{font-size:11px;color:#8b949e;line-height:1.5;margin-top:5px}
+pre.tle{font-family:Consolas,monospace;font-size:10.5px;color:#8b949e;white-space:pre;overflow-x:auto}
+#status{padding:30px;color:#8b949e;font-size:13px}
+.leaflet-container{font-family:inherit}
+.sat-ico{width:18px;height:18px;border-radius:50%;background:#F2A73B;border:2px solid #fff;box-shadow:0 0 8px #F2A73B}
+.obs-ico{width:12px;height:12px;border-radius:50%;background:#ff4d4f;border:2px solid #fff}
+@media (max-width:860px){ #main{flex-direction:column}#side{width:auto;border-left:0;border-top:1px solid #21262d}#map{min-height:52vh}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/satellite.js/5.0.0/satellite.min.js"></script>
+<script src="/static/js/track.js?v=__BUILD__" defer></script>
+</head>
+<body>
+<div id="hdr">
+  <h1>&#128506; <span data-i18n="page_title">2D 地面軌跡</span></h1>
+  <span class="sub" data-i18n="subtitle">地面投影、晝夜線、可視範圍與即時資料（瀏覽器端 SGP4）</span>
+  <span class="sp"></span>
+  <input id="q" data-i18n-placeholder="q_placeholder" placeholder="NORAD ID" inputmode="numeric"/>
+  <div id="lang-switcher">
+    <button type="button" class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+    <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    <button type="button" class="lang-btn" data-lang="ja" onclick="setLang('ja')">日</button>
+  </div>
+  <a id="orbitLink" href="/orbit" target="_blank" rel="noopener">&#128200; <span data-i18n="nav_orbit">軌道要素歷史</span></a>
+  <a href="/">&#8592; <span data-i18n="nav_home">返回主頁</span></a>
+</div>
+<div id="main">
+  <div id="mapwrap">
+    <div id="map"></div>
+    <div id="opts">
+      <label><input type="checkbox" id="optTrack" checked> <span data-i18n="opt_track">地面軌跡</span></label>
+      <label><input type="checkbox" id="optFoot" checked> <span data-i18n="opt_foot">可視範圍</span></label>
+      <label><input type="checkbox" id="optNight" checked> <span data-i18n="opt_night">晝夜</span></label>
+      <label><input type="checkbox" id="optFollow"> <span data-i18n="opt_follow">地圖跟隨衛星</span></label>
+      <span class="hint" data-i18n="opt_hint">點地圖可設定觀測者位置</span>
+    </div>
+  </div>
+  <div id="side">
+    <div id="status" data-i18n="status_loading">載入中…</div>
+    <div id="content" style="display:none">
+      <h2 id="satName"></h2>
+      <div class="alt" id="satSub"></div>
+      <div class="box">
+        <h3 data-i18n="h_live">即時狀態</h3>
+        <table class="kv" id="liveTbl"></table>
+        <div id="sunlit"></div>
+      </div>
+      <div class="box">
+        <h3 data-i18n="h_basic">衛星基本資料</h3>
+        <table class="kv" id="basicTbl"></table>
+      </div>
+      <div class="box">
+        <h3 data-i18n="h_passes">未來過境（3 天，仰角 &gt; 10°）</h3>
+        <div id="passes"></div>
+      </div>
+      <div class="box">
+        <h3 data-i18n="h_observer">觀測者</h3>
+        <table class="kv" id="obsTbl"></table>
+        <div class="note" data-i18n="obs_note">預設使用瀏覽器定位；未授權時為臺北。點地圖可改變位置。</div>
+      </div>
+      <div class="box">
+        <h3>TLE</h3>
+        <pre class="tle" id="tle"></pre>
+        <div class="note" data-i18n="tle_note">位置以 SGP4 由最新 TLE 外推，精度約數公里，TLE 越舊誤差越大。</div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+[package]
+name = "sat_dashboard"
+version = "0.1.2"
+edition = "2021"
+description = "ATRDC SatDashboard — Rust 單機版（Windows x86_64 / ARM64）"
+license = "Proprietary"
+
+[[bin]]
+name = "SatDashboard"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+axum = "0.8"
+base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
+csv = "1.3"
+duckdb = { version = "=1.10506.1", features = ["bundled"] }
+kiddo = "5"
+mime_guess = "2"
+once_cell = "1"
+open = "5"
+parking_lot = "0.12"
+rayon = "1.10"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"] }
+rust-embed = { version = "8", features = ["include-exclude"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+serde_yaml = "0.9"
+sha2 = "0.10"
+sgp4 = "2.3"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "signal"] }
+tower-http = { version = "0.6", features = ["cors"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+ruzstd = "0.9.1"
+ed25519-dalek = "3.0.0"
+semver = "1.0.28"
+
+[build-dependencies]
+cc = "1"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+strip = true

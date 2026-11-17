@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>衛星任務規劃 — SatDashboard</title>
+<link rel="stylesheet" href="/cesium/Widgets/widgets.css"/>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--text:#c9d1d9;--hi:#e6edf3;--mute:#8b949e;--acc:#58a6ff;--ok:#3fb950;--warn:#f2a73b}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:13px "Microsoft JhengHei","Noto Sans TC",sans-serif}
+#top{height:44px;display:flex;align-items:center;gap:12px;padding:0 14px;border-bottom:2px solid #ffe600;background:#010409}
+#top h1{font-size:16px;margin:0;color:#ffe600;font-weight:700;letter-spacing:.5px;text-shadow:0 0 1px #000,0 0 8px rgba(255,230,0,.35)}
+#top a{color:var(--acc);text-decoration:none;margin-left:auto}
+#main{display:flex;height:calc(100% - 44px)}
+#side{width:390px;min-width:390px;overflow:auto;border-right:1px solid var(--line);padding:10px 12px}
+#map{flex:1;position:relative}
+#cesium{position:absolute;inset:0}
+h3{font-size:13px;color:var(--hi);margin:14px 0 6px;border-left:3px solid var(--acc);padding-left:6px}
+.row{display:flex;gap:6px;align-items:center;margin:4px 0}
+.row label{color:var(--mute);min-width:56px}
+input[type=number],select{background:var(--bg);color:var(--hi);border:1px solid var(--line);border-radius:6px;padding:3px 6px;width:100%}
+button{background:#21262d;color:var(--hi);border:1px solid var(--line);border-radius:6px;padding:4px 10px;cursor:pointer}
+button:hover{border-color:var(--acc)}
+.sats label{display:flex;gap:6px;align-items:center;padding:3px 4px;border-radius:5px;cursor:pointer}
+.sats label:hover{background:#1c2128}
+.sats .nx{margin-left:auto;color:var(--mute);font-size:11px}
+.sats .off{opacity:.45}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:4px 3px;border-bottom:1px solid #21262d;text-align:left;white-space:nowrap}
+th{color:var(--mute);font-weight:normal}
+tr.ps{cursor:pointer}
+tr.ps:hover td{background:#1c2128}
+tr.ps.sel td{background:#1f2d3d}
+.hint{color:var(--mute);font-size:11px;line-height:1.5}
+#sky{width:100%;max-width:366px;display:block;margin:4px auto}
+#status{color:var(--mute);font-size:11px;margin-top:4px}
+.wx{margin:4px 0 2px}.wx .bar{display:flex;gap:1px;height:16px;margin:3px 0 1px}.wx .bar i{flex:1;border-radius:2px}
+.wx .ax{display:flex;justify-content:space-between;color:var(--mute);font-size:10px}
+td.cl{font-weight:600}
+label.chk{display:flex;gap:6px;align-items:center;color:var(--text);cursor:pointer;margin:6px 0 2px}
+td.empty{color:var(--mute);white-space:normal;padding:10px 4px;line-height:1.6}
+.badge{display:inline-block;padding:0 6px;border-radius:9px;background:#1f6feb33;color:#79c0ff;font-size:11px}
+</style>
+<script>window.CESIUM_BASE_URL="/cesium/";</script>
+<script src="/cesium/Cesium.js"></script>
+<script src="/ext/standalone_ext.js?v=__BUILD__"></script>
+<script src="/static/js/map_layers.js?v=__BUILD__"></script>
+<script src="/ext/net_tiles.js?v=__BUILD__"></script>
+</head>
+<body>
+<div id="top">
+  <h1>🛰 衛星任務規劃 — 地面站下行接收過頂預報</h1>
+  <span class="badge" id="badge-mask">仰角 ≥ 15°</span>
+  <span id="about-slot" style="margin-left:auto"></span>
+  <a href="/" style="margin-left:12px">← 回 3D 地球儀</a>
+</div>
+<div id="main">
+  <div id="side">
+    <h3>地面站</h3>
+    <div class="row"><select id="st-preset"></select></div>
+    <div class="row"><label>緯度</label><input id="st-lat" type="number" step="0.0001"><label>經度</label><input id="st-lon" type="number" step="0.0001"></div>
+    <div class="row"><label>高度 km</label><input id="st-h" type="number" step="0.01"><label>遮罩 °</label><input id="mask" type="number" step="1" min="0" max="85"></div>
+    <div class="row"><label>時窗</label><select id="day"></select>
+      <button id="btn-run">重新計算</button></div>
+    <label class="chk"><input type="checkbox" id="hide-night" checked>不顯示夜間過頂（TCA 時地面站太陽在地平線下）</label>
+    <div class="hint" id="st-note"></div>
+
+    <h3 id="con-title">衛星星系（單選）</h3>
+    <div class="sats" id="sats"></div>
+    <div class="hint" id="con-note"></div>
+
+    <h3>過頂清單 <span class="hint" id="sel-name"></span></h3>
+    <div class="hint">用滑鼠點選 3D 中的軌道（或上方衛星）後才顯示該顆的過頂清單。</div>
+    <table><thead><tr><th>#</th><th>AOS（台灣時間）</th><th>LOS</th><th>時長</th><th>最大仰角</th><th>方位</th><th title="TCA 時衛星正下方（星下點）總雲量（MET Norway 預報，未來 3 天）">雲量</th></tr></thead>
+      <tbody id="passes"></tbody></table>
+    <div class="hint">點選列可在 3D 中跳至該次過頂（AOS 前 1 分鐘）並顯示 30 秒時間點；時間以台灣時間（UTC+8）顯示。時窗為台灣時間的整日（今天為現在到午夜）；TLE 外推越遠誤差越大，3 天以後的預報僅供參考。</div>
+
+    <h3>衛星正下方雲量（選定過頂）</h3>
+    <div id="wx" class="wx"></div>
+
+    <h3>天球圖（選定過頂，每 30 秒標點）</h3>
+    <svg id="sky" viewBox="-120 -120 240 240"></svg>
+    <div id="status"></div>
+  </div>
+  <div id="map"><div id="cesium"></div></div>
+</div>
+<script src="/ext/mission.js?v=__BUILD__"></script>
+</body>
+</html>

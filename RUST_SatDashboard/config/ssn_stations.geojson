@@ -1,0 +1,498 @@
+{
+ "type": "FeatureCollection",
+ "features": [
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -106.6599,
+     33.8172
+    ]
+   },
+   "properties": {
+    "name": "GEODSS Socorro",
+    "type": "光學/電光",
+    "location": "White Sands Missile Range, NM, USA",
+    "status": "active",
+    "notes": "深空目標光學追蹤"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -156.2578,
+     20.7088
+    ]
+   },
+   "properties": {
+    "name": "GEODSS Maui (AMOS)",
+    "type": "光學/電光",
+    "location": "Haleakalā, Hawaii, USA",
+    "status": "active",
+    "notes": "深空目標光學追蹤"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     72.4522,
+     -7.4117
+    ]
+   },
+   "properties": {
+    "name": "GEODSS Diego Garcia",
+    "type": "光學/電光",
+    "location": "British Indian Ocean Territory",
+    "status": "active",
+    "notes": "深空目標光學追蹤"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -156.26,
+     20.71
+    ]
+   },
+   "properties": {
+    "name": "MAUI Space Surveillance (MSSS)",
+    "type": "光學/電光",
+    "location": "Haleakalā, Hawaii, USA",
+    "status": "active",
+    "notes": "先進光電系統，多光譜成像"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -156.2565,
+     20.7076
+    ]
+   },
+   "properties": {
+    "name": "AEOS Telescope",
+    "type": "光學/電光",
+    "location": "Haleakalā, Hawaii, USA",
+    "status": "active",
+    "notes": "先進電光感測器（3.67m 望遠鏡）"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -14.4,
+     -7.97
+    ]
+   },
+   "properties": {
+    "name": "Ascension Range Radar",
+    "type": "雷達",
+    "location": "Ascension Island",
+    "status": "active",
+    "notes": "南大西洋遙測/追蹤站"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -86.21,
+     30.57
+    ]
+   },
+   "properties": {
+    "name": "AN/FPS-85",
+    "type": "雷達",
+    "location": "Eglin AFB, Florida, USA",
+    "status": "active",
+    "notes": "SSN最大功率相控陣雷達；第20太空監視中隊操作"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     167.75,
+     8.73
+    ]
+   },
+   "properties": {
+    "name": "Space Fence (AN/FPS-133)",
+    "type": "雷達",
+    "location": "Kwajalein Atoll, Marshall Islands",
+    "status": "active",
+    "notes": "S波段相控陣雷達，2020年起作戰；可追蹤10cm以下碎片"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     174.14,
+     52.72
+    ]
+   },
+   "properties": {
+    "name": "AN/FPS-108 Cobra Dane",
+    "type": "雷達",
+    "location": "Shemya Island, Alaska, USA",
+    "status": "active",
+    "notes": "相控陣雷達，兼飛彈預警與太空追蹤"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     31.13,
+     70.37
+    ]
+   },
+   "properties": {
+    "name": "GLOBUS II",
+    "type": "雷達",
+    "location": "Vardø, Norway",
+    "status": "active",
+    "notes": "X波段碟形雷達；挪威情報局（NIS）操作，數據納入SSN"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.518,
+     42.261
+    ]
+   },
+   "properties": {
+    "name": "HUSIR (Haystack)",
+    "type": "雷達",
+    "location": "Westford, Massachusetts, USA",
+    "status": "active",
+    "notes": "超寬頻雷達，MIT林肯實驗室"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.87,
+     42.28
+    ]
+   },
+   "properties": {
+    "name": "Millstone Hill Radar",
+    "type": "雷達",
+    "location": "North Grafton, Massachusetts, USA",
+    "status": "active",
+    "notes": "MIT林肯實驗室追蹤雷達"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     167.755,
+     8.735
+    ]
+   },
+   "properties": {
+    "name": "ALTAIR",
+    "type": "雷達",
+    "location": "Kwajalein Atoll, Marshall Islands",
+    "status": "active",
+    "notes": "Reagan Test Site (RTS) 深空雷達"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -96.37,
+     47.12
+    ]
+   },
+   "properties": {
+    "name": "PARCS (AN/FPQ-16)",
+    "type": "雷達",
+    "location": "Cavalier AFS, North Dakota, USA",
+    "status": "active",
+    "notes": "飛彈預警/太空監視相控陣雷達；第10太空預警中隊"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     167.745,
+     8.725
+    ]
+   },
+   "properties": {
+    "name": "ALCOR",
+    "type": "雷達",
+    "location": "Kwajalein Atoll, Marshall Islands",
+    "status": "active",
+    "notes": "C波段成像雷達，Reagan Test Site (RTS)"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -70.54,
+     41.75
+    ]
+   },
+   "properties": {
+    "name": "Cape Cod SFS (PAVE PAWS)",
+    "type": "飛彈預警/協作",
+    "location": "Bourne, Massachusetts, USA",
+    "status": "active",
+    "notes": "AN/FPS-123，UHF相控陣；第6太空預警中隊"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -121.35,
+     39.14
+    ]
+   },
+   "properties": {
+    "name": "Beale AFB (PAVE PAWS)",
+    "type": "飛彈預警/協作",
+    "location": "California, USA",
+    "status": "active",
+    "notes": "AN/FPS-123，UHF相控陣；第7太空預警中隊"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -149.19,
+     64.3
+    ]
+   },
+   "properties": {
+    "name": "Clear SFS (BMEWS)",
+    "type": "飛彈預警/協作",
+    "location": "Alaska, USA",
+    "status": "active",
+    "notes": "AN/FPS-120，UHF相控陣；第13太空預警中隊"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -0.67,
+     54.36
+    ]
+   },
+   "properties": {
+    "name": "RAF Fylingdales (BMEWS)",
+    "type": "飛彈預警/協作",
+    "location": "England, UK",
+    "status": "active",
+    "notes": "AN/FPS-126，三面相控陣，360°覆蓋；英國皇家空軍操作"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -68.78,
+     76.53
+    ]
+   },
+   "properties": {
+    "name": "Thule/Pituffik SB (BMEWS)",
+    "type": "飛彈預警/協作",
+    "location": "Greenland",
+    "status": "active",
+    "notes": "AN/FPS-120；兼為SCN衛星追控站"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -71.43,
+     42.97
+    ]
+   },
+   "properties": {
+    "name": "New Boston AFS",
+    "type": "衛星追控",
+    "location": "New Hampshire, USA",
+    "status": "active",
+    "notes": "23rd Space Operations Squadron SCN站點"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -120.57,
+     34.75
+    ]
+   },
+   "properties": {
+    "name": "Vandenberg SFB (SCN)",
+    "type": "衛星追控",
+    "location": "California, USA",
+    "status": "active",
+    "notes": "23rd Space Operations Squadron SCN站點"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -158.13,
+     21.36
+    ]
+   },
+   "properties": {
+    "name": "Kaena Point",
+    "type": "衛星追控",
+    "location": "Oahu, Hawaii, USA",
+    "status": "active",
+    "notes": "23rd Space Operations Squadron SCN站點"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     144.87,
+     13.58
+    ]
+   },
+   "properties": {
+    "name": "Guam Remote Tracking Station",
+    "type": "衛星追控",
+    "location": "Guam",
+    "status": "active",
+    "notes": "23rd Space Operations Squadron SCN站點"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -1.08,
+     51.07
+    ]
+   },
+   "properties": {
+    "name": "RAF Oakhanger",
+    "type": "衛星追控",
+    "location": "Hampshire, UK",
+    "status": "active",
+    "notes": "23rd Space Operations Squadron SCN站點（英國）"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     72.4508,
+     -7.413
+    ]
+   },
+   "properties": {
+    "name": "Diego Garcia (SCN)",
+    "type": "衛星追控",
+    "location": "British Indian Ocean Territory",
+    "status": "active",
+    "notes": "23rd Space Operations Squadron SCN站點（兼GEODSS）"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -104.8,
+     38.7
+    ]
+   },
+   "properties": {
+    "name": "Space Surveillance Center (SSC)",
+    "type": "數據中心",
+    "location": "Cheyenne Mountain Complex, Colorado, USA",
+    "status": "active",
+    "notes": "SPACECOM太空監視作戰中心"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     40.04,
+     37.95
+    ]
+   },
+   "properties": {
+    "name": "AN/FPS-79 Pirinclik",
+    "type": "已除役",
+    "location": "Diyarbakır, Turkey",
+    "status": "decommissioned",
+    "notes": "原SSN輔助雷達，已關閉"
+   }
+  },
+  {
+   "type": "Feature",
+   "geometry": {
+    "type": "Point",
+    "coordinates": [
+     -5.609,
+     37.17
+    ]
+   },
+   "properties": {
+    "name": "MOSS (Morón)",
+    "type": "已除役",
+    "location": "Morón Air Base, Spain",
+    "status": "decommissioned",
+    "notes": "光學站，1997–2012年運作"
+   }
+  }
+ ]
+}

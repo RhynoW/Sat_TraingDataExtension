@@ -1,0 +1,33 @@
+# overpass_cats.yaml — 台北覆蓋分析衛星類別定義
+# 修改此檔後呼叫 POST /api/admin/reload_cats 即時生效，無需重啟服務
+
+US_EO:
+  label: "美國商用光學衛星"
+  sublabel: "Vantor/Maxar · Planet SkySat/Pelican · BlackSky"
+  color: "#4488FF"
+  kw: ["WORLDVIEW", "GEOEYE", "LEGION", "SKYSAT", "PELICAN", "GLOBAL-"]   # GLOBAL-n = BlackSky Global
+
+CN_COMM:
+  label: "中國商用光學衛星"
+  sublabel: "SuperView · 高分 · 吉林 · 北京三號"
+  color: "#FF9800"
+  kw: ["SUPERVIEW", "JILIN", "ZHUHAI", "GAOFEN", "BEIJING 3", "BEIJING-3"]
+
+CN_MIL:
+  label: "中國軍用偵察衛星"
+  sublabel: "遙感 Yaogan"
+  color: "#F44336"
+  kw: ["YAOGAN", "JIANBING"]
+
+TW_TASA:
+  label: "台灣 TASA 衛星"
+  sublabel: "Formosat-2/-3(已退役)/-5/-7/-8"
+  color: "#00E5FF"
+  # 以系列名為關鍵字，涵蓋 FORMOSAT 2/3/5/7(A-F)/7R/8A/8B…；福爾摩沙衛星五號在目錄中以中文命名
+  kw: ["FORMOSAT", "福爾摩沙", "ROCSAT", "COSMIC-2", "COSMIC2"]
+
+STARLINK:
+  label: "Starlink 星鏈"
+  sublabel: "SpaceX · Gen1 / Gen2 / V2 Mini"
+  color: "#A855F7"
+  kw: ["STARLINK"]

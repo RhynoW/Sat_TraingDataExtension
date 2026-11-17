@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+
+<script>/* HF 代理暫時性 502/503/504：同源 GET fetch 自動重試 3 次（0.8/1.6/2.4 s） */(function(){var f=window.fetch;if(!f)return;window.fetch=function(input,init){var m=((init&&init.method)||(input&&input.method)||'GET').toUpperCase();var u=typeof input==='string'?input:(input&&input.url)||'';var same=u.charAt(0)==='/'||u.indexOf(location.origin)===0;if(m!=='GET'||!same)return f.apply(this,arguments);var self=this,args=arguments;return new Promise(function(res,rej){(function go(n){f.apply(self,args).then(function(r){if((r.status===502||r.status===503||r.status===504)&&n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{res(r);}},function(e){if(n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{rej(e);}});})(0);});};}());</script><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RPO 案例總覽 — SatDashboard</title>
+<style>
+:root{--bg:#0A0D13;--panel:#12161f;--line:rgba(255,255,255,.09);--ink:#dfe6f0;--muted:#8b96a8;
+      --prim:#F2A73B;--sec:#35C6F4;--crit:#FF5C4E;--mono:"Consolas","Courier New",monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.65 "Segoe UI","Microsoft JhengHei",sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:28px 20px 60px}
+.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+h1{font-size:22px;margin:0}
+.top a{color:var(--sec);text-decoration:none;font-family:var(--mono);font-size:12px}
+.sub{color:var(--muted);font-size:12.5px;margin:0 0 22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:0 0 16px}
+.card h2{font-size:16px;margin:0 0 6px}
+.card .ids{font-family:var(--mono);font-size:11px;color:var(--muted);margin:0 0 8px}
+.card p{margin:6px 0;color:var(--ink);font-size:13px}
+.btn{display:inline-block;background:var(--prim);color:#1a1205;border-radius:8px;padding:8px 14px;
+     font-family:var(--mono);font-size:12.5px;font-weight:700;text-decoration:none;margin:10px 10px 2px 0}
+.btn.alt{background:var(--sec);color:#03202b}
+.btn:hover{filter:brightness(1.08)}
+.tl{margin:10px 0 2px;border-top:1px solid var(--line)}
+.tlrow{display:grid;grid-template-columns:110px 1fr;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12.5px}
+.tlrow .d{font-family:var(--mono);font-size:11px;color:var(--prim)}
+.feat{border-color:var(--prim)}
+.feat h2{color:var(--prim)}
+.howto{background:rgba(53,198,244,.06);border:1px solid rgba(53,198,244,.25);border-radius:9px;padding:10px 14px;margin:12px 0 4px;font-size:12.5px}
+.howto b{color:var(--sec)}
+.note{color:var(--muted);font-size:11.5px;font-family:var(--mono);margin-top:10px}
+h3{font-size:13.5px;margin:14px 0 4px;color:var(--sec)}
+#lang-switcher{display:inline-flex;gap:4px;margin-left:auto}
+.lang-btn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;
+  padding:3px 9px;font-family:var(--mono);font-size:11px;cursor:pointer}
+.lang-btn.active{background:var(--sec);color:#03202b;border-color:var(--sec)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>🛰 <span data-i18n="page_title">RPO 案例總覽</span></h1>
+    <a href="/" data-i18n="nav_home">← 地球儀主頁</a>
+    <a href="/rpo" data-i18n="nav_rpo_viewer">開啟 RPO 檢視器（任意配對）</a>
+    <span id="lang-switcher">
+      <button type="button" class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+      <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button type="button" class="lang-btn" data-lang="ja" onclick="setLang('ja')">日</button>
+    </span>
+  </div>
+  <p class="sub" data-i18n="page_sub">以公開 TLE + SGP4 獨立重建之交會/近接操作（RPO）案例。點「▶ 回放」直接進入
+     3D 場景；距離為 TLE 級精度（km 級）幾何重建，Pc 為 Chan 首階排序代理、非作業級。</p>
+
+  
+  <div class="card feat" id="featured-card" data-i18n-html="featured_html">
+  </div>
+  
+
+  
+  <div class="card">
+    <h2>神龍太空梭 — 在軌釋放與再接近（58573 × 59884）</h2>
+    <div class="ids">58573 × 59884</div>
+    <p>中國可重複使用太空飛機 58573 於 2024-05-24 在約 605 km 釋放 59884，離散至約 1,700 km 後於 6 月再接近至約 1.4 km——逆轉自然沿軌漂移需要推力。碰撞機率 Pc 為 Chan 首階排序代理（proxy），非作業級數值。</p>
+    
+    <div class="tl">
+      
+      <div class="tlrow"><div class="d">2024-05-24</div><div><b>釋放</b>：於 16:30–22:50 UTC 窗、約 605 km 釋放次物體。</div></div>
+      
+      <div class="tlrow"><div class="d">2024-05-25</div><div><b>首筆 elset</b>：59884 於 15:13 UTC 編目（分離後約 9–16 h）。</div></div>
+      
+      <div class="tlrow"><div class="d">05-25 ~ 06-05</div><div><b>離散</b>：沿軌分離穩定增長至約 1,720 km。</div></div>
+      
+      <div class="tlrow"><div class="d">06-06 ~ 06-08</div><div><b>再接近</b>：3 天內 1,439 km → 5.9 km；逆轉漂移需推力。</div></div>
+      
+      <div class="tlrow"><div class="d">06-08 ~ 06-18</div><div><b>近接操作</b>：維持約 2–80 km 約 10 天；最接近約 1.41 km（06-14 10:13 UTC）。</div></div>
+      
+    </div>
+    
+    <a class="btn" href="/rpo?primary=58573&secondary=59884"><span data-i18n="btn_replay">▶ 回放</span>（58573 × 59884）</a>
+  </div>
+  
+  <div class="card">
+    <h2>神龍第4次任務 — Object H 訪問前任務 Object G（69673 × 59884）</h2>
+    <div class="ids">69673 × 59884</div>
+    <p>PRC 太空梭 67689（2026-024A）於 2026-06-22 部署 Object H（69673，2026-024H）；H 機動接近由前次任務（2023-195）釋放之 Object G（59884，2023-195G，即 2024 年 58573 之 RPO 對象），2026-07-04 最近約 6 km 後離去返回太空梭。與 LeoLabs 2026 報告一致。碰撞機率 Pc 為 Chan 首階排序代理（proxy），非作業級數值。</p>
+    
+    <div class="tl">
+      
+      <div class="tlrow"><div class="d">2026-06-22</div><div><b>部署</b>：太空梭 67689 於 605 km 共軌釋放 Object H（69673）。</div></div>
+      
+      <div class="tlrow"><div class="d">06-28 ~ 07-02</div><div><b>轉移</b>：H 離開太空梭、機動接近 Object G（H–G 906→103 km）。</div></div>
+      
+      <div class="tlrow"><div class="d">2026-07-04</div><div><b>最接近 G</b>：H–G 約 6 km（訪問前任務釋放物）。</div></div>
+      
+      <div class="tlrow"><div class="d">07-06 ~ 07-08</div><div><b>離去</b>：H 離開 G 附近（H–G 21→722 km），返回太空梭。</div></div>
+      
+      <div class="tlrow"><div class="d">07-14 起</div><div><b>背離</b>：H 隨太空梭與 G 漸行漸遠（H–G 升至約 800 km）。</div></div>
+      
+    </div>
+    
+    <a class="btn" href="/rpo?primary=69673&secondary=59884"><span data-i18n="btn_replay">▶ 回放</span>（69673 × 59884）</a>
+  </div>
+  
+  <div class="card">
+    <h2>TJS-10 越過 TJS-3 東西換位 — GEO 在軌測試（58204 × 43874）</h2>
+    <div class="ids">58204 × 43874</div>
+    <p>通信技術試驗衛星 TJS-10（2023-11-03 發射、任務未公開）2024 年 3–5 月位於姊妹星 TJS-3（2018-12）東側約 170–360 km（東經 173.3°，同軌道面）；5/15 13:56 與 5/16 13:43 各升軌 SMA +11 km 啟動西漂，5/16–17 夜間以最近約 15 km 越過 TJS-3，5/18–19 兩次 −11 km 剎車、超越至西側約 320 km，再緩漂回東、5/27 微調停漂，6 月起定位於 TJS-3 西側約 65–85 km。COMSPOC 判讀：類似 TJS-3 2019 年之發射後在軌測試（checkout），但 TJS-10 在 TJS-3 東西兩側皆有活動。距離為 SGP4 近似（GEO TLE 級精度 km 級）；每日約 40 km 之週期擺動為相對偏心／傾角所致，非機動。Pc 為 Chan 首階排序代理，非作業級。</p>
+    
+    <div class="tl">
+      
+      <div class="tlrow"><div class="d">2023-11-03</div><div><b>發射</b>：TJS-10（CZ-7A），任務未公開；定點東經約 173°，與 TJS-3 同軌道面。</div></div>
+      
+      <div class="tlrow"><div class="d">2024-03 ~ 05-14</div><div><b>東側伴飛</b>：位於 TJS-3 東側 170→360 km（Δ經度 +0.2°→+0.5°），4/9 一度收至 150 km。</div></div>
+      
+      <div class="tlrow"><div class="d">05-15 ~ 05-16</div><div><b>西漂啟動</b>：兩次升軌 SMA +11.4 / +11.8 km（42,163→42,187 km），開始向西漂移。</div></div>
+      
+      <div class="tlrow"><div class="d">2024-05-16/17</div><div><b>越過 TJS-3</b>：5/16 18:00–5/17 00:00 最近約 15 km（20:10 UTC），由東側換至西側。</div></div>
+      
+      <div class="tlrow"><div class="d">05-18 ~ 05-19</div><div><b>剎車</b>：兩次降軌 −11.1 / −11.8 km 回到 GEO 同步高度；慣性超越至西側約 320 km。</div></div>
+      
+      <div class="tlrow"><div class="d">05-20 ~ 05-27</div><div><b>回漂</b>：緩慢向東漂回（320→110 km）；5/27 −4.9 / +10.5 km 微調停漂。</div></div>
+      
+      <div class="tlrow"><div class="d">2024-06 ~ 07</div><div><b>西側定位</b>：維持 TJS-3 西側約 65–85 km，同軌道面——COMSPOC 判為在軌測試。</div></div>
+      
+    </div>
+    
+    <a class="btn" href="/rpo?primary=58204&secondary=43874"><span data-i18n="btn_replay">▶ 回放</span>（58204 × 43874）</a>
+  </div>
+  
+  <div class="card">
+    <h2>USA 270 接近實驗十二號 01 星 — 一月偵察與中方規避（41744 × 50321）</h2>
+    <div class="ids">41744 × 50321</div>
+    <p>美國 GSSAP 衛星 USA 270 於 2022 年 1 月初逼近 2021-12-23 發射、12-30 抵達 GEO 的中國實驗十二號 01/02 星：反向重建顯示 1/8 04:30 距 01 星約 60 km，而兩星於 1/7 19:30 與 1/8 14:30 各做一次 SMA +20 km 級機動規避——反應在最接近後數小時內（COMSPOC 報導之「一月初雙星機動迴避」的量化重現）。USA 270 隨後 1/20 降軌東漂、2/3 升軌停漂再度接近，2/14 最近約 37 km，01 星數小時內再機動。資料來源：Space-Track gp_history（USA 270 僅 2021-10-22、2022-01-11/20、02-03/08/18 六筆 elset；業餘 classfd.tle 不含 GSSAP）；1/11 前之幾何以 1/11 elset 反向傳播（無機動假設），距離為近似值；Pc 為 Chan 首階排序代理，非作業級。</p>
+    
+    <div class="tl">
+      
+      <div class="tlrow"><div class="d">2021-12-23</div><div><b>發射</b>：實驗十二號 01/02 星（CZ-7A）；12-30 抵達 GEO（SMA 42,164 km）。</div></div>
+      
+      <div class="tlrow"><div class="d">12-31 ~ 01-07</div><div><b>一月逼近（反向重建）</b>：USA 270 自約 1,000 km 以每日約 120 km 接近。</div></div>
+      
+      <div class="tlrow"><div class="d">2022-01-08</div><div><b>最接近（重建）</b>：約 60 km（04:30 UTC）；與 02 星最近約 107 km（1/7 16:30）。</div></div>
+      
+      <div class="tlrow"><div class="d">01-07 ~ 01-08</div><div><b>雙星規避機動</b>：01/02 星於 1/7 19:30 各 SMA +22/+21 km、1/8 14:30 再 +21/+18 km——最接近後數小時內反應。</div></div>
+      
+      <div class="tlrow"><div class="d">01-09 ~ 01-11</div><div><b>離去</b>：距離回升至約 1,700 km（1/11 為 USA 270 首筆公開 elset）。</div></div>
+      
+      <div class="tlrow"><div class="d">01-13 ~ 01-14</div><div><b>01 星再機動 ×3</b>：SMA −31 / +75 / −45 km（12 h 內）重新定位。</div></div>
+      
+      <div class="tlrow"><div class="d">2022-01-20</div><div><b>USA 270 降軌</b>：SMA −39 km，向東漂移（GEO 帶下方）。</div></div>
+      
+      <div class="tlrow"><div class="d">2022-02-03</div><div><b>USA 270 升軌</b>：SMA +134 km，停漂定位；02-05 起每日約 400 km 再接近。</div></div>
+      
+      <div class="tlrow"><div class="d">2022-02-14</div><div><b>二月最接近</b>：約 37 km（15:17 UTC）；01 星 03:38 已先 +11 km 機動。</div></div>
+      
+    </div>
+    
+    <a class="btn" href="/rpo?primary=41744&secondary=50321"><span data-i18n="btn_replay">▶ 回放</span>（41744 × 50321）</a>
+  </div>
+  
+  <div class="card">
+    <h2>USA 270 接近實驗十二號 02 星 — 二月再接近與即時反制（41744 × 50322）</h2>
+    <div class="ids">41744 × 50322</div>
+    <p>同一事件對 02 星之幾何：一月初 USA 270 逼近（反向重建 1/7 最近約 107 km），02 星於 1/7–1/8 兩次機動規避；USA 270 二月再接近時 2/13 15:25 最近約 126 km，02 星於約 2 小時後（17:28 UTC）SMA −26 km 機動離開，並依 COMSPOC 分析定位於太陽與 USA 270 之間反向觀測——反應時間以小時計，顯示中國具備高精度、及時且反應迅速的 SSA／反太空能力（另見實踐二十一號案例）。USA 270 公開 elset 稀疏（Space-Track 六筆；業餘 classfd.tle 無 GSSAP），1/11 前以 1/11 elset 反向傳播，距離為近似值；Pc 為 Chan 首階排序代理，非作業級。</p>
+    
+    <div class="tl">
+      
+      <div class="tlrow"><div class="d">2021-12-23</div><div><b>發射</b>：實驗十二號 01/02 星；12-30 抵達 GEO。</div></div>
+      
+      <div class="tlrow"><div class="d">12-31 ~ 01-07</div><div><b>一月逼近（反向重建）</b>：USA 270 自約 950 km 每日約 120 km 接近，1/7 16:30 最近約 107 km。</div></div>
+      
+      <div class="tlrow"><div class="d">01-07 ~ 01-08</div><div><b>02 星規避機動</b>：1/7 19:30 SMA +21 km、1/8 14:23 +18 km（與 01 星同步）。</div></div>
+      
+      <div class="tlrow"><div class="d">01-09 ~ 01-11</div><div><b>離去</b>：距離回升至約 1,760 km。</div></div>
+      
+      <div class="tlrow"><div class="d">2022-01-20</div><div><b>USA 270 降軌</b>：SMA −39 km，向東漂移。</div></div>
+      
+      <div class="tlrow"><div class="d">2022-02-03</div><div><b>USA 270 升軌</b>：SMA +134 km，停漂；02-05 起每日約 400 km 再接近。</div></div>
+      
+      <div class="tlrow"><div class="d">2022-02-13</div><div><b>二月最接近</b>：約 126 km（15:25 UTC）。</div></div>
+      
+      <div class="tlrow"><div class="d">2022-02-13</div><div><b>02 星反制機動</b>：17:28 UTC SMA −26 km，約 2 小時內反應離開並取得順光觀測位置。</div></div>
+      
+    </div>
+    
+    <a class="btn" href="/rpo?primary=41744&secondary=50322"><span data-i18n="btn_replay">▶ 回放</span>（41744 × 50322）</a>
+  </div>
+  
+  <div class="card">
+    <h2>美英「奧林匹克衛士」聯合 RPO — USA 271 檢視 SKYNET 5A（41745 × 30794）</h2>
+    <div class="ids">41745 × 30794</div>
+    <p>2025-09-04 至 09-12，美國太空司令部與英國太空司令部在「Multinational Force – Operation OLYMPIC DEFENDER」框架下執行首次美英聯合衛星近接操作：一枚美方衛星機動接近並檢視一枚英方衛星，確認其在軌正常運作，兩國於 2025-09-18 聯合新聞稿證實此事。官方僅公布英方衛星為 SKYNET 5A（英國軍用通信衛星）；美方衛星身份官方未曾點名。商業太空態勢感知公司 COMSPOC 依獨立追蹤資料判讀美方衛星為 USA 271（高機動 GSSAP 地球同步太空態勢感知衛星），並公布：09-04 約 11:00 UTC 一次沿軌機動（約 2.2 m/s，中止原本每日 −1.5° 之西向漂移）、09-05 23:00 UTC 前後最近約 13 km（維持 0.05° 以內達 6 天）、09-10～09-13 再一次機動（約 1.14 m/s，轉為每日 +0.25° 東向漂移離開）。**這組關鍵數字（USA 271 身份、13 km、delta-v）均為 COMSPOC 推定／觀測，非官方證實**。
+
+本頁以 Space-Track 公開 TLE 獨立重建幾何：USA 271 在整個事件期間（09-01～10-04）**完全沒有公開 elset**，本頁只能用 09-01（機動前 3 天）之元素外推，得最接近約 **212 km**（09-04 23:15 UTC）——比 COMSPOC 的 ~13 km 大了一個數量級。**這不是本頁重建方法出錯，而是公開 TLE 目錄對 GSSAP 這類機動衛星的已知盲區**：機動未反映在任何後續公開 elset 上，SGP4 從機動前的元素外推自然追不上真實軌跡——這正是本案例想誠實呈現的重點，而非隱藏這個落差。距離為 SGP4 近似（GEO TLE 級精度 km 級）；Pc 為 Chan 首階排序代理，非作業級數值。</p>
+    
+    <div class="tl">
+      
+      <div class="tlrow"><div class="d">2025-08 起</div><div><b>西向漂移</b>：USA 271 以每日約 −1.5° 之速率西漂接近 95.3°E 附近（COMSPOC）。</div></div>
+      
+      <div class="tlrow"><div class="d">2025-09-01</div><div><b>最後一筆公開 elset</b>：09-01 07:56 UTC 後，USA 271 直到 10-04 才再有公開 TLE——完整涵蓋本事件之 33 天空窗。</div></div>
+      
+      <div class="tlrow"><div class="d">2025-09-04</div><div><b>機動（COMSPOC）</b>：約 11:00 UTC 沿軌機動 ~2.2 m/s，中止西向漂移，開始逼近 SKYNET 5A。</div></div>
+      
+      <div class="tlrow"><div class="d">2025-09-05</div><div><b>TCA（COMSPOC）</b>：23:00 UTC 前後最近約 13 km，其後維持 0.05° 以內共 6 天。</div></div>
+      
+      <div class="tlrow"><div class="d">2025-09-10 ~ 09-13</div><div><b>離去（COMSPOC）</b>：機動 ~1.14 m/s，轉為每日 +0.25° 東向漂移，脫離接近幾何。</div></div>
+      
+      <div class="tlrow"><div class="d">2025-09-18</div><div><b>官方證實</b>：美英太空司令部聯合新聞稿確認此為雙方首次聯合 RPO 演示，點名 SKYNET 5A 為英方衛星，未點名美方衛星。</div></div>
+      
+      <div class="tlrow"><div class="d">2025-10-04</div><div><b>公開 TLE 恢復</b>：USA 271 首筆事件後 elset，SMA 較 09-01 已淨降約 133 km，顯示事件期間確有顯著軌道調整，惟細節無法由公開資料逐段還原。</div></div>
+      
+    </div>
+    
+    <a class="btn" href="/rpo?primary=41745&secondary=30794"><span data-i18n="btn_replay">▶ 回放</span>（41745 × 30794）</a>
+  </div>
+  
+  <div class="card">
+    <h2>COSMOS 2612 接近 ICEYE-X36 — 相位調整、繞飛三天後離開（59103 × 68762）</h2>
+    <div class="ids">59103 × 68762</div>
+    <p>俄國軍事衛星 COSMOS 2612 與 2610、2611、2613、2614 於 2026-05 集體將傾角調至 ICEYE-X36 軌道面；9/30 升軌約 47 km 停留 12 天以調整相位，10/12 降回，10/15–16 再以一降一升兩次小機動微調相位，進入以 X36 為中心之自然運動繞飛（NMC），中心落後約 2 km；10/18 再升軌約 2.3 km 脫離，10/20 降回後停在 X36 後方約 475 km。LeoLabs 等商業追蹤報導 10/15–19 最接近約 500 m；ICEYE 僅表示持續追蹤，未證實碰撞、干擾或損害。公開 TLE 級精度，次公里距離非量測值；Pc 為 Chan 首階排序代理。</p>
+    
+    <div class="tl">
+      
+      <div class="tlrow"><div class="d">2026-05-16</div><div><b>軌道面匹配</b>：傾角 96.96° → 97.85°（+0.89°），與姊妹星 2610/2611/2613/2614 同週進入 X36 軌道面（本端 TLE 判讀共 5 顆）。英國智庫 RUSI 2026-06 報告亦指出 5 月有四顆俄方衛星調整軌道對齊 ICEYE-X36（他方口徑，顆數與本端判讀不同）。</div></div>
+      
+      <div class="tlrow"><div class="d">2026-09-30</div><div><b>升軌</b>：兩段點火 +46.5 km 至約 590.7 km，週期變長、相對 X36 沿軌漂移。</div></div>
+      
+      <div class="tlrow"><div class="d">10-01 ~ 10-12</div><div><b>相位調整</b>：於高軌停留 12.3 天（10/07 傾角微調 +0.03°）。</div></div>
+      
+      <div class="tlrow"><div class="d">2026-10-12</div><div><b>降軌</b>：−47.8 km、傾角 −0.048°，回到 X36 同高度同軌道面。</div></div>
+      
+      <div class="tlrow"><div class="d">2026-10-15</div><div><b>追趕</b>：降軌約 2.3 km（公開 TLE 15:56Z 起反映），縮短週期、由後方追上 X36。</div></div>
+      
+      <div class="tlrow"><div class="d">2026-10-16</div><div><b>同步</b>：升軌約 2.3 km 回到 X36 同高度（14:14Z 起反映），形成 NMC；本端判讀橢圓中心落後 X36 約 2.0 km、沿軌／徑向振幅比 2.01。</div></div>
+      
+      <div class="tlrow"><div class="d">2026-10-18</div><div><b>離開</b>：01:10Z 前後本端 SGP4 重建最近約 0.16 km（TLE 級，非量測值）；23:34Z 起之 elset 平均高度升約 2.3 km，週期變長，以約 300 km/日向 X36 後方漂離，結束繞飛。</div></div>
+      
+      <div class="tlrow"><div class="d">2026-10-20</div><div><b>停漂</b>：降軌約 2.5 km 回到 X36 同高度，相對漂移停止，此後穩定在 X36 後方約 475 km（至 10/22 資料）。</div></div>
+      
+      <div class="tlrow"><div class="d">外部報導</div><div><b>公開報導（他方口徑）</b>：LeoLabs 與獨立追蹤者指出 Kosmos 2612 自 9/30 起多次機動，10/15–19 接近 ICEYE-X36，最近約 500 m（亦有更近之估計）；追蹤者未見 X36 軌道受撞擊或擾動跡象。ICEYE 聲明「持續密切追蹤，星座架構具持續運作與韌性」，未證實攻擊或損害。（來源：CNN 2026-10-19 報導 edition.cnn.com/2026/10/19/science/russian-satellite-iceye-x36-approach）</div></div>
+      
+    </div>
+    
+    <a class="btn" href="/rpo?primary=59103&secondary=68762"><span data-i18n="btn_replay">▶ 回放</span>（59103 × 68762）</a>
+  </div>
+  
+
+  <p class="note" data-i18n="method_note">方法學：兩物體各取最近 elset 以 SGP4 傳播至共同時鐘；已知案例載入 preset
+     視窗與事件標註。GEO 案例可勾「COMSPOC 模式」看地固座標系定點保持迴圈。</p>
+</div>
+<script>
+"use strict";
+const RPO_I18N = {
+  zh: {
+    page_title: "RPO 案例總覽",
+    nav_home: "← 地球儀主頁",
+    nav_rpo_viewer: "開啟 RPO 檢視器（任意衛星配對）",
+    page_sub: "以公開 TLE 資料使用 SGP4 獨立重建之 RPO 相關近接案例。點「▶ 回放」直接進入\n     3D 場景；距離為 TLE 相當精度（km 級）的幾何重建，Pc 為基於 Chan 一階近似的排序代理指標，並非作業級碰撞機率。",
+    btn_replay: "▶ 回放",
+    method_note: "方法學：兩物體各自選取可取得的最近 elset，使用 SGP4 傳播至共同 epoch；已知案例載入預設\n     時間窗與事件標註。GEO 案例啟用「COMSPOC 模式」後，可檢視地固座標系下的定點保持軌跡。",
+    featured_html: `
+    <h2>特寫：神龍太空飛機（第 4 次任務）× Object H — 三個月內兩度部署與回收</h2>
+    <div class="ids">primary 69673（OBJECT H，2026-024H）× secondary 67689（PRC TEST SPACECRAFT 4，2026-024A）</div>
+    <p><b>背景</b> — 中國第 4 架可重複使用試驗太空飛機（NORAD 67689，2026-024A，2026-02-07
+       酒泉發射，西方稱 Shenlong「神龍」）於 605 km / 49.99° 軌道運作。2026-06-22 釋放一顆
+       小型衛星 Object H（NORAD 69673，2026-024H）。H 隨後機動離開、前往「上一次任務（2023-195）
+       釋放的 Object G（59884）」繞行偵察，再折返太空飛機並於 7 月中旬被回收——
+       美國第 18 太空防禦中隊（18 SDS）與 LeoLabs 均作此評估，路透社 2026-08 報導即此事件。
+       本案例以 Space-Track 公開 TLE 逐日 SGP4 重建，時序與 LeoLabs 完全一致。
+       <b>第二次循環</b>：2026-08-31 H 再度分離，約兩週後的 09-13 再度與太空飛機共位——美國太空軍資料（McDowell 2026-09-23 引述）稱之為「第二次抓回」。約 12 週內兩度釋放並收回同一枚小衛星，中方未說明其用途。</p>
+    <h3>逐段時序（回放時對照畫面右側時間軸）</h3>
+    <div class="tl">
+      <div class="tlrow"><div class="d">2026-06-22</div><div><b>部署</b>：H 自太空飛機釋放，兩者相距僅 ≈0.2 km、近乎共位。</div></div>
+      <div class="tlrow"><div class="d">06-24 ~ 07-06</div><div><b>離開</b>：H 沿軌道漸行漸遠，前往訪問 Object G（H–太空飛機距離升至約 1,000 km）。</div></div>
+      <div class="tlrow"><div class="d">07-08 ~ 07-11</div><div><b>返回</b>：訪 G 結束後折返，H–太空飛機 722 → 5 km——逆轉自然漂移需要推力，是「受控接近」的直接證據。</div></div>
+      <div class="tlrow"><div class="d">07-12 ~ 07-14</div><div><b>回收</b>：兩者距離 ≈0 km，地面感測器已無法分辨；18 SDS 評估 H 已被太空飛機收回。</div></div>
+      <div class="tlrow"><div class="d">07-14 ~ 08-30</div><div><b>共位</b>：編目上 H 與太空飛機的軌道根數逐筆完全相同（0 km），約七週。</div></div>
+    </div>
+    <h3>第二次循環（回放請按下方「第二次循環」按鈕）</h3>
+    <div class="tl">
+      <div class="tlrow"><div class="d">2026-08-31</div><div><b>再部署</b>：兩者根數分開，當日距離由 0 升至約 230 km。</div></div>
+      <div class="tlrow"><div class="d">09-01 ~ 09-07</div><div><b>離開</b>：距離逐日增加，09-05～07 約 1,200–1,300 km。</div></div>
+      <div class="tlrow"><div class="d">09-07 ~ 09-09</div><div><b>資料空窗</b>：H 有 10 筆官方 elset 半長軸驟低 18 km、相位領先約 20°，10 小時後又回到共位——物理上不可能，研判為編目錯配，已剔除；H 實際折返時點無法判定。</div></div>
+      <div class="tlrow"><div class="d">09-09 ~ 09-12</div><div><b>返回近接</b>：資料恢復時 H 已在太空飛機約 3 km 內，09-10 最近約 0.2 km。</div></div>
+      <div class="tlrow"><div class="d">09-13 起</div><div><b>再回收</b>：軌道根數再度完全相同（0 km）。「根數相同」代表編目上已無法分辨兩物體，與併體判讀一致，但不是實體捕獲的獨立證據。</div></div>
+    </div>
+    <div class="howto"><b>怎麼看回放</b>：
+      ① 右側浮動「相對軌跡投影」視窗是主線索：紅點沿粗趨勢線移動，靠向原點＝接近、貼原點＝回收；
+      ② 3D 視角預設「第三方遠景」綜觀整個事件（時間軸下方色帶＝部署/訪 G/返回/回收四階段），按「切換視角」可循 遠景 → H → 太空飛機 輪替；
+      ③ 紅線是兩者連線（越紅越近），紅點標最接近時刻；
+      ④ 播放速度已調為全程約 3 分鐘，時間軸可拖曳到 07-12 直接看回收段；
+      ⑤ 3σ 橢球代表 TLE 級不確定度——次公里距離落在雜訊底，回收段請看趨勢而非單點數值；
+      ⑥ 浮窗縱軸＝Δ高度、粗線＝單圈移動平均——衛星繞圈看不出的軌道升降在這裡一眼可見（可拖曳、⇄ 換中心）。</div>
+    <a class="btn" href="/rpo?primary=69673&secondary=67689">▶ 回放：部署與回收（69673 × 67689）</a>
+    <a class="btn" href="/rpo?primary=69673&secondary=67689&variant=cycle2">▶ 回放：第二次循環（08-31 部署 → 09-13 回收）</a>
+    <a class="btn alt" href="/rpo?primary=69673&secondary=59884">▶ 支線：H 訪問 Object G（69673 × 59884）</a>
+    <div class="note">獨立重現：verify_shenlong_2026_rpo.py（SGP4 逐日最小距離）；報告章：期末_RPO案例_神龍_20260807。</div>`,
+  },
+  ja: {
+    page_title: "RPO事例集",
+    nav_home: "← グローブホームへ",
+    nav_rpo_viewer: "RPOビューアーを開く（任意の衛星ペア）",
+    page_sub: "公開TLEデータをSGP4で独自に再構築した、RPO関連の近接事例です。「▶ 再生」をクリックすると\n     3Dシーンに直接移動します。距離はTLE相当の精度（km級）による幾何学的再構築であり、PcはChanの一次近似に基づく順位付け用の代理指標で、運用レベルの衝突確率ではありません。",
+    btn_replay: "▶ 再生",
+    method_note: "方法論：各物体について利用可能な直近のエレメントセット（elset）を選択し、SGP4で共通エポック\n     まで伝播します。既知事例では、プリセットされた時間窓とイベント注記を読み込みます。GEO事例では「COMSPOCモード」を有効にすると、地球固定座標系での定点保持軌跡を表示できます。",
+    featured_html: `
+    <h2>特集：神龍宇宙往還機（第4回ミッション）× Object H — 3か月で2度の分離と回収</h2>
+    <div class="ids">primary 69673（OBJECT H、2026-024H）× secondary 67689（PRC TEST SPACECRAFT 4、2026-024A）</div>
+    <p><b>背景</b> — 中国の第4号再使用型実験宇宙往還機（NORAD 67689、2026-024A、2026-02-07に
+       酒泉から打上げ、西側では「神龍（Shenlong）」と呼称）は高度605km／傾斜角49.99°の軌道で運用。
+       2026-06-22に小型衛星Object H（NORAD 69673、2026-024H）を分離。Hはその後機動して離脱し、
+       「前回ミッション（2023-195）で分離されたObject G（59884）」を周回・観測した後、宇宙往還機へ折り返し、
+       7月中旬に回収されたと見られる——米宇宙軍第18宇宙防衛隊（18 SDS）とLeoLabsの双方がこの評価を示しており、
+       ロイター通信も2026年8月にこの事案を報じている。本事例はSpace-Track公開TLEを用いた日次SGP4再構築であり、
+       時系列はLeoLabsの評価と完全に一致する。
+       <b>第2サイクル</b>：2026-08-31にHが再び分離し、約2週間後の09-13に再び往還機と同一軌道に戻った——米宇宙軍のデータ（McDowell、2026-09-23）はこれを「2度目の回収」としている。約12週間で同じ小型衛星を2度分離・回収したことになるが、中国側は目的を説明していない。</p>
+    <h3>段階別タイムライン（再生時、画面右側のタイムラインと対照）</h3>
+    <div class="tl">
+      <div class="tlrow"><div class="d">2026-06-22</div><div><b>分離</b>：Hが宇宙往還機から分離。両者の距離は≈0.2 kmのみでほぼ同一軌道。</div></div>
+      <div class="tlrow"><div class="d">06-24 ～ 07-06</div><div><b>離脱</b>：Hが軌道上を徐々に離れ、Object Gへの訪問に向かう（H–往還機間の距離は約1,000 kmまで増加）。</div></div>
+      <div class="tlrow"><div class="d">07-08 ～ 07-11</div><div><b>帰還</b>：Gへの訪問終了後に折り返し、H–往還機間の距離が722 → 5 kmに縮小——自然なドリフトを逆行させるには推力が必要であり、「制御された接近」の直接的証拠である。</div></div>
+      <div class="tlrow"><div class="d">07-12 ～ 07-14</div><div><b>回収</b>：両者の距離は≈0 kmとなり、地上センサーではもはや区別不能。18 SDSはHが宇宙往還機に回収されたと評価。</div></div>
+      <div class="tlrow"><div class="d">07-14 ～ 08-30</div><div><b>同一軌道保持</b>：カタログ上、Hと往還機の軌道要素は1件ずつ完全に一致（0 km）、約7週間。</div></div>
+    </div>
+    <h3>第2サイクル（下の「第2サイクル」ボタンで再生）</h3>
+    <div class="tl">
+      <div class="tlrow"><div class="d">2026-08-31</div><div><b>再分離</b>：軌道要素が分かれ、当日の距離は0から約230 kmに。</div></div>
+      <div class="tlrow"><div class="d">09-01 ～ 09-07</div><div><b>離脱</b>：距離は日ごとに増加し、09-05～07に約1,200–1,300 km。</div></div>
+      <div class="tlrow"><div class="d">09-07 ～ 09-09</div><div><b>データ欠落</b>：Hの公式elset 10件で長半径が18 km急低下、位相が約20°先行し、10時間後に再び同一軌道へ——物理的に不可能なためカタログ上の誤関連と判断し除外。Hが実際に折り返した時刻は特定できない。</div></div>
+      <div class="tlrow"><div class="d">09-09 ～ 09-12</div><div><b>帰還・近接</b>：データ回復時点でHは往還機から約3 km以内、09-10に最接近約0.2 km。</div></div>
+      <div class="tlrow"><div class="d">09-13以降</div><div><b>再回収</b>：軌道要素が再び完全一致（0 km）。「要素の一致」はカタログ上2物体を区別できなくなったことを意味し、結合との解釈と整合するが、物理的な捕獲の独立した証拠ではない。</div></div>
+    </div>
+    <div class="howto"><b>再生の見方</b>：
+      ①右側に浮かぶ「相対軌跡投影」ウィンドウが主な手がかりです。赤い点が太い傾向線に沿って動き、原点に近づく＝接近、原点に張り付く＝回収を意味します。
+      ②3D視点は初期設定で「第三者俯瞰視点」となり事象全体を俯瞰します（タイムライン下部の色帯＝分離／G訪問／帰還／回収の4段階）。「視点切替」ボタンで 俯瞰 → H → 往還機 の順に切り替え可能です。
+      ③赤い線は両者を結ぶ連結線（近いほど赤くなる）、赤い点は最接近時刻を示します。
+      ④再生速度は全体で約3分になるよう調整済みです。タイムラインを07-12までドラッグすれば回収段階を直接確認できます。
+      ⑤3σ楕円体はTLE級の不確かさを表します——サブキロメートルの距離は雑音の下限に位置するため、回収段階は個々の値ではなく傾向として読み取ってください。
+      ⑥浮動ウィンドウの縦軸＝Δ高度、太線＝1周移動平均——衛星の周回運動だけでは分からない軌道の上昇・降下がここで一目で分かります（ドラッグ可能、⇄で基準衛星を切替）。</div>
+    <a class="btn" href="/rpo?primary=69673&secondary=67689">▶ 再生：分離と回収（69673 × 67689）</a>
+    <a class="btn" href="/rpo?primary=69673&secondary=67689&variant=cycle2">▶ 再生：第2サイクル（08-31 分離 → 09-13 回収）</a>
+    <a class="btn alt" href="/rpo?primary=69673&secondary=59884">▶ 支線：HによるObject G訪問（69673 × 59884）</a>
+    <div class="note">独立再現：verify_shenlong_2026_rpo.py（SGP4による日次最小距離計算）；報告章：期末_RPO案例_神龍_20260807。</div>`,
+  },
+  en: {
+    page_title: "RPO Case Overview",
+    nav_home: "← Globe Home",
+    nav_rpo_viewer: "Open RPO Viewer (Any Satellite Pair)",
+    page_sub: "RPO-related proximity cases independently reconstructed from public TLE data using SGP4. Click \"▶ Replay\" to open\n     the 3D scene; distances are km-level geometric reconstructions based on TLE-quality data, and Pc is a Chan first-order approximation used as a ranking proxy, not an operational-grade probability of collision.",
+    btn_replay: "▶ Replay",
+    method_note: "Methodology: each object is propagated with SGP4 from its nearest available element set (elset) to a common epoch;\n     known cases load preset time windows and event annotations. For GEO cases, enable \"COMSPOC mode\" to view the station-keeping trajectory in an Earth-fixed frame.",
+    featured_html: `
+    <h2>Featured: Shenlong Spaceplane (4th Mission) × Object H — Two Deploy-and-Recover Cycles in Three Months</h2>
+    <div class="ids">primary 69673 (OBJECT H, 2026-024H) × secondary 67689 (PRC TEST SPACECRAFT 4, 2026-024A)</div>
+    <p><b>Background</b> — China's 4th reusable experimental spaceplane (NORAD 67689, 2026-024A, launched
+       from Jiuquan on 2026-02-07, referred to in the West as "Shenlong") operates in a 605 km / 49.99°
+       orbit. On 2026-06-22 it released a small satellite, Object H (NORAD 69673, 2026-024H). H then
+       maneuvered away to approach and observe "Object G (59884), released during the previous mission
+       (2023-195)," before returning to the spaceplane and apparently being recovered in mid-July —
+       an assessment made by both U.S. Space Force's 18th Space Defense Squadron (18 SDS) and LeoLabs;
+       this is the event reported by Reuters in August 2026. This case is reconstructed day-by-day with
+       SGP4 from public Space-Track TLEs, and the timeline matches LeoLabs' assessment exactly.
+       <b>Second cycle</b>: on 2026-08-31 H separated again, and about two weeks later, on 09-13, it was co-located with the spaceplane once more — U.S. Space Force data (cited by Jonathan McDowell, 2026-09-23) describe this as a second recapture. The same small satellite was released and recovered twice in about 12 weeks; China has not explained its purpose.</p>
+    <h3>Timeline by Phase (compare against the timeline on the right during replay)</h3>
+    <div class="tl">
+      <div class="tlrow"><div class="d">2026-06-22</div><div><b>Deployment</b>: H is released from the spaceplane; the two are only ≈0.2 km apart, nearly co-located.</div></div>
+      <div class="tlrow"><div class="d">06-24 ~ 07-06</div><div><b>Departure</b>: H gradually drifts away along its orbit to visit Object G (H–spaceplane distance grows to about 1,000 km).</div></div>
+      <div class="tlrow"><div class="d">07-08 ~ 07-11</div><div><b>Return</b>: After the visit to G, H turns back; H–spaceplane distance shrinks from 722 → 5 km — reversing natural drift requires thrust, direct evidence of a "controlled approach."</div></div>
+      <div class="tlrow"><div class="d">07-12 ~ 07-14</div><div><b>Recovery</b>: The two objects' distance is ≈0 km, no longer distinguishable by ground sensors; 18 SDS assesses that H has been recovered by the spaceplane.</div></div>
+      <div class="tlrow"><div class="d">07-14 ~ 08-30</div><div><b>Co-location</b>: In the catalog, every H element set is identical to the spaceplane's (0 km) for about seven weeks.</div></div>
+    </div>
+    <h3>Second cycle (use the "Second cycle" replay button below)</h3>
+    <div class="tl">
+      <div class="tlrow"><div class="d">2026-08-31</div><div><b>Re-deployment</b>: the element sets diverge; separation grows from 0 to about 230 km that day.</div></div>
+      <div class="tlrow"><div class="d">09-01 ~ 09-07</div><div><b>Departure</b>: separation grows daily, reaching about 1,200–1,300 km on 09-05 to 09-07.</div></div>
+      <div class="tlrow"><div class="d">09-07 ~ 09-09</div><div><b>Data gap</b>: ten official H element sets show a semi-major axis 18 km lower and a phase about 20° ahead, then return to co-location within 10 hours — physically impossible, so they are treated as a catalog mis-association and excluded; the exact time H turned back cannot be determined.</div></div>
+      <div class="tlrow"><div class="d">09-09 ~ 09-12</div><div><b>Return and proximity</b>: when normal data resume, H is already within about 3 km of the spaceplane; closest approach about 0.2 km on 09-10.</div></div>
+      <div class="tlrow"><div class="d">From 09-13</div><div><b>Second recovery</b>: element sets identical again (0 km). Identical elements mean the catalog can no longer tell the two objects apart — consistent with docking, but not independent proof of physical capture.</div></div>
+    </div>
+    <div class="howto"><b>How to read the replay</b>:
+      ① The floating "relative trajectory projection" panel on the right is the main clue: the red dot moves along a thick trend line — approaching the origin means closing in, sitting on the origin means recovery;
+      ② The 3D view defaults to a "third-party overview" of the whole event (the color band below the timeline marks the 4 phases: deployment / visit to G / return / recovery); use "Switch View" to cycle overview → H → spaceplane;
+      ③ The red line connects the two objects (redder = closer), with a red dot marking the closest-approach moment;
+      ④ Playback speed is tuned to about 3 minutes end-to-end; drag the timeline to 07-12 to jump straight to the recovery phase;
+      ⑤ The 3σ ellipsoid represents TLE-grade uncertainty — sub-kilometer distances sit at the noise floor, so read the recovery phase as a trend rather than individual values;
+      ⑥ The floating panel's vertical axis is Δaltitude, and the thick line is the per-orbit moving average — altitude changes invisible from watching the satellite orbit are visible here at a glance (draggable, ⇄ to switch reference object).</div>
+    <a class="btn" href="/rpo?primary=69673&secondary=67689">▶ Replay: Deployment &amp; Recovery (69673 × 67689)</a>
+    <a class="btn" href="/rpo?primary=69673&secondary=67689&variant=cycle2">▶ Replay: Second cycle (08-31 deploy → 09-13 recovery)</a>
+    <a class="btn alt" href="/rpo?primary=69673&secondary=59884">▶ Side story: H visits Object G (69673 × 59884)</a>
+    <div class="note">Independently reproduced: verify_shenlong_2026_rpo.py (day-by-day SGP4 minimum distance); report chapter: 期末_RPO案例_神龍_20260807.</div>`,
+  },
+};
+let LANG = localStorage.getItem('rpo_cases_lang') || 'zh';
+if (!RPO_I18N[LANG]) LANG = 'zh';
+function t(key) {
+  const d = RPO_I18N[LANG] || RPO_I18N.zh;
+  return (key in d) ? d[key] : (RPO_I18N.zh[key] !== undefined ? RPO_I18N.zh[key] : key);
+}
+function setLang(lang) {
+  if (!RPO_I18N[lang]) return;
+  LANG = lang;
+  localStorage.setItem('rpo_cases_lang', lang);
+  document.documentElement.lang = {zh: 'zh-Hant', en: 'en-US', ja: 'ja-JP'}[lang] || 'zh-Hant';
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+}
+document.addEventListener('DOMContentLoaded', () => setLang(LANG));
+</script>
+</body>
+</html>

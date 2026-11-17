@@ -1,0 +1,230 @@
+"""發布 Rust 單機版的線上更新：衛星資料庫與執行檔 → HuggingFace dataset（預設 RhynoWu/Rust_SatDashboard）。
+
+產出（repo 根目錄）：
+  manifest.json            版本、大小、sha256、下載來源（sources 清單，之後可加 GitHub Releases 當第二來源）
+  manifest.json.sig        ed25519 簽章（私鑰 %USERPROFILE%\\.satdashboard\\update_signing_key.pem，scripts/update_keygen.py 產生）
+  db/space_db_slim.duckdb.zst
+  exe/SatDashboard-x64.exe、exe/SatDashboard-arm64.exe
+  README.md                dataset 說明
+
+內容沒變的檔案（sha256 與線上 manifest 相同）不重傳，沿用線上那份。預設上傳後壓縮 dataset 歷史（只留最新版）。
+
+  python scripts/publish_hf.py                   # 資料庫 + 執行檔（先跑 scripts/build.ps1）
+  python scripts/publish_hf.py --skip-exe        # 只發布資料庫（每日排程用）
+  python scripts/publish_hf.py --local out\\hf    # 只輸出到資料夾，不上傳（本機測試：--update-manifest out\\hf\\manifest.json）
+  python scripts/publish_hf.py --dry-run         # 只列出會做什麼
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import os
+import platform
+import shutil
+import subprocess
+import sys
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+import zstandard
+from cryptography.hazmat.primitives import serialization
+
+ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_DB = ROOT.parent / "scenario-advanced01" / "DB" / "space_db_slim.duckdb"
+KEY = Path.home() / ".satdashboard" / "update_signing_key.pem"
+PUB = ROOT / "src" / "update_pubkey.hex"
+EXES = {"x86_64": "SatDashboard-x64.exe", "aarch64": "SatDashboard-arm64.exe"}
+DB_NAME = "space_db_slim.duckdb"
+
+
+def sha256(p: Path) -> str:
+    h = hashlib.sha256()
+    with open(p, "rb") as f:
+        for b in iter(lambda: f.read(1 << 20), b""):
+            h.update(b)
+    return h.hexdigest()
+
+
+def url_of(repo: str, path: str) -> str:
+    return f"https://huggingface.co/datasets/{repo}/resolve/main/{path}"
+
+
+def remote_manifest(repo: str) -> dict | None:
+    import urllib.request
+    try:
+        with urllib.request.urlopen(url_of(repo, "manifest.json"), timeout=30) as r:
+            return json.loads(r.read())
+    except Exception:  # noqa: BLE001  第一次發布時還沒有
+        return None
+
+
+def exe_about(exe: Path) -> dict:
+    out = subprocess.run([str(exe), "--version"], capture_output=True, timeout=60, check=True)
+    return json.loads(out.stdout.decode("utf-8"))
+
+
+def native_exe(exe_dir: Path) -> Path:
+    arch = "aarch64" if platform.machine().lower() in ("arm64", "aarch64") else "x86_64"
+    return exe_dir / EXES[arch]
+
+
+def signer():
+    if not KEY.exists():
+        raise SystemExit(f"找不到簽章私鑰 {KEY}（先執行 python scripts/update_keygen.py）")
+    k = serialization.load_pem_private_key(KEY.read_bytes(), password=None)
+    pub = k.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw).hex()
+    if pub != PUB.read_text(encoding="ascii").strip():
+        raise SystemExit("私鑰與 src/update_pubkey.hex 不符：exe 會拒絕這份 manifest")
+    return k
+
+
+README = """---
+license: other
+pretty_name: ATRDC SatDashboard Rust 單機版
+---
+
+# ATRDC SatDashboard — Rust 單機版（Windows）
+
+太空態勢儀表板的離線單機版：單一執行檔、不需安裝 Python，雙擊即可在瀏覽器開啟。
+
+## 下載
+
+- Intel／AMD 電腦：[SatDashboard-x64.exe](https://huggingface.co/datasets/RhynoWu/Rust_SatDashboard/resolve/main/exe/SatDashboard-x64.exe)
+- ARM64（Snapdragon 等）電腦：[SatDashboard-arm64.exe](https://huggingface.co/datasets/RhynoWu/Rust_SatDashboard/resolve/main/exe/SatDashboard-arm64.exe)
+
+## 第一次使用
+
+1. 把 exe 放進一個新資料夾，雙擊執行（Windows 若跳出 SmartScreen：「其他資訊」→「仍要執行」）。
+2. 瀏覽器會自動開啟儀表板。按右下角「檢查更新」→ 資料庫旁的「更新」，下載衛星資料庫（約 237 MB，下載後自動解壓並載入）。
+3. 之後程式每 6 小時自動檢查新版資料庫與新版程式，有新版時右下角會出現「更新」按鈕。
+
+## 功能
+
+- 3D 地球儀：全目錄衛星即時位置、搜尋、近距離配對篩選、NORAD 監測
+- 衛星任務規劃：地面站下行接收過頂預報（今天到未來 7 天）、夜間過頂過濾、地面軌跡左右各 5° 的 1° 網格雲量預報（MET Norway）
+- 軌道要素歷史與雙星比較（/orbit）、2D 地面軌跡（/track）
+- 台北覆蓋分析、RPO 相對接近 3D、全球海纜態勢、Himawari 氣象衛星最新全圓盤影像
+
+## 檔案
+
+- `manifest.json`：版本、大小、sha256、下載來源；`manifest.json.sig` 是 ed25519 簽章，程式驗證通過才會更新。
+- `db/space_db_slim.duckdb.zst`：衛星資料庫（zstd 壓縮）。程式會自動下載；手動安裝時解壓到 exe 所在資料夾的 `data\DB\space_db_slim.duckdb`。
+- `exe/`：單機版執行檔。
+
+聯絡：[Rhyno Wu（LinkedIn）](https://www.linkedin.com/in/rhyno-wu-6b766771/)
+"""
+
+
+def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--repo", default="RhynoWu/Rust_SatDashboard")
+    ap.add_argument("--db", default=str(DEFAULT_DB))
+    ap.add_argument("--exe-dir", default=str(ROOT / "dist"))
+    ap.add_argument("--skip-db", action="store_true")
+    ap.add_argument("--skip-exe", action="store_true")
+    ap.add_argument("--notes", default="", help="新版說明（顯示在程式的更新提示）")
+    ap.add_argument("--local", help="只輸出到此資料夾（manifest 的下載網址改用相對路徑），不上傳")
+    ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--no-squash", action="store_true", help="不壓縮 dataset 歷史")
+    a = ap.parse_args()
+
+    key = signer()
+    old = None if a.local else remote_manifest(a.repo)
+    stage = Path(a.local) if a.local else Path(tempfile.mkdtemp(prefix="satdash_hf_"))
+    stage.mkdir(parents=True, exist_ok=True)
+    src = (lambda p: p) if a.local else (lambda p: url_of(a.repo, p))
+    uploads: list[str] = []
+    manifest = {"schema": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "db": old.get("db") if old else None, "app": old.get("app") if old else None,
+                "contact": "https://www.linkedin.com/in/rhyno-wu-6b766771/"}
+    try:
+        # ── 資料庫 ──
+        if not a.skip_db:
+            db = Path(a.db)
+            if not db.is_file():
+                raise SystemExit(f"找不到資料庫 {db}")
+            raw_sha = sha256(db)
+            version = datetime.fromtimestamp(db.stat().st_mtime, timezone.utc).strftime("%Y-%m-%dT%H:%MZ")
+            if old and old.get("db") and old["db"]["sha256"] == raw_sha:
+                print(f"資料庫沒有變更（{old['db']['version']}），不重傳")
+            else:
+                packed = stage / "db" / (DB_NAME + ".zst")
+                packed.parent.mkdir(parents=True, exist_ok=True)
+                print(f"壓縮資料庫 {db.stat().st_size / 1e6:.0f} MB（zstd 19）…")
+                if not a.dry_run:
+                    with open(db, "rb") as fi, open(packed, "wb") as fo:
+                        zstandard.ZstdCompressor(level=19, threads=-1).copy_stream(fi, fo, size=db.stat().st_size)
+                psize = packed.stat().st_size if packed.exists() else 0
+                manifest["db"] = {"version": version, "file": DB_NAME, "size": db.stat().st_size, "sha256": raw_sha,
+                                  "packed": {"format": "zstd", "size": psize, "sha256": sha256(packed) if psize else ""},
+                                  "sources": [{"type": "hf", "url": src("db/" + DB_NAME + ".zst")}]}
+                uploads.append("db/" + DB_NAME + ".zst")
+                print(f"  資料庫版本 {version}：{db.stat().st_size / 1e6:.0f} MB → {psize / 1e6:.0f} MB")
+
+        # ── 執行檔 ──
+        if not a.skip_exe:
+            exe_dir = Path(a.exe_dir)
+            info = exe_about(native_exe(exe_dir))
+            assets = {}
+            for arch, name in EXES.items():
+                p = exe_dir / name
+                if not p.is_file():
+                    raise SystemExit(f"找不到 {p}（先執行 scripts/build.ps1）")
+                h = sha256(p)
+                prev = (old or {}).get("app") or {}
+                prev_asset = (prev.get("assets") or {}).get(arch)
+                if prev_asset and prev_asset["sha256"] == h:
+                    assets[arch] = prev_asset
+                    print(f"{name} 沒有變更，不重傳")
+                    continue
+                (stage / "exe").mkdir(parents=True, exist_ok=True)
+                if not a.dry_run:
+                    shutil.copy2(p, stage / "exe" / name)
+                assets[arch] = {"file": name, "size": p.stat().st_size, "sha256": h,
+                                "sources": [{"type": "hf", "url": src("exe/" + name)}]}
+                uploads.append("exe/" + name)
+            manifest["app"] = {"version": info["version"], "build_date": info["build_date"],
+                               "notes": a.notes, "assets": assets}
+            print(f"程式版本 v{info['version']}（{info['build_date']}）")
+
+        if not manifest["db"] and not manifest["app"]:
+            raise SystemExit("沒有任何內容可發布")
+        body = json.dumps(manifest, ensure_ascii=False, indent=1).encode("utf-8")
+        (stage / "manifest.json").write_bytes(body)
+        (stage / "manifest.json.sig").write_text(key.sign(body).hex() + "\n", encoding="ascii")
+        (stage / "README.md").write_text(README, encoding="utf-8")
+        uploads += ["manifest.json", "manifest.json.sig", "README.md"]
+        print("檔案：", ", ".join(uploads))
+
+        if a.local:
+            print(f"已輸出到 {stage}；測試：SatDashboard.exe --update-manifest {stage / 'manifest.json'}")
+            return 0
+        if a.dry_run:
+            print("--dry-run：沒有上傳")
+            return 0
+
+        from huggingface_hub import CommitOperationAdd, HfApi
+        api = HfApi()
+        api.create_repo(a.repo, repo_type="dataset", private=False, exist_ok=True)
+        # manifest 放在同一個 commit：客戶端不會看到「manifest 已更新、檔案還沒到」的中間狀態
+        ops = [CommitOperationAdd(path_in_repo=p, path_or_fileobj=str(stage / p)) for p in uploads]
+        info = api.create_commit(a.repo, repo_type="dataset", operations=ops,
+                                 commit_message=f"update: db {manifest['db'] and manifest['db']['version']}, "
+                                                f"app {manifest['app'] and manifest['app']['version']}")
+        print("已上傳：", getattr(info, "commit_url", info))
+        if not a.no_squash:
+            api.super_squash_history(repo_id=a.repo, repo_type="dataset")
+            print("已壓縮 dataset 歷史（只留最新版）")
+        print("manifest：", url_of(a.repo, "manifest.json"))
+        return 0
+    finally:
+        if not a.local:
+            shutil.rmtree(stage, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
