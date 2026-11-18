@@ -50,7 +50,9 @@ def main():
     out, end = Path(sys.argv[1]), date.fromisoformat(sys.argv[2])
     R = {}
     for nid, spec in DELIV.items():
-        r = rb.build_report_data(nid, date.fromisoformat(spec[0]), end, with_ai=False, with_external=True)
+        # 交付報表之結束日＝min(資料截止日, 該星最後一筆 TLE 日期)（如 SHIYAN 24C 02 為 2026-10-15）
+        d1 = min(end, rb.load_tle(nid).epoch.max().date())
+        r = rb.build_report_data(nid, date.fromisoformat(spec[0]), d1, with_ai=False, with_external=True)
         R[str(nid)] = clean({k: v for k, v in r.items() if k not in DROP})
         print(nid, r.get("name"), len(r.get("events") or []), len(r.get("low_conf") or []), flush=True)
     out.parent.mkdir(parents=True, exist_ok=True)
