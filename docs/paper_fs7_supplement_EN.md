@@ -1,4 +1,6 @@
-# Supplementary Material for "An Empirical Sensitivity Model for Maneuver Detection from Public Two-Line Elements: Calibration Against Precise Orbit Determination Truth"
+# Supplementary Material for "Detector-Level Sensitivity of Maneuver Detection from Public Two-Line Elements: An Empirical Model Calibrated Against FORMOSAT-7 Precise Orbits"
+
+**Revisions.** Section S17 (Tables S36–S43), Section S18 (Table S44, moved from the main text) and Table S1b are new in R2 (generated from `fs7_review6_analysis.json` by `docs/gen_fs7_supplement_r2.py`). Sections S11–S16 (Tables S28–S35, Fig. S5) are new in this revision and are generated from `fs7_review5_analysis.json` by `docs/gen_fs7_supplement_r1.py`; Section S9 is updated for the symmetric decision rules.
 
 **Target journal:** Advances in Space Research
 
@@ -18,6 +20,14 @@ This supplement provides the tables, definitions and figures referred to in the 
 - Section S8 — Probability calibration on the temporal hold-out (Tables S22–S23; Fig. S2)
 - Section S9 — Pseudo-event false-positive sample (Tables S24–S27)
 - Section S10 — Altitude–inclination domain map (Fig. S3)
+- Section S11 — Selection bias of the evaluable event population (Table S28) — *new in R1*
+- Section S12 — Coefficient interpretation: per-cadence c and the drag-ambiguity term (Table S29) — *new in R1*
+- Section S13 — Injection recall at every grid amplitude; autocorrelation stratification; held-out AUC CIs (Tables S30–S31) — *new in R1*
+- Section S14 — Storm-interval candidates and geomagnetic activity; inclination corroboration (Table S32) — *new in R1*
+- Section S15 — Symmetric decision rules and threshold sweep (Table S33; Fig. S5) — *new in R1*
+- Section S16 — Decomposition of real-event outcomes (Tables S34–S35) — *new in R1*
+- Section S17 — R2 robustness analyses: TLE-response sensitivity, contamination by source, independent-event check, sign sensitivity, E1 logistic, wide-grid c and the SNR-floor artifact, drag proxies, D1 parameter sensitivity (Tables S36–S43) — *new in R2*
+- Section S18 — Conditions of applicability and requirements for transfer (Table S44) — *moved from the main text in R2*
 
 ---
 
@@ -36,6 +46,34 @@ This supplement provides the tables, definitions and figures referred to in the 
 | calibration (S8) | `fs7_final_supplement.json`, `fs7_review4_analysis.json`, `fs7_review4b_analysis.json`, `fs7_review3_analysis.json` (`calibration`) | `fs7_final_supplement.py`; `fs7_review4_analysis.py`; `fs7_review4b_analysis.py`; `docs/fs7_supplement_tables.py` |
 | pseudo-event sample (S9) | `fs7_review3_analysis.json` (`confusion`), `fs7_review4b_analysis.json` (`pseudo_event_stratified`, `wilson_ci`) | `fs7_review3_analysis.py`; `fs7_review4b_analysis.py`; `docs/fs7_supplement_tables.py` |
 | domain map (S10) | `tle_noise_floor_map.csv` | `fs7_noise_floor_map.py`; `fs7_noise_floor_map_v2.py` |
+
+**Table S1b — Final-version map (R2): each main-text table, figure and number, with the final file, key and script that produce it.** Earlier JSON files that are not listed here are superseded for main-text use and are kept only for traceability.
+
+| main-text item | final source file (key) | script |
+|---|---|---|
+| Table 1, Table 2 (event counts) | `fs7_events_2025raise.csv`, `fs7_events_campaigns_20260825.csv`, `fs7_tle_recall_unified_20260825.csv` | `fs7_campaign_truth_build.py`; `fs7_tle_recall_unified.py` |
+| §2.6 exclusion reasons and timing; Table 2b | `fs7_review5_analysis.json` (`selection_bias`) | `fs7_review5_analysis.py` |
+| §3.3 coefficient table (ĉ, profile CI, corr −0.98) | `fs7_law_fit_v4.json` (`c_drag`); `fs7_review3_analysis.json` (`identifiability`) | `fs7_injection_sweep_v4.py`; `fs7_review3_analysis.py` |
+| §3.3 per-cadence c; drag-ambiguity term | `fs7_review5_analysis.json` (`per_cadence_c`, `drag_term_by_condition`); `fs7_review6_analysis.json` (`M7`) | `fs7_review5_analysis.py`; `fs7_review6_analysis.py` |
+| Table 3 (held-out metrics, calibration) | `fs7_law_fit_v4.json`; `fs7_review4_analysis.json`; `fs7_final_supplement.json` (`calibration_slope`); `fs7_review4b_analysis.json` (`amp_calibration`); `fs7_review5_analysis.json` (`heldout_auc`) | `fs7_injection_sweep_v4.py`; `fs7_review4_analysis.py`; `fs7_final_supplement.py`; `fs7_review5_analysis.py` |
+| §4.3 alternative drag proxies (Tables S43a–b) | `fs7_review6_analysis.json` (`M8`, `M8_da90`) | `fs7_review6_analysis.py` |
+| Table 4a; §4.4 interpolated column | `fs7_review5_analysis.json` (`da90_interpolated`); `fs7_review5_recall_grid.csv` | `fs7_review5_analysis.py` |
+| §4.4 model-implied Δa₉₀ | `fs7_review3_analysis.json` (`da90_backcalc`) | `fs7_review3_analysis.py` |
+| §4.4 r₁ stratification | `fs7_review5_analysis.json` (`autocorr_stratification`) | `fs7_review5_analysis.py` |
+| §4.5 metrics suite | `fs7_injection_metrics.csv`; `fs7_law_fit_v3.json`; `fs7_supplement_tables.json` (`S7_metrics`) | `fs7_injection_sweep_v3.py`; `docs/fs7_supplement_tables.py` |
+| §4.5 D1 parameter sensitivity | `fs7_review6_analysis.json` (`m9`); `fs7_review6_detector_sensitivity.csv` | `fs7_review6_analysis.py` |
+| Table 4 (real-event recall) | `fs7_tle_recall_unified_20260825.csv` | `fs7_tle_recall_unified.py` |
+| §5 E1 logistic comparison | `fs7_review6_analysis.json` (`M2`) | `fs7_review6_analysis.py` |
+| §5.1 Kp alignment | `fs7_review5_analysis.json` (`storm_alignment`); `data/space_weather/gfz_kp_3h_2024-04_05.csv` | `fs7_review5_analysis.py` |
+| Table 5; §5.4 sweep, stratification | `fs7_review5_analysis.json` (`symmetric_rules`, `threshold_sweep`); `fs7_supplement_tables.json` (`S9_pseudo`, Draw C) | `fs7_review5_analysis.py`; `docs/fs7_supplement_tables.py` |
+| §5.4 sign sensitivity; independent 85-event check | `fs7_review6_analysis.json` (`M5`, `M4`) | `fs7_review6_analysis.py` |
+| Table 6, Table 6a; §5.5 | `fs7_review5_analysis.json` (`miss_decomposition`); `fs7_review5_event_decomposition.csv`; `fs7_review6_analysis.json` (`M1`, `M3`) | `fs7_review5_analysis.py`; `fs7_review6_analysis.py` |
+| §6.1–6.2 (temporal hold-out, blocked CV) | `fs7_law_fit_v4.json`; `fs7_review4_analysis.json` | `fs7_injection_sweep_v4.py`; `fs7_review4_analysis.py` |
+| Figs. 1–6; Figs. S1–S5 | see the README of the reproduction package | `docs/gen_fig_fs7_*.py`; `fs7_injection_sweep*.py`; `fs7_review5_analysis.py` |
+
+Superseded for main-text use: `fs7_review3_analysis.json` (`confusion`, the original Draw A), which is retained for comparison in Section S9.
+
+**Error-rate terms** follow main §3.5. The *false-alarm rate* is the number of flags per satellite per 30 days in D1 control windows. The *false-positive rate* is FP/(FP + TN) over E1 pseudo-events. The *false-discovery proportion* is 1 − precision.
 
 All random draws use `numpy.random.default_rng(42)`. Cluster-bootstrap intervals are percentile intervals with the satellite × window cluster (478 clusters on the full data; 212 clusters on the temporal test split).
 
@@ -389,11 +427,11 @@ The slope > 1 reflects over-prediction in the lowest two deciles (0.375 predicte
 
 ### S9.1 Protocol and draws
 
-Pseudo-events are random TLE epochs, up to 200 per satellite, drawn without replacement from the full 2024–2026 history (excluding the first and last 3 d), rejected if within 2 d of the t_start of any of the 131 verified events, and evaluated with the identical pre/post trend estimator, windows and thresholds as the real events (`tle_step`). A pseudo-event is *evaluable* when the estimator's coverage conditions hold (≥ 3 TLEs pre, ≥ 1 TLE post). FP = evaluable pseudo-event with |residual| above the threshold (no sign condition, since a pseudo-event has no SP3 step sign); FPR = FP / (FP + TN), pooled across satellites. Three draws under this protocol are reported:
+Pseudo-events are random TLE epochs, up to 200 per satellite, drawn without replacement from the full 2024–2026 history (excluding the first and last 3 d), rejected if within 2 d of the t_start of any of the 131 verified events, and evaluated with the identical pre/post trend estimator, windows and thresholds as the real events (`tle_step`). A pseudo-event is *evaluable* when the estimator's coverage conditions hold (≥ 3 TLEs pre, ≥ 1 TLE post). In the original submission, FP = evaluable pseudo-event with |residual| above the threshold (no sign condition), whereas real-event TPs required a sign match; this asymmetry is removed in R1, where both samples are evaluated under rule S (sign-constrained; pseudo-events carry a hypothesized sign drawn from the real-event sign mix, in expectation) and under rule U (sign-free) — Section S15. The FPR values in Tables S24–S26 are rule-U values. FPR = FP / (FP + TN), pooled across satellites. Three draws under this protocol are reported:
 
-- **Draw A** (n = 1,131 evaluable): the tabulated draw of main §5.4 (`fs7_review3_analysis.json`, `confusion`).
+- **Draw A** (n = 1,131 evaluable): the draw tabulated in the original submission (`fs7_review3_analysis.json`, `confusion`). It depended on the TLE archive state at the time and cannot be reproduced exactly from the current archive (a rerun gives n = 1,141; `fs7_review3_analysis_rerun.json`); it is retained for comparison only.
 - **Draw B** (n = 1,142): per-satellite stratification and storm sensitivity (`fs7_review4b_analysis.json`, `pseudo_event_stratified`).
-- **Draw C** (n = 1,145): per-period stratification and cadence match, TLE history restricted to epochs before 2026-08-25 (`docs/fs7_supplement_tables.py`, `S9_pseudo`).
+- **Draw C** (n = 1,145): reproducible (TLE history restricted to epochs before 2026-08-25); used for main §5.4 Table 5 from R1 onward, for per-period stratification and cadence match (`docs/fs7_supplement_tables.py`, `S9_pseudo`), and for Section S15 (`fs7_review5_analysis.py`).
 
 **Storm interval.** The 21 storm-interval signatures are not verified events, so the 2-day exclusion rule does not remove pseudo-events from the May 2024 storm interval (2024-05-08 to 2024-05-20); pseudo-events falling there are retained in the pooled FPR and removed in the storm-excluded sensitivity rows. Likewise, SP3 candidates rejected by the consistency checks (Table S7) are not excluded from the sampling frame.
 
@@ -463,3 +501,333 @@ Two-sample Kolmogorov–Smirnov: D = 0.134, p = 0.076. The spanning interval of 
 ![](figures_pub/fig_tle_noise_floor_map_contour/fig_tle_noise_floor_map_contour_en_light.png)
 
 **Fig. S3** Altitude–inclination domain map of the study satellites (FORMOSAT-7 calibration set, 6; altimetry benchmark, 14; SPOT/GRACE/Sentinel-6B hold-out, 9; Starlink sample of the detector's training domain, 27 with a valid estimate), colored by the nominal TLE residual scale σ_TLE (m). Contours show the fitted noise floor σ_th(h) = sqrt(σ₀² + (A·e^{−(h−400)/H})²) with σ₀ = 0.045 m, A = 24.5 m, H = 77 km (fit in log space, soft-L1 loss, measurement floor 0.02 m; log-space R² = 0.89; no inclination dependence). The figure is contextual and is not part of the calibrated model's claims. The two GRACE pairs (NORAD 27391/27392 at ≈ 470 km and 43476/43477 at ≈ 496 km; σ_TLE 0.5–2.4 m) lie well below the contour value at their altitude, consistent with their low area-to-mass ratio, and mark a limit of the altitude-only description. Data: `tle_noise_floor_map.csv` (59 listed objects, 56 with a valid σ_TLE estimate); scripts: `fs7_noise_floor_map.py`, `fs7_noise_floor_map_v2.py`.
+
+---
+
+## Section S11. Selection bias of the evaluable event population (main §2.6, Table 2b)
+
+Exclusion reasons (coverage rule of main §2.6): pre-event window with fewer than three TLEs only, 34; empty post-event window only, 1; both, 0. Distribution of the number of pre-event TLEs among excluded events: 0 TLE: 1, 1 TLE: 7, 2 TLE: 26, 7 TLE: 1.
+
+Timing of TLE coverage. Excluded events: median time since the last TLE before t_start 17.0 h (IQR 11.2–37.8 h), median time from t_end to the next TLE 10.4 h (IQR 3.5–19.2 h). Included events: 7.3 h and 10.6 h.
+
+**Table S28 — Real-event recall under alternative treatments of excluded events, both thresholds** (rule S). Source: `fs7_review5_analysis.json` (`selection_bias.recall_bounds_by_bin`).
+
+| bin | verified | evaluable | 45 m: evaluable | 45 m: IPW | 45 m: worst | 45 m: best | 3σ: evaluable | 3σ: IPW | 3σ: worst | 3σ: best |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1–50 m | 52 | 37 | 0.11 | 0.11 | 0.08 | 0.37 | 0.19 | 0.17 | 0.13 | 0.42 |
+| 50–100 m | 21 | 16 | 0.31 | 0.31 | 0.24 | 0.48 | 0.50 | 0.46 | 0.38 | 0.62 |
+| 100–300 m | 22 | 18 | 0.50 | 0.47 | 0.41 | 0.59 | 0.61 | 0.57 | 0.50 | 0.68 |
+| 300 m–1 km | 10 | 8 | 0.62 | 0.70 | 0.50 | 0.70 | 0.62 | 0.70 | 0.50 | 0.70 |
+| 1–3 km | 26 | 17 | 0.82 | 0.86 | 0.54 | 0.88 | 0.82 | 0.86 | 0.54 | 0.88 |
+| all | 131 | 96 | 0.39 | 0.37 | 0.28 | 0.55 | 0.47 | 0.44 | 0.34 | 0.61 |
+
+IPW weight = 1 / P(included | campaign), inclusion probability estimated as the campaign inclusion fraction; satellite×campaign cells contain zero-inclusion cells (4) so a satellite×campaign IPW is not identifiable.
+
+---
+
+## Section S12. Coefficient interpretation: per-cadence c and the drag-ambiguity term (main §3.3)
+
+**Table S29 — Per-cadence profile-likelihood estimate of c and the derived drag-ambiguity term by condition.** Source: `fs7_review5_analysis.json` (`per_cadence_c`, `drag_term_by_condition`). Grid `logspace(−1.3, 1.0, 47)`; 95% set ℓ(ĉ) − ℓₚ(c) ≤ 1.9208.
+
+| cadence | ĉ | 95% profile set | set reaches grid edge |
+|---|--:|---|---|
+| 1× | 10.0 | [0.56, 10.0] | yes |
+| 2× | 0.32 | [0.25, 0.5] | no |
+| 4× | 0.28 | [0.22, 0.35] | no |
+
+| condition | σ_TLE (m) | c·\|ȧ\|·Δt, c = 0.32 (m) | c·\|ȧ\|·Δt, c = 0.28 (m) | σ_eff, c = 0.32 (m) | drag share of σ_eff² |
+|---|--:|--:|--:|--:|--:|
+| 1×·low | 1.1 | 2.0 | 1.7 | 2.3 | 0.76 |
+| 1×·mid | 2.6 | 6.0 | 5.2 | 6.5 | 0.84 |
+| 1×·high | 5.5 | 13.0 | 11.4 | 14.1 | 0.85 |
+| 2×·low | 2.2 | 5.1 | 4.5 | 5.6 | 0.85 |
+| 2×·mid | 5.4 | 14.7 | 12.9 | 15.7 | 0.88 |
+| 2×·high | 10.7 | 23.7 | 20.7 | 26.0 | 0.83 |
+| 4×·low | 3.6 | 10.2 | 8.9 | 10.8 | 0.89 |
+| 4×·mid | 8.7 | 26.7 | 23.4 | 28.1 | 0.9 |
+| 4×·high | 20.8 | 48.4 | 42.3 | 52.7 | 0.84 |
+
+At 1× the profile likelihood increases monotonically to the upper grid edge, so c is not identified from 1× trials alone; the lower bound of the 95% set (0.56) exceeds the pooled estimate.
+
+---
+
+## Section S13. Injection recall at every grid amplitude and the interpolated Δa₉₀ (main §4.1, Table 4a)
+
+**Table S30 — Injection recall by condition and grid amplitude**, with satellite × window cluster-bootstrap 95% CIs (B = 2,000). Source: `fs7_review5_recall_grid.csv`.
+
+| condition | 20 m | 50 m | 100 m | 150 m | 200 m | 300 m | 500 m | 750 m | 1000 m | 1500 m | 2000 m |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| 1×·low | 0.58 [0.50, 0.66] | 0.99 [0.98, 1.00] | 0.99 [0.98, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] |
+| 1×·mid | 0.14 [0.09, 0.19] | 0.50 [0.43, 0.58] | 0.96 [0.93, 0.99] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] |
+| 1×·high | 0.13 [0.08, 0.18] | 0.15 [0.10, 0.20] | 0.64 [0.56, 0.71] | 0.89 [0.83, 0.93] | 0.98 [0.96, 1.00] | 0.99 [0.98, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] |
+| 2×·low | 0.38 [0.31, 0.46] | 0.94 [0.89, 0.97] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] |
+| 2×·mid | 0.13 [0.08, 0.18] | 0.44 [0.36, 0.52] | 0.91 [0.87, 0.96] | 0.99 [0.97, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] |
+| 2×·high | 0.17 [0.12, 0.24] | 0.25 [0.19, 0.32] | 0.47 [0.39, 0.55] | 0.71 [0.65, 0.78] | 0.89 [0.84, 0.93] | 0.99 [0.97, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] |
+| 4×·low | 0.21 [0.16, 0.28] | 0.56 [0.48, 0.63] | 0.91 [0.86, 0.95] | 0.99 [0.98, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] |
+| 4×·mid | 0.17 [0.12, 0.24] | 0.16 [0.10, 0.22] | 0.44 [0.37, 0.53] | 0.71 [0.64, 0.79] | 0.90 [0.85, 0.94] | 0.98 [0.96, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] |
+| 4×·high | 0.13 [0.08, 0.18] | 0.15 [0.10, 0.21] | 0.15 [0.10, 0.21] | 0.25 [0.18, 0.32] | 0.43 [0.35, 0.51] | 0.67 [0.59, 0.74] | 0.92 [0.88, 0.96] | 0.99 [0.98, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] | 1.00 [1.00, 1.00] |
+
+Interpolation: the recall curve is made monotone non-decreasing by pool-adjacent-violators, and the 0.90 crossing is interpolated linearly in log₁₀Δa between the bracketing grid amplitudes; the bootstrap repeats both steps in every resample. Source of Table 4a: `fs7_review5_analysis.json` (`da90_interpolated`).
+
+**Table S31 — Within-cadence stratification by residual lag-1 autocorrelation r₁** (terciles of r₁ within each cadence; observed minus mean predicted recall under the descriptive-refit coefficients). Source: `fs7_review5_analysis.json` (`autocorr_stratification`).
+
+| cadence | r₁ tercile | median r₁ | windows | interpolated Δa₉₀ [95% CI] | obs − pred (all Δa) | obs − pred (Δa ≤ 200 m) |
+|---|---|--:|--:|--:|--:|--:|
+| 1× | low | -0.04 | 160 | 121 m [98, 141] | -0.040 | -0.089 |
+| 1× | mid | 0.24 | 159 | 106 m [94, 120] | -0.033 | -0.074 |
+| 1× | high | 0.44 | 159 | 121 m [99, 140] | -0.038 | -0.087 |
+| 2× | low | 0.08 | 160 | 150 m [130, 175] | +0.007 | +0.007 |
+| 2× | mid | 0.47 | 159 | 136 m [105, 168] | +0.027 | +0.049 |
+| 2× | high | 0.69 | 159 | 160 m [139, 176] | +0.030 | +0.050 |
+| 4× | low | 0.09 | 160 | 281 m [242, 341] | +0.023 | +0.021 |
+| 4× | mid | 0.49 | 159 | 285 m [231, 353] | +0.024 | +0.028 |
+| 4× | high | 0.74 | 159 | 403 m [336, 467] | +0.011 | +0.012 |
+
+Adding r₁ as a covariate to the calibration-split logistic model (c = 0.28 fixed) changes the held-out log loss from 0.1238 to 0.1228 (r₁ coefficient 0.245). Correlation of r₁ with log₁₀ SNR_eff: -0.181.
+
+Held-out AUC (trial level, 212 clusters, B = 2,000): drag-aware 0.9773 [0.9736, 0.9806], amplitude-only 0.9671 [0.9621, 0.9717], difference 0.0102 [0.0072, 0.0131].
+
+---
+
+## Section S14. Storm-interval candidates and geomagnetic activity (main §5.1)
+
+**Table S32 — The 21 storm-interval candidates aligned with the GFZ 3-hourly Kp index** [main ref. 14]. Main-phase onset (first Kp ≥ 7 in the sample): 2024-05-10 15:00 UT; Kp peak 9.0 at 2024-05-11 00:00 UT. 'Kp slot' is the 3-h interval containing t_start. Source: `fs7_review5_analysis.json` (`storm_alignment`), `data/space_weather/gfz_kp_3h_2024-04_05.csv`.
+
+| satellite | t_start (UT) | step (m) | Kp slot | max Kp, preceding 24 h | F10.7 obs (sfu) | hours from main-phase onset |
+|---|---|--:|--:|--:|--:|--:|
+| L76 | 2024-05-02 18:12 | -21.7 | 6.7 | 6.7 | 142 | -188.8 |
+| L76 | 2024-05-02 19:45 | -16.9 | 6.7 | 6.7 | 142 | -187.2 |
+| L78 | 2024-05-11 18:41 | -47.3 | 7.7 | 9.0 | 214 | +27.7 |
+| L80 | 2024-05-11 22:24 | -33.8 | 7.7 | 9.0 | 214 | +31.4 |
+| L76 | 2024-05-12 02:15 | -27.0 | 6.3 | 9.0 | 222 | +35.2 |
+| L76 | 2024-05-12 02:39 | -27.9 | 6.3 | 9.0 | 222 | +35.6 |
+| L76 | 2024-05-12 05:00 | -16.5 | 7.0 | 9.0 | 222 | +38.0 |
+| L77 | 2024-05-12 11:14 | -23.4 | 4.3 | 8.7 | 222 | +44.2 |
+| L80 | 2024-05-12 11:33 | -23.4 | 4.3 | 8.7 | 222 | +44.5 |
+| L77 | 2024-05-12 12:03 | -21.6 | 2.0 | 8.3 | 222 | +45.0 |
+| L79 | 2024-05-13 17:35 | -29.9 | 2.7 | 6.3 | 215 | +74.6 |
+| L79 | 2024-05-13 18:08 | -32.7 | 2.3 | 6.3 | 215 | +75.1 |
+| L79 | 2024-05-14 10:45 | -26.1 | 2.3 | 3.3 | 220 | +91.8 |
+| L77 | 2024-05-15 21:48 | -29.1 | 2.3 | 3.0 | 216 | +126.8 |
+| L77 | 2024-05-16 12:21 | -40.0 | 4.3 | 6.0 | 207 | +141.3 |
+| L78 | 2024-05-16 18:10 | -32.9 | 2.3 | 6.0 | 207 | +147.2 |
+| L78 | 2024-05-16 19:45 | -30.0 | 2.3 | 6.0 | 207 | +148.8 |
+| L78 | 2024-05-17 17:34 | -32.0 | 5.3 | 5.3 | 204 | +170.6 |
+| L78 | 2024-05-17 23:25 | -42.9 | 5.3 | 6.0 | 204 | +176.4 |
+| L78 | 2024-05-17 23:43 | -43.1 | 5.3 | 6.0 | 204 | +176.7 |
+| L78 | 2024-05-18 11:18 | -38.2 | 3.0 | 6.0 | 194 | +188.3 |
+
+The project's earlier daily index file carried a constant fill value for Kp in April–May 2024 and is not used.
+
+**Inclination corroboration** (main §2.7). Robust scale of the inclination change across all candidates 0.00147°; corroboration level 4σ = 0.00589°. Verified events with an inclination signature: 2 of 131; rejected candidates: 6 of 891 (persistence 3, common mode 2, both 1).
+
+---
+
+## Section S15. Symmetric decision rules and threshold sweep (main §5.4)
+
+Pseudo-event draw: Draw C (n = 1,145). Hypothesized sign for rule S: positive with probability 0.521 (the real-event sign mix), applied in expectation.
+
+**Table S33 — Original asymmetric and symmetric rules.** Source: `fs7_review5_analysis.json` (`symmetric_rules`, `threshold_sweep`); full sweep in `fs7_review5_threshold_sweep.csv`.
+
+| threshold | rule | TP | FP | recall | FPR |
+|---|---|--:|--:|--:|--:|
+| 45 m | original (TP sign-constrained, FP sign-free) | 37 | 59 | 0.385 | 0.052 |
+| 45 m | S (both sign-constrained) | 37 | 29.8 | 0.385 | 0.026 |
+| 45 m | U (both sign-free) | 53 | 59 | 0.552 | 0.052 |
+| unified 3σ | original (TP sign-constrained, FP sign-free) | 45 | 628 | 0.469 | 0.548 |
+| unified 3σ | S (both sign-constrained) | 45 | 314.0 | 0.469 | 0.274 |
+| unified 3σ | U (both sign-free) | 72 | 628 | 0.750 | 0.548 |
+
+ROC AUC (real events versus pseudo-events; events and per-satellite pseudo-events resampled separately, B = 2,000): rule U 0.727 [0.659, 0.795]; rule S 0.588 [0.509, 0.666]. Post hoc Youden threshold (reference only): 105 m (U: recall 0.552, FPR 0.027; S: recall 0.385, FPR 0.014). Smallest swept threshold with FPR ≤ 0.01: rule S 186 m (recall 0.354); rule U 1819 m (recall 0.271). Sample precision uses the sample ratio 96 events : 1,145 pseudo-events and is prevalence-dependent; it is not an operational precision.
+
+![](fig_fs7_threshold_sweep.png)
+
+**Fig. S5** ROC curves (left) and recall/FPR versus threshold (right) for the 96 evaluable real events and the 1,145 pseudo-events under rules S and U; dots and the dotted line mark the pre-specified 45 m threshold. Data: `fs7_review5_threshold_sweep.csv`; script: `fs7_review5_analysis.py`.
+
+---
+
+## Section S16. Decomposition of real-event outcomes (main §5.5, Table 6)
+
+**Table S34 — Outcome classes of all 131 verified events by amplitude bin** (rule S). Classes: excluded (pre-event coverage), excluded (post-event coverage), detected, below threshold, sign mismatch (|residual| above threshold, opposite sign). Source: `fs7_review5_analysis.json` (`miss_decomposition`); per-event classes in `fs7_review5_event_decomposition.csv`.
+
+| bin | 45 m: excl. pre / excl. post / detected / below / wrong sign | 3σ: excl. pre / excl. post / detected / below / wrong sign |
+|---|---|---|
+| 1–50 m | 14 / 1 / 4 / 25 / 8 | 14 / 1 / 7 / 13 / 17 |
+| 50–100 m | 5 / 0 / 5 / 10 / 1 | 5 / 0 / 8 / 6 / 2 |
+| 100–300 m | 4 / 0 / 9 / 8 / 1 | 4 / 0 / 11 / 5 / 2 |
+| 300 m–1 km | 2 / 0 / 5 / 0 / 3 | 2 / 0 / 5 / 0 / 3 |
+| 1–3 km | 9 / 0 / 14 / 0 / 3 | 9 / 0 / 14 / 0 / 3 |
+| all | 34 / 1 / 37 / 43 / 16 | 34 / 1 / 45 / 24 / 27 |
+
+Shared TLE interval (another verified event between the last pre-event and first post-event TLE): 45 m recall 0.382 (n = 55) versus 0.39 (n = 41) for isolated events; 3σ: 0.491 versus 0.439.
+
+**Table S35 — TLE response class by amplitude bin and pre-event trend status** (evaluable events). ratio = (TLE a − pre-window linear trend)/SP3 step for each TLE in [t_end+2h, t_end+3d]; immediate: first ratio in [0.5, 2]; delayed: a later TLE in [0.5, 2]; none: all |ratio| < 0.5; other: remaining (e.g. > 2 or opposite sign, typically subsequent burns). Contaminated: an SP3 candidate of any verdict with |step| ≥ 500 m lies in the pre-event trend window.
+
+| bin | clean: immediate / delayed / none / other | contaminated: immediate / delayed / none / other |
+|---|---|---|
+| 1–50 m | 0 / 5 / 9 / 16 | 0 / 0 / 0 / 7 |
+| 50–100 m | 0 / 0 / 10 / 1 | 0 / 0 / 0 / 5 |
+| 100–300 m | 0 / 3 / 7 / 1 | 0 / 0 / 0 / 7 |
+| 300 m–1 km | 1 / 0 / 0 / 0 | 0 / 0 / 0 / 7 |
+| 1–3 km | 3 / 1 / 0 / 0 | 8 / 1 / 0 / 4 |
+
+**Misses in the 1–3 km bin (45 m).**
+
+| satellite | campaign | t_start (UT) | SP3 step (m) | TLE residual (m) | gap (d) | verified events in pre-window | SP3 candidates ≥ 500 m in pre-window (any verdict) |
+|---|---|---|--:|--:|--:|--:|--:|
+| L80 | 2025-07/08 | 2025-07-21 08:39 | 1666 | -1031.6 | 2.86 | 0 | 1 |
+| L80 | 2025-07/08 | 2025-08-20 08:16 | 2517 | -2274.0 | 1.93 | 6 | 2 |
+| L79 | 2025-05 | 2025-05-14 04:13 | 2236 | -265.4 | 1.06 | 0 | 2 |
+
+Of the 16 wrong-sign events at 45 m, 11 have a contaminated pre-event window.
+
+---
+
+## Section S17. R2 robustness analyses (main §3.3, §4.3–4.5, §5, §5.4–5.5)
+
+Source for every table in this section: `fs7_review6_analysis.json`, produced by `fs7_review6_analysis.py`.
+
+**Table S36 — Outcome classes and TLE-response classes with cluster-bootstrap CIs** (23 satellite × campaign clusters, B = 2,000; key `M1`).
+
+| population | class | n | proportion [95% CI] |
+|---|---|--:|--:|
+| 131 verified, 45 m, rule S | excl_pre | 34 | 0.26 [0.10, 0.46] |
+| 131 verified, 45 m, rule S | excl_post | 1 | 0.01 [0.00, 0.03] |
+| 131 verified, 45 m, rule S | detected | 37 | 0.28 [0.16, 0.39] |
+| 131 verified, 45 m, rule S | below_threshold | 43 | 0.33 [0.22, 0.48] |
+| 131 verified, 45 m, rule S | sign_mismatch | 16 | 0.12 [0.06, 0.18] |
+| clean 50–300 m (n = 22) | immediate | 0 | 0.00 [0.00, 0.00] |
+| clean 50–300 m (n = 22) | delayed | 3 | 0.14 [0.00, 0.41] |
+| clean 50–300 m (n = 22) | none | 17 | 0.77 [0.50, 0.97] |
+| clean 50–300 m (n = 22) | other | 2 | 0.09 [0.00, 0.22] |
+
+**Table S37 — Sensitivity of the TLE-response classification** (clean-window events; ratio cut c means a response requires a ratio in [c, 1/c], and 'none' requires |ratio| < c at every TLE in the window).
+
+| ratio cut | window (d) | 50–300 m: none / delayed / immediate / other | ≥ 300 m: immediate / n |
+|--:|--:|---|---|
+| 0.3 | 3 | 16 / 4 / 0 / 2 | 4 / 5 |
+| 0.3 | 5 | 12 / 5 / 0 / 5 | 4 / 5 |
+| 0.3 | 7 | 10 / 5 / 0 / 7 | 4 / 5 |
+| 0.5 | 3 | 17 / 3 / 0 / 2 | 4 / 5 |
+| 0.5 | 5 | 14 / 5 / 0 / 3 | 4 / 5 |
+| 0.5 | 7 | 10 / 5 / 0 / 7 | 4 / 5 |
+| 0.7 | 3 | 17 / 2 / 0 / 3 | 4 / 5 |
+| 0.7 | 5 | 15 / 4 / 0 / 3 | 4 / 5 |
+| 0.7 | 7 | 11 / 4 / 0 / 7 | 4 / 5 |
+
+Covariates of no-response (clean 50–300 m): not_none: n = 5, median |ȧ| 22.1 m/d, median post-event TLEs within 3 d 7, median gap 0.73 d, median amplitude 178.1 m, negative-going 40%; none: n = 17, median |ȧ| 16.9 m/d, median post-event TLEs within 3 d 4, median gap 1.0 d, median amplitude 97.3 m, negative-going 65%. By campaign (none / delayed / other): 2024-07: 1 / 0 / 0; 2024-11/12: 1 / 0 / 1; 2025-05: 1 / 0 / 0; 2025-07/08: 12 / 3 / 1; 2026-01: 2 / 0 / 0. By satellite (none): L76 6, L77 2, L79 2, L80 4, L81 3. Largest |residual| within 3 d: median 10.2 m; 16 of 22 never exceed 45 m.
+
+**Table S38 — Pre-event trend contamination by source** (≥ 500 m SP3 candidates in [t_start − 3 d, t_start); 'rejected' means rejected by any check, in practice the common-mode check; key `M3`).
+
+| pre-event window | n | recall 45 m (S) | recall 45 m (U) | wrong sign | median \|residual\| (m) | median ratio | median \|ȧ\| (m/d) | median delay to first post-event TLE (h) | median amplitude (m) |
+|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
+| both | 3 | 1.00 | 1.00 | 0 | 1,266.3 | 1.82 | 1,095.4 | 21.8 | 1213.6 |
+| clean | 57 | 0.16 | 0.25 | 5 | 6.4 | -0.01 | 23.5 | 8.2 | 46.0 |
+| rejected_only | 24 | 0.71 | 1.00 | 7 | 2,168.3 | 1.74 | 832.4 | 16.7 | 242.5 |
+| verified_only | 12 | 0.67 | 1.00 | 4 | 2,376.9 | 5.29 | 681.3 | 15.8 | 407.1 |
+
+Events with a common-mode-rejected ≥ 500 m burn in the pre-event window: 27 (recall 0.74, wrong sign 7; by bin 1–50 m 7, 50–100 m 3, 100–300 m 3, 300 m–1 km 4, 1–3 km 10).
+
+**Table S39 — 45 m threshold on events never used in the earlier analysis** (key `M4`).
+
+| event subset | evaluable n | recall S [Wilson 95% CI] | recall U | discrimination AUC U | discrimination AUC S |
+|---|--:|--:|--:|--:|--:|
+| 85 events from four campaigns not used earlier | 53 | 0.36 [0.24, 0.49] | 0.55 | 0.72 | 0.53 |
+| 46 events of 2025-07/08 (used earlier) | 43 | 0.42 [0.28, 0.57] | 0.56 | 0.73 | 0.67 |
+| all | 96 | 0.39 [0.29, 0.48] | 0.55 | 0.73 | 0.59 |
+
+Recall by amplitude bin, independent subset (rule S): 1–50 m 0.13 (n = 30), 50–100 m 0.43 (n = 7), 100–300 m 0.40 (n = 5), 300 m–1 km 1.00 (n = 5), 1–3 km 0.83 (n = 6). Pseudo-event FPR at 45 m (rule U): 0.052. Post hoc Youden threshold on the independent subset (rule U, reference only): 225 m.
+
+**Table S40 — Rule-S sensitivity to the hypothesized-sign probability p₊** (key `M5`). Pseudo-event steps: 48.4% positive, median -0.29 m.
+
+| p₊ | FPR (S), 45 m | FPR (S), 3σ | discrimination AUC (S) |
+|--:|--:|--:|--:|
+| 0.0 | 0.019 | 0.275 | 0.588 |
+| 0.5 | 0.026 | 0.274 | 0.588 |
+| 0.521 | 0.026 | 0.274 | 0.588 |
+| 1.0 | 0.032 | 0.273 | 0.588 |
+
+**Table S41 — E1-based logistic models versus the D1-based descriptive probability** (96 evaluable events; outcome = E1 detection at 45 m, rule S; key `M2`). LOCO = leave-one-campaign-out (5 folds); D1 probability uses fixed descriptive-refit coefficients (no refit).
+
+| model | log loss | Brier | AUC |
+|---|--:|--:|--:|
+| E1 logistic: log₁₀ amplitude (LOCO) | 0.581 | 0.193 | 0.786 |
+| E1 logistic: + contamination indicator (LOCO) | 0.517 | 0.16 | 0.867 |
+| D1-based descriptive probability (no refit) | 2.056 | 0.373 | 0.546 |
+| base rate | 0.667 | 0.237 | — |
+
+**Table S42 — Profile likelihood of c on an extended grid (c ≤ 100) with unclipped SNR** (key `M7`). The c → ∞ limit is the drag-only model Δa/(|ȧ|Δt), in which σ_TLE drops out.
+
+| data | ĉ | 95% set | ℓ(ĉ) | ℓ(0.32) | ℓ(drag-only limit) | interior maximum |
+|---|--:|---|--:|--:|--:|---|
+| 1× | 100.0 | [0.56, inf] | -642.1 | -650.9 | -642.1 | no |
+| 2× | 0.32 | [0.25, 0.5] | -849.0 | -849.0 | -856.9 | yes |
+| 4× | 0.28 | [0.22, 0.35] | -1247.3 | -1247.6 | -1260.9 | yes |
+| all cadences | 0.32 | [0.28, 0.4] | -2891.6 | -2891.6 | -2913.8 | yes |
+
+*Numerical floor artifact.* The released analysis scripts bound SNR_eff to [10⁻², 10⁴] before taking logarithms. This has no effect for c ≤ 10 (at most 0.2% of trials reach the floor). On an extended grid, however, a growing share of trials is floored, which acts as a spurious low-SNR plateau and inflates the likelihood. Without the bound, the likelihood decreases monotonically toward the drag-only limit beyond the interior maximum:
+
+| c | share of trials below 10⁻² | ℓ unclipped | ℓ with floor |
+|--:|--:|--:|--:|
+| 0.32 | 0.000 | -2891.6 | -2891.6 |
+| 10 | 0.002 | -2913.8 | -2912.2 |
+| 20 | 0.014 | -2913.8 | -2896.3 |
+| 50 | 0.058 | -2913.8 | -2773.9 |
+| 100 | 0.119 | -2913.8 | -2682.6 |
+
+All published estimates use c ≤ 10 and are unaffected. The R2 analyses of alternative drag proxies use unclipped SNR.
+
+**Table S43a — Alternative drag proxies** (calibration-split fit, test-split evaluation; key `M8`).
+
+| ambiguity term | ĉ (calibration) | calibration mean log-likelihood | held-out log loss | held-out AUC |
+|---|--:|--:|--:|--:|
+| c·|ȧ|·Δt^0 | 0.154 | -0.2341 | 0.1231 | 0.9764 |
+| c·|ȧ|·Δt^0.5 | 0.316 | -0.22504 | 0.1159 | 0.9807 |
+| c·|ȧ|·Δt^1 | 0.274 | -0.23174 | 0.1238 | 0.9773 |
+| c·|ȧ|·Δt^2 | 0.049 | -0.24694 | 0.137 | 0.9698 |
+| drag-only Δa/(|ȧ|Δt) | — | — | 0.1243 | 0.9774 |
+| none (Δa/σ) | — | — | 0.1413 | 0.9671 |
+
+**Table S43b — Model-implied Δa₉₀ (full-data fit) under the linear and √Δt forms versus the interpolated empirical Δa₉₀** (key `M8_da90`).
+
+| condition | linear Δt: model (m) | √Δt: model (m) | interpolated empirical (m) |
+|---|--:|--:|--:|
+| 1×·low | 22 | 34 | 40.7 |
+| 1×·mid | 64 | 93 | 91.0 |
+| 1×·high | 138 | 176 | 156.5 |
+| 2×·low | 55 | 56 | 47.0 |
+| 2×·mid | 153 | 148 | 98.4 |
+| 2×·high | 254 | 244 | 209.9 |
+| 4×·low | 106 | 80 | 98.8 |
+| 4×·mid | 274 | 203 | 200.0 |
+| 4×·high | 515 | 372 | 476.3 |
+
+Ratio interpolated / model: linear [0.64, 1.85], √Δt [0.67, 1.28] (√Δt: ĉ = 0.355, SNR₉₀ = 8.56).
+
+**Table S43c — D1 parameter sensitivity** (all 15,774 injections replayed with identical windows and injection indices; baseline agreement with the published hits 1.0000; per-condition values in `fs7_review6_detector_sensitivity.csv`; the false-alarm rate is the replay's flags per satellite per 30 days in control windows, averaged over conditions).
+
+| setting | κ | h | MAD multiplier | interpolated Δa₉₀ range (m) | max relative change | Spearman vs baseline | false-alarm rate |
+|---|--:|--:|--:|---|--:|--:|--:|
+| baseline | 0.5 | 5 | 3 | 41–476 | 0.0% | 1.000 | 1.75 |
+| h=4 | 0.5 | 4 | 3 | 40–476 | 2.4% | 1.000 | 1.91 |
+| h=6 | 0.5 | 6 | 3 | 41–476 | 1.8% | 0.983 | 1.65 |
+| kappa=0.25 | 0.25 | 5 | 3 | 40–474 | 6.7% | 0.983 | 2.12 |
+| kappa=1.0 | 1.0 | 5 | 3 | 41–476 | 0.2% | 1.000 | 1.53 |
+| MAD 4σ | 0.5 | 5 | 4 | 47–576 | 47.4% | 0.967 | 1.07 |
+
+---
+
+## Section S18. Conditions of applicability and requirements for transfer (main §7)
+
+**Table S44 — Evaluated conditions and what a transfer would require** (main §7, "Population of applicability").
+
+| factor | evaluated FS7 condition | required for a meaningful transfer |
+|---|---|---|
+| altitude / inclination | ≈ 550 km, 24° | similar drag regime, or recalibration of c·\|ȧ\|·Δt |
+| propulsion / maneuver type | chemical, discrete burns of tens of metres to 2.8 km | impulsive maneuvers; low-thrust arcs are not covered |
+| maneuver coordination | individually verified only; coordinated burns excluded | separate validation of coordinated events |
+| TLE cadence | median 8–12 h over the full history, 21.6 h during the 2025 campaign; 0.3–2.0 d across the injection conditions | comparable Δt, or use of the cadence-dependent empirical floors |
+| residual scale σ_TLE | 1–21 m in quiet windows | measured σ_TLE with the Appendix B estimator |
+| drag rate \|ȧ\| | 18–77 m/day in quiet windows; up to 182 m/day in the storm | within or near the calibrated range |
+| detector | D1 (MAD 3σ ∪ CUSUM κ = 0.5, h = 5) | the same detector family, or recalibration |
+| truth source | independent precise orbits (60 s SP3) | an independent truth source (SP3/SLR/DORIS/GNSS-POD) with ≥ ~50 verified events spanning 20 m–2 km, plus quiet windows for injections and a temporal hold-out | As supplementary context (Fig. S3), a domain map of the study satellites in altitude–inclination space with fitted noise-floor contours σ_th(h) = sqrt(σ₀² + (A·e^{−(h−400)/H})²) (σ₀ = 0.045 m, A = 24.5 m, H = 77 km, log-space R² = 0.89; derived in the companion study [11]) illustrates the altitude dominance of the nominal residual scale; it is contextual, not part of the calibrated model's claims, and the GRACE pair's departure from the contours (consistent with their low area-to-mass ratio) marks a limit of the single-parameter description.

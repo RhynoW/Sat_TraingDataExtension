@@ -16,6 +16,7 @@ figure, expected output checksums, and the fixed random seeds.
 | data | source | how |
 |---|---|---|
 | leoOrb SP3 daily packs | TACC, `https://tacc.cwa.gov.tw/data-service/fs7rt_tdpc/daily_tar` | `python -m formosat7_leoorb.cli download --start YYYY-MM-DD --end YYYY-MM-DD` (public, no login). Campaign windows used: 2024-07-08→08-01, 2024-11-18→12-13, 2025-05-01→05-25, 2025-06-20→09-10, 2026-01-13→02-03, plus the 2024 storm sample. File versions/download dates/checksums: `fs7_checksums_sha256.txt` |
+| Geomagnetic indices (Kp 3-hourly, F10.7) | GFZ Potsdam, `https://kp.gfz.de/app/files/Kp_ap_Ap_SN_F107_since_1932.txt` (CC BY 4.0; Matzka et al. 2021) | extract for 2024-04/05 shipped as `data/space_weather/gfz_kp_3h_2024-04_05.csv` |
 | TLE histories | Space-Track (user's own credentials; raw TLEs are **not** redistributed per the user agreement) | NORAD IDs 44343/44349/44350/44351/44353/44358; epoch lists shipped as metadata; retrieval via the project's `download_TLE_unified.py` into `space_db.duckdb` (table `raw_tle_archive`) |
 
 ## 3. Commands per table / figure (run from repository root; all seeds fixed at 42)
@@ -35,6 +36,12 @@ figure, expected output checksums, and the fixed random seeds.
 | §2.5 campaign truth (Table 1a event counts) | `python fs7_campaign_truth_build.py` | `data/benchmark/fs7_events_campaigns_20260825.csv` |
 | Table 4; §5.4 threshold performance | `python fs7_tle_recall_unified.py` | `data/benchmark/fs7_tle_recall_unified_20260825.csv` |
 | §4.6 slope/intercept CI; supplement Δa₉₀ variant | `python fs7_final_supplement.py` | `data/benchmark/fs7_final_supplement.json` |
+| R1: Table 2b, 4a, 5, 6; §5.1 Kp alignment; Tables S28–S35; Fig. S5 | `python fs7_review5_analysis.py` (DB read-only; TLE epochs < 2026-08-25; pseudo-event Draw C, asserted against `fs7_supplement_tables.json`) | `data/benchmark/fs7_review5_analysis.json`, `fs7_review5_event_decomposition.csv`, `fs7_review5_threshold_sweep.csv`, `fs7_review5_recall_grid.csv`, `docs/fig_fs7_threshold_sweep.png` (+ `.pdf`) |
+| R2: §4.3 Table 3b, §4.5 D1 sensitivity, §5 E1 logistic, §5.4 sign/independent checks, §5.5 Table 6a and contamination by source; Tables S36–S43 | `python fs7_review6_analysis.py` (DB read-only; TLE epochs < 2026-08-25) | `data/benchmark/fs7_review6_analysis.json`, `fs7_review6_detector_sensitivity.csv` |
+| R2: supplement Section S17 (Markdown) | `python docs/gen_fs7_supplement_r2.py` | `docs/_supplement_r2_sections.md` |
+| R2: minimal reproduction (no DB, no Space-Track) | `python fs7_repro_minimal.py` (exit 0 when Tables 3, 4a, 4, 5 match) | — |
+| R2: anonymized review package | `python docs/build_paperB_review_package.py` | `dist/paperB_review_package_R2.zip`, plus `data/benchmark/fs7_tle_epoch_list.csv` and `fs7_injection_trials_with_t0.csv` |
+| R1: supplement Sections S11–S16 (Markdown) | `python docs/gen_fs7_supplement_r1.py` (reads the review5 products only) | `docs/_supplement_r1_sections.md` |
 | Fig. S3 domain map | `python fs7_noise_floor_map.py && python fs7_noise_floor_map_v2.py` | `data/benchmark/tle_noise_floor_map.csv`, `docs/fig_tle_noise_floor_map_contour.png` |
 
 Each figure script above also accepts `--pub`, which writes the zh/en × light/dark
