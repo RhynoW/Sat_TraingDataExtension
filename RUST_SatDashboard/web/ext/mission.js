@@ -179,7 +179,8 @@
     return RE_KM * lam;
   }
 
-  // 星系各成員自時窗起點一圈的軌道（可用滑鼠點選；選定的那顆另畫完整地面軌跡）
+  // 星系各成員「時窗起點後第一圈」的軌道（點選入口；與各次過頂通常不是同一圈——地球每圈西移約 24°）。
+  // 選定過頂時另由 drawPassOrbit() 畫出涵蓋該過頂的那一圈，與 30 s 標點重合。
   function drawOrbits() {
     if (!schedule) return;
     schedule.satellites.forEach(function (s, i) {
@@ -189,9 +190,12 @@
       var seg = [], prev = null;
       var props = { norad: s.norad_id };
       function flush() {
-        if (seg.length >= 6) ds.entities.add({ name: s.label + "（點選以顯示過頂清單）", properties: props, polyline: {
-          positions: Cesium.Cartesian3.fromDegreesArrayHeights(seg), width: chosen ? 2 : 3,
-          material: col.withAlpha(chosen ? 0.35 : 0.85) } });
+        if (seg.length >= 6) ds.entities.add({ name: s.label + "（時窗起點後第一圈；點選以顯示過頂清單）",
+          description: "此線為時窗起點起算的第一圈軌道，僅作為點選入口；各次過頂多半發生在之後的圈次，" +
+            "地面軌跡每圈約西移 24°，因此與過頂的 30 秒標點不重合。選定過頂後另以亮色畫出該次過頂所在的那一圈。",
+          properties: props, polyline: {
+          positions: Cesium.Cartesian3.fromDegreesArrayHeights(seg), width: chosen ? 1.5 : 3,
+          material: col.withAlpha(chosen ? 0.2 : 0.85) } });
       }
       s.orbit.forEach(function (p) {
         if (prev && Math.abs(p[0] - prev[0]) > 180) { flush(); seg = []; }
@@ -206,6 +210,37 @@
           showBackground: true, backgroundColor: Cesium.Color.fromAlpha(Cesium.Color.BLACK, 0.6),
           distanceDisplayCondition: new Cesium.DistanceDisplayCondition(0, 3.0e7) } });
     });
+  }
+
+  // 選定過頂所在的那一圈（以 TCA 為中心前後各半圈，衛星高度）：過頂區間用 5 s 細軌跡、其餘用 30 s 全時窗軌跡，
+  // 與 30 s 標點同一時刻、同一高度，兩者完全重合
+  function drawPassOrbit(ps, t0ms) {
+    var a = RE_KM + (data.satellite.mean_alt_km || 500);
+    var half = Math.PI * Math.sqrt(a * a * a / 398600.4418);          // 半個軌道週期（s）
+    var aosS = (Date.parse(ps.aos.t) - t0ms) / 1000, losS = (Date.parse(ps.los.t) - t0ms) / 1000;
+    var tcaS = (Date.parse(ps.tca.t) - t0ms) / 1000;
+    var pts = [];                                                     // [s, lon, lat, alt_km]
+    data.ground_track.forEach(function (p) {
+      if (p[0] >= tcaS - half && p[0] < aosS) pts.push([p[0], p[1], p[2], p[3]]);
+    });
+    ps.track.forEach(function (t) { pts.push([aosS + t[0], t[4], t[3], t[5]]); });
+    data.ground_track.forEach(function (p) {
+      if (p[0] > losS && p[0] <= tcaS + half) pts.push([p[0], p[1], p[2], p[3]]);
+    });
+    var si = schedule ? schedule.satellites.findIndex(function (s) { return s.norad_id === selNorad; }) : -1;
+    var col = Cesium.Color.fromCssColorString(ORBIT_COLORS[(si < 0 ? 0 : si) % ORBIT_COLORS.length]);
+    var seg = [], prev = null;
+    function flush() {
+      if (seg.length >= 6) ds.entities.add({ name: data.satellite.name + "　過頂 #" + (selPass + 1) + " 所在圈次",
+        description: "以 TCA " + tw(ps.tca.t, true) + "（台灣）為中心前後各半圈的軌道，與該次過頂的 30 秒標點同一時刻、同一高度。",
+        polyline: { positions: Cesium.Cartesian3.fromDegreesArrayHeights(seg), width: 2.5, material: col.withAlpha(0.95) } });
+    }
+    pts.forEach(function (p) {
+      if (prev && Math.abs(p[1] - prev[1]) > 180) { flush(); seg = []; }
+      seg.push(p[1], p[2], p[3] * 1000);
+      prev = p;
+    });
+    flush();
   }
 
   // 地面軌跡兩側 ±5° 的 1° 雲量網格（地表，半透明）
@@ -315,6 +350,7 @@
         });
       });
       if (chosen) drawCloudGrid(ps);
+      if (chosen) drawPassOrbit(ps, t0ms);
       if (chosen) {
         var arc = [];
         ps.track.forEach(function (t) { arc.push(t[4], t[3], t[5] * 1000); });
