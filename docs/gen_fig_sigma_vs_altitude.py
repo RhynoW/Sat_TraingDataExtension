@@ -4,7 +4,15 @@
 資料來自 ids_truth_set/ids_sigma_calibration.csv；加入 FORMOSAT-3 在地對照與 Starlink 帶。
 標籤要求：Sentinel-3B 置於數據點正上方；Sentinel-6A 置於數據點右上方。
 輸出：docs/fig_sigma_vs_altitude_EN.png（英）、docs/fig_sigma_vs_altitude.png（中）
---pub：另輸出 docs/figures_pub/fig_sigma_vs_altitude/ 之中英 × 白底／黑底四版本（600 dpi PNG＋PDF）"""
+--pub：另輸出 docs/figures_pub/fig_sigma_vs_altitude/ 之中英 × 白底／黑底四版本（600 dpi PNG＋PDF）
+--paper：論文 A 修訂版（預設輸出保持不變）→ docs/fig_sigma_vs_altitude_paperA.png（英）、
+         docs/fig_sigma_vs_altitude_paperA_ZH.png（中）；加 --pub 則輸出
+         docs/figures_pub/fig_sigma_vs_altitude_paperA/ 四版本。修訂內容：
+         · 移除「Starlink σ ≈ 24–75 m」紅框，改畫 TLE 對 SpaceX 星曆 |Δa| 之中位數與 IQR
+           （data/benchmark/starlink_tle_meme_error_floor_20260918.csv；高度帶取逐點高度 P1–P99），
+           並標明為不同物理量；
+         · 灰虛線標籤改為 "Fixed 50 m threshold"；
+         · 福衛三號點改用 docs/paperA_numbers.py 重算之代表值（六星 σ_diff 中位、高度中位）。"""
 import sys
 from pathlib import Path
 try: sys.stdout.reconfigure(encoding="utf-8")
@@ -69,15 +77,59 @@ TXT = {
 }
 
 F3_ALT, F3_SIG = 788.0, 0.95
+PAPER = "--paper" in sys.argv
+
+
+def _paper_inputs():
+    """論文 A 版之 Starlink 帶與福衛三號代表值（皆由檔案計算，不寫死）。"""
+    import json
+    sl = pd.read_csv(ROOT / "data" / "benchmark" / "starlink_tle_meme_error_floor_20260918.csv",
+                     usecols=["a_meme_km", "da_km"])
+    ada = sl["da_km"].abs() * 1000.0
+    alt = sl["a_meme_km"] - 6378.137
+    out = dict(sl_lo=float(alt.quantile(0.01)), sl_hi=float(alt.quantile(0.99)),
+               sl_med=float(ada.median()), sl_q1=float(ada.quantile(0.25)), sl_q3=float(ada.quantile(0.75)),
+               f3_alt=786.5, f3_sig=1.04)   # 後二者為 paperA_numbers.json 缺檔時之後備值
+    js = ROOT / "data" / "benchmark" / "paperA_numbers.json"
+    if js.exists():
+        rep = json.loads(js.read_text(encoding="utf-8")).get("fs", {}).get("FS3", {}).get("fig1_representative")
+        if rep:
+            out["f3_alt"], out["f3_sig"] = float(rep["alt_km"]), float(rep["sigma_diff_m"])
+    return out
+
+
+if PAPER:
+    PI = _paper_inputs()
+    F3_ALT, F3_SIG = PI["f3_alt"], PI["f3_sig"]
+    TXT["en"].update(
+        starlink=(f"Starlink: TLE vs SpaceX ephemeris |Δa|\n(median {PI['sl_med']:.0f} m, "
+                  f"IQR {PI['sl_q1']:.0f}–{PI['sl_q3']:.0f} m)\n— a different quantity, not σ_diff"),
+        ref="Fixed 50 m threshold",
+        f3=f"FORMOSAT-3 ({F3_ALT:.0f} km, non-propulsive; median of 6, last 30 d)",
+        out=DOCS / "fig_sigma_vs_altitude_paperA.png")
+    TXT["zh"].update(
+        starlink=(f"Starlink：TLE 對 SpaceX 星曆 |Δa|\n（中位 {PI['sl_med']:.0f} m，"
+                  f"IQR {PI['sl_q1']:.0f}–{PI['sl_q3']:.0f} m）\n— 不同物理量，非 σ_diff"),
+        ref="固定 50 m 門檻",
+        f3=f"福衛三號（{F3_ALT:.0f} km、無推進；六星近 30 天中位）",
+        out=DOCS / "fig_sigma_vs_altitude_paperA_ZH.png")
 
 
 def draw(cfg):
     """繪圖（不設字型、不存檔），回傳 Figure；供預設輸出與 --pub 四版本共用。"""
     fig, ax = plt.subplots(figsize=(11.5, 7.2))
 
-    ax.add_patch(Rectangle((350, 24), 200, 75 - 24, facecolor="#d9534f", alpha=0.12,
-                           edgecolor="#d9534f", lw=1.0, zorder=1))
-    ax.text(360, 88, cfg["starlink"], color="#c0392b", fontsize=11, va="top", fontweight="bold")
+    if PAPER:
+        lo, hi = PI["sl_lo"], PI["sl_hi"]
+        ax.add_patch(Rectangle((lo, PI["sl_q1"]), hi - lo, PI["sl_q3"] - PI["sl_q1"], facecolor="#b0339c",
+                               alpha=0.13, edgecolor="#b0339c", lw=1.0, ls=(0, (4, 2)), zorder=1))
+        ax.plot([lo, hi], [PI["sl_med"]] * 2, color="#b0339c", lw=2.2, zorder=2)
+        ax.text(lo + 6, PI["sl_q1"] * 0.92, cfg["starlink"], color="#7d1f6f", fontsize=9.6,
+                va="top", ha="left", linespacing=1.35)
+    else:
+        ax.add_patch(Rectangle((350, 24), 200, 75 - 24, facecolor="#d9534f", alpha=0.12,
+                               edgecolor="#d9534f", lw=1.0, zorder=1))
+        ax.text(360, 88, cfg["starlink"], color="#c0392b", fontsize=11, va="top", fontweight="bold")
 
     ax.axhline(50, color="#888888", ls="--", lw=1.4, zorder=1)
     ax.text(1330, 56, cfg["ref"], color="#666666", fontsize=10.5, ha="right", va="bottom")
@@ -126,9 +178,10 @@ def render(cfg):
 
 
 if __name__ == "__main__":
-    if "--pub" in sys.argv:          # 中英 × 白底／黑底四版本 → docs/figures_pub/fig_sigma_vs_altitude/
+    if "--pub" in sys.argv:          # 中英 × 白底／黑底四版本 → docs/figures_pub/fig_sigma_vs_altitude[_paperA]/
         import fig_pub as fp
-        fp.export_variants(lambda: draw(TXT[fp.lang()]), "fig_sigma_vs_altitude")
+        fp.export_variants(lambda: draw(TXT[fp.lang()]),
+                           "fig_sigma_vs_altitude_paperA" if PAPER else "fig_sigma_vs_altitude")
         sys.exit(0)
     for k in ("en", "zh"):
         render(TXT[k])

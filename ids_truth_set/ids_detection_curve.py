@@ -117,6 +117,16 @@ def main():
         D.to_csv(OUT, index=False, encoding="utf-8-sig")
         print(f"逐事件 {len(D)} 筆 → {OUT}")
 
+    # 真值改為窗內全部 burn 之淨 Δa（原版只取窗內第一個 burn，多 burn 窗之真值偏低）。
+    # 觀測值與偵測判定不變（沿用逐事件結果），只重算 da_true。
+    net = (df[df["norad"] == NORAD_J3].groupby(["win_start_tai", "win_end_tai"])["da_km"]
+           .sum().abs().reset_index().rename(columns={"da_km": "da_true_net_km"}))
+    D = D.merge(net[["win_start_tai", "da_true_net_km"]], on="win_start_tai", how="left")
+    n_multi = int((df[df["norad"] == NORAD_J3].groupby(["win_start_tai", "win_end_tai"]).size() > 1).sum())
+    D["da_true_m"] = D["da_true_net_km"].fillna(D["da_true_km"]) * 1000.0
+    D["da_over_sigma"] = D["da_true_m"] / 1000.0 / sigma
+    print(f"真值改用窗內淨 Δa（多 burn 窗 {n_multi} 個）")
+
     thr_cal_m = K_SIGMA * sigma * 1000.0        # 真實校準底 3σ（m）
     thr_t11_m = K_SIGMA * 0.05 * 1000.0         # 表 11 假設 3σ（m）= 150 m
 
@@ -173,16 +183,16 @@ def plot_curve(D, grp, thr_cal_m, thr_t11_m, pdet_all, r_corr):
     ax1.axvline(thr_cal_m, color="#5cb85c", lw=1.6, ls="--", zorder=2,
                 label=T(f"校準底 3σ = {thr_cal_m:.1f} m（實測）", f"Calibrated noise floor 3σ = {thr_cal_m:.1f} m (measured)"))
     ax1.axvline(thr_t11_m, color="#d9534f", lw=1.6, ls="--", zorder=2,
-                label=T(f"表 11 假設 3σ = {thr_t11_m:.0f} m", f"Reference-table assumption 3σ = {thr_t11_m:.0f} m"))
+                label=T(f"固定 σ = 50 m 假設之 3σ = {thr_t11_m:.0f} m", f"3σ under a fixed σ = 50 m assumption = {thr_t11_m:.0f} m"))
     ax1.annotate("", xy=(thr_t11_m, 0.5), xytext=(thr_cal_m, 0.5),
                  arrowprops=dict(arrowstyle="<->", color="#8a6d3b", lw=1.3))
     ax1.text(math.sqrt(thr_cal_m * thr_t11_m), 0.55,
-             T(f"假設門檻高於實測 {thr_t11_m / thr_cal_m:.0f}×\n"
+             T(f"50 m 假設之門檻為校準值之 {thr_t11_m / thr_cal_m:.0f}×\n"
                f"此區 {n_gap} 次點火中 {n_gap_det} 次已被偵得\n"
-               f"（其真值 Δa 皆低於假設門檻）",
-               f"Assumed threshold is {thr_t11_m / thr_cal_m:.0f}x the measured one\n"
+               f"（其真值 Δa 皆低於 150 m）",
+               f"Fixed-σ threshold is {thr_t11_m / thr_cal_m:.0f}× the calibrated one\n"
                f"{n_gap_det} of {n_gap} burns in this band were detected\n"
-               f"(all have truth Δa below the assumed threshold)"),
+               f"(all with truth Δa below 150 m)"),
              ha="center", va="bottom", fontsize=9, color="#8a6d3b")
     ax1.set_xscale("log"); ax1.set_ylim(-0.03, 1.06)
     ax1.set_xlabel(T("真值 Δa (m)", "Truth Δa (m)"))
@@ -205,7 +215,7 @@ def plot_curve(D, grp, thr_cal_m, thr_t11_m, pdet_all, r_corr):
     ax2.set_title(T(f"(B) 觀測 vs 真值 Δa 回收　r = {r_corr:.2f}", f"(B) Observed vs truth Δa recovery (r = {r_corr:.2f})"))
     ax2.grid(True, alpha=0.3, which="both"); ax2.legend(loc="upper left", fontsize=8.5)
 
-    fig.suptitle(T("Jason-3 IDS 認證點火：偵測能力實資料驗證（表 11 由合成注入升級為實測）", "Jason-3 IDS-certified maneuvers: real-data validation of detection capability"),
+    fig.suptitle(T("Jason-3 IDS 認證點火：偵測能力實資料驗證", "Jason-3 IDS-certified maneuvers: real-data validation of detection capability"),
                  fontsize=12.5)
     fig.tight_layout(rect=[0, 0, 1, 0.96])
     return fig
