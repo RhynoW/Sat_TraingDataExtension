@@ -18,6 +18,7 @@ ids_dv_vector_validate.py — 交叉弧段 ΔV 向量驗證（收尾 §18.2-3(c)
   之 ΔV 攤在數十圈、無單一階躍，單步反解會系統性低估——見報告 burn-arc 章。
 
 用法：python ids_dv_vector_validate.py
+      python ids_dv_vector_validate.py --pub   （讀既有逐事件 CSV，不連 DB；輸出 docs/figures_pub/fig_ids_dv_vector/ 中英×白底／黑底四版本）
 輸出：ids_dv_vector_validate.csv（逐事件）＋ docs/fig_ids_dv_vector.png
 """
 from __future__ import annotations
@@ -34,6 +35,9 @@ import pandas as pd
 import duckdb
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "docs"))
+import fig_pub as fp  # noqa: E402
+from fig_pub import t  # noqa: E402
 DB = ROOT / "space_db.duckdb"
 TRUTH = Path(__file__).parent / "ids_truth.csv"
 FIG = ROOT / "docs" / "fig_ids_dv_vector.png"
@@ -140,48 +144,62 @@ def main():
                 print(f"  [{name}/{tag}] 沿軌 n={len(mm)} r={r:.3f}")
 
     # ── 圖 ──
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
     try:
-        import matplotlib
-        matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
         plt.rcParams["font.sans-serif"] = ["Microsoft JhengHei", "Yu Gothic", "DejaVu Sans"]
         plt.rcParams["axes.unicode_minus"] = False
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.4, 5.2))
-        colors = {"SWOT": "#1a6fc4", "CryoSat-2": "#e08a2c"}
-
-        for name in ("SWOT", "CryoSat-2"):
-            sub = Dc[(Dc["sat"] == name) & (Dc["dv_along_truth"].abs() > 1e-6)]
-            ax1.scatter(sub["dv_along_truth"] * 1000, sub["dv_along_rec"] * 1000,
-                        s=26, alpha=0.75, color=colors[name], label=f"{name}（n={len(sub)}）")
-        lim = 120
-        ax1.plot([-lim, lim], [-lim, lim], color="#888", lw=1.0, ls=":", label="y = x")
-        ax1.set_xlim(-lim, lim); ax1.set_ylim(-lim, lim)
-        ax1.set_xlabel("IDS 真值 沿軌 Δv_t (mm/s)")
-        ax1.set_ylabel("TLE 反解 沿軌 Δv_t (mm/s)")
-        ax1.set_title("(A) 沿軌 ΔV 反解 vs IDS 真值（乾淨 bracket）")
-        ax1.grid(True, alpha=0.3); ax1.legend(loc="upper left", fontsize=9)
-
-        both = D[D["dv_cross_truth"].abs() > 1e-6]
-        for name in ("SWOT", "CryoSat-2"):
-            sub = both[both["sat"] == name]
-            ax2.scatter(sub["dv_cross_truth"] * 1000, sub["dv_cross_rec"] * 1000,
-                        s=26, alpha=0.75, color=colors[name], label=name)
-        lim2 = 200
-        ax2.plot([-lim2, lim2], [-lim2, lim2], color="#888", lw=1.0, ls=":", label="y = x")
-        ax2.set_xlim(-lim2, lim2); ax2.set_ylim(-lim2, lim2)
-        ax2.set_xlabel("IDS 真值 越軌 Δv_c (mm/s)")
-        ax2.set_ylabel("TLE 反解 越軌 Δv_c (mm/s)")
-        ax2.set_title("(B) 越軌 ΔV 反解 vs 真值（Δi 微小、較噪）")
-        ax2.grid(True, alpha=0.3); ax2.legend(loc="upper left", fontsize=9)
-
-        fig.suptitle("交叉弧段 ΔV 向量驗證：TLE 反解 R/T/N vs IDS 三分量真值（脈衝化學推進）",
-                     fontsize=12.5)
-        fig.tight_layout(rect=[0, 0, 1, 0.96])
+        fig = plot_dv(D)
         fig.savefig(FIG, dpi=140)
         print(f"圖 → {FIG}")
     except Exception as e:
         print(f"（繪圖略：{e}）")
 
 
+def plot_dv(D):
+    """雙面板圖；不設定字型（由呼叫端／fig_pub 決定），回傳 Figure。"""
+    import matplotlib.pyplot as plt
+    Dc = D[D["clean"] == 1]
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12.4, 5.2))
+    colors = {"SWOT": "#1a6fc4", "CryoSat-2": "#e08a2c"}
+
+    for name in ("SWOT", "CryoSat-2"):
+        sub = Dc[(Dc["sat"] == name) & (Dc["dv_along_truth"].abs() > 1e-6)]
+        ax1.scatter(sub["dv_along_truth"] * 1000, sub["dv_along_rec"] * 1000,
+                    s=26, alpha=0.75, color=colors[name], label=t(f"{name}（n={len(sub)}）", f"{name} (n={len(sub)})"))
+    lim = 120
+    ax1.plot([-lim, lim], [-lim, lim], color="#888", lw=1.0, ls=":", label="y = x")
+    ax1.set_xlim(-lim, lim); ax1.set_ylim(-lim, lim)
+    ax1.set_xlabel(t("IDS 真值 沿軌 Δv_t (mm/s)", "IDS truth along-track Δv_t (mm/s)"))
+    ax1.set_ylabel(t("TLE 反解 沿軌 Δv_t (mm/s)", "TLE-inverted along-track Δv_t (mm/s)"))
+    ax1.set_title(t("(A) 沿軌 ΔV 反解 vs IDS 真值（乾淨 bracket）", "(A) Along-track ΔV inversion vs IDS truth (clean brackets)"))
+    ax1.grid(True, alpha=0.3); ax1.legend(loc="upper left", fontsize=9)
+
+    both = D[D["dv_cross_truth"].abs() > 1e-6]
+    for name in ("SWOT", "CryoSat-2"):
+        sub = both[both["sat"] == name]
+        ax2.scatter(sub["dv_cross_truth"] * 1000, sub["dv_cross_rec"] * 1000,
+                    s=26, alpha=0.75, color=colors[name], label=name)
+    lim2 = 200
+    ax2.plot([-lim2, lim2], [-lim2, lim2], color="#888", lw=1.0, ls=":", label="y = x")
+    ax2.set_xlim(-lim2, lim2); ax2.set_ylim(-lim2, lim2)
+    ax2.set_xlabel(t("IDS 真值 越軌 Δv_c (mm/s)", "IDS truth cross-track Δv_c (mm/s)"))
+    ax2.set_ylabel(t("TLE 反解 越軌 Δv_c (mm/s)", "TLE-inverted cross-track Δv_c (mm/s)"))
+    ax2.set_title(t("(B) 越軌 ΔV 反解 vs 真值（Δi 微小、較噪）", "(B) Cross-track ΔV inversion vs truth (tiny Δi, noisier)"))
+    ax2.grid(True, alpha=0.3); ax2.legend(loc="upper left", fontsize=9)
+
+    fig.suptitle(t("交叉弧段 ΔV 向量驗證：TLE 反解 R/T/N vs IDS 三分量真值（脈衝化學推進）",
+          "Cross-arc ΔV vector validation: TLE-inverted R/T/N vs IDS three-component truth "
+          "(impulsive chemical propulsion)"),
+                 fontsize=12.5)
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    return fig
+
+
 if __name__ == "__main__":
-    main()
+    if fp.wants_pub():
+        _D = pd.read_csv(OUT)
+        fp.export_variants(lambda: plot_dv(_D), "fig_ids_dv_vector")
+    else:
+        main()

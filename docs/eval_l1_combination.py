@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 """eval_l1_combination.py — 以大樣本比較 L1 規則之組合方式（P2／P5／P6／其他根數／P4）。
 
-變體（皆含「其他根數」Δi／Δe／ΔΩ 標記與 P1／P3 抑制；超過門檻之轉換不受抑制）：
+變體（皆含「其他根數」Δi／Δe 標記與 P1 抑制；超過門檻之轉換不受抑制；與現行 apply_strategies 一致，
+不含 ΔΩ 殘差標記與 P3 抑制）：
   A 舊版聯集    ：門檻＝P2（舊版 P2∪P5∪P6 聯集等同 P2），P4＝標記點及其後 2 筆
   B 現行        ：門檻＝P2×P5×P6（P5 上限 1.8），P4＝標記點及其後 2 筆
   C 現行去 P4   ：門檻＝P2×P5×P6，無 P4
@@ -58,18 +59,14 @@ def combine(tr: pd.DataFrame, orbit_class: str, thr_mode: str, p4_mode: str) -> 
     else:
         thr = thr_p2
     flag = np.abs(da) > thr
-    other = ((np.abs(tr["di_deg"].to_numpy(float)) > ms.THR_DI) | (np.abs(tr["de"].to_numpy(float)) > ms.THR_DE)
-             | (np.abs(tr["draan_res_deg"].to_numpy(float)) > ms.THR_DRAAN))
-    # P1／P3 抑制（與 apply_strategies 相同）
+    other = (np.abs(tr["di_deg"].to_numpy(float)) > ms.THR_DI) | (np.abs(tr["de"].to_numpy(float)) > ms.THR_DE)
+    # P1 抑制（與 apply_strategies 相同）
     sup = np.zeros(n, bool)
     for i in range(n):
         seg = da[max(0, i - 4):i + 1]
         if len(seg) >= 4 and np.mean(seg < 0.1) >= 0.85 and np.all(np.abs(seg) < 2.0) \
                 and not np.isnan(bstar[i]) and bstar[i] > 0:
             sup[i] = True
-    vb = bstar[~np.isnan(bstar)]
-    hi = np.nanmedian(vb) + 2 * np.nanstd(vb) if len(vb) else np.inf
-    sup |= (~np.isnan(bstar)) & (bstar > max(hi, 5e-4)) & (da < 0) & (np.abs(da) < 1.5)
     sup &= ~flag
     base = flag | other
     p4 = np.zeros(n, bool)

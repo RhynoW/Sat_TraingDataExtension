@@ -8,6 +8,8 @@
 資料：r15.json ＝ maneuver_report_builder.build_report_data() 對 15 顆衛星之輸出
 （報表版本 R7，2026-11-15；本機總庫 TLE 至 2026-11-14；含 NRLMSIS 阻力殘差通道）。
 用法：python docs/build_tasa15_ppt.py <r15.json>
+      python docs/build_tasa15_ppt.py <r15.json> --pub-fig-only
+        （只輸出時間軸圖 docs/figures_pub/fig_tasa15_timeline_r7/ 中英×白底／黑底四版本，不建 pptx、不覆寫原圖）
 輸出：docs/期末_TASA15星機動偵測_R7_20261115.pptx、fig_tasa15_timeline_r7.png（PDF 由 docs/export_pptx_pdf.py 匯出）
 R6 版（2026-11-13）之簡報保留為 期末_TASA15星機動偵測_20261113.pptx。
 """
@@ -30,6 +32,8 @@ from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Emu, Inches, Pt
+
+import fig_pub as fp
 
 DOCS = Path(__file__).resolve().parent
 TPL = DOCS / "tasa_template"
@@ -84,9 +88,20 @@ def disp(n, r) -> str:
 GRADE_COLOR = {"E3": "#002B8A", "E2": "#3F7BE0", "E1": "#A9C3F0"}
 
 
+TYPE_EN = {"A": "Orbit\ntransfer", "B": "Constellation\noperations", "C": "Small\nadjustments",
+           "D": "No events\nabove floor"}
+
+
 def build_timeline(R: dict[int, dict]) -> None:
     plt.rcParams["font.family"] = [CJK, "DejaVu Sans"]
     plt.rcParams["axes.unicode_minus"] = False
+    fig = draw_timeline(R)
+    fig.savefig(FIG, dpi=200)
+    plt.close(fig)
+
+
+def draw_timeline(R: dict[int, dict]):
+    """15 顆衛星事件時間軸（泳道）；不設定字型（由呼叫端／fig_pub 決定），回傳 Figure。"""
     fig, ax = plt.subplots(figsize=(12.4, 5.75), dpi=200)
     rows, y, yt, ylab = [], 0, [], []
     group_y = []
@@ -101,7 +116,7 @@ def build_timeline(R: dict[int, dict]) -> None:
     for i, (code, tname, a, b) in enumerate(group_y):
         if i % 2 == 0:
             ax.axhspan(a - 0.5, b + 0.5, color="#F2F4F8", zorder=0, lw=0)
-        ax.text(-0.175, (a + b) / 2, f"{code}\n{tname}", transform=ytr, ha="center", va="center",
+        ax.text(-0.175, (a + b) / 2, f"{code}\n{fp.t(tname, TYPE_EN[code])}", transform=ytr, ha="center", va="center",
                 fontsize=11, color="#002B8A", fontweight="bold", linespacing=1.3, clip_on=False)
     for n, yy in rows:
         r = R[n]
@@ -120,19 +135,19 @@ def build_timeline(R: dict[int, dict]) -> None:
     ymap = dict(rows)
     notes = [  # (norad, 時間, 文字, dx 天, dy, ha)：dy<0 標在該列上方、dy>0 標在該列與下一列之間
         (64199, "2025-05-29", "−38.7 km", 0, -0.30, "center"),
-        (64199, "2026-11-09", "+9.8 km（11/09）", -12, -0.30, "right"),
+        (64199, "2026-11-09", fp.t("+9.8 km（11/09）", "+9.8 km (11/09)"), -12, -0.30, "right"),
         (58651, "2024-03-15", "+39.8 km", 0, -0.30, "center"),
-        (62190, "2025-04-25", "三件累計 +25.1 km", 0, 0.42, "left"),
-        (53056, "2026-07-20", "26 天連續降軌 −83.8 km", 0, -0.30, "center"),
+        (62190, "2025-04-25", fp.t("三件累計 +25.1 km", "3 events, cumulative +25.1 km"), 0, 0.42, "left"),
+        (53056, "2026-07-20", fp.t("26 天連續降軌 −83.8 km", "26-day continuous lowering −83.8 km"), 0, -0.30, "center"),
         (69018, "2026-10-19", "−1.6 km", -10, -0.30, "right"),
-        (68831, "2026-06-01", "D：回跳型態（資料品質）", 0, 0, "right"),
+        (68831, "2026-06-01", fp.t("D：回跳型態（資料品質）", "D: rebound pattern (data quality)"), 0, 0, "right"),
     ]
     for n, t, txt, dx, dy, ha in notes:
         ax.text(pd.Timestamp(t) + pd.Timedelta(days=dx), ymap[n] + dy, txt, fontsize=9.5, color="#262626",
                 ha=ha, va="bottom" if dy < 0 else "center", zorder=5)
     test = pd.Timestamp("2026-10-30")
     ax.axvline(test, color="#C00000", lw=1.2, ls=(0, (4, 3)), zorder=3)
-    ax.text(test + pd.Timedelta(days=6), -0.95, "10/30 交付任務，測試15衛星", color="#C00000", fontsize=9.5,
+    ax.text(test + pd.Timedelta(days=6), -0.95, fp.t("10/30 交付任務，測試15衛星", "10/30 tasking: 15 satellites tested"), color="#C00000", fontsize=9.5,
             ha="right", va="bottom")
     ax.set_yticks(yt, ylab, fontsize=10)
     ax.set_ylim(y - 0.6 + 0.1, -1.0)
@@ -145,18 +160,17 @@ def build_timeline(R: dict[int, dict]) -> None:
         ax.spines[sp].set_visible(False)
     ax.spines["bottom"].set_color("#BFBFBF")
     ax.grid(axis="x", color="#E3E6EC", lw=0.8, zorder=0)
-    leg = [Line2D([], [], color="#C9CED8", lw=5, label="TLE 觀測期間")]
+    leg = [Line2D([], [], color="#C9CED8", lw=5, label=fp.t("TLE 觀測期間", "TLE coverage period"))]
     leg += [Line2D([], [], marker="o", ls="", markersize=9, markerfacecolor=c, markeredgecolor="white", label=g)
             for g, c in GRADE_COLOR.items()]
     leg += [Line2D([], [], marker="o", ls="", markersize=9, markerfacecolor="white", markeredgecolor="#7F7F7F", label="D"),
-            Line2D([], [], color="#002B8A", lw=7, label="連續機動段")]
+            Line2D([], [], color="#002B8A", lw=7, label=fp.t("連續機動段", "Continuous maneuver segment"))]
     ax.legend(handles=leg, loc="lower left", bbox_to_anchor=(0.0, 1.0), ncol=6, frameon=False, fontsize=10,
               handletextpad=0.4, columnspacing=1.4)
-    ax.text(0.0, -0.075, "圓點顏色＝證據等級、大小∝|淨 Δa|", transform=ax.transAxes, ha="left", va="top",
+    ax.text(0.0, -0.075, fp.t("圓點顏色＝證據等級、大小∝|淨 Δa|", "Dot color = evidence grade; size ∝ |net Δa|"), transform=ax.transAxes, ha="left", va="top",
             fontsize=9.5, color="#595959")
     fig.subplots_adjust(left=0.225, right=0.985, top=0.93, bottom=0.095)
-    fig.savefig(FIG, dpi=200)
-    plt.close(fig)
+    return fig
 
 
 # ── PPTX 共用元件 ─────────────────────────────────────────────────────────────
@@ -707,6 +721,84 @@ def build(R: dict[int, dict]) -> None:
         [("系統用途：", H), ("此預期值即阻力殘差中被扣除之「被動變化」；扣除後超過 0.3 km 才視為可能之主動變化。", {})],
     ], size=12, after=8)
 
+    # ── NRLMSIS 驗證（2026-11-16 新增）：近地點分檔 150 顆、太陽活動時間相關、FORMOSAT-7 精密軌道 ──
+    s = frame(prs, "NRLMSIS 驗證 ①：300–1000 km 共 425 顆衛星（2024-01 迄今）", 0)
+    s.shapes.add_picture(str(DOCS / "fig_perigee_drag_corr_x30.png"), Inches(0.9), Inches(0.98), width=Inches(11.5))
+    table(s, 0.62, 4.85, 12.1, [5.2, 1.6, 5.3], [
+        ["TLE 實測衰減 vs NRLMSIS 預期（55,879 個 7 日窗，取對數）", "r = 0.98", "強正相關：模型可解釋各高度之自然衰減"],
+        ["高度 vs 衰減率（逐星，取對數；實測／NRLMSIS）", "ρ = −0.93／−0.96", "高度越高衰減越慢（300 km 檔約 167 m／日，1000 km 檔約 0.5 m／日）"],
+        ["逐星時間相關（全期被動 309 顆／有抬升紀錄 116 顆）", "0.92／0.22", "主動控制軌道的衛星不適用阻力模型，須先排除"],
+        ["高度 vs 阻力殘差 RMS／相對殘差", "−0.70／+0.47", "殘差絕對值隨高度下降，但占預期衰減之比例隨高度上升"],
+    ], ["相關分析", "係數", "意義"], size=11, row_h=0.36, head_h=0.32,
+        align=[PP_ALIGN.LEFT, PP_ALIGN.CENTER, PP_ALIGN.LEFT], bold_cols=(1,))
+    text(s, 0.62, 6.78, 11.5, 0.3, "選星：每 50 km 一檔、每檔至多 30 顆，近地點在各檔 ±5 km（不足放寬至 ±20 km）之近圓酬載，排除 Starlink、OneWeb 等推力維持高度之星系；"
+         "300、1000 km 檔候選不足 30 顆。248 顆以 Space-Track 歷史 TLE 補齊，335 顆涵蓋 2024-01 起。", size=10, color=MUTED)
+
+    s = frame(prs, "NRLMSIS 驗證 ②：衰減率隨太陽活動起伏之時間相關", 0)
+    s.shapes.add_picture(str(DOCS / "fig_nrlmsis_solar_tracking_x30.png"), Inches(0.5), Inches(0.98), height=Inches(6.05))
+    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(7.25), Inches(1.15), Inches(5.4), Inches(5.6))
+    box.fill.solid(); box.fill.fore_color.rgb = GRAY_ROW2; box.line.color.rgb = GRAY_ROW
+    text(s, 7.4, 1.25, 5.1, 0.4, "為什麼看時間相關", size=16, bold=True, color=NAVY)
+    text(s, 7.4, 1.7, 5.1, 0.9, "彈道係數逐星以全期單一常數校準，量級吻合是校準的結果；"
+         "曲線隨太陽活動的起伏完全來自模型大氣密度，才是真正的檢驗。", size=12)
+    table(s, 7.4, 2.75, 5.1, [1.7, 1.0, 1.2, 1.2], [
+        ["350–550 km", "79", "0.93", "0.93"],
+        ["600–700 km", "58", "0.95", "0.95"],
+        ["750–850 km", "82", "0.95", "0.92"],
+        ["900–1000 km", "51", "0.95", "0.89"],
+    ], ["高度帶", "衛星", "週中位 r", "逐星 r"], size=11.5, row_h=0.36, head_h=0.34,
+        align=[PP_ALIGN.LEFT, PP_ALIGN.CENTER, PP_ALIGN.CENTER, PP_ALIGN.CENTER])
+    bullets(s, 7.4, 4.65, 5.1, 2.0, [
+        [("對象：", H), ("全期被動、TLE 自 2024-01 起完整之 270 顆。", {})],
+        [("結果：", H), ("2024-10 太陽活動高峰時衰減率約為中位數 2–3 倍、2025-07 低點約 0.5 倍，四個高度帶 NRLMSIS 都重現此起伏與 27 日自轉週期擾動。", {})],
+    ], size=11.5, after=6)
+
+    s = frame(prs, "NRLMSIS 驗證 ③：以 FORMOSAT-7 精密軌道驗證", 0)
+    s.shapes.add_picture(str(DOCS / "fig_fs7_precise_nrlmsis.png"), Inches(0.45), Inches(0.98), height=Inches(6.05))
+    box = s.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(8.2), Inches(1.15), Inches(4.45), Inches(5.6))
+    box.fill.solid(); box.fill.fore_color.rgb = GRAY_ROW2; box.line.color.rgb = GRAY_ROW
+    text(s, 8.35, 1.25, 4.2, 0.4, "不依賴 TLE 的實測", size=16, bold=True, color=NAVY)
+    table(s, 8.35, 1.75, 4.15, [2.75, 1.4], [
+        ["精密軌道 vs NRLMSIS", "0.96"],
+        ["TLE vs NRLMSIS", "0.96"],
+        ["TLE vs 精密軌道", "0.996"],
+    ], ["7 日窗衰減率（616 窗）", "合併 r"], size=11.5, row_h=0.36, head_h=0.34,
+        align=[PP_ALIGN.LEFT, PP_ALIGN.CENTER], bold_cols=(1,))
+    bullets(s, 8.35, 3.35, 4.15, 3.4, [
+        [("對象：", H), ("FORMOSAT7-1、2、4、5、6（不含 7-3），leoOrb 精密軌道 2024-01 迄今，約 540–585 km。", {})],
+        [("TLE 可代表真實衰減：", H), ("TLE 與精密軌道之衰減率差約 2 m／日，150 顆以 TLE 為實測之分析成立。", {})],
+        [("彈道係數一致：", H), ("五星校準值 0.0216–0.0219 m²／kg。", {})],
+        [("高活動偏高：", H), ("2024-11 高峰 NRLMSIS 約 145、實測約 120 m／日（高約 20%）；低活動期幾乎重合，原因未查證", {})],
+    ], size=11.5, after=6)
+
+    s = frame(prs, "後續研究議題建議 ①：阻力殘差門檻是否依高度調整", 0)
+    s.shapes.add_picture(str(DOCS / "fig_drag_resid_threshold.png"), Inches(0.9), Inches(0.98), width=Inches(11.5))
+    table(s, 0.62, 4.9, 12.1, [1.6, 1.9, 1.9, 1.9, 1.9, 2.9], [
+        ["現行 0.30 km 誤報", "44", "3.6", "0.8–1.5", "≤ 0.35", "目標：與 L1 相同 0.43"],
+        ["等誤報率門檻 (km)", "> 3", "1.1", "0.45–0.70", "0.03–0.27", "B：各檔查表"],
+        ["高度公式門檻 (km)", "1.43", "0.86", "0.40–0.66", "0.04–0.31", "C：log10(門檻) = 0.82 − 2.22 × h／1000"],
+    ], ["每千星日誤報／門檻", "300 km", "400 km", "450–550 km", "600–1000 km", "說明"], size=11, row_h=0.36, head_h=0.32,
+        align=[PP_ALIGN.LEFT] + [PP_ALIGN.CENTER] * 4 + [PP_ALIGN.LEFT], bold_cols=(0,))
+    text(s, 0.62, 6.38, 12.0, 0.6, [[("研討結論：", H), ("固定 0.30 km 在 400 km 以下誤報偏多（低軌預期阻力本身就大），600 km 以上又過於保守（可偵測下限卡在約 0.31 km，"
+         "實際雜訊只有數十公尺）。建議改為依高度調整：700 km 以上靈敏度可提升約 1.6–8 倍（越高越多），400 km 以下誤報率降至 L1 水準。", {})]], size=11.5)
+    text(s, 0.62, 6.95, 12.0, 0.25, "對象：309 顆全期被動衛星、87.8 萬筆相鄰 TLE（間隔不超過 3 日）；誤報＝殘差超門檻且 48 小時內合併為一次。只做分析與建議，未改正式偵測程式。",
+         size=9.5, color=MUTED)
+
+    s = frame(prs, "後續研究議題建議 ②：研究規劃（Proposal）", 0)
+    table(s, 0.62, 1.1, 12.1, [2.0, 10.1], [
+        ["研究目標", "建立依高度與太陽活動調整之阻力殘差門檻，兼顧低軌誤報與高軌靈敏度；作為報表 R8 之候選規則"],
+        ["項目 1　門檻模型", "以本次高度公式為起點，加入逐星雜訊自適應（相鄰 TLE 殘差之 MAD）與 TLE 間隔正規化，取代固定 0.30 km"],
+        ["項目 2　動態彈道係數", "以滾動窗校準彈道係數，改善太陽活動高峰期 NRLMSIS 偏高約 20% 之現象（FORMOSAT-7 精密軌道已觀察到）"],
+        ["項目 3　被動判定精進", "低軌立方衛星常有電推進小推力，會被誤當被動衛星；以精密軌道、營運者公告標記，避免低估誤報門檻"],
+        ["項目 4　真值驗證", "FORMOSAT-7 精密軌道（機動與衰減）、IDS 點火紀錄、Starlink MEME 星曆：量測新門檻之召回率與誤報率"],
+        ["資料基礎", "本次 425 顆近地點分檔基準集（含 Space-Track 補回之 2024-01 起 TLE）、FORMOSAT-7 leoOrb 精密軌道 2024-01 起"],
+        ["交付成果", "門檻模型與參數表、驗證報告、報表 R8 試行版（與 R7 並行比較，不直接取代）"],
+        ["預期效益", "700 km 以上可偵測下限由約 0.31 km 降至 0.04–0.2 km；400 km 以下誤報由每千星日 3.6–44 件降至 0.43 件以下"],
+        ["建議期程", "Q1 門檻模型與動態彈道係數　→　Q2 真值驗證　→　Q3 R8 並行試行　→　Q4 評估報告與建議"],
+    ], ["項目", "內容"], size=12.5, row_h=0.56, head_h=0.38, align=[PP_ALIGN.LEFT, PP_ALIGN.LEFT], bold_cols=(0,))
+    text(s, 0.62, 6.75, 12.0, 0.4, "門檻調整後，阻力殘差仍只作為輔助通道與低置信複核項來源，不單獨產生候選事件；證據等級仍代表複核優先順序。",
+         size=11, color=MUTED)
+
     # 17 Appendix
     s = frame(prs, "Appendix — 名詞與資料說明", 17)
     bullets(s, 0.86, 1.15, 11.7, 5.6, [
@@ -754,5 +846,8 @@ def build(R: dict[int, dict]) -> None:
 
 if __name__ == "__main__":
     data = load(sys.argv[1])
-    build_timeline(data)
-    build(data)
+    if "--pub-fig-only" in sys.argv or fp.wants_pub():
+        fp.export_variants(lambda: draw_timeline(data), "fig_tasa15_timeline_r7")
+    else:
+        build_timeline(data)
+        build(data)
