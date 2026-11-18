@@ -1,4 +1,4 @@
-//! Conjunction & Maneuver Lab（第二階段 Sprint 1）：頁面與 API，路徑與 JSON 形狀同 Python api/lab.py。
+//! Conjunction & Maneuver Lab（第二階段 Sprint 1／2）：頁面與 API，路徑與 JSON 形狀同 Python api/lab.py。
 //!
 //! GET  /lab                 頁面
 //! GET  /api/lab/demo        示範場景清單（含完整場景 JSON）
@@ -6,6 +6,8 @@
 //! POST /api/lab/batch       主星＋次星清單（CSV 文字或陣列）→ 批次會合結果
 //! POST /api/lab/batch.csv   {"events": [...]} → 結果 CSV（下載）
 //! POST /api/lab/csv/parse   CSV 文字 → 解析結果與錯誤（前端預覽）
+//! GET  /api/lab/maneuver/demo  避碰示範案例（maneuver_cases.json 套用 ops 後的完整場景）
+//! POST /api/lab/maneuver    {"scenario": 場景, "screening_norad_ids": [...]} → 避碰決策報告（Sprint 2）
 //!
 //! EOP：資料目錄 DB\EOP-All.csv（或資料庫同目錄）存在時優先使用，否則用內嵌的凍結快照。
 
@@ -21,7 +23,7 @@ use axum::{Json, Router};
 use once_cell::sync::OnceCell;
 use serde_json::{json, Value};
 
-use crate::phase2::{batch, csvio, e2e, eop::Eop};
+use crate::phase2::{apply_ops, batch, csvio, e2e, eop::Eop, maneuver};
 use crate::state::AppState;
 
 type St = State<Arc<AppState>>;
@@ -35,6 +37,10 @@ const DEMOS: [&str; 3] = [
     include_str!("../config/phase2/testdata/e2e_tle_iss_css.json"),
 ];
 
+const MANEUVER_CASES: &str = include_str!("../config/phase2/testdata/maneuver_cases.json");
+const MANEUVER_BASE: &str = include_str!("../config/phase2/testdata/maneuver_leo.json");
+const MAX_SCREENING_OBJECTS: usize = 200;
+
 static EOP: OnceCell<Arc<Eop>> = OnceCell::new();
 
 pub fn extend(r: Router<Arc<AppState>>) -> Router<Arc<AppState>> {
@@ -44,6 +50,8 @@ pub fn extend(r: Router<Arc<AppState>>) -> Router<Arc<AppState>> {
         .route("/api/lab/batch", post(batch_api))
         .route("/api/lab/batch.csv", post(batch_csv))
         .route("/api/lab/csv/parse", post(csv_parse))
+        .route("/api/lab/maneuver/demo", get(maneuver_demo))
+        .route("/api/lab/maneuver", post(maneuver_api))
 }
 
 /// 執行期 EOP（與 Python default_eop 相同：程序內只載入一次）
@@ -162,4 +170,80 @@ async fn batch_csv(body: Bytes) -> Resp {
     h.insert(header::CONTENT_TYPE, HeaderValue::from_static("text/csv; charset=utf-8"));
     h.insert(header::CONTENT_DISPOSITION, HeaderValue::from_static("attachment; filename=conjunction_events.csv"));
     r
+}
+
+async fn maneuver_demo() -> Resp {
+    let cases: Value = serde_json::from_str(MANEUVER_CASES).expect("內嵌避碰案例");
+    let base: Value = serde_json::from_str(MANEUVER_BASE).expect("內嵌避碰場景");
+    let out: Vec<Value> = cases["cases"].as_array().unwrap().iter()
+        .map(|c| json!({"id": c["name"], "scenario": apply_ops(&base, &c["ops"])})).collect();
+    let mut r = Json(json!({"description": base.get("description").cloned().unwrap_or(json!("")), "scenarios": out})).into_response();
+    r.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=3600"));
+    r
+}
+
+/// Python int(x)：整數、浮點（截斷）、布林、十進位整數字串；其餘失敗
+fn py_int(x: &Value) -> Option<i64> {
+    match x {
+        Value::Bool(b) => Some(*b as i64),
+        Value::Number(n) => n.as_i64().or_else(|| n.as_f64().filter(|f| f.is_finite()).map(|f| f.trunc() as i64)),
+        Value::String(s) => s.trim().replace('_', "").parse::<i64>().ok(),
+        _ => None,
+    }
+}
+
+async fn maneuver_api(State(st): St, body: Bytes) -> Resp {
+    let bad = |msg: &str| json_status(json!({"status": "error", "error": msg}), StatusCode::BAD_REQUEST);
+    let Some(b) = body_json(&body).filter(|b| b.get("scenario").map(Value::is_object).unwrap_or(false)) else {
+        return bad("需要 {\"scenario\": 場景 JSON}");
+    };
+    let mut sc = b["scenario"].clone();
+    let ids: Vec<Value> = match b.get("screening_norad_ids") {
+        None | Some(Value::Null) => vec![],
+        Some(Value::Array(a)) => a.clone(),
+        Some(Value::Bool(false)) => vec![],
+        Some(Value::Number(n)) if n.as_f64() == Some(0.0) => vec![],
+        Some(Value::String(s)) if s.is_empty() => vec![],
+        Some(Value::Object(m)) if m.is_empty() => vec![],
+        Some(_) => return bad("screening_norad_ids 須為陣列"),
+    };
+    let mut unresolved: Vec<Value> = Vec::new();
+    if !ids.is_empty() {
+        let Some(ms) = sc.get_mut("maneuver_search").and_then(Value::as_object_mut) else {
+            return bad("場景缺 maneuver_search");
+        };
+        let ss = ms.entry("secondary_screening").or_insert_with(|| json!({}));
+        let Some(ss) = ss.as_object_mut() else { return bad("secondary_screening 須為物件") };
+        let objs = ss.entry("objects").or_insert_with(|| json!([]));
+        let Some(objs) = objs.as_array_mut() else { return bad("secondary_screening.objects 須為陣列") };
+        let mut have: Vec<f64> = objs.iter().filter_map(|o| o.get("norad_id").and_then(Value::as_f64)).collect();
+        let idx = st.index();
+        for x in &ids {
+            let Some(nid) = py_int(x) else {
+                unresolved.push(x.clone());
+                continue;
+            };
+            if have.contains(&(nid as f64)) {
+                continue;
+            }
+            let hit = u32::try_from(nid).ok().and_then(|k| idx.sats.get(&k));
+            let Some(s) = hit else {
+                unresolved.push(json!(nid));
+                continue;
+            };
+            objs.push(json!({"name": s.name, "norad_id": nid, "ephemeris": {"type": "TLE", "line1": s.line1, "line2": s.line2}}));
+            have.push(nid as f64);
+        }
+        if objs.len() > MAX_SCREENING_OBJECTS {
+            return bad(&format!("二次篩選物體最多 {MAX_SCREENING_OBJECTS} 顆"));
+        }
+    }
+    let eop = default_eop(&st);
+    match blocking(move || maneuver::run(&sc, &eop)).await {
+        Ok(mut rep) => {
+            rep["screening_unresolved"] = json!(unresolved);
+            json_status(rep, StatusCode::OK)
+        }
+        Err(e) => json_status(json!({"status": "error", "error": e}), StatusCode::BAD_REQUEST),
+    }
 }

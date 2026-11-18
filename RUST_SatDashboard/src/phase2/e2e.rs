@@ -91,7 +91,7 @@ pub fn py_g(x: f64) -> String {
 }
 
 /// ForceModel.describe() 的 Python dict repr（provenance 字串與 Python 版逐字相同）
-fn fm_repr(fm: &ForceModel) -> String {
+pub fn fm_repr(fm: &ForceModel) -> String {
     let zonal = if fm.zonal { "'J2-J4'".to_string() } else { "None".to_string() };
     let drag = if fm.drag {
         format!("{{'model': 'ExponentialAtmosphere', 'ballistic_m2_kg': {}}}", py_float_repr(fm.ballistic_m2_kg))
@@ -102,38 +102,53 @@ fn fm_repr(fm: &ForceModel) -> String {
 }
 
 /// 單一物體的協方差模型
-enum ObjCov<'a> {
+pub enum ObjCov<'a> {
     None,
     Demo { eph: &'a dyn Ephemeris, s2: [f64; 3] },
     Prop(CovarianceTrack<'a>),
+    PropRef(&'a CovarianceTrack<'a>),
 }
 
 impl ObjCov<'_> {
-    fn at(&self, tau: f64) -> M3 {
+    pub fn at(&self, tau: f64) -> M3 {
         match self {
             ObjCov::None => [[f64::NAN; 3]; 3],
-            ObjCov::Demo { eph, s2 } => {
-                let (r, v) = eph.rv(tau);
-                let c = rtn_matrix(r, v);
-                let mut out = [[0.0; 3]; 3];
-                for i in 0..3 {
-                    for j in 0..3 {
-                        out[i][j] = (0..3).map(|k| c[k][i] * s2[k] * c[k][j]).sum();
-                    }
-                }
-                out
-            }
+            ObjCov::Demo { eph, s2 } => demo_cov(*eph, s2, tau),
             ObjCov::Prop(t) => t.pos_at(tau),
+            ObjCov::PropRef(t) => t.pos_at(tau),
         }
     }
-    fn mode(&self) -> Option<&'static str> {
+    pub fn mode(&self) -> Option<&'static str> {
         match self {
             ObjCov::None => None,
             ObjCov::Demo { .. } => Some("demo"),
-            ObjCov::Prop(_) => Some("propagated"),
+            ObjCov::Prop(_) | ObjCov::PropRef(_) => Some("propagated"),
+        }
+    }
+    pub fn track(&self) -> Option<&CovarianceTrack<'_>> {
+        match self {
+            ObjCov::Prop(t) => Some(t),
+            ObjCov::PropRef(t) => Some(t),
+            _ => None,
         }
     }
 }
+
+/// 展示模式：Cᵀ diag(σ²) C（C 為 RTN 矩陣）
+pub fn demo_cov(eph: &dyn Ephemeris, s2: &[f64; 3], tau: f64) -> M3 {
+    let (r, v) = eph.rv(tau);
+    let c = rtn_matrix(r, v);
+    let mut out = [[0.0; 3]; 3];
+    for i in 0..3 {
+        for j in 0..3 {
+            out[i][j] = (0..3).map(|k| c[k][i] * s2[k] * c[k][j]).sum();
+        }
+    }
+    out
+}
+
+/// 物體協方差：(模型, source, describe)；無協方差為 (None, null, null)
+pub type CovEntry<'a> = (ObjCov<'a>, Value, Value);
 
 fn object_covariance<'a>(
     obj: &Value,
@@ -143,7 +158,7 @@ fn object_covariance<'a>(
     ert: &'a EarthRotationTable,
     zonal: bool,
     geo: bool,
-) -> anyhow::Result<(ObjCov<'a>, Value, Value)> {
+) -> anyhow::Result<CovEntry<'a>> {
     let Some(cov) = obj.get("covariance").filter(|c| c.as_object().map(|m| !m.is_empty()).unwrap_or(false)) else {
         return Ok((ObjCov::None, Value::Null, Value::Null));
     };
@@ -160,34 +175,87 @@ fn object_covariance<'a>(
     } else {
         p
     };
-    let q = cov.get("propagation").and_then(|x| x.get("process_noise")).and_then(|x| x.get("q_km2_s3"))
-        .and_then(Value::as_f64).unwrap_or(0.0);
+    let q = process_noise_q(obj);
     let step = if geo { COV_STEP_GEO_S } else { COV_STEP_LEO_S };
     let track = CovarianceTrack::new(eph, m6_from(&p), t0, dur, step, Some(ert), zonal, q);
     let desc = track.describe();
     Ok((ObjCov::Prop(track), cov["source"].clone(), desc))
 }
 
-pub fn run(sc: &Value, eop: &Eop) -> anyhow::Result<Value> {
+/// covariance.propagation.process_noise.q_km2_s3（缺則 0）
+pub fn process_noise_q(obj: &Value) -> f64 {
+    obj.get("covariance").and_then(|c| c.get("propagation")).and_then(|x| x.get("process_noise"))
+        .and_then(|x| x.get("q_km2_s3")).and_then(Value::as_f64).unwrap_or(0.0)
+}
+
+/// 物體的力模型（同 Python e2e.object_force_model）
+pub fn object_force_model(o: &Value, zonal: bool, drag: bool) -> ForceModel {
+    let b = o.get("cd").and_then(Value::as_f64).unwrap_or(0.0) * o.get("area_to_mass_m2kg").and_then(Value::as_f64).unwrap_or(0.0);
+    ForceModel::new(zonal, drag, b)
+}
+
+/// 合併協方差模式（同 Python combined_covariance 的 cov_mode）；任一物體缺協方差則 None
+pub fn combined_mode(cp: &ObjCov, cs: &ObjCov) -> Option<&'static str> {
+    let (a, b) = (cp.mode()?, cs.mode()?);
+    let m = if a == "propagated" || b == "propagated" { "propagated" } else { "demo" };
+    Some(if a != b { "mixed" } else { m })
+}
+
+pub fn add3(a: &M3, b: &M3) -> M3 {
+    let mut c = [[0.0; 3]; 3];
+    for i in 0..3 {
+        for j in 0..3 {
+            c[i][j] = a[i][j] + b[i][j];
+        }
+    }
+    c
+}
+
+/// 驗證後的場景設定（同 Python build_context 的純資料部分）；星曆與協方差另由 ephemerides／covariances 建立
+pub struct Context<'e> {
+    pub sc: Value,
+    pub start: UtcTime,
+    pub dur: f64,
+    pub roles: Vec<(String, Value)>,
+    pub geo: bool,
+    pub step: f64,
+    pub coarse: f64,
+    pub min_step: f64,
+    pub mode: String,
+    pub zonal: bool,
+    pub drag: bool,
+    pub t_lo: f64,
+    pub threshold_km: f64,
+    pub ert: EarthRotationTable,
+    pub eop: &'e Eop,
+}
+
+pub struct Ephs<'a> {
+    pub list: Vec<Box<dyn Ephemeris + 'a>>,
+    pub t0s: Vec<f64>,
+    pub prov: Map<String, Value>,
+}
+
+/// 驗證並建立設定。成功回傳 Ok(Ok(ctx))；場景無效回傳 Ok(Err(invalid_scenario 報告))
+pub fn build_context<'e>(sc: &Value, eop: &'e Eop) -> anyhow::Result<Result<Context<'e>, Value>> {
     let val = validate(sc);
     if !val.ok {
-        return Ok(json!({"status": "invalid_scenario", "validation": val.to_json()}));
+        return Ok(Err(json!({"status": "invalid_scenario", "validation": val.to_json()})));
     }
     let scr = &sc["screening"];
     let start = UtcTime::parse(scr["start"].as_str().unwrap())?;
     let dur = scr["duration_s"].as_f64().unwrap();
     let objs_list = sc["objects"].as_array().unwrap();
     // Python dict {role: obj}：依出現順序，同角色後者覆蓋前者
-    let mut roles: Vec<(String, &Value)> = Vec::new();
+    let mut roles: Vec<(String, Value)> = Vec::new();
     for o in objs_list {
         let role = o["role"].as_str().unwrap().to_string();
         if let Some(slot) = roles.iter_mut().find(|(r, _)| *r == role) {
-            slot.1 = o;
+            slot.1 = o.clone();
         } else {
-            roles.push((role, o));
+            roles.push((role, o.clone()));
         }
     }
-    let get = |role: &str| roles.iter().find(|(r, _)| r == role).map(|(_, o)| *o).unwrap();
     let geo = objs_list.iter().all(|o| o.get("orbit_regime").and_then(Value::as_str).unwrap_or("LEO") == "GEO");
     let fnum = |k: &str| scr.get(k).and_then(Value::as_f64).filter(|x| *x != 0.0);
     let step = fnum("step_s").unwrap_or(if geo { RK4_STEP_GEO_S } else { RK4_STEP_LEO_S });
@@ -203,64 +271,81 @@ pub fn run(sc: &Value, eop: &Eop) -> anyhow::Result<Value> {
             let dt = seconds_between(&start, &UtcTime::parse(o["ephemeris"]["epoch"].as_str().unwrap())?);
             t_lo = t_lo.min(dt);
             if dt > 0.0 {
-                return Ok(json!({"status": "invalid_scenario",
-                    "validation": {"ok": false, "codes": ["E_STATE_EPOCH_AFTER_START"], "messages": []}}));
+                return Ok(Err(json!({"status": "invalid_scenario",
+                    "validation": {"ok": false, "codes": ["E_STATE_EPOCH_AFTER_START"], "messages": []}})));
             }
         }
     }
     let ert = EarthRotationTable::new(start, t_lo - 1.0, dur + 1.0, eop)?;
+    Ok(Ok(Context { sc: sc.clone(), start, dur, roles, geo, step, coarse, min_step, mode, zonal, drag, t_lo,
+        threshold_km: scr["threshold_km"].as_f64().unwrap(), ert, eop }))
+}
 
-    let mut ephs: Vec<Box<dyn Ephemeris + '_>> = Vec::new();
-    let mut t0s: Vec<f64> = Vec::new();
-    let mut prov_eph = Map::new();
-    for (role, o) in &roles {
-        let use_sgp4 = o["ephemeris"]["type"] == "TLE" && (mode == "auto" || mode == "sgp4");
-        if use_sgp4 {
-            let e = Sgp4Ephemeris::new(o["ephemeris"]["line1"].as_str().unwrap(), o["ephemeris"]["line2"].as_str().unwrap(),
-                start, &ert, (0.0, dur))?;
-            ephs.push(Box::new(e));
-            prov_eph.insert(role.clone(), json!("SGP4 (WGS-72, opsmode i) → GCRF"));
-            t0s.push(0.0);
-        } else {
-            let (r0, v0, t0) = initial_state_gcrf(o, &start, eop)?;
-            let b = o.get("cd").and_then(Value::as_f64).unwrap_or(0.0) * o.get("area_to_mass_m2kg").and_then(Value::as_f64).unwrap_or(0.0);
-            let fm = ForceModel::new(zonal, drag, b);
-            ephs.push(Box::new(NumericalEphemeris::new(propagate(r0, v0, t0, dur, step, &fm, Some(&ert)))));
-            prov_eph.insert(role.clone(), json!(format!("numerical RK4 {} s, {}", py_g(step), fm_repr(&fm))));
-            t0s.push(t0);
-        }
+impl<'e> Context<'e> {
+    pub fn idx(&self, role: &str) -> usize {
+        self.roles.iter().position(|(r, _)| r == role).unwrap()
     }
-    let mut covs: Vec<(ObjCov, Value, Value)> = Vec::new();
-    for (i, (_, o)) in roles.iter().enumerate() {
-        covs.push(object_covariance(o, ephs[i].as_ref(), t0s[i], dur, &ert, zonal, geo)?);
+    pub fn obj(&self, role: &str) -> &Value {
+        &self.roles[self.idx(role)].1
     }
-    let idx = |role: &str| roles.iter().position(|(r, _)| r == role).unwrap();
-    let (ip, is) = (idx("primary"), idx("secondary"));
-    let (eph_p, eph_s) = (ephs[ip].as_ref(), ephs[is].as_ref());
-    let rel = RelativeState::new(eph_p, eph_s);
-    let thr = scr["threshold_km"].as_f64().unwrap();
-    let res = find_minima_adaptive(&|t| rel.rv(t), &|t| rel.rva(t), 0.0, dur,
-        AdaptiveParams { coarse_step: coarse, threshold_km: Some(thr), min_step, ..Default::default() });
-    let hbr_km = (get("primary")["hbr_m"].as_f64().unwrap() + get("secondary")["hbr_m"].as_f64().unwrap()) / 1000.0;
-    let others: Vec<f64> = res.all_minima.iter().map(|m| m.tau).collect();
-    let (cp, cs) = (&covs[ip], &covs[is]);
-    let have_cov = cp.0.mode().is_some() && cs.0.mode().is_some();
-    let cov_mode: Option<&str> = if have_cov {
-        let m = if cp.0.mode() == Some("propagated") || cs.0.mode() == Some("propagated") { "propagated" } else { "demo" };
-        Some(if cp.0.mode() != cs.0.mode() { "mixed" } else { m })
-    } else {
-        None
-    };
-    let c3 = |tau: f64| -> M3 {
-        let (a, b) = (cp.0.at(tau), cs.0.at(tau));
-        let mut c = [[0.0; 3]; 3];
-        for i in 0..3 {
-            for j in 0..3 {
-                c[i][j] = a[i][j] + b[i][j];
+
+    pub fn ephemerides(&self) -> anyhow::Result<Ephs<'_>> {
+        let (start, dur, step) = (self.start, self.dur, self.step);
+        let mut list: Vec<Box<dyn Ephemeris + '_>> = Vec::new();
+        let mut t0s: Vec<f64> = Vec::new();
+        let mut prov = Map::new();
+        for (role, o) in &self.roles {
+            let use_sgp4 = o["ephemeris"]["type"] == "TLE" && (self.mode == "auto" || self.mode == "sgp4");
+            if use_sgp4 {
+                let e = Sgp4Ephemeris::new(o["ephemeris"]["line1"].as_str().unwrap(), o["ephemeris"]["line2"].as_str().unwrap(),
+                    start, &self.ert, (0.0, dur))?;
+                list.push(Box::new(e));
+                prov.insert(role.clone(), json!("SGP4 (WGS-72, opsmode i) → GCRF"));
+                t0s.push(0.0);
+            } else {
+                let (r0, v0, t0) = initial_state_gcrf(o, &start, self.eop)?;
+                let fm = object_force_model(o, self.zonal, self.drag);
+                list.push(Box::new(NumericalEphemeris::new(propagate(r0, v0, t0, dur, step, &fm, Some(&self.ert)))));
+                prov.insert(role.clone(), json!(format!("numerical RK4 {} s, {}", py_g(step), fm_repr(&fm))));
+                t0s.push(t0);
             }
         }
-        c
+        Ok(Ephs { list, t0s, prov })
+    }
+
+    pub fn covariances<'a>(&'a self, ephs: &'a Ephs<'a>) -> anyhow::Result<Vec<CovEntry<'a>>> {
+        let mut covs = Vec::new();
+        for (i, (_, o)) in self.roles.iter().enumerate() {
+            covs.push(object_covariance(o, ephs.list[i].as_ref(), ephs.t0s[i], self.dur, &self.ert, self.zonal, self.geo)?);
+        }
+        Ok(covs)
+    }
+}
+
+pub fn run(sc: &Value, eop: &Eop) -> anyhow::Result<Value> {
+    let ctx = match build_context(sc, eop)? {
+        Ok(c) => c,
+        Err(rep) => return Ok(rep),
     };
+    let ephs = ctx.ephemerides()?;
+    let covs = ctx.covariances(&ephs)?;
+    screen_report(&ctx, &ephs, &covs)
+}
+
+pub fn screen_report(ctx: &Context, ephs: &Ephs, covs: &[CovEntry]) -> anyhow::Result<Value> {
+    let (start, dur, coarse, min_step) = (ctx.start, ctx.dur, ctx.coarse, ctx.min_step);
+    let (ip, is) = (ctx.idx("primary"), ctx.idx("secondary"));
+    let (eph_p, eph_s) = (ephs.list[ip].as_ref(), ephs.list[is].as_ref());
+    let rel = RelativeState::new(eph_p, eph_s);
+    let thr = ctx.threshold_km;
+    let res = find_minima_adaptive(&|t| rel.rv(t), &|t| rel.rva(t), 0.0, dur,
+        AdaptiveParams { coarse_step: coarse, threshold_km: Some(thr), min_step, ..Default::default() });
+    let hbr_km = (ctx.obj("primary")["hbr_m"].as_f64().unwrap() + ctx.obj("secondary")["hbr_m"].as_f64().unwrap()) / 1000.0;
+    let others: Vec<f64> = res.all_minima.iter().map(|m| m.tau).collect();
+    let (cp, cs) = (&covs[ip], &covs[is]);
+    let cov_mode = combined_mode(&cp.0, &cs.0);
+    let have_cov = cov_mode.is_some();
+    let c3 = |tau: f64| -> M3 { add3(&cp.0.at(tau), &cs.0.at(tau)) };
     let screen_mode = if matches!(cov_mode, Some("propagated") | Some("mixed")) { "propagated" } else { "demo" };
     let mut events = Vec::new();
     for ap in &res.events {
@@ -280,7 +365,7 @@ pub fn run(sc: &Value, eop: &Eop) -> anyhow::Result<Value> {
         anyhow::bail!(e);
     }
     let mut objects = Map::new();
-    for (role, o) in &roles {
+    for (role, o) in &ctx.roles {
         objects.insert(role.clone(), json!({"name": o["name"], "norad_id": o.get("norad_id").cloned().unwrap_or(Value::Null)}));
     }
     let mut search = res.resolution();
@@ -289,14 +374,14 @@ pub fn run(sc: &Value, eop: &Eop) -> anyhow::Result<Value> {
     search["global_min"] = gmin.unwrap_or(Value::Null);
     Ok(json!({
         "status": "ok",
-        "scenario_id": sc["id"],
+        "scenario_id": ctx.sc["id"],
         "start": start.iso(), "duration_s": dur, "threshold_km": thr,
         "objects": objects,
         "series": {"step_s": s_step, "d_km": d_km},
         "provenance": {
-            "code_version": CODE_VERSION, "constants_version": CONSTANTS_VERSION, "eop": eop.version(),
+            "code_version": CODE_VERSION, "constants_version": CONSTANTS_VERSION, "eop": ctx.eop.version(),
             "frames": {"sgp4_output": "TEME", "propagation": "GCRF", "precession_nutation": "IAU-2006/2000A CIO (xy06+s06), dX/dY applied"},
-            "propagator_mode": mode, "ephemeris": prov_eph,
+            "propagator_mode": ctx.mode, "ephemeris": ephs.prov,
             "covariance": {"primary": cp.2, "secondary": cs.2},
         },
         "search": search,

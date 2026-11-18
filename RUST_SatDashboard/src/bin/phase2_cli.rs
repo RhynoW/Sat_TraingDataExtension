@@ -4,6 +4,7 @@
 //!   validate <scenario.json>
 //!   schema-cases <schema_cases.json>                 （base 路徑相對於 cases 檔）
 //!   e2e <scenario.json> <eop.csv>
+//!   maneuver <scenario.json> <eop.csv>              → 避碰決策報告（同 Python maneuver.run）
 //!   sgp4 <input.json>          {"tles":[{"line1","line2"}],"times":[iso]}
 //!   frames <input.json> <eop.csv>   {"cases":[{"t":iso,"r_teme":[3],"v_teme":[3]}]}
 //!   propagate <input.json> <eop.csv> {"epoch","r_km","v_kms","duration_s","step_s","zonal","drag","ballistic_m2_kg","out_times":[τ]}
@@ -23,7 +24,7 @@ mod phase2;
 use std::path::Path;
 
 use phase2::eop::Eop;
-use phase2::{batch, covprop, csvio, e2e, ephemeris, frames, integrator, kepler, pc, schema, screening, tca, timescale::UtcTime, V3};
+use phase2::{batch, covprop, csvio, e2e, ephemeris, maneuver, frames, integrator, kepler, pc, schema, screening, tca, timescale::UtcTime, V3};
 use serde_json::{json, Value};
 
 fn read(p: &str) -> anyhow::Result<Value> {
@@ -32,44 +33,6 @@ fn read(p: &str) -> anyhow::Result<Value> {
 
 fn v3(v: &Value) -> V3 {
     [v[0].as_f64().unwrap(), v[1].as_f64().unwrap(), v[2].as_f64().unwrap()]
-}
-
-fn apply_ops(base: &Value, ops: &Value) -> Value {
-    let mut d = base.clone();
-    for op in ops.as_array().unwrap() {
-        let path = op["path"].as_array().unwrap();
-        let (head, last) = path.split_at(path.len() - 1);
-        let mut tgt = &mut d;
-        for k in head {
-            tgt = match k {
-                Value::String(s) => tgt.get_mut(s.as_str()).unwrap(),
-                Value::Number(n) => tgt.get_mut(n.as_u64().unwrap() as usize).unwrap(),
-                _ => unreachable!(),
-            };
-        }
-        let set = op["op"] == "set";
-        match &last[0] {
-            Value::String(s) => {
-                let m = tgt.as_object_mut().unwrap();
-                if set {
-                    m.insert(s.clone(), op["value"].clone());
-                } else {
-                    m.remove(s);
-                }
-            }
-            Value::Number(n) => {
-                let a = tgt.as_array_mut().unwrap();
-                let i = n.as_u64().unwrap() as usize;
-                if set {
-                    a[i] = op["value"].clone();
-                } else {
-                    a.remove(i);
-                }
-            }
-            _ => unreachable!(),
-        }
-    }
-    d
 }
 
 fn elements(v: &Value) -> kepler::Elements {
@@ -87,12 +50,13 @@ fn main() -> anyhow::Result<()> {
             let dir = Path::new(&args[2]).parent().unwrap();
             let base = read(dir.join(spec["base"].as_str().unwrap()).to_str().unwrap())?;
             let res: Vec<Value> = spec["cases"].as_array().unwrap().iter().map(|c| {
-                let v = schema::validate(&apply_ops(&base, &c["ops"]));
+                let v = schema::validate(&phase2::apply_ops(&base, &c["ops"]));
                 json!({"name": c["name"], "codes": v.codes})
             }).collect();
             json!(res)
         }
         "e2e" => e2e::run(&read(&args[2])?, &Eop::load(Path::new(&args[3]))?)?,
+        "maneuver" => maneuver::run(&read(&args[2])?, &Eop::load(Path::new(&args[3]))?)?,
         "sgp4" => {
             let inp = read(&args[2])?;
             let times: Vec<UtcTime> = inp["times"].as_array().unwrap().iter().map(|t| UtcTime::parse(t.as_str().unwrap()).unwrap()).collect();

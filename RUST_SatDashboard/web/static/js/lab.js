@@ -4,7 +4,7 @@
 const I18N = {
   zh: {
     page_title: '會合與機動實驗室', nav_home: '返回主頁',
-    subtitle: '第二階段 Sprint 1：會合事件核心（近接極小值搜尋、碰撞機率、適用性篩選）',
+    subtitle: '第二階段 Sprint 2：會合事件核心與避碰決策',
     tab_batch: '批次分析', tab_scenario: '場景 JSON',
     f_primary: '主星 NORAD 編號', f_start: '起始時刻（UTC）', f_duration: '分析天數（≤ 7）', f_threshold: '篩選門檻（km）',
     f_coarse: '粗掃步長（秒）', f_hbr: '預設硬體半徑（m）', f_sig_p: '主星 RTN σ（km，逗號分隔）', f_sig_s: '次星預設 RTN σ（km）',
@@ -32,7 +32,7 @@ const I18N = {
   },
   en: {
     page_title: 'Conjunction & Maneuver Lab', nav_home: 'Home',
-    subtitle: 'Phase 2 Sprint 1: conjunction core (close-approach search, collision probability, applicability screen)',
+    subtitle: 'Phase 2 Sprint 2: conjunction core and collision-avoidance decisions',
     tab_batch: 'Batch analysis', tab_scenario: 'Scenario JSON',
     f_primary: 'Primary NORAD ID', f_start: 'Start (UTC)', f_duration: 'Days (≤ 7)', f_threshold: 'Screening threshold (km)',
     f_coarse: 'Coarse step (s)', f_hbr: 'Default hard-body radius (m)', f_sig_p: 'Primary RTN σ (km, comma separated)', f_sig_s: 'Default secondary RTN σ (km)',
@@ -60,7 +60,7 @@ const I18N = {
   },
   ja: {
     page_title: '会合・軌道変更ラボ', nav_home: 'ホームへ',
-    subtitle: 'フェーズ2 スプリント1：会合イベント中核（最接近探索、衝突確率、適用性判定）',
+    subtitle: 'フェーズ2 スプリント2：会合イベント中核と衝突回避の意思決定',
     tab_batch: 'バッチ解析', tab_scenario: 'シナリオ JSON',
     f_primary: '主衛星 NORAD 番号', f_start: '開始時刻（UTC）', f_duration: '解析日数（7 日以内）', f_threshold: 'スクリーニング閾値（km）',
     f_coarse: '粗探索ステップ（秒）', f_hbr: '既定の物体半径（m）', f_sig_p: '主衛星 RTN σ（km、カンマ区切り）', f_sig_s: '副衛星の既定 RTN σ（km）',
@@ -104,6 +104,7 @@ function setLang(lang) {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
   if (STATE) render();
+  if (window.labManeuverRender) window.labManeuverRender();
 }
 window.setLang = setLang;
 
@@ -317,8 +318,10 @@ function drawSeries(pair, sel) {
   ctx.strokeStyle = '#d29922'; ctx.setLineDash([4, 3]);
   ctx.beginPath(); ctx.moveTo(L, Y(STATE.threshold)); ctx.lineTo(w - R, Y(STATE.threshold)); ctx.stroke();
   ctx.setLineDash([]); ctx.fillStyle = '#d29922'; ctx.fillText(t('series_thr'), w - R - 40, Y(STATE.threshold) - 4);
+  // 等間隔取樣抓不到窄谷：把事件的真正極小值（TCA, 距離）併入點列再畫線
+  const pts = d.map((v, i) => [i * step, v]).concat(evs.map(e => [e.tca_tau_s, e.miss_km])).sort((p, q) => p[0] - q[0]);
   ctx.strokeStyle = '#58a6ff'; ctx.lineWidth = 1.3; ctx.beginPath();
-  d.forEach((v, i) => { const x = X(i * step), y = Y(v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+  pts.forEach(([s, v], i) => { const x = X(s), y = Y(v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
   ctx.stroke();
   evs.forEach(e => {
     ctx.fillStyle = e === sel ? '#f85149' : '#e6edf3';
@@ -384,6 +387,8 @@ function init() {
   document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
     document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
     document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + b.dataset.pane));
+    document.body.dataset.pane = b.dataset.pane;
+    if (b.dataset.pane === 'maneuver' && window.labManeuverRender) window.labManeuverRender();
   });
   $('b-run').onclick = runBatch;
   $('b-check').onclick = checkCsv;

@@ -1,0 +1,291 @@
+{
+ "schema": "satdash.scenario/v1",
+ "id": "maneuver-leo-01",
+ "description": "Sprint 2 避碰案例：合成 LEO 雙星（傳播協方差），TCA≈06:00Z、0.23 km、Pc 6.2e-6；沿跡向單脈衝，目標 Pc ≤ 1e-7 且距離 ≥ 1 km；二次篩選 4 顆 TLE 物體",
+ "time": {
+  "system": "UTC",
+  "eop_source": "celestrak EOP-All.csv",
+  "eop_version": "snapshot 2026-11-18"
+ },
+ "frames": {
+  "sgp4_output": "TEME",
+  "propagation": "GCRF"
+ },
+ "objects": [
+  {
+   "role": "primary",
+   "name": "SYN-P",
+   "orbit_regime": "LEO",
+   "ephemeris": {
+    "type": "state",
+    "epoch": "2026-11-20T00:00:00Z",
+    "frame": "GCRF",
+    "r_km": [
+     215.3357059388151,
+     4740.941021012885,
+     4969.580669570353
+    ],
+    "v_kms": [
+     -6.9546790172395765,
+     -2.089713045506579,
+     2.2894798706190342
+    ],
+    "source": "synthetic"
+   },
+   "covariance": {
+    "mode": "propagated",
+    "epoch": "2026-11-20T00:00:00Z",
+    "frame": "RTN",
+    "velocity_convention": "inertial_velocity_components",
+    "units": {
+     "pos": "km",
+     "vel": "km/s",
+     "cross": "km^2/s"
+    },
+    "matrix_6x6": [
+     [
+      0.0025000000000000005,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0.04000000000000001,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0.0025000000000000005,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      1e-08,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      1e-08,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1e-08
+     ]
+    ],
+    "source": "assumed",
+    "independent_of_other": true,
+    "propagation": {
+     "method": "numerical_variational_gcrf",
+     "process_noise": {
+      "model": "none",
+      "q_km2_s3": 0.0
+     }
+    },
+    "maneuver_execution_error": {
+     "included": true,
+     "mag_frac_sigma": 0.02,
+     "point_deg_sigma": 1.0
+    }
+   },
+   "hbr_m": 5.0,
+   "mass_kg": 260.0,
+   "area_to_mass_m2kg": 0.01,
+   "cd": 2.2,
+   "propulsion": {
+    "isp_s": 220.0,
+    "dv_budget_ms": 1.0,
+    "min_notice_s": 1800.0,
+    "thrust_dirs": [
+     "T",
+     "-T"
+    ]
+   }
+  },
+  {
+   "role": "secondary",
+   "name": "SYN-S",
+   "orbit_regime": "LEO",
+   "ephemeris": {
+    "type": "state",
+    "epoch": "2026-11-20T00:00:00Z",
+    "frame": "GCRF",
+    "r_km": [
+     2515.7309002332604,
+     482.7941530924302,
+     6377.262247932742
+    ],
+    "v_kms": [
+     -6.011275261313622,
+     -3.8341214182882055,
+     2.659751483728053
+    ],
+    "source": "synthetic"
+   },
+   "covariance": {
+    "mode": "propagated",
+    "epoch": "2026-11-20T00:00:00Z",
+    "frame": "RTN",
+    "velocity_convention": "inertial_velocity_components",
+    "units": {
+     "pos": "km",
+     "vel": "km/s",
+     "cross": "km^2/s"
+    },
+    "matrix_6x6": [
+     [
+      0.010000000000000002,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0.16000000000000003,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0.010000000000000002,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      4e-08,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      4e-08,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      4e-08
+     ]
+    ],
+    "source": "assumed",
+    "independent_of_other": true,
+    "propagation": {
+     "method": "numerical_variational_gcrf",
+     "process_noise": {
+      "model": "none",
+      "q_km2_s3": 0.0
+     }
+    }
+   },
+   "hbr_m": 5.0,
+   "mass_kg": 260.0,
+   "area_to_mass_m2kg": 0.01,
+   "cd": 2.2
+  }
+ ],
+ "screening": {
+  "start": "2026-11-20T00:00:00Z",
+  "duration_s": 28800.0,
+  "step_s": 10.0,
+  "threshold_km": 25.0
+ },
+ "force_model": {
+  "zonal": true,
+  "drag": false
+ },
+ "analysis_time": "2026-11-20T00:00:00Z",
+ "conjunction": {
+  "tca": "2026-11-20T06:00:00Z",
+  "source": "screening"
+ },
+ "maneuver_search": {
+  "window_rel_tca_s": [
+   -18000.0,
+   -1800.0
+  ],
+  "dv_ms": [
+   0.01,
+   0.5
+  ],
+  "pc_target": 1e-07,
+  "min_miss_km": 1.0,
+  "n_times": 24,
+  "n_dv": 20,
+  "max_verify": 6,
+  "secondary_screening": {
+   "catalog": "provided",
+   "objects": [
+    {
+     "name": "國際太空站",
+     "norad_id": 25544,
+     "ephemeris": {
+      "type": "TLE",
+      "line1": "1 25544U 98067A   26321.85053418  .00010861  00000-0  20179-3 0  9996",
+      "line2": "2 25544  51.6318 259.6690 0007364  37.3950 322.7550 15.49442652595577"
+     }
+    },
+    {
+     "name": "CSS TIANHE-1",
+     "norad_id": 48274,
+     "ephemeris": {
+      "type": "TLE",
+      "line1": "1 48274U 21035A   26321.57295439  .00017960  00000-0  21376-3 0  9999",
+      "line2": "2 48274  41.4687 109.8550 0004865 252.9645 107.0661 15.60681825317128"
+     }
+    },
+    {
+     "name": "ICEYE-X36",
+     "norad_id": 59103,
+     "ephemeris": {
+      "type": "TLE",
+      "line1": "1 59103U 24043F   26321.84312757  .00004291  00000-0  28265-3 0  9994",
+      "line2": "2 59103  97.8564 102.9869 0006456 148.7558 211.4055 15.08059579148294"
+     }
+    },
+    {
+     "name": "COSMOS 2612",
+     "norad_id": 68762,
+     "ephemeris": {
+      "type": "TLE",
+      "line1": "1 68762U 26083H   26321.64502890  .00002290  00000-0  15284-3 0  9992",
+      "line2": "2 68762  97.8574 102.7870 0007980 161.2343 198.9180 15.08069443 32304"
+     }
+    }
+   ]
+  }
+ }
+}

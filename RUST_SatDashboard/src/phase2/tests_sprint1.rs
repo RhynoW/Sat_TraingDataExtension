@@ -168,7 +168,7 @@ fn csv_parse_matches_expected() {
 
 #[test]
 fn schema_cases_count() {
-    assert_eq!(load("schema_cases.json")["cases"].as_array().unwrap().len(), 32);
+    assert_eq!(load("schema_cases.json")["cases"].as_array().unwrap().len(), 37);
 }
 
 fn check_events(got: &[Value], exp: &[Value], what: &str) {

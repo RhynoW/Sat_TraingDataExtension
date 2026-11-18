@@ -45,3 +45,14 @@ pub const SCREEN_LIN_MAX_FRAC: f64 = 0.1;
 pub const SCREEN_COV_DET_MAX_REL: f64 = 0.10;
 pub const SCREEN_COV_AXIS_MAX_REL: f64 = 0.10;
 pub const SCREEN_COV_ROT_MAX_DEG: f64 = 5.0;
+
+// 避碰決策（Sprint 2）
+pub const MAN_N_TIMES: usize = 48;
+pub const MAN_N_DV: usize = 20;
+pub const MAN_MAX_VERIFY: usize = 10;
+pub const MAN_DV_MS_DEFAULT: (f64, f64) = (0.05, 2.0);
+pub const MAN_MIN_MISS_DEFAULT_KM: f64 = 1.0;
+pub const MAN_G0_MS2: f64 = 9.80665;
+pub const MAN_PREFILTER_MARGIN_KM: f64 = 25.0;
+pub const MAN_TARGET_MATCH_FRAC_PERIOD: f64 = 0.25;
+pub const MAN_PLOT_POINTS: usize = 241;

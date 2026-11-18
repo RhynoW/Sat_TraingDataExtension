@@ -1,4 +1,4 @@
-//! 第二階段：會合評估、避碰決策與 RPO 控制模擬（Sprint 0 規格與測試骨架＋Sprint 1 自適應搜尋、協方差傳播、批次）。
+//! 第二階段：會合評估、避碰決策與 RPO 控制模擬（Sprint 0 規格與測試骨架＋Sprint 1 自適應搜尋、協方差傳播、批次＋Sprint 2 避碰決策）。
 //!
 //! Python `scenario-advanced01/scenario04/phase2/` 的同演算法移植；兩邊以 `config/phase2/testdata/`
 //! （由 scripts/sync_web.py 自 Python 版同步）共用測試資料比對。模組對應關係與 Python 相同。
@@ -16,6 +16,7 @@ pub mod forces;
 pub mod frames;
 pub mod integrator;
 pub mod kepler;
+pub mod maneuver;
 pub mod pc;
 pub mod rtn;
 pub mod schema;
@@ -26,6 +27,8 @@ pub mod timescale;
 mod tests;
 #[cfg(test)]
 mod tests_sprint1;
+#[cfg(test)]
+mod tests_sprint2;
 
 pub type V3 = [f64; 3];
 pub type M3 = [[f64; 3]; 3];
@@ -149,4 +152,44 @@ pub mod la {
         }
         Some(r)
     }
+}
+
+/// schema_cases／maneuver_cases 的 ops（同 Python api/lab.apply_ops）：set 設值、del 刪除；path 為鍵或索引
+pub fn apply_ops(base: &serde_json::Value, ops: &serde_json::Value) -> serde_json::Value {
+    use serde_json::Value;
+    let mut d = base.clone();
+    for op in ops.as_array().map(Vec::as_slice).unwrap_or(&[]) {
+        let path = op["path"].as_array().unwrap();
+        let (head, last) = path.split_at(path.len() - 1);
+        let mut tgt = &mut d;
+        for k in head {
+            tgt = match k {
+                Value::String(s) => tgt.get_mut(s.as_str()).unwrap(),
+                Value::Number(n) => tgt.get_mut(n.as_u64().unwrap() as usize).unwrap(),
+                _ => unreachable!(),
+            };
+        }
+        let set = op["op"] == "set";
+        match &last[0] {
+            Value::String(s) => {
+                let m = tgt.as_object_mut().unwrap();
+                if set {
+                    m.insert(s.clone(), op["value"].clone());
+                } else {
+                    m.remove(s);
+                }
+            }
+            Value::Number(n) => {
+                let a = tgt.as_array_mut().unwrap();
+                let i = n.as_u64().unwrap() as usize;
+                if set {
+                    a[i] = op["value"].clone();
+                } else {
+                    a.remove(i);
+                }
+            }
+            _ => unreachable!(),
+        }
+    }
+    d
 }

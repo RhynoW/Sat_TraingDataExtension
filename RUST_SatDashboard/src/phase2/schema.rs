@@ -67,6 +67,15 @@ fn int(c: &mut Ctx, m: &Map<String, Value>, k: &str, path: &str, lo: i64) {
         }
     }
 }
+fn int_range(c: &mut Ctx, m: &Map<String, Value>, k: &str, path: &str, lo: i64, hi: i64) {
+    if let Some(v) = m.get(k) {
+        let ok = v.as_i64().map(|x| x >= lo && x <= hi).unwrap_or(false)
+            || v.as_f64().map(|x| x.fract() == 0.0 && x >= lo as f64 && x <= hi as f64).unwrap_or(false);
+        if !ok {
+            c.err(&format!("{path}/{k}"), "須為整數且在範圍內");
+        }
+    }
+}
 fn string(c: &mut Ctx, m: &Map<String, Value>, k: &str, path: &str, min_len: usize) {
     if let Some(v) = m.get(k) {
         match v.as_str() {
@@ -112,6 +121,33 @@ fn is_obj(c: &mut Ctx, m: &Map<String, Value>, k: &str, path: &str) {
     }
 }
 
+fn check_ephemeris(c: &mut Ctx, e: &Value, pe: &str) {
+    match e.get("type").and_then(Value::as_str) {
+        Some("TLE") => {
+            if let Some(em) = obj(c, e, pe, &["type", "line1", "line2"], &["type", "line1", "line2", "source", "retrieved"]) {
+                for k in ["line1", "line2"] {
+                    if em.get(k).and_then(Value::as_str).map(|s| s.chars().count() != 69).unwrap_or(false) {
+                        c.err(&format!("{pe}/{k}"), "TLE 行長須為 69");
+                    }
+                    string(c, em, k, pe, 0);
+                }
+                string(c, em, "source", pe, 0);
+                string(c, em, "retrieved", pe, 0);
+            }
+        }
+        Some("state") => {
+            if let Some(em) = obj(c, e, pe, &["type", "epoch", "frame", "r_km", "v_kms"], &["type", "epoch", "frame", "r_km", "v_kms", "source"]) {
+                string(c, em, "epoch", pe, 0);
+                enumv(c, em, "frame", pe, &["GCRF", "TEME"]);
+                num_array(c, em, "r_km", pe, 3, false);
+                num_array(c, em, "v_kms", pe, 3, false);
+                string(c, em, "source", pe, 0);
+            }
+        }
+        _ => c.err(pe, "type 須為 TLE 或 state"),
+    }
+}
+
 fn check_covariance(c: &mut Ctx, v: &Value, path: &str) {
     let Some(m) = obj(c, v, path, &["mode", "source", "independent_of_other"],
         &["mode", "epoch", "frame", "rtn_definition", "velocity_convention", "units", "sigma_km", "matrix_6x6",
@@ -139,7 +175,14 @@ fn check_covariance(c: &mut Ctx, v: &Value, path: &str) {
     enumv(c, m, "source", path, &["assumed", "cdm", "od"]);
     boolean(c, m, "independent_of_other", path);
     is_obj(c, m, "propagation", path);
-    is_obj(c, m, "maneuver_execution_error", path);
+    if let Some(me) = m.get("maneuver_execution_error") {
+        let pm = format!("{path}/maneuver_execution_error");
+        if let Some(mm) = obj(c, me, &pm, &["included"], &["included", "mag_frac_sigma", "point_deg_sigma"]) {
+            boolean(c, mm, "included", &pm);
+            num(c, mm, "mag_frac_sigma", &pm, Some((0.0, false)), None);
+            num(c, mm, "point_deg_sigma", &pm, Some((0.0, false)), None);
+        }
+    }
 }
 
 fn check_structure(sc: &Value) -> Vec<String> {
@@ -185,31 +228,7 @@ fn check_structure(sc: &Value) -> Vec<String> {
                     int(&mut c, m, "norad_id", &p, 0);
                     enumv(&mut c, m, "orbit_regime", &p, &["LEO", "MEO", "GEO", "HEO"]);
                     if let Some(e) = m.get("ephemeris") {
-                        let pe = format!("{p}/ephemeris");
-                        match e.get("type").and_then(Value::as_str) {
-                            Some("TLE") => {
-                                if let Some(em) = obj(&mut c, e, &pe, &["type", "line1", "line2"], &["type", "line1", "line2", "source", "retrieved"]) {
-                                    for k in ["line1", "line2"] {
-                                        if em.get(k).and_then(Value::as_str).map(|s| s.chars().count() != 69).unwrap_or(false) {
-                                            c.err(&format!("{pe}/{k}"), "TLE 行長須為 69");
-                                        }
-                                        string(&mut c, em, k, &pe, 0);
-                                    }
-                                    string(&mut c, em, "source", &pe, 0);
-                                    string(&mut c, em, "retrieved", &pe, 0);
-                                }
-                            }
-                            Some("state") => {
-                                if let Some(em) = obj(&mut c, e, &pe, &["type", "epoch", "frame", "r_km", "v_kms"], &["type", "epoch", "frame", "r_km", "v_kms", "source"]) {
-                                    string(&mut c, em, "epoch", &pe, 0);
-                                    enumv(&mut c, em, "frame", &pe, &["GCRF", "TEME"]);
-                                    num_array(&mut c, em, "r_km", &pe, 3, false);
-                                    num_array(&mut c, em, "v_kms", &pe, 3, false);
-                                    string(&mut c, em, "source", &pe, 0);
-                                }
-                            }
-                            _ => c.err(&pe, "type 須為 TLE 或 state"),
-                        }
+                        check_ephemeris(&mut c, e, &format!("{p}/ephemeris"));
                     }
                     if let Some(cv) = m.get("covariance") {
                         check_covariance(&mut c, cv, &format!("{p}/covariance"));
@@ -267,16 +286,37 @@ fn check_structure(sc: &Value) -> Vec<String> {
     if let Some(ms) = top.get("maneuver_search") {
         let p = "/maneuver_search";
         if let Some(m) = obj(&mut c, ms, p, &["window_rel_tca_s"],
-            &["window_rel_tca_s", "dv_ms", "pc_target", "min_miss_km", "feasibility_check", "secondary_screening"]) {
+            &["window_rel_tca_s", "dv_ms", "pc_target", "min_miss_km", "feasibility_check", "secondary_screening",
+              "n_times", "n_dv", "max_verify"]) {
             num_array(&mut c, m, "window_rel_tca_s", p, 2, false);
             num_array(&mut c, m, "dv_ms", p, 2, true);
             num(&mut c, m, "pc_target", p, Some((0.0, true)), Some(1.0));
             num(&mut c, m, "min_miss_km", p, Some((0.0, false)), None);
             boolean(&mut c, m, "feasibility_check", p);
+            int_range(&mut c, m, "n_times", p, 1, 500);
+            int_range(&mut c, m, "n_dv", p, 1, 200);
+            int_range(&mut c, m, "max_verify", p, 1, 100);
             if let Some(ss) = m.get("secondary_screening") {
-                if let Some(sm) = obj(&mut c, ss, &format!("{p}/secondary_screening"), &[], &["catalog", "window_days"]) {
-                    enumv(&mut c, sm, "catalog", p, &["active", "full"]);
-                    num(&mut c, sm, "window_days", p, Some((0.0, true)), None);
+                let ps = format!("{p}/secondary_screening");
+                if let Some(sm) = obj(&mut c, ss, &ps, &[], &["catalog", "window_days", "objects"]) {
+                    enumv(&mut c, sm, "catalog", &ps, &["active", "full", "provided"]);
+                    num(&mut c, sm, "window_days", &ps, Some((0.0, true)), None);
+                    if let Some(ol) = sm.get("objects") {
+                        match ol.as_array() {
+                            Some(a) if a.len() <= 200 => {
+                                for (i, o) in a.iter().enumerate() {
+                                    let po = format!("{ps}/objects/{i}");
+                                    let Some(om) = obj(&mut c, o, &po, &["name", "ephemeris"], &["name", "norad_id", "ephemeris"]) else { continue };
+                                    string(&mut c, om, "name", &po, 1);
+                                    int(&mut c, om, "norad_id", &po, 0);
+                                    if let Some(e) = om.get("ephemeris") {
+                                        check_ephemeris(&mut c, e, &format!("{po}/ephemeris"));
+                                    }
+                                }
+                            }
+                            _ => c.err(&format!("{ps}/objects"), "須為至多 200 個物體的陣列"),
+                        }
+                    }
                 }
             }
         }
@@ -336,6 +376,13 @@ pub fn validate(sc: &Value) -> Validation {
         }
         if let Some(e) = o.get("covariance").and_then(|c| c.get("epoch")) {
             times.push(s(e));
+        }
+    }
+    let scr_objs = sc.get("maneuver_search").and_then(|m| m.get("secondary_screening")).and_then(|x| x.get("objects"))
+        .and_then(Value::as_array);
+    for o in scr_objs.into_iter().flatten() {
+        if o["ephemeris"]["type"] == "state" {
+            times.push(s(&o["ephemeris"]["epoch"]));
         }
     }
     for t in &times {

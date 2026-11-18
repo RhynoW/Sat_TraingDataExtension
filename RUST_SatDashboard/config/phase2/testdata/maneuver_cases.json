@@ -1,0 +1,339 @@
+{
+ "note": "以 maneuver_leo.json 為底，依序套用 ops（set 設值、del 刪除；path 為鍵或索引）。expected 為 Python 參考輸出摘要：status、reason、best（機動時刻 τ、方向、Δv）、驗證數與通過數。",
+ "base": "maneuver_leo.json",
+ "cases": [
+  {
+   "name": "base_feasible",
+   "ops": [],
+   "expected": {
+    "status": "feasible_solution_found",
+    "reason": null,
+    "best": {
+     "burn_tau_s": 19099.953373472705,
+     "direction": "-T",
+     "dv_ms": 0.3452631578947369,
+     "passed": true
+    },
+    "verified": 6,
+    "passed": 5
+   }
+  },
+  {
+   "name": "notice_window_conflict",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "analysis_time"
+     ],
+     "value": "2026-11-20T05:40:00Z"
+    }
+   ],
+   "expected": {
+    "status": "infeasible_constraints",
+    "reason": "notice_window_conflict",
+    "best": null,
+    "verified": null,
+    "passed": null
+   }
+  },
+  {
+   "name": "window_before_data_start",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "analysis_time"
+     ],
+     "value": "2026-11-18T00:00:00Z"
+    },
+    {
+     "op": "set",
+     "path": [
+      "objects",
+      0,
+      "propulsion",
+      "min_notice_s"
+     ],
+     "value": 0.0
+    },
+    {
+     "op": "set",
+     "path": [
+      "maneuver_search",
+      "window_rel_tca_s"
+     ],
+     "value": [
+      -90000.0,
+      -86400.0
+     ]
+    }
+   ],
+   "expected": {
+    "status": "infeasible_constraints",
+    "reason": "window_before_data_start",
+    "best": null,
+    "verified": null,
+    "passed": null
+   }
+  },
+  {
+   "name": "dv_budget_below_min",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "objects",
+      0,
+      "propulsion",
+      "dv_budget_ms"
+     ],
+     "value": 0.005
+    }
+   ],
+   "expected": {
+    "status": "infeasible_constraints",
+    "reason": "dv_budget_below_min_dv",
+    "best": null,
+    "verified": null,
+    "passed": null
+   }
+  },
+  {
+   "name": "no_along_track_thrust",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "objects",
+      0,
+      "propulsion",
+      "thrust_dirs"
+     ],
+     "value": [
+      "R",
+      "N"
+     ]
+    }
+   ],
+   "expected": {
+    "status": "infeasible_constraints",
+    "reason": "no_along_track_thrust",
+    "best": null,
+    "verified": null,
+    "passed": null
+   }
+  },
+  {
+   "name": "no_solution_small_dv",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "maneuver_search",
+      "dv_ms"
+     ],
+     "value": [
+      0.001,
+      0.01
+     ]
+    }
+   ],
+   "expected": {
+    "status": "no_solution_found",
+    "reason": "no_linear_candidate_met_targets",
+    "best": {
+     "burn_tau_s": 13459.953373472705,
+     "direction": "-T",
+     "dv_ms": 0.01,
+     "passed": false
+    },
+    "verified": 3,
+    "passed": 0
+   }
+  },
+  {
+   "name": "no_maneuver_required",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "maneuver_search",
+      "pc_target"
+     ],
+     "value": 0.0001
+    },
+    {
+     "op": "set",
+     "path": [
+      "maneuver_search",
+      "min_miss_km"
+     ],
+     "value": 0.1
+    }
+   ],
+   "expected": {
+    "status": "no_maneuver_required",
+    "reason": "reference_meets_targets",
+    "best": null,
+    "verified": null,
+    "passed": null
+   }
+  },
+  {
+   "name": "target_not_found",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "conjunction",
+      "tca"
+     ],
+     "value": "2026-11-20T03:00:00Z"
+    }
+   ],
+   "expected": {
+    "status": "target_not_found",
+    "reason": "no_event_near_conjunction_tca",
+    "best": null,
+    "verified": null,
+    "passed": null
+   }
+  },
+  {
+   "name": "demo_covariance_miss_only",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "objects",
+      0,
+      "covariance"
+     ],
+     "value": {
+      "mode": "demo",
+      "sigma_km": [
+       0.1,
+       0.5,
+       0.1
+      ],
+      "source": "assumed",
+      "independent_of_other": true
+     }
+    },
+    {
+     "op": "set",
+     "path": [
+      "objects",
+      1,
+      "covariance"
+     ],
+     "value": {
+      "mode": "demo",
+      "sigma_km": [
+       0.2,
+       1.0,
+       0.2
+      ],
+      "source": "assumed",
+      "independent_of_other": true
+     }
+    }
+   ],
+   "expected": {
+    "status": "feasible_solution_found",
+    "reason": null,
+    "best": {
+     "burn_tau_s": 4999.953373472705,
+     "direction": "+T",
+     "dv_ms": 0.035789473684210524,
+     "passed": true
+    },
+    "verified": 6,
+    "passed": 6
+   }
+  },
+  {
+   "name": "new_conjunction_rejects_best",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "maneuver_search",
+      "secondary_screening",
+      "objects"
+     ],
+     "value": [
+      {
+       "name": "國際太空站",
+       "norad_id": 25544,
+       "ephemeris": {
+        "type": "TLE",
+        "line1": "1 25544U 98067A   26321.85053418  .00010861  00000-0  20179-3 0  9996",
+        "line2": "2 25544  51.6318 259.6690 0007364  37.3950 322.7550 15.49442652595577"
+       }
+      },
+      {
+       "name": "CSS TIANHE-1",
+       "norad_id": 48274,
+       "ephemeris": {
+        "type": "TLE",
+        "line1": "1 48274U 21035A   26321.57295439  .00017960  00000-0  21376-3 0  9999",
+        "line2": "2 48274  41.4687 109.8550 0004865 252.9645 107.0661 15.60681825317128"
+       }
+      },
+      {
+       "name": "ICEYE-X36",
+       "norad_id": 59103,
+       "ephemeris": {
+        "type": "TLE",
+        "line1": "1 59103U 24043F   26321.84312757  .00004291  00000-0  28265-3 0  9994",
+        "line2": "2 59103  97.8564 102.9869 0006456 148.7558 211.4055 15.08059579148294"
+       }
+      },
+      {
+       "name": "COSMOS 2612",
+       "norad_id": 68762,
+       "ephemeris": {
+        "type": "TLE",
+        "line1": "1 68762U 26083H   26321.64502890  .00002290  00000-0  15284-3 0  9992",
+        "line2": "2 68762  97.8574 102.7870 0007980 161.2343 198.9180 15.08069443 32304"
+       }
+      },
+      {
+       "name": "TRAP-SYN",
+       "ephemeris": {
+        "type": "state",
+        "epoch": "2026-11-20T00:00:00Z",
+        "frame": "GCRF",
+        "r_km": [
+         1180.240438093832,
+         6330.22685754981,
+         2409.0609069704287
+        ],
+        "v_kms": [
+         -3.71249865600221,
+         2.9613267178270513,
+         -5.952082795691897
+        ],
+        "source": "synthetic"
+       }
+      }
+     ]
+    }
+   ],
+   "expected": {
+    "status": "feasible_solution_found",
+    "reason": null,
+    "best": {
+     "burn_tau_s": 13459.953373472705,
+     "direction": "-T",
+     "dv_ms": 0.37105263157894736,
+     "passed": true
+    },
+    "verified": 6,
+    "passed": 1
+   }
+  }
+ ]
+}

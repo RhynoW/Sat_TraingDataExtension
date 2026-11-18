@@ -59,13 +59,25 @@ tbody tr.sel{background:#1f2a3a}
 .kv dt{color:var(--mut)}.kv dd{color:var(--hi);font-variant-numeric:tabular-nums;word-break:break-word}
 .acc{border-left:3px solid var(--warn);padding:6px 10px;margin-top:8px;font-size:11.5px;line-height:1.6;color:var(--fg)}
 #csvmsg div{font-size:11.5px}
+body[data-pane=maneuver] #results{display:none!important}
+body:not([data-pane=maneuver]) #m-results{display:none!important}
+#m-results{padding:0 22px 40px;display:none}
+.banner{border:1px solid var(--line2);border-left:4px solid var(--mut);border-radius:6px;padding:10px 14px;margin-bottom:12px;background:var(--panel);line-height:1.6}
+.banner b{color:var(--hi);font-size:14px}
+.banner.ok{border-left-color:var(--ok)}.banner.warn{border-left-color:var(--warn)}.banner.crit{border-left-color:var(--crit)}
+.chk{font-size:11px}.chk.y{color:var(--ok)}.chk.n{color:var(--warn)}
+.seg{display:inline-flex;gap:0;margin-left:8px}
+.seg button{background:#21262d;color:var(--mut);border:1px solid var(--line2);padding:2px 9px;font-size:11px;cursor:pointer}
+.seg button.on{background:#1f6feb;color:#fff;border-color:#1f6feb}
+.card canvas.drag{cursor:grab}
 </style>
 <script src="/static/js/lab.js?v=__BUILD__" defer></script>
+<script src="/static/js/lab_maneuver.js?v=__BUILD__" defer></script>
 </head>
 <body>
 <div id="hdr">
   <h1>&#128752; <span data-i18n="page_title">會合與機動實驗室</span></h1>
-  <span class="sub" data-i18n="subtitle">第二階段 Sprint 1：會合事件核心（近接極小值搜尋、碰撞機率、適用性篩選）</span>
+  <span class="sub" data-i18n="subtitle">第二階段 Sprint 2：會合事件核心與避碰決策</span>
   <span class="sp"></span>
   <div id="lang-switcher">
     <button type="button" class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
@@ -78,6 +90,7 @@ tbody tr.sel{background:#1f2a3a}
 <div id="tabs">
   <button type="button" class="tab on" data-pane="batch" data-i18n="tab_batch">批次分析</button>
   <button type="button" class="tab" data-pane="scenario" data-i18n="tab_scenario">場景 JSON</button>
+  <button type="button" class="tab" data-pane="maneuver" data-i18n="tab_maneuver">避碰決策</button>
 </div>
 
 <div class="pane on" id="pane-batch">
@@ -118,7 +131,44 @@ tbody tr.sel{background:#1f2a3a}
   <div id="s-msg" class="hint" style="margin-top:8px"></div>
 </div>
 
+<div class="pane" id="pane-maneuver">
+  <div class="form">
+    <label><span data-i18n="m_case">示範案例</span><select id="m-case"></select></label>
+    <label><span data-i18n="m_win_a">機動窗起點（TCA 前分鐘）</span><input id="m-wa" type="number" min="1" step="1"/></label>
+    <label><span data-i18n="m_win_b">機動窗終點（TCA 前分鐘）</span><input id="m-wb" type="number" min="0" step="1"/></label>
+    <label><span data-i18n="m_notice">最短通知時間（分鐘）</span><input id="m-notice" type="number" min="0" step="1"/></label>
+    <label><span data-i18n="m_dv">Δv 範圍（m/s，最小, 最大）</span><input id="m-dv"/></label>
+    <label><span data-i18n="m_budget">Δv 預算（m/s）</span><input id="m-budget" type="number" min="0" step="0.01"/></label>
+    <label><span data-i18n="m_pc">Pc 目標（僅傳播模式協方差採用）</span><input id="m-pc"/></label>
+    <label><span data-i18n="m_miss">最小距離目標（km）</span><input id="m-miss" type="number" min="0" step="0.1"/></label>
+    <label><span data-i18n="m_grid">網格（機動時刻數, Δv 量級數, 驗證上限）</span><input id="m-grid"/></label>
+    <label class="wide"><span data-i18n="m_ids">二次篩選追加物體（NORAD 編號，逗號或換行分隔；由伺服器資料庫取 TLE）</span><input id="m-ids" placeholder="25544, 48274"/></label>
+    <label class="wide"><span data-i18n="f_json">場景 JSON（satdash.scenario/v1）</span><textarea id="m-json" style="min-height:160px"></textarea></label>
+  </div>
+  <div class="row">
+    <input type="file" id="m-file" accept=".json" style="display:none"/>
+    <button type="button" class="sec" id="m-load" data-i18n="btn_load_json">載入 JSON 檔</button>
+    <button type="button" class="pri" id="m-run" data-i18n="m_run">搜尋避碰方案</button>
+  </div>
+  <div id="m-msg" class="hint" style="margin-top:8px"></div>
+  <p class="hint" style="margin-top:8px" data-i18n="m_note">沿跡向單脈衝：在機動窗起點取主星狀態建立不機動的參考軌跡，所有候選方案自同一軌跡分岔；線性 STM 預篩整個網格，再以非線性傳播驗證、重新搜尋 TCA、重算 Pc 並做二次篩選。</p>
+</div>
+
 <div id="status"></div>
+
+<div id="m-results">
+  <div class="banner" id="m-banner"></div>
+  <div class="kpis" id="m-kpis"></div>
+  <div class="row" style="margin:0 0 8px">
+    <button type="button" class="sec" id="m-dl" data-i18n="btn_dl_json">下載完整 JSON</button>
+    <span class="hint" id="m-meta"></span>
+  </div>
+  <div class="tblwrap"><table>
+    <thead><tr id="m-thead"></tr></thead>
+    <tbody id="m-tbody"></tbody>
+  </table></div>
+  <div id="m-detail" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px;margin-top:12px"></div>
+</div>
 
 <div id="results">
   <div class="kpis" id="kpis"></div>
