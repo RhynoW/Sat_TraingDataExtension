@@ -86,6 +86,8 @@ def disp(n, r) -> str:
 
 # ── 圖：15 顆衛星事件時間軸（泳道）────────────────────────────────────────────
 GRADE_COLOR = {"E3": "#002B8A", "E2": "#3F7BE0", "E1": "#A9C3F0"}
+# 黑底版：證據越強越亮；E1 亦須在黑底上可辨（以 to_dark 反轉前之值存放，見 fig_pub.theme）
+GRADE_COLOR_DARK = {"E3": "#BFD6FF", "E2": "#6F9BEA", "E1": "#3E64B3"}
 
 
 TYPE_EN = {"A": "Orbit\ntransfer", "B": "Constellation\noperations", "C": "Small\nadjustments",
@@ -102,6 +104,8 @@ def build_timeline(R: dict[int, dict]) -> None:
 
 def draw_timeline(R: dict[int, dict]):
     """15 顆衛星事件時間軸（泳道）；不設定字型（由呼叫端／fig_pub 決定），回傳 Figure。"""
+    GC = ({k: fp.invert_color(v) for k, v in GRADE_COLOR_DARK.items()}
+          if fp.in_pub() and fp.theme() == "dark" else GRADE_COLOR)
     fig, ax = plt.subplots(figsize=(12.4, 5.75), dpi=200)
     rows, y, yt, ylab = [], 0, [], []
     group_y = []
@@ -124,14 +128,14 @@ def draw_timeline(R: dict[int, dict]):
         ax.plot([s, e], [yy, yy], color="#C9CED8", lw=5, solid_capstyle="round", zorder=1)
         for sg in r.get("segments") or []:
             ax.plot([pd.Timestamp(sg["t_start"]).tz_localize(None), pd.Timestamp(sg["t_end"]).tz_localize(None)],
-                    [yy, yy], color=GRADE_COLOR.get(sg.get("grade"), "#002B8A"), lw=7, solid_capstyle="round", zorder=2)
+                    [yy, yy], color=GC.get(sg.get("grade"), "#002B8A"), lw=7, solid_capstyle="round", zorder=2)
         for ev in r.get("events") or []:
             t = pd.Timestamp(ev["t_start"]).tz_localize(None)
             size = 28 + 26 * np.log1p(abs(ev["net_da"]))
             if ev["grade"] == "D":
                 ax.scatter(t, yy, s=size, facecolor="white", edgecolor="#7F7F7F", lw=1.6, zorder=4)
             else:
-                ax.scatter(t, yy, s=size, color=GRADE_COLOR[ev["grade"]], edgecolor="white", lw=1.2, zorder=4)
+                ax.scatter(t, yy, s=size, color=GC[ev["grade"]], edgecolor="white", lw=1.2, zorder=4)
     ymap = dict(rows)
     notes = [  # (norad, 時間, 文字, dx 天, dy, ha)：dy<0 標在該列上方、dy>0 標在該列與下一列之間
         (64199, "2025-05-29", "−38.7 km", 0, -0.30, "center"),
@@ -162,7 +166,7 @@ def draw_timeline(R: dict[int, dict]):
     ax.grid(axis="x", color="#E3E6EC", lw=0.8, zorder=0)
     leg = [Line2D([], [], color="#C9CED8", lw=5, label=fp.t("TLE 觀測期間", "TLE coverage period"))]
     leg += [Line2D([], [], marker="o", ls="", markersize=9, markerfacecolor=c, markeredgecolor="white", label=g)
-            for g, c in GRADE_COLOR.items()]
+            for g, c in GC.items()]
     leg += [Line2D([], [], marker="o", ls="", markersize=9, markerfacecolor="white", markeredgecolor="#7F7F7F", label="D"),
             Line2D([], [], color="#002B8A", lw=7, label=fp.t("連續機動段", "Continuous maneuver segment"))]
     ax.legend(handles=leg, loc="lower left", bbox_to_anchor=(0.0, 1.0), ncol=6, frameon=False, fontsize=10,

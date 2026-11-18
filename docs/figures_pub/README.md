@@ -44,9 +44,9 @@
 | 16 | fig_r4_shenlong_release | **未完成** | — | 見下方 |
 | 17 | fig_r6_shenlong_height | **未完成** | — | 見下方 |
 | 18 | fig_shenlong_2026_rpo | 完成 | `python verify_shenlong_2026_rpo.py --pub` | verify_shenlong_2026_rpo.csv |
-| 19 | fig_tasa15_timeline_r7 | **程式已備妥，未輸出** | `python docs/build_tasa15_ppt.py <r15.json> --pub-fig-only` | r15.json（已不在專案內） |
+| 19 | fig_tasa15_timeline_r7 | 完成 | `python docs/build_tasa15_ppt.py data/benchmark/tasa15_r7_delivery/r15.json --pub-fig-only` | r15.json 以交付當時資料重建（`docs/build_r15_json.py`） |
 | 20 | fig_sys_app_vs_r7 | 完成 | `python docs/gen_fig_system_flow.py --pub` | 無 |
-| 21 | fig_tasa15_detect_vs_alt_r7 | **程式已備妥，未輸出** | `python docs/gen_fig_tasa15_detect_vs_alt.py <r15.json> --pub R7` | r15.json（已不在專案內） |
+| 21 | fig_tasa15_detect_vs_alt_r7 | 完成 | `python docs/gen_fig_tasa15_detect_vs_alt.py data/benchmark/tasa15_r7_delivery/r15.json --pub R7` | 同上；重建之中文白底版與報告原圖逐像素相同 |
 | 22 | fig_drag_resid_threshold | 完成 | `python docs/study_drag_resid_threshold.py --pub` | drag_thr_by_alt_x30.csv、drag_thr_summary_x30.csv |
 
 ## 論文一：docs/paper_tle_sma_noise_floor.md
@@ -78,7 +78,6 @@
 | 圖 | 原因 |
 |---|---|
 | 報告圖 4、5、11–17（fig_r5_p2_parabola、fig_r1_nrlmsis_density、fig_r3_joint_element、fig_r9_planupload、fig_r2_starlink_planes、fig_r8_fs_family、fig_r7_fs7_fleet、fig_r4_shenlong_release、fig_r6_shenlong_height） | 專案內只有 PNG，找不到產生程式。檔名只出現在 build_*_ppt*.py 的插圖引用，git 歷史中也沒有。重繪等於從頭重寫程式，而且多數要重查 DB（MEME 檔、Starlink 軌道面、福衛家族、神龍相對運動），無法保證與報告原圖一致。 |
-| 報告圖 19、21（fig_tasa15_timeline_r7、fig_tasa15_detect_vs_alt_r7） | 程式已改好，支援四版本輸出，並以小樣本測試過。所需的 `r15.json`（maneuver_report_builder 對 15 顆衛星之 R7 輸出，資料至 2026-11-14）已不在專案內。若重跑 DB，現在的 TLE 已比 11-14 新，結果會與報告不一致。取得原 r15.json 後執行上表指令即可。另外，黑底版的 E1 淺藍在反轉後偏暗，產出前需再調整。 |
 | 論文一圖 3（paper2_fig3_shap_importance） | 原圖是 `Orbital_Maneuver_V2/analyze_plan_b_model.py` 以 shap 套件輸出的 shap_summary_bar.png，再手動複製而成。要重算 SHAP 並改寫 shap 內建繪圖，不屬於「讀快取重繪」。 |
 | 論文一圖 4（paper2_fig5_roc_comparison） | 左半部是直接嵌入的點陣圖（compare_models.py 產生的 roc_comparison.png），無法轉成黑底或英文；要重訓 RF／XGBoost 才能重繪 ROC 曲線。 |
 | 論文二 Fig. S1／S2（fig_fs7_profile_likelihood、fig_fs7_joint_likelihood） | 圖中的 profile likelihood 曲線、聯合似然網格與 reliability 曲線沒有存檔（json 只存摘要值）。要重跑 fs7_review3／review4，包含 200 次 cluster bootstrap 擬合及讀 DB 取窗起點時間。 |
@@ -93,3 +92,15 @@
   - 圖中擬合值為 H = 77 km、R² = 0.89，但論文內文寫 H = 79 km、R² = 0.87，需要作者確認。
 - 原報告圖 18（fig_shenlong_2026_rpo.png，中文）的「≈」與對數刻度負號，在原檔中是缺字方塊；四版本已用字型 fallback 修正。原檔未動。
 - `fig_starlink_v3_profile/` 目錄不是本批程式產生的，不在上述對照表內。
+
+## r15.json 之重建（報告圖 19、21）
+
+`data/benchmark/tasa15_r7_delivery/r15.json` 以「交付當時之資料」重建：本機資料庫只取 2026-11-15 13:50 UTC（交付 PDF 產生時刻）以前下載之 TLE，期間與交付相同（至 2026-11-14），分析流程 4778df6。15 顆之候選事件、證據等級與偵測下限皆與交付一致；低置信複核項除 STARLINK-4314 多 1 項（2026-10-18 阻力殘差 0.302 km，門檻邊緣，太空天氣檔已更新）外皆一致，兩張圖不使用低置信複核項。重建步驟：
+
+```
+# 1. 建交付當時資料庫（15 顆、downloaded_at_utc <= '2026-11-15 13:50:00'）
+# 2. set LOCAL_DB_PATH=<上述資料庫>
+python docs/build_r15_json.py data/benchmark/tasa15_r7_delivery/r15.json 2026-11-14
+```
+
+圖 19 黑底版之證據等級改用黑底專用配色（`build_tasa15_ppt.GRADE_COLOR_DARK`，經 `fig_pub.theme()` 判斷），使 E1 在黑底上可辨。

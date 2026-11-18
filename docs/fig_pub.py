@@ -69,6 +69,15 @@ def lang() -> str:
 _IN_PUB = False
 
 
+_THEME = "light"
+
+
+def theme() -> str:
+    """export_variants 執行中之主題（light／dark）。繪圖函式可據此改用黑底專用配色；
+    該配色須先以 invert_color() 預先反轉，因 to_dark() 會再反轉一次（不透明色之亮度反轉互逆）。"""
+    return _THEME
+
+
 def in_pub() -> bool:
     """export_variants 執行中為 True：可供繪圖函式只在出版版本加的微調（不影響原預設輸出）。"""
     return _IN_PUB
@@ -260,13 +269,14 @@ def export_variants(draw_fn: Callable[[], "plt.Figure"], stem: str, *, out_root:
     out_dir = (out_root or PUB_DIR) / stem
     out_dir.mkdir(parents=True, exist_ok=True)
     written: list[Path] = []
-    global _IN_PUB
+    global _IN_PUB, _THEME
     prev = _LANG
     _IN_PUB = True
     try:
         for l in langs:
             set_lang(l)
             for th in themes:
+                _THEME = th
                 rc = rc_for(l)
                 if extra_rc:
                     rc.update(extra_rc)
@@ -292,4 +302,5 @@ def export_variants(draw_fn: Callable[[], "plt.Figure"], stem: str, *, out_root:
     finally:
         set_lang(prev)
         _IN_PUB = False
+        _THEME = "light"
     return written
