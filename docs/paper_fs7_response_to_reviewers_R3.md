@@ -86,7 +86,7 @@ We thank the reviewer for the recommendation to accept with minor revisions and 
 
 **Response.** The anonymized review package `paperB_review_package_R2.zip` (81 files, 1.2 MB) is attached to this resubmission.
 
-- **Manifest.** The SHA-256 of its `MANIFEST_SHA256.txt` is `478463d267305f97a5c7a408933ccc09a453bda53952f91a19628c01ee51fec1`. The manifest lists the SHA-256 of every packaged file.
+- **Manifest.** The SHA-256 of its `MANIFEST_SHA256.txt` is `8ea8f2bea8d223059427f5baf1e0232ebe5ac89f15463ca56241af5b2cf46375`. The manifest lists the SHA-256 of every packaged file.
 - **Contents.** The package contains `fs7_review5_analysis.py`, `fs7_review6_analysis.py`, `fs7_review7_analysis.py` and their JSON outputs; `docs/fs7_env_freeze.txt`; and the Supplementary Material (`docs/paper_fs7_supplement_EN.md`), which includes Tables S1b, S44 and S45–S48.
 - **Minimal reproduction.** `python fs7_repro_minimal.py` requires only NumPy and pandas, and no Space-Track credentials or database. It reproduces and checks the following values, and every check passes:
   - **Table 3:** calibration-split SNR₅₀ = 3.87 and β = 5.04 (at the grid value c = 0.2818); held-out log loss 0.1237 (drag-aware) and 0.1413 (amplitude-only); held-out AUC 0.9773.

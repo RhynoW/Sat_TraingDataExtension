@@ -850,7 +850,7 @@ Ratio interpolated / model: linear [0.64, 1.85], √Δt [0.67, 1.28] (√Δt: ĉ
 | residual scale σ_TLE | 1–21 m in quiet windows | measured σ_TLE with the Appendix B estimator |
 | drag rate \|ȧ\| | 18–77 m/day in quiet windows; up to 182 m/day in the storm | within or near the calibrated range |
 | detector | D1 (MAD 3σ ∪ CUSUM κ = 0.5, h = 5) | the same detector family, or recalibration |
-| truth source | independent precise orbits (60 s SP3) | an independent truth source (SP3/SLR/DORIS/GNSS-POD) with ≥ ~50 verified events spanning 20 m–2 km, plus quiet windows for injections and a temporal hold-out | As supplementary context (Fig. S3), a domain map of the study satellites in altitude–inclination space with fitted noise-floor contours σ_th(h) = sqrt(σ₀² + (A·e^{−(h−400)/H})²) (σ₀ = 0.045 m, A = 24.5 m, H = 77 km, log-space R² = 0.89; derived in the companion study [11]) illustrates the altitude dominance of the nominal residual scale; it is contextual, not part of the calibrated model's claims, and the GRACE pair's departure from the contours (consistent with their low area-to-mass ratio) marks a limit of the single-parameter description.
+| truth source | independent precise orbits (60 s SP3) | an independent truth source (SP3/SLR/DORIS/GNSS-POD) with ≥ ~50 verified events spanning 20 m–2 km, plus quiet windows for injections and a temporal hold-out |
 
 ---
 
