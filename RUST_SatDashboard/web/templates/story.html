@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+
+<script>/* HF 代理暫時性 502/503/504：同源 GET fetch 自動重試 3 次（0.8/1.6/2.4 s） */(function(){var f=window.fetch;if(!f)return;window.fetch=function(input,init){var m=((init&&init.method)||(input&&input.method)||'GET').toUpperCase();var u=typeof input==='string'?input:(input&&input.url)||'';var same=u.charAt(0)==='/'||u.indexOf(location.origin)===0;if(m!=='GET'||!same)return f.apply(this,arguments);var self=this,args=arguments;return new Promise(function(res,rej){(function go(n){f.apply(self,args).then(function(r){if((r.status===502||r.status===503||r.status===504)&&n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{res(r);}},function(e){if(n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{rej(e);}});})(0);});};}());</script>
+<title>Story — 太空態勢敘事</title>
+<!-- <html lang> 與此標題僅為初始／SEO 用途，實際語言由 story.js 之 applyStaticI18n() 依 localStorage 動態設定 -->
+<style>
+#lang-switcher{position:fixed;top:8px;right:64px;z-index:40;display:flex;gap:4px}
+.lang-btn{background:#21262d;color:#8b949e;border:1px solid #30363d;border-radius:5px;padding:4px 9px;font-size:12px;cursor:pointer}
+.lang-btn:hover{background:#30363d;color:#c9d1d9}
+.lang-btn.active{background:#1f6feb;color:#fff;border-color:#1f6feb}
+</style>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#0d1117;color:#c9d1d9;font-family:'Segoe UI',Tahoma,'Microsoft JhengHei',sans-serif;min-height:100vh}
+a{color:#58a6ff}
+/* 頁首：固定於右側、垂直直書（不遮擋各節抬頭） */
+#hdr{position:fixed;top:0;right:0;bottom:0;width:56px;display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px 6px;background:rgba(22,27,34,.95);border-left:1px solid #21262d;z-index:20;backdrop-filter:blur(4px)}
+#hdr h1{writing-mode:vertical-rl;font-size:13.5px;color:#e6edf3;font-weight:600;letter-spacing:2px;max-height:62vh;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#hdr .sp{flex:1}
+#hdr a{writing-mode:vertical-rl;font-size:12px;text-decoration:none;border:1px solid #30363d;border-radius:5px;padding:10px 4px;background:#21262d;letter-spacing:2px}
+#hdr a:hover{background:#30363d}
+body{padding-right:56px}
+#hdr .nav{display:flex;flex-direction:column;gap:8px;align-items:center}
+#hdr .nav button{width:40px;background:#21262d;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;padding:8px 0 6px;cursor:pointer;font-size:12px;line-height:1.25;display:flex;flex-direction:column;align-items:center;gap:3px}
+#hdr .nav button:hover{background:#30363d;color:#fff}
+#hdr .nav button b{font-size:14px}
+#hdr .nav button span{writing-mode:vertical-rl;letter-spacing:2px}
+#hdr .nav button:disabled{opacity:.35;cursor:default;box-shadow:none}
+/* 凸顯上下步控制：下一步亮綠、上一步亮橘 */
+#hdr .nav button{width:44px;padding:10px 0 8px;font-weight:700;border-width:2px}
+#hdr .nav button b{font-size:18px}
+#nav-next{background:#2ea043;border-color:#3fb950;color:#fff;box-shadow:0 0 12px rgba(63,185,80,.55)}
+#nav-next:hover{background:#3fb950;border-color:#56d364;color:#fff;box-shadow:0 0 18px rgba(86,211,100,.8)}
+#nav-prev{background:#d9730d;border-color:#f0883e;color:#fff;box-shadow:0 0 12px rgba(240,136,62,.55)}
+#nav-prev:hover{background:#f0883e;border-color:#ffa657;color:#fff;box-shadow:0 0 18px rgba(255,166,87,.8)}
+/* 投影片式：每節正好一個視窗高度、逐頁吸附 */
+html{scroll-snap-type:y mandatory}
+html.nosnap{scroll-snap-type:none}
+.hero.list{height:auto;min-height:0;padding:80px 10px 30px;border-bottom:0;scroll-snap-align:none}
+#wrap{max-width:1180px;margin:0 auto;padding:0 20px 0}
+/* hero */
+.hero{height:100vh;box-sizing:border-box;padding:0 10px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;border-bottom:1px solid #21262d;scroll-snap-align:start}
+.hero h2{font-size:34px;color:#e6edf3;font-weight:700;letter-spacing:1px}
+.hero .sub{font-size:16px;color:#8b949e;margin-top:12px}
+.hero .note{font-size:13px;color:#6e7681;margin-top:20px;max-width:680px;margin-left:auto;margin-right:auto;line-height:1.7}
+.hero .scroll{margin-top:36px;font-size:22px;color:#30363d;animation:bob 1.6s infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+/* 封面併入第一節：置頂橫幅 */
+.hero-in{flex:none;text-align:center;padding:6px 10px 14px;margin-bottom:12px;border-bottom:1px solid #21262d}
+.hero-in h2{font-size:28px;color:#e6edf3;font-weight:700;letter-spacing:1px}
+.hero-in .sub{font-size:15px;color:#8b949e;margin-top:8px}
+.hero-in .note{font-size:12.5px;color:#6e7681;margin-top:10px;max-width:900px;margin-left:auto;margin-right:auto;line-height:1.7}
+.hcards{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:14px auto 4px;max-width:1200px}
+.hcard{flex:1 1 180px;max-width:240px;background:#161b22;border:1px solid #30363d;border-radius:8px;
+  padding:10px 12px;text-align:left}
+.hcard b{display:block;font-size:19px;color:#58a6ff;line-height:1.3}
+.hcard span{display:block;font-size:12px;color:#c9d1d9;margin-top:3px;line-height:1.4}
+.hcard i{display:block;font-size:10.5px;color:#6e7681;font-style:normal;margin-top:4px}
+@media(max-width:760px){.hcard{flex:1 1 44%}}
+.sec.first{padding-top:14px}
+.sec.first[data-type="text"]{justify-content:flex-start;padding-bottom:12px}
+.sec.first[data-type="text"] h3{font-size:24px}
+.sec.first[data-type="text"] .body{font-size:15.5px}
+.sec.first .sec-body{flex:1;min-height:0}
+@media(max-width:760px){.hero-in h2{font-size:22px}}
+/* 資料口徑列 */
+.prov{margin:10px auto 0;max-width:1000px;text-align:left;font-size:12px;border:1px solid #30363d;border-radius:8px;background:#161b22}
+.prov summary{cursor:pointer;padding:6px 12px;color:#8b949e;display:flex;gap:12px;align-items:center}
+.prov summary .ok{color:#3fb950}.prov summary .stale{color:#f0883e}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px;padding:6px 12px 10px}
+@media(max-width:800px){.pgrid{grid-template-columns:1fr}}
+.pv{display:flex;gap:8px;line-height:1.5}.pv .k{flex:none;width:92px;color:#6e7681}.pv .v{color:#c9d1d9}
+.evd{margin-top:8px;font-size:12.5px}.evd summary{cursor:pointer;color:#8b949e}
+/* sections */
+.sec{height:100vh;box-sizing:border-box;padding:22px 6px 12px;display:flex;flex-direction:column;scroll-snap-align:start;opacity:0;transform:translateY(24px);transition:opacity .7s,transform .7s}
+.sec.vis{opacity:1;transform:none}
+.sec h3{font-size:21px;color:#e6edf3;font-weight:650;margin-bottom:8px;border-left:4px solid #1f6feb;padding-left:12px;flex:none}
+.sec .body{font-size:13.5px;line-height:1.75;color:#c9d1d9;max-width:960px;flex:none;max-height:22vh;overflow:auto;margin-bottom:6px}
+.sec-body{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column}
+/* 純文字節 → 標題投影片：垂直置中、放大 */
+.sec[data-type="text"]{justify-content:center;padding-bottom:12vh}
+.sec[data-type="text"] h3{font-size:34px;margin-bottom:18px}
+.sec[data-type="text"] .body{font-size:18px;line-height:1.9;max-height:none;max-width:1000px}
+.sec[data-type="text"] .sec-body{flex:none}
+.sec-body>.pm-wrap{flex:1;min-height:0;display:flex;flex-direction:column}
+.sec-body>.pm-wrap>.posmap{flex:1;min-height:240px}
+.sec-body>.frame{flex:1;min-height:0}
+.sec-body>.frame iframe{height:100%}
+/* table */
+table.launch{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+table.launch th,table.launch td{padding:9px 12px;text-align:left;border-bottom:1px solid #21262d}
+table.launch th{color:#8b949e;font-weight:500;background:#161b22}
+table.launch tr.rw{cursor:pointer}
+table.launch tr.rw:hover{background:#161b22}
+table.launch td:nth-child(3){font-family:Consolas,monospace}
+.tbl-note{font-size:12px;color:#6e7681;margin-top:8px}
+/* image section */
+figure.img-sec{margin:8px 0 0;max-width:960px}
+figure.img-sec img{max-width:100%;max-height:52vh;display:block;border:1px solid #30363d;border-radius:8px;background:#0d1117}
+figure.img-sec figcaption{font-size:12.5px;color:#8b949e;line-height:1.6;margin-top:8px}
+figure.img-sec figcaption a{color:#58a6ff}
+/* sat section */
+.sat-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 8px}
+.sat-head .nbtn{background:#21262d;color:#c9d1d9;border:1px solid #30363d;border-radius:5px;padding:5px 14px;font-size:12.5px;cursor:pointer}
+.sat-head .nbtn.on{background:#1f6feb;color:#fff;border-color:#1f6feb}
+.sat-head .open{margin-left:auto;font-size:12px}
+.frame{position:relative;border:1px solid #21262d;border-radius:10px;overflow:hidden;background:#0d1117;margin-top:6px}
+.frame iframe{width:100%;height:1250px;border:0;display:block}
+.frame .ph{height:420px;display:flex;align-items:center;justify-content:center;color:#484f58;font-size:13px}
+/* positions world map */
+.pm-wrap{margin-top:10px}
+.posmap{position:relative;border:1px solid #21262d;border-radius:10px;overflow:hidden;background:#0a0f1a}
+.posmap canvas{width:100%;display:block}
+.pm-cap{font-size:12px;color:#6e7681;margin-top:6px}
+.pm-seq{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.pm-seq .nbtn{background:#21262d;color:#c9d1d9;border:1px solid #30363d;border-radius:5px;padding:4px 12px;font-size:12px;cursor:pointer}
+.pm-seq .nbtn.on{background:#9e6a03;color:#fff;border-color:#9e6a03}
+/* 整合展示：KPI 磚、長條圖、表格 */
+.kpis{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.faq details{background:#161b22;border:1px solid #21262d;border-radius:8px;margin:0 0 8px;padding:0 14px}
+.faq summary{cursor:pointer;padding:11px 0;font-size:14px;color:#e6edf3;font-weight:600}
+.faq details[open] summary{border-bottom:1px solid #21262d}
+.faq .faq-a{padding:10px 0 12px;font-size:13px;color:#c9d1d9;line-height:1.75;white-space:pre-line}
+.kpi{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:10px 14px;min-width:120px}
+.kpi .v{font-size:22px;font-weight:600;color:#e6edf3}
+.kpi .l{font-size:11.5px;color:#8b949e;margin-top:2px}
+.kpi.gain .v{color:#3fb950}
+.bars{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:8px 10px;margin-top:8px}
+.bars h5{font-size:12px;color:#8b949e;font-weight:500;margin-bottom:4px}
+.bars canvas{width:100%;display:block}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:800px){.two{grid-template-columns:1fr}}
+table.data{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px}
+table.data th,table.data td{padding:6px 9px;border-bottom:1px solid #21262d;text-align:right}
+table.data th{color:#8b949e;font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data a{color:#58a6ff;text-decoration:none}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font-size:11.5px;background:#21262d;border:1px solid #30363d;border-radius:12px;padding:3px 10px;color:#c9d1d9;text-decoration:none}
+.chip:hover{background:#30363d}
+.note{font-size:11.5px;color:#6e7681;margin-top:6px}
+/* 重訪 / 覆蓋分析（可調仰角門檻） */
+.rvctl{display:flex;gap:22px;flex-wrap:wrap;align-items:center;background:#161b22;border:1px solid #21262d;border-radius:8px;padding:10px 14px;margin:8px 0 12px}
+.rvctl label{font-size:12.5px;color:#8b949e;display:flex;align-items:center;gap:8px}
+.rvctl select{background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:5px;padding:4px 8px;font-size:12.5px}
+.rvctl .rng{flex:1;min-width:260px}
+.rvctl input[type=range]{flex:1;accent-color:#ffd747;min-width:140px}
+.rvctl .rng b{color:#ffd747;font-size:15px;min-width:44px;text-align:right;font-variant-numeric:tabular-nums}
+.rvgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0}
+@media(max-width:800px){.rvgrid{grid-template-columns:1fr}}
+.rvgrid canvas,#wrap canvas[id$="-tl"]{width:100%;display:block;background:#0d1117;border:1px solid #21262d;border-radius:8px}
+.cap{font-size:12px;color:#8b949e;margin:10px 0 4px}
+.skywrap{display:grid;grid-template-columns:minmax(280px,420px) 1fr;gap:14px;align-items:start}
+@media(max-width:800px){.skywrap{grid-template-columns:1fr}}
+.skywrap canvas{width:100%;display:block;background:#0a0f1a;border:1px solid #21262d;border-radius:10px}
+/* 章節總覽磚 */
+.toc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px}
+.toc .tile{display:block;background:#161b22;border:1px solid #21262d;border-radius:10px;padding:16px 16px 14px;text-decoration:none;transition:border-color .15s,transform .15s}
+.toc .tile:hover{border-color:#58a6ff;transform:translateY(-2px)}
+.toc .ic{font-size:26px;margin-bottom:6px}
+.toc .t{font-size:14.5px;font-weight:600;color:#e6edf3}
+.toc .s{font-size:12px;color:#8b949e;margin-top:4px;line-height:1.5}
+/* dots nav */
+#dots{position:fixed;right:70px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:30}
+#dots a{width:10px;height:10px;border-radius:50%;background:#30363d;display:block}
+#dots a.on{background:#58a6ff}
+#dots a:hover{background:#8b949e}
+/* story list (index) */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;padding:50px 0}
+.card{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:20px;text-decoration:none;display:block}
+.card:hover{border-color:#58a6ff}
+.card h4{color:#e6edf3;font-size:16.5px;margin-bottom:8px}
+.card p{color:#8b949e;font-size:13px;line-height:1.6}
+.card .up{color:#6e7681;font-size:11.5px;margin-top:10px}
+@media(max-width:760px){.hero h2{font-size:24px}#dots{display:none}.frame iframe{height:1500px}}
+</style>
+<script>window.STORY_ID = "__STORY_ID__";</script>
+<script src="/static/js/story.js?v=__BUILD__" defer></script>
+</head>
+<body>
+<div id="lang-switcher">
+  <button type="button" class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+  <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+  <button type="button" class="lang-btn" data-lang="ja" onclick="setLang('ja')">日</button>
+</div>
+<div id="hdr">
+  <h1>&#128214; <span id="hdr-title" data-i18n="hdr_title_default">太空態勢敘事</span></h1>
+  <span class="sp"></span>
+  <div class="nav" id="stepnav" style="display:none">
+    <button id="nav-prev" data-i18n-title="nav_prev_title" title="上一步（↑ / PageUp）"><b>&#9650;</b><span data-i18n="nav_prev">上一步</span></button>
+    <button id="nav-next" data-i18n-title="nav_next_title" title="下一步（↓ / PageDown）"><b>&#9660;</b><span data-i18n="nav_next">下一步</span></button>
+  </div>
+  <span class="sp"></span>
+  <a href="/story" id="lnk-list" data-i18n="lnk_list" style="display:none">故事清單</a>
+  <a href="/" data-i18n="nav_home">返回主頁</a>
+</div>
+<div id="dots"></div>
+<div id="wrap"><div style="padding:60px 0;color:#8b949e" data-i18n="loading_text">載入中…</div></div>
+</body>
+</html>

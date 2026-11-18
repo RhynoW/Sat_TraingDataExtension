@@ -25,12 +25,7 @@ type St = State<Arc<AppState>>;
 type Q = Query<HashMap<String, String>>;
 type Resp = Response<Body>;
 
-const UNPORTED_PAGES: [&str; 4] = [
-    "/starlink",
-    "/story",
-    "/orbit-tuner",
-    "/story/{sid}",
-];
+const UNPORTED_PAGES: [&str; 0] = [];
 
 pub fn router(state: Arc<AppState>) -> Router {
     let mut r = Router::new()
@@ -74,6 +69,8 @@ pub fn router(state: Arc<AppState>) -> Router {
     let r = crate::tiles::extend(r);
     let r = crate::mission::extend(r);
     let r = crate::orbit_history::extend(r);
+    let r = crate::story::extend(r);
+    let r = crate::starlink::extend(r);
     let r = crate::update::extend(r);
     r.fallback(fallback).with_state(state)
 }

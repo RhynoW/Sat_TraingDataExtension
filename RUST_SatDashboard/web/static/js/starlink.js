@@ -34,6 +34,7 @@ const I18N = {
     error_prefix: '錯誤：{error}',
     stat_total: '資料庫衛星數', stat_mean: '平均可見顆數', stat_min: '最低可見顆數',
     stat_avail: '幾何可用率', stat_rtt_mean: '平均 RTT 下限', stat_rtt_range: 'RTT 下限範圍',
+    opshell_note: '作業殼層 ≥ {thr} km（{how}），排除 {n} 顆爬升／衰減中', opshell_auto: '自動判定', opshell_fallback: '預設值',
     stat_gaps: '覆蓋空窗次數',
     stat_excluded: '已排除離軌中衛星', stat_excluded_link: '查看即時離軌名單 →',
     lbl_generation: '世代篩選', lbl_dropout: '備援折損模擬', gen_all: '全部',
@@ -70,7 +71,7 @@ const I18N = {
     card1_4_title: '遮蔽模擬',
     card1_4_desc: '點選天空格子描繪地形 / 建物遮蔽，即時計算扣除遮蔽後的幾何可用率與空窗變化。',
     card1_5_title: '傳播延遲下限估計',
-    card1_5_desc: '由最近可見衛星斜距計算光速往返時間（RTT floor）。只計入作業殼層（近地點 ≥ 330 km）的衛星：殼層高度約 340–560 km，衛星在天頂時往返約 2.3–3.7 ms，仰角越低越長；加上閘道路由後實際約 25–45 ms。',
+    card1_5_desc: '由最近可見衛星斜距計算光速往返時間（RTT floor）。只計入作業殼層的衛星（門檻依近地點分布自動判定，本次數值見上方「RTT 下限範圍」卡片）：殼層高度約 340–560 km，衛星在天頂時往返約 2.3–3.7 ms，仰角越低越長；加上閘道路由後實際約 25–45 ms。',
     layer2_title: '第二層 — 進階網路品質分析（重度用戶 / 企業 / 研究者）',
     card2_1_title: '換手頻率估計',
     card2_1_desc: '追蹤「最高仰角衛星」隨時間的切換次數，換手密集時段對應較高的 jitter。',
@@ -104,6 +105,7 @@ const I18N = {
     error_prefix: 'Error: {error}',
     stat_total: 'Satellites in Database', stat_mean: 'Mean Visible Count', stat_min: 'Min Visible Count',
     stat_avail: 'Geometric Availability', stat_rtt_mean: 'Mean RTT Floor', stat_rtt_range: 'RTT Floor Range',
+    opshell_note: 'Shell floor ≥ {thr} km ({how}); {n} raising/decaying excluded', opshell_auto: 'auto-detected', opshell_fallback: 'default',
     stat_gaps: 'Coverage Gap Count',
     stat_excluded: 'Deorbiting Excluded', stat_excluded_link: 'View live deorbit list →',
     lbl_generation: 'Generation', lbl_dropout: 'Redundancy Loss Sim', gen_all: 'All',
@@ -140,7 +142,7 @@ const I18N = {
     card1_4_title: 'Obstruction Simulation',
     card1_4_desc: 'Click sky cells to sketch terrain / building obstruction and instantly compute the resulting change in geometric availability and gaps.',
     card1_5_title: 'Propagation Latency Floor Estimate',
-    card1_5_desc: "Computes speed-of-light round-trip time (RTT floor) from the nearest visible satellite's slant range. Only satellites in operational shells (perigee ≥ 330 km) are counted: shells sit at about 340–560 km, giving ~2.3–3.7 ms at zenith and longer at lower elevations; actual RTT is around 25–45 ms once gateway routing is included.",
+    card1_5_desc: "Computes speed-of-light round-trip time (RTT floor) from the nearest visible satellite's slant range. Only satellites in operational shells are counted (the perigee floor is detected automatically from the perigee distribution; see the RTT Floor Range card above): shells sit at about 340–560 km, giving ~2.3–3.7 ms at zenith and longer at lower elevations; actual RTT is around 25–45 ms once gateway routing is included.",
     layer2_title: 'Layer 2 — Advanced Network Quality Analysis (Power users / Enterprise / Researchers)',
     card2_1_title: 'Handover Frequency Estimate',
     card2_1_desc: "Tracks how often the 'highest-elevation satellite' switches over time; periods of frequent handover correspond to higher jitter.",
@@ -174,6 +176,7 @@ const I18N = {
     error_prefix: 'エラー：{error}',
     stat_total: 'データベース衛星数', stat_mean: '平均可視衛星数', stat_min: '最小可視衛星数',
     stat_avail: '幾何学的可用率', stat_rtt_mean: '平均RTT下限', stat_rtt_range: 'RTT下限範囲',
+    opshell_note: '運用シェル下限 ≥ {thr} km（{how}）、上昇中／降下中 {n} 機を除外', opshell_auto: '自動判定', opshell_fallback: '既定値',
     stat_gaps: 'カバレッジギャップ回数',
     stat_excluded: '離軌中除外数', stat_excluded_link: 'リアルタイム離軌リストを見る →',
     lbl_generation: '世代フィルタ', lbl_dropout: '冗長性損失シミュレーション', gen_all: 'すべて',
@@ -210,7 +213,7 @@ const I18N = {
     card1_4_title: '遮蔽シミュレーション',
     card1_4_desc: '天空セルをクリックして地形・建物の遮蔽を描画し、遮蔽後の幾何学的可用率とギャップの変化をリアルタイムで計算。',
     card1_5_title: '伝搬遅延下限推定',
-    card1_5_desc: '最も近い可視衛星のスラントレンジから光速往復時間（RTT floor）を計算。運用シェル（近地点 330 km 以上）の衛星のみを対象とする。シェル高度は約 340〜560 km で、天頂では往復約 2.3〜3.7 ms、仰角が低いほど長くなる。ゲートウェイ経由の実際のRTTは約25〜45ms。',
+    card1_5_desc: '最も近い可視衛星のスラントレンジから光速往復時間（RTT floor）を計算。運用シェルの衛星のみを対象とする（近地点の下限は近地点分布から自動判定。今回の値は上の「RTT下限範囲」カードに表示）。シェル高度は約 340〜560 km で、天頂では往復約 2.3〜3.7 ms、仰角が低いほど長くなる。ゲートウェイ経由の実際のRTTは約25〜45ms。',
     layer2_title: 'レイヤー2 — 高度なネットワーク品質分析（ヘビーユーザー・企業・研究者向け）',
     card2_1_title: 'ハンドオーバー頻度推定',
     card2_1_desc: '「最高仰角衛星」の時間経過による切替回数を追跡。ハンドオーバーが頻繁な時間帯はジッターが高くなる傾向。',
@@ -411,6 +414,14 @@ function renderStats(s){
       s.min_rtt_floor_ms != null
         ? `${s.min_rtt_floor_ms.toFixed(1)}–${s.max_rtt_floor_ms.toFixed(1)} ms`
         : '—');
+  const shellEl = document.getElementById('st-opshell');
+  if(shellEl){
+    shellEl.textContent = s.min_operational_perigee_km != null
+      ? tpl('opshell_note', {thr: Math.round(s.min_operational_perigee_km),
+                             how: t(s.min_operational_perigee_method === 'auto' ? 'opshell_auto' : 'opshell_fallback'),
+                             n: s.excluded_low_orbit_count || 0})
+      : '';
+  }
   const excludedEl = document.getElementById('st-excluded');
   if(excludedEl){
     const excluded = s.excluded_deorbiting_count || 0;

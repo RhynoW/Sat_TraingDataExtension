@@ -28,6 +28,7 @@ const ELEMS: [&str; 4] = ["sma_km", "inclination_deg", "raan_deg", "argp_deg"];
 pub fn extend(r: Router<Arc<AppState>>) -> Router<Arc<AppState>> {
     r.route("/orbit", get(|| async { page("templates/orbit.html") }))
         .route("/track", get(|| async { page("templates/track.html") }))
+        .route("/orbit-tuner", get(|| async { page("templates/orbit_tuner.html") }))
         .route("/api/orbit/history", get(history))
         .route("/api/orbit/limits", get(limits))
 }
@@ -64,7 +65,7 @@ async fn limits(State(st): State<Arc<AppState>>) -> Json<Value> {
     Json(out)
 }
 
-fn page(path: &str) -> Html<String> {
+pub fn page(path: &str) -> Html<String> {
     let raw = assets::get(path).unwrap_or_default();
     Html(String::from_utf8_lossy(&raw).replace("__BUILD__", env!("CARGO_PKG_VERSION")))
 }

@@ -1,0 +1,148 @@
+{
+  "id": "dia-space-security-2026",
+  "title": "太空安全面臨的挑戰：層疊、競逐與合作（DIA 2026 互動導讀）",
+  "subtitle": "依美國國防情報局（DIA）報告繁中譯稿 01–10 章整理：軌道統計、反太空威脅連續體、中俄伊北韓能力、2040 發展與附錄概念",
+  "hero_note": "原始資料來源：美國國防情報局（DIA）發布報告《太空安全面臨的挑戰：層疊、競逐與合作》（Challenges to Security in Space: Congestion, Competition, and Cooperation），[https://www.dia.mil/Military-Power-Publications/](https://www.dia.mil/Military-Power-Publications/)。繁中譯本 PDF：[下載](/static/docs/Challenges_Security_Space_2026_zh-TW.pdf)。本頁為學習用導讀，非 DIA 官方出版品，數字以原報告為準。",
+  "updated": "2026-10-28",
+  "sections": [
+    {
+      "type": "table",
+      "title": "原始資料來源",
+      "anchor": "source",
+      "dur": 4,
+      "columns": [
+        "項目",
+        "內容"
+      ],
+      "rows": [
+        [
+          "發布單位",
+          "美國國防情報局（Defense Intelligence Agency, DIA）"
+        ],
+        [
+          "報告名稱",
+          "《太空安全面臨的挑戰：層疊、競逐與合作》（Challenges to Security in Space: Congestion, Competition, and Cooperation），2026 年版"
+        ],
+        [
+          "原文網址",
+          "[https://www.dia.mil/Military-Power-Publications/](https://www.dia.mil/Military-Power-Publications/)"
+        ],
+        [
+          "繁中譯本 PDF",
+          "[Challenges_Security_Space_2026_zh-TW.pdf（115 頁，含 12 幅中文重繪圖表）](/static/docs/Challenges_Security_Space_2026_zh-TW.pdf)；非官方譯本，如有歧義以英文原版為準"
+        ],
+        [
+          "本頁性質",
+          "依繁中譯稿 01–10 章整理的互動式導讀；非官方出版品，引用數字請回查原報告及其註釋"
+        ]
+      ]
+    },
+    {
+      "type": "toc",
+      "title": "章節導覽",
+      "anchor": "toc",
+      "dur": 3,
+      "items": [
+        {
+          "label": "互動導讀（全 10 章）",
+          "anchor": "guide"
+        },
+        {
+          "label": "章節重點一覽",
+          "anchor": "chapters"
+        },
+        {
+          "label": "延伸閱讀",
+          "anchor": "related"
+        }
+      ]
+    },
+    {
+      "type": "embed",
+      "title": "互動導讀（全 10 章）",
+      "anchor": "guide",
+      "dur": 10,
+      "url": "/static/docs/dia_space_security_2026.html",
+      "height": 1200
+    },
+    {
+      "type": "table",
+      "title": "章節重點一覽",
+      "anchor": "chapters",
+      "dur": 6,
+      "columns": [
+        "章",
+        "主題",
+        "重點"
+      ],
+      "rows": [
+        [
+          "01",
+          "定義太空",
+          "2026/6 各軌道衛星：LEO 15,058、GEO 572、MEO 271、HEO 22"
+        ],
+        [
+          "02",
+          "剝奪進入太空",
+          "反太空威脅連續體：可逆（電子攻擊、拒止欺騙）→ 暫時或永久（定向能、網路、軌道）→ 不可逆（動能、地面站攻擊、核爆）"
+        ],
+        [
+          "03",
+          "中國",
+          "發射 22→93 次（2016→2025）；ISR 衛星 510+；國網 177、G60 238 顆；TJS 系列 27 顆"
+        ],
+        [
+          "04",
+          "俄羅斯",
+          "Nudol 2021 年 470 km ASAT 測試；Cosmos 2543 投射物；Peresvet 雷射；發展可攜核武衛星"
+        ],
+        [
+          "05",
+          "伊朗與北韓",
+          "伊朗 2020 年後 7 次國產火箭成功；北韓萬里鏡一號為唯一運作衛星"
+        ],
+        [
+          "06",
+          "至 2040 年",
+          "35,000+ 編目物體、60–90 萬未編目致命碎片；神龍太空飛機 276/268 天任務；VLEO 楚天星座"
+        ],
+        [
+          "07",
+          "展望",
+          "更擁擠、更競爭；中俄反太空與 SI 應用持續升級"
+        ],
+        [
+          "08–09",
+          "附錄",
+          "衛星指管三段架構、SDA 感測器、RPO 用途；上行／下行干擾、反太空手段與縮寫表"
+        ],
+        [
+          "10",
+          "範圍與摘要",
+          "非機密概覽；執行摘要五重點"
+        ]
+      ],
+      "note": "資料來源：DIA《太空安全面臨的挑戰：層疊、競逐與合作》，[https://www.dia.mil/Military-Power-Publications/](https://www.dia.mil/Military-Power-Publications/)"
+    },
+    {
+      "type": "table",
+      "title": "延伸閱讀",
+      "anchor": "related",
+      "dur": 3,
+      "columns": [
+        "StoryMap",
+        "關聯"
+      ],
+      "rows": [
+        [
+          "[中國軍事／情報衛星與 SSA](/story/prc-military-isr-ssa)",
+          "對應 03 章 ISR 與 GEO 軌道威脅（TJS、實踐系列）"
+        ],
+        [
+          "[SSA 與 SDA：SpaceX→NRO](/story/ssa-sda-spacex-nro)",
+          "對應 08 章 SDA 定義與感測概念"
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+
+<script>/* HF 代理暫時性 502/503/504：同源 GET fetch 自動重試 3 次（0.8/1.6/2.4 s） */(function(){var f=window.fetch;if(!f)return;window.fetch=function(input,init){var m=((init&&init.method)||(input&&input.method)||'GET').toUpperCase();var u=typeof input==='string'?input:(input&&input.url)||'';var same=u.charAt(0)==='/'||u.indexOf(location.origin)===0;if(m!=='GET'||!same)return f.apply(this,arguments);var self=this,args=arguments;return new Promise(function(res,rej){(function go(n){f.apply(self,args).then(function(r){if((r.status===502||r.status===503||r.status===504)&&n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{res(r);}},function(e){if(n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{rej(e);}});})(0);});};}());</script><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>軌道六參數調整器 — SatDashboard</title>
+<style>
+:root{--bg:#0A0D13;--panel:#12161f;--line:rgba(255,255,255,.09);--ink:#dfe6f0;--muted:#8b96a8;
+      --prim:#64DD17;--sec:#35C6F4;--crit:#FF5C4E;--mono:"Consolas","Courier New",monospace}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.65 "Segoe UI","Microsoft JhengHei",sans-serif}
+.wrap{max-width:920px;margin:0 auto;padding:28px 20px 60px}
+.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+h1{font-size:22px;margin:0}
+.top a{color:var(--sec);text-decoration:none;font-family:var(--mono);font-size:12px}
+.sub{color:var(--muted);font-size:12.5px;margin:0 0 22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:0 0 16px}
+.card h2{font-size:15px;margin:0 0 8px;color:var(--prim)}
+.card p{margin:6px 0;color:var(--ink);font-size:13px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.grid{grid-template-columns:1fr}}
+.elem{background:rgba(100,221,23,.06);border:1px solid rgba(100,221,23,.25);border-radius:9px;padding:10px 14px}
+.elem b{color:var(--prim);font-family:var(--mono);font-size:12.5px}
+.elem p{margin:4px 0 0;font-size:12.5px;color:var(--ink)}
+.btn{display:inline-block;background:var(--prim);color:#0a1a02;border-radius:8px;padding:9px 16px;
+     font-family:var(--mono);font-size:13px;font-weight:700;text-decoration:none;margin:10px 10px 2px 0}
+.btn.alt{background:var(--sec);color:#03202b}
+.btn:hover{filter:brightness(1.08)}
+.note{color:var(--muted);font-size:11.5px;font-family:var(--mono);margin-top:10px}
+h3{font-size:13.5px;margin:14px 0 6px;color:var(--sec)}
+#lang-switcher{display:inline-flex;gap:4px;margin-left:auto}
+.lang-btn{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:6px;
+  padding:3px 9px;font-family:var(--mono);font-size:11px;cursor:pointer}
+.lang-btn.active{background:var(--sec);color:#03202b;border-color:var(--sec)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <h1>&#128225; <span data-i18n="page_title">軌道六參數調整器</span></h1>
+    <a href="/" data-i18n="nav_home">← 地球儀主頁</a>
+    <span id="lang-switcher">
+      <button type="button" class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+      <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button type="button" class="lang-btn" data-lang="ja" onclick="setLang('ja')">日</button>
+    </span>
+  </div>
+  <p class="sub" data-i18n="page_sub">互動調整古典軌道六要素，即時在 3D 地球上看到軌道形狀變化，並自動產生對應的
+    STK Connect 指令——概念參考自 AGI 官方 Orbit Tuner 教學插件，重新以本平台既有 Cesium 場景實作。</p>
+
+  <div class="card">
+    <h2 data-i18n="what_title">這是什麼？</h2>
+    <p data-i18n="what_body">克卜勒軌道由六個獨立的「古典軌道要素」完整描述：三個決定橢圓形狀與大小
+      （半長軸 a、離心率 e），三個決定橢圓在慣性空間中的方位（傾角 i、升交點赤經 Ω、近地點幅角 ω），
+      以及一個描述衛星目前沿軌道的位置（真近點角 ν）。拖動任一滑桿，即可直接感受每個參數對軌道形狀、
+      朝向與衛星覆蓋範圍的影響。</p>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="elems_title">六個參數</h2>
+    <div class="grid" id="elem-grid"></div>
+  </div>
+
+  <div class="card">
+    <h2 data-i18n="connect_title">STK Connect 指令對照</h2>
+    <p data-i18n="connect_body">面板同步將目前六參數換算為可直接貼到 STK Connect 主控台的
+      <code>SetState .../Classical TwoBody ...</code> 指令字串，方便跨工具驗證或延伸到 STK 場景中使用。</p>
+  </div>
+
+  <a class="btn" href="/?open=orbit6" data-i18n="cta_open">▶ 開啟互動調整面板</a>
+  <a class="btn alt" href="/" data-i18n="cta_home">回主頁瀏覽 3D 地球儀</a>
+
+  <p class="note" data-i18n="method_note">本功能為教育展示用途：採二體克卜勒理想軌道數學（非 SGP4 攝動傳播），
+    目的是呈現軌道要素的幾何意義，不代表任何實際衛星的精確星曆。</p>
+</div>
+<script>
+"use strict";
+const OT_I18N = {
+  zh: {
+    page_title: "軌道六參數調整器",
+    nav_home: "← 地球儀主頁",
+    page_sub: "互動調整古典軌道六要素，即時在 3D 地球上看到軌道形狀變化，並自動產生對應的\n    STK Connect 指令——概念參考自 AGI 官方 Orbit Tuner 教學插件，重新以本平台既有 Cesium 場景實作。",
+    what_title: "這是什麼？",
+    what_body: "克卜勒軌道由六個獨立的「古典軌道要素」完整描述：三個決定橢圓形狀與大小\n      （半長軸 a、離心率 e），三個決定橢圓在慣性空間中的方位（傾角 i、升交點赤經 Ω、近地點幅角 ω），\n      以及一個描述衛星目前沿軌道的位置（真近點角 ν）。拖動任一滑桿，即可直接感受每個參數對軌道形狀、\n      朝向與衛星覆蓋範圍的影響。",
+    elems_title: "六個參數",
+    connect_title: "STK Connect 指令對照",
+    connect_body: "面板同步將目前六參數換算為可直接貼到 STK Connect 主控台的 SetState .../Classical TwoBody ... 指令字串，方便跨工具驗證或延伸到 STK 場景中使用。",
+    cta_open: "▶ 開啟互動調整面板",
+    cta_home: "回主頁瀏覽 3D 地球儀",
+    method_note: "本功能為教育展示用途：採二體克卜勒理想軌道數學（非 SGP4 攝動傳播），\n    目的是呈現軌道要素的幾何意義，不代表任何實際衛星的精確星曆。",
+    elems: [
+      ["半長軸 a", "衛星橢圓軌道最長半徑，決定軌道大小與週期；數值越大，軌道越高、繞地球一圈時間越長。"],
+      ["離心率 e", "軌道偏離正圓的程度，0＝正圓、越接近1＝越扁的橢圓；e 越大，近地點與遠地點高度差越懸殊。"],
+      ["傾角 i", "軌道面與地球赤道面的夾角；0°＝赤道軌道，90°＝極軌，可決定衛星覆蓋的緯度範圍。"],
+      ["升交點赤經 Ω", "軌道面與春分點方向的夾角，決定軌道面在慣性空間中朝哪個方向展開。"],
+      ["近地點幅角 ω", "近地點在軌道面內、相對升交點的角度，決定橢圓軌道最近點朝向地球的哪個方位。"],
+      ["真近點角 ν", "衛星目前在軌道上的位置角度（相對近地點量測），拖動可模擬衛星沿軌道移動。"],
+    ],
+  },
+  en: {
+    page_title: "Orbit Tuner",
+    nav_home: "← Globe Home",
+    page_sub: "Interactively adjust the six classical Keplerian elements and watch the orbit shape change on the 3D globe in real time, with a matching\n    STK Connect command generated automatically — inspired by AGI's official Orbit Tuner tutorial plugin, reimplemented on this platform's existing Cesium scene.",
+    what_title: "What is this?",
+    what_body: "A Keplerian orbit is fully described by six independent \"classical orbital elements\": two that define\n      the ellipse's shape and size (semi-major axis a, eccentricity e), three that define the ellipse's orientation\n      in inertial space (inclination i, RAAN Ω, argument of perigee ω), and one that describes the satellite's\n      current position along the orbit (true anomaly ν). Drag any slider to directly feel how each parameter\n      affects the orbit's shape, orientation, and ground coverage.",
+    elems_title: "The Six Elements",
+    connect_title: "STK Connect Command Mapping",
+    connect_body: "The panel simultaneously converts the current six elements into a SetState .../Classical TwoBody ... command string ready to paste into the STK Connect console, for cross-tool verification or extending into an STK scenario.",
+    cta_open: "▶ Open the Interactive Tuner",
+    cta_home: "Back to the 3D Globe Home",
+    method_note: "This feature is for educational demonstration: it uses idealized two-body Keplerian math (not SGP4 perturbation\n    propagation), meant to convey the geometric meaning of the orbital elements, not the precise ephemeris of any real satellite.",
+    elems: [
+      ["Semi-major Axis a", "Half of the longest diameter of the elliptical orbit; determines orbit size and period — larger means a higher, slower orbit."],
+      ["Eccentricity e", "How much the orbit deviates from a perfect circle. 0 = circular, closer to 1 = more elongated ellipse; larger e means a bigger gap between perigee and apogee altitude."],
+      ["Inclination i", "The angle between the orbital plane and Earth's equatorial plane. 0° = equatorial orbit, 90° = polar orbit; determines the latitude range the satellite can cover."],
+      ["RAAN Ω", "The angle between the orbital plane and the vernal equinox direction; determines which way the orbital plane faces in inertial space."],
+      ["Argument of Perigee ω", "The angle, measured within the orbital plane, from the ascending node to perigee; determines which side of Earth the closest point of the ellipse faces."],
+      ["True Anomaly ν", "The satellite's current position angle along the orbit, measured from perigee; drag it to simulate the satellite moving along its orbit."],
+    ],
+  },
+  ja: {
+    page_title: "軌道六要素チューナー",
+    nav_home: "← グローブホームへ",
+    page_sub: "古典軌道六要素をインタラクティブに調整し、3D地球儀上で軌道形状がリアルタイムに変化する様子を確認できます。対応する\n    STK Connect コマンドも自動生成されます——AGI公式のOrbit Tunerチュートリアルプラグインの発想を、本プラットフォーム既存のCesiumシーン上で再実装したものです。",
+    what_title: "これは何か？",
+    what_body: "ケプラー軌道は6つの独立した「古典軌道要素」で完全に記述されます：楕円の形状と大きさを決める2つ\n      （軌道長半径 a、離心率 e）、慣性空間内での楕円の向きを決める3つ（軌道傾斜角 i、昇交点赤経 Ω、近地点引数 ω）、\n      そして衛星が軌道上のどこにいるかを表す1つ（真近点角 ν）です。スライダーを動かすことで、各パラメータが\n      軌道の形状・向き・カバー範囲にどう影響するかを直接体感できます。",
+    elems_title: "6つのパラメータ",
+    connect_title: "STK Connect コマンド対応",
+    connect_body: "パネルは現在の六要素を STK Connect コンソールに直接貼り付けられる SetState .../Classical TwoBody ... コマンド文字列に自動変換します。他ツールとの相互検証やSTKシナリオへの展開に活用できます。",
+    cta_open: "▶ インタラクティブ調整パネルを開く",
+    cta_home: "3D地球儀のホームに戻る",
+    method_note: "本機能は教育目的のデモンストレーションです：二体ケプラー理想軌道の数学を用いており（SGP4摂動伝播ではありません）、\n    軌道要素の幾何学的な意味を伝えることが目的で、実在する衛星の精密な暦を表すものではありません。",
+    elems: [
+      ["軌道長半径 a", "楕円軌道の最長半径。軌道の大きさと周期を決める。値が大きいほど軌道は高く、公転周期は長くなる。"],
+      ["離心率 e", "軌道が正円からどれだけ外れているかを示す指標。0＝正円、1に近いほど扁平な楕円になり、近地点と遠地点の高度差が大きくなる。"],
+      ["軌道傾斜角 i", "軌道面と地球赤道面のなす角。0°＝赤道軌道、90°＝極軌道。衛星がカバーできる緯度範囲を決める。"],
+      ["昇交点赤経 Ω", "軌道面と春分点方向のなす角。軌道面が慣性空間内でどちらを向いているかを決める。"],
+      ["近地点引数 ω", "昇交点から近地点までを軌道面内で測った角度。楕円軌道の最も低い点が地球のどちら側を向くかを決める。"],
+      ["真近点角 ν", "衛星が軌道上で現在どこにいるかを示す角度（近地点からの角度）。動かすと軌道上を移動する様子を模擬できる。"],
+    ],
+  },
+};
+let LANG = localStorage.getItem('starlink_lang') || 'zh';
+if (!OT_I18N[LANG]) LANG = 'zh';
+function t(key) {
+  const d = OT_I18N[LANG] || OT_I18N.zh;
+  return (key in d) ? d[key] : (OT_I18N.zh[key] !== undefined ? OT_I18N.zh[key] : key);
+}
+function renderElems() {
+  const grid = document.getElementById('elem-grid');
+  grid.innerHTML = '';
+  t('elems').forEach(([name, desc]) => {
+    const div = document.createElement('div');
+    div.className = 'elem';
+    div.innerHTML = `<b>${name}</b><p>${desc}</p>`;
+    grid.appendChild(div);
+  });
+}
+function setLang(lang) {
+  if (!OT_I18N[lang]) return;
+  LANG = lang;
+  localStorage.setItem('starlink_lang', lang);
+  document.documentElement.lang = {zh: 'zh-Hant', en: 'en-US', ja: 'ja-JP'}[lang] || 'zh-Hant';
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  renderElems();
+}
+document.addEventListener('DOMContentLoaded', () => setLang(LANG));
+</script>
+</body>
+</html>

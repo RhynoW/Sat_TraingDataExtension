@@ -1,0 +1,348 @@
+{
+  "id": "diting-rf-sensing-constellation",
+  "title": "從「看地球」到「聽地球」：商用射頻感知星座「諦聽」首發查核",
+  "subtitle": "三星編隊 TDOA／FDOA 定位原理、與光學／SAR 遙感的本質差異，以及它跟本專案 TLE 機動偵測工作的界線",
+  "hero_note": "本篇為公開情資背景整理，非本系統之獨立觀測或運算結果。任務事實整理自長光衛星／吉林一號公眾號原始公告（經新浪財經轉載）、泰伯網、財聯社三則公開報導（詳見末節「⑥ 資料來源」），本系統未獨立查證其中定位精度、頻段覆蓋等技術指標是否屬實——原始報導本身亦未揭露這些數字。標示準則：[公開報導]＝媒體轉述並附原始網址、[通用技術原理]＝該類系統之公開技術路徑一般性說明、[誠實界定]＝本系統對自身能力範圍的聲明、[TLE-derived]＝本系統以公開 TLE 資料庫獨立查核之結果。本篇⑦⑧⑨節之軌道資料為本系統唯一之獨立技術查核，其餘敘述仍以公開報導為準，亦不對任一方之技術能力或意圖做出判斷。",
+  "updated": "2026-09-30",
+  "sections": [
+    {
+      "type": "text",
+      "title": "導言：射頻感知，一種不同於「看」的偵察維度",
+      "dur": 5,
+      "anchor": "intro",
+      "body": "2026 年 9 月 20 日，中國商業火箭「力箭一號遙十八」以一箭九星方式發射，其中三顆「諦聽 01 組 A／B／C」衛星，據公開報導稱為中國首個以三星編隊方式開展商用天基射頻數據採集的衛星星座。光學衛星回答的是「那裡有什麼」，射頻感知衛星回答的則是「那裡正在發射什麼訊號」——這是情報維度上的差異，而非單純的解析度或精度比較。本篇整理公開報導所述之任務事實與技術原理，並清楚標明本系統未能查證的部分，以及此案例與本專案自身工作範圍的界線。"
+    },
+    {
+      "type": "table",
+      "title": "① 發射與星座基本事實 [公開報導]",
+      "dur": 8,
+      "anchor": "facts",
+      "columns": [
+        "項目",
+        "內容"
+      ],
+      "rows": [
+        [
+          "發射時間",
+          "2026-09-20 12:03（北京時間）"
+        ],
+        [
+          "發射地點",
+          "東風商業航天創新試驗區"
+        ],
+        [
+          "運載火箭",
+          "力箭一號遙十八（中科宇航研製，第 16 次飛行，累計已送入 121 顆衛星）"
+        ],
+        [
+          "發射方式",
+          "一箭九星"
+        ],
+        [
+          "核心酬載",
+          "諦聽 01 組 A／B／C 星（三星編隊）"
+        ],
+        [
+          "同箭其他衛星",
+          "秦嶺衛星 01／02 星、浦江四號、鵬城首發星、超智算一號、雲霄探路者等"
+        ],
+        [
+          "星座抓總設計與運營",
+          "天津星瞰九州科技有限公司（成立於 2023 年）"
+        ],
+        [
+          "衛星研製",
+          "長光衛星"
+        ],
+        [
+          "星座首期規劃",
+          "據報導規劃 2029 年前建置 60 顆低軌小衛星，目前為技術試驗驗證的早期階段"
+        ],
+        [
+          "最新融資",
+          "據報導 2026 年 8 月完成新一輪（Pre-A+ 輪）融資"
+        ],
+        [
+          "尚未公開之技術指標",
+          "頻段覆蓋範圍、定位精度、重訪時間、數據更新頻率——截至本篇更新日期均未見官方公開數字"
+        ]
+      ],
+      "note": "本表整理自長光衛星／吉林一號公眾號原始公告（經新浪財經轉載）、泰伯網、財聯社三則公開報導（原文與網址見末節「⑥ 資料來源」），本系統未獨立查證，請以原始報導來源為準。"
+    },
+    {
+      "type": "table",
+      "title": "② 射頻感知 vs 光學／SAR：回答的是不同的問題",
+      "dur": 8,
+      "anchor": "comparison",
+      "columns": [
+        "維度",
+        "光學遙感",
+        "合成孔徑雷達（SAR）",
+        "射頻感知（諦聽類系統）"
+      ],
+      "rows": [
+        [
+          "感測物理量",
+          "反射之可見光／紅外光",
+          "主動發射微波、接收地表後向散射",
+          "地面發射源之被動電磁輻射"
+        ],
+        [
+          "回答的問題",
+          "那裡有什麼、外形如何",
+          "地表結構／形變如何",
+          "誰在發射、什麼頻段、從哪裡發射"
+        ],
+        [
+          "全天候能力",
+          "否（受雲層與光照限制）",
+          "是",
+          "是（電磁波可穿透雲雨）"
+        ],
+        [
+          "典型商業產品",
+          "正射影像、分類圖、變化偵測圖",
+          "地表形變圖、船舶偵測",
+          "發射源座標、頻譜事件清單、訊號分類報告"
+        ]
+      ],
+      "note": "一艘船可以關閉 AIS，雲層也可能使光學衛星無法取得清晰畫面；但只要船上的雷達或通信設備仍在運作，就可能持續釋放電磁訊號。射頻感知鎖定的正是「設備仍在工作」的痕跡，而非外形本身。"
+    },
+    {
+      "type": "text",
+      "title": "③ 三星編隊如何定位：TDOA／FDOA 多邊定位原理 [通用技術原理]",
+      "dur": 12,
+      "anchor": "principle",
+      "body": "單顆衛星只能判斷「某片區域出現了訊號」，無法精確定位發射源；若三顆衛星以受控幾何隊形同時接收同一訊號，則可比對訊號到達各星的細微差異來解算位置，相當於把地面無線電測向站搬上太空、且不受國界與地形限制。國際同類商用系統（如美商 HawkEye 360）公開採用的技術路徑可作為理解框架：TDOA（到達時差）——訊號到達三顆衛星的時間存在微小差異，任兩星的時間差對應一條「等時差雙曲線」（雙曲面與地球表面之交線），三顆衛星可組出兩條互相獨立的雙曲線，其交點即為發射源的概略位置，此法要求衛星間時鐘達奈秒級同步精度；FDOA（到達頻差／都卜勒頻差）——衛星以每秒約 7 公里以上相對地面運動，對同一發射源觀測到的都卜勒頻移因各星相對速度矢量不同而有差異，任兩星頻差同樣對應一條「等頻差曲線」（幾何上近似另一族雙曲線），可提供獨立於 TDOA 之第二組約束，尤其有助於解析窄頻訊號因時差量測模糊（ambiguity）而產生的多重候選解。實務上，地面處理鏈會將 TDOA 與 FDOA 聯合解算，輸出以「95% 信賴橢圓」表示之座標不確定範圍，橢圓大小（即定位精度）取決於訊號時長、頻寬、訊噪比、以及衛星相對發射源之幾何構型優劣（GDOP，Geometric Dilution of Precision）——幾何構型愈接近共線，解算誤差愈大。值得注意的是，多星編隊 TDOA／FDOA 並非唯一技術路徑：另一類公開商用系統（如法商 Unseenlabs）採「單星都卜勒」（monosatellite FDOA-only）路徑，僅憑單顆衛星在單次過境（pass）期間持續觀測同一訊號源的都卜勒頻移曲線即可解算位置，不需衛星編隊與星間時鐘同步，但需要較長的單次觀測窗口，且理論上無法如 TDOA 般於單一時間點瞬時定位。三星編隊與單星都卜勒是兩種不同的工程權衡（編隊複雜度與同步精度需求 vs. 觀測時間與單星妥善率），詳見下節商業模式比較。誠實註記：截至本篇更新日期，官方尚未公開「諦聽」的具體定位精度、衛星間同步方式或訊號處理細節；以上原理僅為此類系統的通用技術描述，並非對「諦聽」實際性能或內部架構之證實。"
+    },
+    {
+      "type": "image",
+      "title": "圖：雙曲線定位原理示意（Hyperbolic Navigation）",
+      "dur": 4,
+      "anchor": "img-hyperbolic-nav",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/9/91/Hyperbolic_Navigation.svg",
+      "alt": "三個接收站 A、B、C 與發射源之間依時間差構成雙曲線定位示意圖",
+      "caption": "三個位置已知的接收站 A、B、C 接收同一訊號源，任兩站之時間差對應一條等時差雙曲線，多條雙曲線之交點即為訊號源位置——此為③節 TDOA 原理之通用幾何示意圖，非「諦聽」或任何特定系統之實際架構圖。來源：[Wikipedia – Hyperbolic navigation](https://en.wikipedia.org/wiki/Hyperbolic_navigation)（CC0 公有領域，作者 Cosmia Nebula）"
+    },
+    {
+      "type": "image",
+      "title": "圖：TDOA 多站幾何示意（Surveillance System TDOA Geometry）",
+      "dur": 4,
+      "anchor": "img-tdoa-geometry",
+      "src": "https://upload.wikimedia.org/wikipedia/commons/1/1c/TDOA_Geometry.png",
+      "alt": "發射源與多個接收站之距離差構成之 TDOA 幾何示意圖",
+      "caption": "發射源與多個接收站間之距離差（偽距差）構成等時差雙曲線之幾何關係，為③節「雙曲線交點解算位置」原理的另一種常見教科書畫法。來源：[Wikipedia – Pseudo-range multilateration](https://en.wikipedia.org/wiki/Pseudo-range_multilateration)（CC BY-SA 3.0／GFDL，作者 TinyPebble）"
+    },
+    {
+      "type": "text",
+      "title": "④ 商業模式與產業脈絡 [公開報導]",
+      "dur": 6,
+      "anchor": "business",
+      "body": "傳統遙感的商業產品是「影像」，射頻感知類星座的產品形態則轉為「頻譜事件清單」「發射源座標」「訊號分類報告」，多採訂閱制／API 供應，與國際同類商用系統之商業模式相近。據公開報導，此類系統之應用場景設想包括無線電管理、海洋船舶監測、公共安全、鐵路交通與應急救援等，反映商業航天競爭正從「造更多衛星」轉向「賣更多種類的數據」。惟「諦聽 01 組」目前仍處於技術試驗驗證的早期階段，前述應用場景屬產業規劃層次之公開說法，尚待後續在軌測試與組網運行結果驗證。"
+    },
+    {
+      "type": "table",
+      "title": "⑤ 產業脈絡比較：HawkEye 360 vs Unseenlabs [公開報導]",
+      "dur": 8,
+      "anchor": "industry-comparison",
+      "columns": [
+        "比較維度",
+        "HawkEye 360（美國）",
+        "Unseenlabs（法國）"
+      ],
+      "rows": [
+        [
+          "主要焦點",
+          "全域陸／空／海 RF 地理定位，官方自述為「全球領先之國防科技公司」，核心客群為國防與情報單位",
+          "以海洋領域監控（MDA）為核心，專精偵測關閉或偽造 AIS 訊號的「暗船」；第二代衛星規劃擴展至陸域與太空頻譜監測"
+        ],
+        [
+          "技術路徑",
+          "三星編隊，單次過境內聯合解算 TDOA＋FDOA，並結合盲相干積分（blind coherent integration）與機器學習分析",
+          "單星都卜勒（monosatellite FDOA-only），單次過境內以頻移曲線定位，不需編隊"
+        ],
+        [
+          "衛星規模與平台",
+          "微衛星三星編隊集群；截至可查證之最新公開資訊（2026 年 3 月）已發射至少 14 個集群（含 Pathfinder），一般報導常引述約 30～36 顆在軌；RF 酬載自研，衛星平台由加拿大多倫多大學太空飛行實驗室（UTIAS-SFL）建造",
+          "單星獨立運作；不同時間點公開資訊介於 21～23 顆（2026 年），規劃每年再增 3～6 顆；RF 酬載自研（法國），衛星本體（8U CubeSat）由丹麥 GOMSpace 建造；規劃中新一代衛星重量將提升至約 150 kg 以擴大頻譜監測範圍"
+        ],
+        [
+          "頻譜覆蓋",
+          "公開技術文件多引述涵蓋 VHF 至 Ku 頻段（約 30～70 MHz 至 18 GHz），含 L／S／X 頻段等寬頻覆蓋",
+          "以船載導航雷達之 S／X 頻段為主，公司宣稱新一代衛星將擴大至約 1～10 GHz"
+        ],
+        [
+          "重訪與委派時效（廠商自述行銷數字，未經本系統獨立查證）",
+          "全星座部署後全球重訪目標約 45 分鐘至 1 小時（不同時間點公開資訊略有差異）",
+          "目前約 3 小時，官方目標為 2026 年底前隨衛星數增加縮短至 1 小時內"
+        ],
+        [
+          "資料處理與出口管制",
+          "雲端架構，提供 API 存取；因屬美國國防相關技術，涉及美國《國際武器貿易條例》（ITAR）管制考量",
+          "官方明確宣稱「ITAR-free」，資料處理限定於法國本土伺服器與團隊，涉及政府客戶之資料外送須先取得法國政府出口許可，以此作為主權自主之市場訴求"
+        ],
+        [
+          "資本／策略夥伴",
+          "早期投資人與策略夥伴含 Airbus、Raytheon、Esri 等；Airbus 並代理其 RF 數據產品於歐洲市場銷售",
+          "與法國 Airbus Defence and Space 合作角逐法國國防部之 SIGINT 衛星標案——與 HawkEye 360 之 Airbus 合作屬不同性質（一為股權／通路夥伴，一為政府標案合作）"
+        ],
+        [
+          "上市狀態",
+          "已於 2026 年 5 月在紐約證交所掛牌（代號 HAWK），IPO 募資約 4.16 億美元",
+          "私人公司，未上市，屬法國新創"
+        ],
+        [
+          "主要客群",
+          "美國國防／情報／國安機構與盟國政府為主（2025 年美國客戶約占營收 61%），另涉海事商業客戶",
+          "法國海軍、加拿大／日本等政府機關、海事保險、航運監理、離岸能源業者"
+        ]
+      ],
+      "note": "本表採可查證之最新公開來源、不代表官方即時在軌狀態；「重訪與委派時效」列之數字源自廠商自身行銷資料，本系統未能獨立驗證其實際運作表現。本表用於說明國際同類商用射頻感知系統存在至少兩種不同的技術路徑（多星編隊 TDOA／FDOA vs 單星都卜勒）與截然不同的市場定位（國防情報 vs 海事主權自主），並非對「諦聽」與兩者之技術淵源或授權關係做出任何判斷——「諦聽 01 組 A／B／C」採三星編隊之公開描述，在架構形式上與 HawkEye 360 路徑較為相似，但兩者之訊號處理細節、定位精度等技術指標均未見官方公開比較數字，本系統亦未獨立查證。資料來源詳見末節「⑩ 資料來源」。"
+    },
+    {
+      "type": "text",
+      "title": "⑥ 誠實界定：這跟本專案有什麼關係、沒有什麼關係 [誠實界定]",
+      "dur": 6,
+      "anchor": "boundary",
+      "body": "本專案（機動偵測／SSA）處理的是公開 TLE 的軌道行為，與「諦聽」處理的電磁頻譜訊號是完全不同的資料維度與感測手段，兩者沒有技術上的直接交集，本專案也不具備射頻情資之採集或分析能力。收錄本篇僅為讓 SSA／SDA 的視野更完整：軌道位置（TLE／精密星曆）、軌道機動（本專案主題）、電磁頻譜活動（諦聽這類系統）是三種可互補、但彼此獨立的情報維度，實務上常需多源融合才能提高判讀信心。本篇內容整理自使用者提供之公開報導／分析文字，屬外部獨立報導，非本專案之查證或研究成果，亦與本專案在台灣所做之 TLE 機動偵測工作性質不同、互不隸屬。"
+    },
+    {
+      "type": "text",
+      "title": "⑦ 誠實查核：這批衛星在系統資料庫裡，但官方尚未逐星公開命名 [TLE-derived]",
+      "dur": 8,
+      "anchor": "tle-audit",
+      "body": "本系統以自有之公開 TLE 資料庫（raw_tle_archive）獨立查核：力箭一號遙十八確實已編目為 NORAD 100780–100789（國際編號 COSPAR 2026-220A ～ 2026-220K），共 10 個物體，首見 epoch 均為 2026-09-20，與本篇①節所述之發射時間、地點完全吻合。其中 100789（2026-220K）半長軸約 6,763 km、離心率約 0.022，明顯低於且偏心於其餘物體，目錄名稱記載為「ZK-1A／RB」（力箭一號／Kinetica-1 火箭之通用代號），對應為運載火箭末級本體；其餘 9 個物體（100780–100788，COSPAR 2026-220A～H、J，依國際慣例略過字母 I）軌道高度約 533～535 km、傾角約 97.54°，為太陽同步軌道，數量與軌道面皆與「一箭九星」相符。惟截至本篇更新日期，Space-Track／美國太空軍 18th SDS 官方目錄之物體名稱欄位仍為佔位符「OBJECT A」至「OBJECT J」，尚未逐一公開賦予真實衛星名稱——本系統無法從軌道資料本身判斷這 9 顆之中，哪 3 顆具體是「諦聽 01 組 A／B／C」，哪些又是秦嶺衛星 01／02、浦江四號、鵬城首發星、超智算一號或雲霄探路者。因此下方⑧⑨兩節呈現的是這 9 顆酬載的整批軌道資料，並非單獨鎖定諦聽三星。這項限制本身就是本篇想誠實呈現的重點：公開 TLE 能確認「這批衛星存在、目前在哪裡、軌道如何變化」，卻無法回答「哪個 NORAD 編號對應哪個任務名稱」——這需要等待官方後續編目更新，或其他非本系統掌握之來源提供逐星對應。"
+    },
+    {
+      "type": "sat",
+      "title": "⑧ 9 顆酬載的軌道根數時序：半長軸／傾角／RAAN／近地點幅角 [TLE-derived]",
+      "dur": 14,
+      "anchor": "orbit-elements",
+      "norads": [
+        100780,
+        100781,
+        100782,
+        100783,
+        100784,
+        100785,
+        100786,
+        100787,
+        100788
+      ],
+      "row": true,
+      "autoplay": true,
+      "height": 720,
+      "start": "2026-09-20",
+      "body": "自 2026-09-20 首見 TLE 起，逐日重建 NORAD 100780～100788（COSPAR 2026-220A～H、J）九顆酬載的半長軸、傾角、RAAN、近地點幅角趨勢（SGP4／TLE 模型下之平均要素估計，非精密星曆瞬時值）。九顆衛星皆位於同一太陽同步軌道面附近，發射初期彼此軌道根數差異極小，可觀察後續是否出現任一顆因軌道調整（如相位分離、進入各自工作軌道）而與其餘衛星產生明顯分異——但如⑦節所述，本系統無法指出其中哪顆對應諦聽三星。"
+    },
+    {
+      "type": "positions",
+      "title": "⑨ 9 顆酬載的即時位置動畫 [TLE-derived]",
+      "dur": 8,
+      "anchor": "live-positions",
+      "mode": "ids",
+      "globe": true,
+      "ids": [
+        100780,
+        100781,
+        100782,
+        100783,
+        100784,
+        100785,
+        100786,
+        100787,
+        100788
+      ],
+      "body": "以本系統目前持有之最新 TLE，用 SGP4 即時傳播上述九顆酬載（NORAD 100780～100788）之軌道位置。動畫呈現的是整批酬載的即時分布，而非鎖定諦聽三星單獨顯示——原因同⑦節：官方尚未公開九顆之中哪些對應諦聽 01 組 A／B／C。"
+    },
+    {
+      "type": "table",
+      "title": "⑩ 資料來源",
+      "dur": 2,
+      "anchor": "sources",
+      "columns": [
+        "來源",
+        "說明"
+      ],
+      "rows": [
+        [
+          "[长光卫星参与研制！我国成功发射谛听01组A/B/C星（吉林一號公眾號，經新浪財經轉載）](https://finance.sina.com.cn/roll/2026-09-20/doc-inismzva9365462.shtml)",
+          "第一手來源：由衛星研製方長光衛星之官方公眾號發布，明確指出諦聽 01 組 A／B／C 星由天津星瞰九州科技有限公司抓總、長光衛星研製，為中國首次以三星編隊開展商業天基射頻數據採集之衛星星座"
+        ],
+        [
+          "[泰伯早報｜9月21日：北京禁飛區正式啟用；我國突破地下大空間高精度定位導航與控制技術；力箭一號送超智算一號入軌（泰伯網）](https://www.taibo.cn/p/99736)",
+          "地理資訊／商業航天垂直媒體轉引吉林一號公眾號內容，覆核「三星編隊、商業天基射頻數據採集」之表述"
+        ],
+        [
+          "[一箭9星背後：通感智算、太空算力，衛星「新品種」密集入軌（財聯社 CLS）](https://www.cls.cn/detail/2488115)",
+          "確認發射時間、地點與同箭 9 星名單，並複述「諦聽 01 組 A／B／C 星為我國首次以三星編隊開展商業天基射頻數據採集的衛星星座」"
+        ],
+        [
+          "[Wikipedia – Hyperbolic navigation](https://en.wikipedia.org/wiki/Hyperbolic_navigation)",
+          "圖檔 Hyperbolic_Navigation.svg（作者 Cosmia Nebula，CC0 公有領域），用於③節後之雙曲線定位原理示意圖"
+        ],
+        [
+          "[Wikipedia – Pseudo-range multilateration](https://en.wikipedia.org/wiki/Pseudo-range_multilateration)",
+          "圖檔 TDOA_Geometry.png（作者 TinyPebble，CC BY-SA 3.0／GFDL），用於③節後之 TDOA 多站幾何示意圖"
+        ],
+        [
+          "[HawkEye 360 - eoPortal](https://www.eoportal.org/satellite-missions/hawkeye-360)",
+          "第三方衛星任務資料庫，說明 HawkEye 360 三星編隊之 TDOA／FDOA 技術架構、軌道高度與頻譜覆蓋範圍，作為③⑤節通用技術原理與比較之參考來源"
+        ],
+        [
+          "[How HawkEye 360 Finds RF Signals from Space（Hubble Network Community）](https://hubble.com/community/guides/how-hawkeye-360-finds-rf-signals-from-space/)",
+          "說明 HawkEye 360 地面處理鏈如何聯合解算 TDOA／FDOA 並輸出 95% 信賴橢圓之定位結果"
+        ],
+        [
+          "[HawkEye 360 Raises $416M, Pricing at High End for IPO（Via Satellite）](https://www.satellitetoday.com/finance/2026/05/07/hawkeye-360-raises-416m-pricing-at-high-end-for-ipo/)",
+          "HawkEye 360 於 2026 年 5 月在紐約證交所（代號 HAWK）掛牌之 IPO 募資金額，用於⑤節上市狀態欄位"
+        ],
+        [
+          "[HawkEye 360, Inc. Form 8-K 財報公告（SEC 官方文件）](https://www.sec.gov/Archives/edgar/data/0001750704/000175070426000018/exhibit991-earningsrelease.htm)",
+          "美國證管會（SEC）公開財報文件，說明 2025 年美國客戶約占營收 61%，用於⑤節主要客群欄位"
+        ],
+        [
+          "[Unseenlabs Overview（European Space Agency, Earth Online）](https://earth.esa.int/eogateway/missions/unseenlabs/description)",
+          "歐洲太空總署官方任務說明頁，介紹 Unseenlabs 單星都卜勒（monosatellite）技術路徑與海事領域應用，作為③⑤節比較之參考來源"
+        ],
+        [
+          "[Unseenlabs launches Gen 2 satellite（PR Newswire）](https://www.prnewswire.com/news-releases/unseenlabs-launches-gen-2-satellite-expanding-radio-frequency-intelligence-for-maritime-land-and-space-302819611.html)",
+          "官方新聞稿，說明 2026 年 Unseenlabs 星座規模（23 顆）、第二代衛星發射與客群（法國海軍、加拿大／日本政府機關等），用於⑤節星座規模與客群欄位"
+        ],
+        [
+          "[Unseenlabs | The Company（官方網站）](https://unseenlabs.com/en/company/)",
+          "公司官網，確認總部位於法國 Cesson-Sévigné、私人公司性質，用於⑤節總部與上市狀態欄位"
+        ],
+        [
+          "[HawkEye 360 Cluster 14 Formation-Flying RF Satellites（SFL Missions）](https://sflmissions.com/hawkeye-360-cluster-14/)",
+          "衛星平台建造商加拿大多倫多大學太空飛行實驗室（UTIAS-SFL）之任務頁，用於⑤節衛星集群數量與平台來源欄位（截至 2026 年 3 月已發射至第 14 集群）"
+        ],
+        [
+          "[One example of ITAR and NewSpace: SigInt operator HawkEye 360（Space Intel Report）](https://www.spaceintelreport.com/one-example-of-itar-and-newspace-signals-intelligence-provider-hawkeye-360/)",
+          "說明 HawkEye 360 所處美國 ITAR 出口管制脈絡，用於⑤節「資料處理與出口管制」欄位"
+        ],
+        [
+          "[HawkEye 360 and Airbus Form Strategic Partnership（GeoConnexion）](https://www.geoconnexion.com/news/hawkeye-360-and-airbus-form-strategic-partnership)、[HawkEye 360 | Esri Partner（Esri 官網）](https://www.esri.com/partners/hawkeye-360-a2Tf20000056pxHEAQ)",
+          "確認 Airbus／Esri／Raytheon 為 HawkEye 360 之投資人或通路夥伴，用於⑤節「資本／策略夥伴」欄位；財聯社等原始報導及 CSV 中提及之 BlackSky、Windward 合作關係，本系統查證時未找到具體公開來源佐證，故未採用"
+        ],
+        [
+          "[How Unseenlabs Tracks Suspicious Ships from Space Using Radio Frequencies（DirectIndustry emag）](https://emag.directindustry.com/2025/06/24/unseenlabs-space-satellite-surveillance-suspicious-ship-tracking/)",
+          "說明 Unseenlabs「ITAR-free」定位與法國本土伺服器資料處理之主權訴求，用於⑤節「資料處理與出口管制」欄位"
+        ],
+        [
+          "[Airbus and Unseenlabs win French SIGINT satellite contract（IN Defence）](https://indefencemag.com/airbus-and-unseenlabs-win-french-sigint-satellite-contract/)",
+          "Unseenlabs 與 Airbus Defence and Space 合作角逐法國國防部 SIGINT 衛星標案之報導，用於⑤節「資本／策略夥伴」欄位"
+        ],
+        [
+          "使用者提供之比較表：reference/Feature-Unseenlabs-HawkEye360_old.csv",
+          "使用者提供之原始比較表（檔名標示為 old，內容多為 2025 年中快照），本系統以上述公開來源查核並更新其中衛星數量、上市狀態、ITAR 等已隨時間變動之欄位後納入⑤節"
+        ],
+        [
+          "本系統公開 TLE 資料庫獨立查核（raw_tle_archive）",
+          "NORAD 100780–100789／COSPAR 2026-220A～2026-220K，用以確認力箭一號遙十八發射批次之在軌數量與軌道特徵；⑧⑨兩節之軌道根數與位置動畫即源自此查核，惟無法據此判斷各 NORAD 對應之官方任務名稱（詳見⑦節）"
+        ]
+      ],
+      "note": "①～⑤節任務事實、通用技術原理與產業比較整理自前述公開報導與 HawkEye 360／Unseenlabs 官方或第三方公開資訊；⑥節為本系統對自身能力範圍之誠實聲明；⑦～⑨節軌道根數、位置動畫為本系統以公開 TLE 獨立查核之技術查核結果，三者性質不同，請分別看待其可信基礎。HawkEye 360 與 Unseenlabs 之技術與商業資訊均為其官方或第三方公開來源，本系統未與兩家公司有任何合作或授權關係，亦未獨立查證其公開數字之準確性。"
+    }
+  ]
+}

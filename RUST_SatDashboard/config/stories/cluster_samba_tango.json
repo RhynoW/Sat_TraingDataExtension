@@ -1,0 +1,314 @@
+{
+  "id": "cluster-samba-tango",
+  "title": "Samba 與 Tango 的一生：ESA Cluster 雙星目標式再入觀測",
+  "subtitle": "從 2000 年發射到 ESA 預報於 2026-08-31／09-01 再入——為再入觀測而調整軌道的兩顆衛星",
+  "hero_note": "ESA Cluster 四顆結構相同的磁層科學衛星於 2000 年發射；Salsa 已於 2024-09 完成首次目標式再入（targeted reentry）觀測 [ESA-reported]；Samba（NORAD 26410）已於 2026-08-31 21:39:38 UTC、Tango（26464）已於 2026-09-01 21:30:31 UTC 在南太平洋（紐西蘭以北）再入，ESA 已正式確認並由 ROSIE 空中觀測團隊實際觀測到再入畫面 [ESA-reported]。本故事以公開 TLE 歷史展示兩星的軌道要素演化，並把 ESA 任務資訊與本系統 TLE 推導結果分開標示：[ESA-reported]＝ESA 公開資訊、[TLE-derived]＝本系統由 TLE 計算、[interpretation]＝作者解讀。公開 TLE 只能提供軌道趨勢，不足以獨立證明點火、任務成功、實際再入時間或解體狀態。",
+  "updated": "2026-09-28",
+  "sections": [
+    {
+      "type": "text",
+      "title": "導言：為什麼要讓兩顆衛星「約好」再入",
+      "dur": 5,
+      "body": "衛星再入解體的實測資料極為稀少——事件轉瞬即逝、地點多在無人海域，儀器只能靠飛機帶到現場。Cluster 四顆衛星完全相同，於不同軌跡與氣象條件下觀測多次再入，等於一組可重複的解體物理實驗，有助設計下一代「零碎片」（zero-debris、design-for-demise）衛星 [ESA-reported]。Samba 與 Tango 原已處於安全處置軌道、會自然再入南太平洋，但兩者再入的時間與地點相距太遠，單一飛機任務無法兼顧。ESA 飛行動力團隊在 2026 年 1 月 19～20 日各執行一次小幅點火：Samba 再入點略向東、Tango 略向西，讓兩次再入相隔約 24 小時，觀測團隊得以返回基地加油、輪休後再次出勤 [ESA-reported，C1/C3]。ESA 使用的術語為 targeted reentry（目標式再入），指經軌道調整使自然再入落在預定海域與時間窗，並非可精確控制落點的 controlled re-entry [interpretation]。",
+      "anchor": "intro"
+    },
+    {
+      "type": "table",
+      "title": "① Cluster 四星：同一批孿生衛星的四種結局 [ESA-reported / 目錄]",
+      "dur": 6,
+      "columns": [
+        "衛星",
+        "NORAD",
+        "國際編號",
+        "發射",
+        "結局"
+      ],
+      "rows": [
+        [
+          "Rumba（Cluster 1 / FM5）",
+          "26463",
+          "2000-045A",
+          "2000-08-09 Soyuz-Fregat",
+          "2025 年目標式再入 [ESA-reported，外部任務資訊]；本庫無可用 TLE 歷史"
+        ],
+        [
+          "Salsa（Cluster 2 / FM6）",
+          "26411",
+          "2000-041B",
+          "2000-07-16 Soyuz-Fregat",
+          "2024-09-08 首次目標式再入（南太平洋，飛機觀測）[ESA-reported，C4]"
+        ],
+        [
+          "Samba（Cluster 3 / FM7）",
+          "26410",
+          "2000-041A",
+          "2000-07-16 Soyuz-Fregat",
+          "已於 2026-08-31 21:39:38 UTC 再入（紐西蘭以北南太平洋），較預報 21:41:54 UTC 提前約 2 分 16 秒，落在 ±10 min 不確定度內；ROSIE 空中觀測團隊實際觀測到再入畫面 [ESA-reported，確認，C2/C7]"
+        ],
+        [
+          "Tango（Cluster 4 / FM8）",
+          "26464",
+          "2000-045B",
+          "2000-08-09 Soyuz-Fregat",
+          "已於 2026-09-01 21:30:31 UTC 再入（同區域，與 Samba 實際相隔約 23h51m），較預報 21:33:20 UTC 提前約 2 分 49 秒；ESA 最終修正預報已收斂至 ±1 秒，ROSIE 團隊同樣實際觀測到再入畫面 [ESA-reported，確認，C2/C7]"
+        ]
+      ],
+      "note": "Cluster 為高橢圓極軌：原始約 19,000 × 119,000 km（高度）；本庫 2026-08-16 TLE 計算 Samba 遠地點地心距約 137,800 km（高度約 131,400 km，WGS-84 平均半徑 6,378.137 km）、傾角約 150° [TLE-derived]。再入預報為 ESA 以 2026-08-24 最後地面過境資料所作，本文件不重新驗證其不確定度。NORAD 與暱稱對應依 CelesTrak／Space-Track（26410=Samba、26464=Tango）；表中結局欄之外部任務資訊來源見文末「歷史事件來源」。",
+      "anchor": "cluster-fleet"
+    },
+    {
+      "type": "positions",
+      "title": "② Samba 與 Tango 再入前最後位置（3D，TLE 傳播位置）[TLE-derived]",
+      "dur": 6,
+      "mode": "ids",
+      "ids": [
+        26410,
+        26464
+      ],
+      "globe": true,
+      "body": "兩顆衛星以本庫最後一筆 TLE 傳播之位置（Samba 最後 TLE 2026-08-16、Tango 2026-08-30；兩顆均已再入——Samba 2026-08-31、Tango 2026-09-01，此處為再入前最後一筆 TLE 傳播之位置，僅供示意）。依 2026-08-16 TLE 計算，Samba 軌道週期約 53.5 h、遠地點高度約 131,400 km、理想化近地點高度已低於 0 km（幾何軌道穿入參考橢球）——衛星大部分時間遠在月球距離三分之一以外，約每 2.2 天一次掠過大氣邊緣，再入即發生在其中一次掠過 [TLE-derived / interpretation]。",
+      "anchor": "positions"
+    },
+    {
+      "type": "sat",
+      "anchor": "salsa",
+      "title": "③ 先行者 Salsa（26411）：2024 年的首次目標式再入",
+      "dur": 12,
+      "norads": [
+        26411
+      ],
+      "row": true,
+      "autoplay": true,
+      "height": 720,
+      "start": "2024-01-01",
+      "body": "Salsa 的理想化近地點高度自 2024-01 的約 3,000 km 逐月下降，8 月降至 0 km 以下（幾何軌道穿入參考橢球，非實際飛行高度）；ESA 於 2024-09-08 完成目標式再入觀測 [ESA-reported，C4]。本系統 TLE 歷史止於 2024-09-08，時間軸播到最後即是資料終止之日 [TLE-derived]。在本系統的 TLE 平均要素時序中，SMA 相對穩定（約 72,500 km），偏心率與近地點幅角（ARGP）的變化主導了理想化近地點的估算——這是 TLE 模型下的趨勢描述；高橢圓軌道近地點的長期下降主要由月球與太陽引力攝動驅動，而非大氣阻力 [interpretation]。"
+    },
+    {
+      "type": "sat",
+      "anchor": "samba",
+      "title": "④ Samba（26410）：30 個月、理想化近地點高度從 14,600 km 降至 0 以下",
+      "dur": 14,
+      "norads": [
+        26410
+      ],
+      "row": true,
+      "autoplay": true,
+      "height": 720,
+      "start": "2024-01-01",
+      "body": "依本庫 TLE 平均要素計算之理想化近地點高度：2024-01 約 14,597 km → 2025-01 約 7,661 km → 2026-01 約 2,022 km → 2026-07 約 70 km → 2026-08 已低於 0（幾何軌道穿入參考橢球；實際近地點在 100 km 上下）[TLE-derived]。每月約降 500 km、均勻而單調，符合「安全處置軌道」的設計思路：不必多耗燃料，讓天體力學把衛星送回大氣層 [interpretation]。2026-01-16→01-20 的相鄰 TLE 顯示 SMA 由 72,108.6 km 增至 72,154.1 km（+45.5 km）[TLE-derived]，與 ESA 所述 1 月 19～20 日軌道調整的時段一致，本系統將其標記為機動候選；但 TLE 擬合誤差、攝動模型與軌道決定更新亦可能造成類似訊號，單靠 TLE 不能獨立證明點火時間或真實 Δv [interpretation]。SMA 增加對應週期加長；ESA 稱此調整使再入時刻延後、落點向東 [ESA-reported，C1]。"
+    },
+    {
+      "type": "sat",
+      "anchor": "tango",
+      "title": "⑤ Tango（26464）：同一條路，反向微調",
+      "dur": 12,
+      "norads": [
+        26464
+      ],
+      "row": true,
+      "autoplay": true,
+      "height": 720,
+      "start": "2024-01-01",
+      "body": "Tango 的理想化近地點曲線與 Samba 幾乎重疊（2024-01 約 14,582 km → 2026-08-30 約 −143 km）[TLE-derived]，畢竟兩顆是同一批、同一軌道面部署的孿生星。2026-01-15→01-19 的相鄰 TLE 顯示 SMA 由 72,556.8 km 減至 72,551.6 km（−5.2 km）[TLE-derived]，方向與 Samba 相反、且幅度小；ESA 稱 Tango 的調整使再入時刻提前、落點向西，兩者再入因此相隔約 24 小時 [ESA-reported，C1]。−5.2 km 接近 TLE 平均要素的擬合噪聲量級，本系統僅將其列為弱候選，不作為點火證據 [interpretation]。"
+    },
+    {
+      "type": "table",
+      "title": "⑥ 2026-01-19／20 軌道調整在 TLE 上的簽章 [TLE-derived]",
+      "dur": 6,
+      "columns": [
+        "衛星",
+        "點火前 TLE",
+        "SMA 前 (km)",
+        "點火後 TLE",
+        "SMA 後 (km)",
+        "ΔSMA",
+        "ESA 所述效果 [ESA-reported]"
+      ],
+      "rows": [
+        [
+          "Samba 26410",
+          "2026-01-16",
+          "72,108.6",
+          "2026-01-20",
+          "72,154.1",
+          "+45.5 km",
+          "再入延後、落點向東"
+        ],
+        [
+          "Tango 26464",
+          "2026-01-15",
+          "72,556.8",
+          "2026-01-19",
+          "72,551.6",
+          "−5.2 km",
+          "再入提前、落點向西"
+        ]
+      ],
+      "note": "ΔSMA 為相鄰 TLE 平均要素差分，時段與 ESA 公告一致，故本系統標記為機動候選（Samba 超過 MEO/GEO 2 km 門檻；Tango −5.2 km 亦超過門檻但接近噪聲量級）。Cluster 為高偏心率軌道，本故事**不以**近圓軌道 Δv≈n·Δa/2 估算真實 Δv：真實點火量取決於點火時刻（近／遠地點速度差異極大）、推力方向與軌道狀態，需精密星曆或任務遙測求解；ESA 亦未公開 Δv。兩星傾角同時期由 148.2° 緩升至 148.5°，為月日攝動之自然演化 [interpretation]。",
+      "anchor": "burn-signature"
+    },
+    {
+      "type": "table",
+      "title": "⑦ 再入時程：ESA 預報 vs 確認之實際結果 [ESA-reported]",
+      "dur": 8,
+      "columns": [
+        "項目",
+        "Samba",
+        "Tango"
+      ],
+      "rows": [
+        [
+          "ESA 預報再入時刻（UTC，2026-08-24 發布）",
+          "2026-08-31 21:41:54 ±10 min",
+          "2026-09-01 21:33:20 ±10 min"
+        ],
+        [
+          "ESA 確認之實際再入時刻（UTC）[C7/C8]",
+          "2026-08-31 21:39:38（較預報提前 2m16s）",
+          "2026-09-01 21:30:31（較預報提前 2m49s；最終修正預報已收斂至 ±1 秒）"
+        ],
+        [
+          "ESA 預報再入時刻（台北 UTC+8）",
+          "2026-09-01 05:42",
+          "2026-09-02 05:33"
+        ],
+        [
+          "再入區域（ESA 確認）",
+          "紐西蘭以北南太平洋（NZZO 空域告示區）；ESA 未公開精確落點座標",
+          "同一區域"
+        ],
+        [
+          "ROSIE 空中觀測結果 [C7]",
+          "實際觀測到再入畫面，30 具儀器中 29 具成功記錄，追蹤約 50 秒",
+          "同左；起飛基地為東加（Tonga）；Kourou 地面站於再入前約 15 分鐘失去訊號"
+        ],
+        [
+          "預報依據",
+          "最後地面過境資料 2026-08-24",
+          "同左"
+        ],
+        [
+          "Space-Track 18 SDS 60 日衰減預報（日級，訊息 2026-08-05／07-29）[外部]",
+          "2026-09-14（日級）",
+          "2026-09-01（日級）"
+        ],
+        [
+          "本系統階段二數值 MC 中位（校準後）[TLE-derived]",
+          "2026-08-31 19:35 UTC（−30.5°, −128.5°）",
+          "2026-09-01 20:46 UTC（−30.4°, −145.3°）"
+        ],
+        [
+          "觀測方式",
+          "空中觀測團隊於禁航區邊緣以科學儀器觀測",
+          "同一團隊 24 h 後再次出勤（「fly out and back twice」）"
+        ],
+        [
+          "本庫最後 TLE",
+          "2026-08-16",
+          "2026-08-30"
+        ]
+      ],
+      "note": "預報列為 ESA 2026-08-24 公開預報 [C2]；確認列為 ESA 事後正式公告與即時直播記錄之實際結果 [C7/C8]，兩顆衛星之實際再入時刻均較預報提前 2-3 分鐘、落在原先 ±10 min 不確定度內——顯示 ESA 末段軌道決定之預報方法相當可靠。ESA 至今未公開精確再入座標（僅公開區域層級之 NZZO 空域告示區），本文件不臆測或反推精確落點。18 SDS 60 日衰減訊息為美軍第 18 太空防禦中隊之例行日級預報（Space-Track decay 類別），與 ESA 分鐘級預報精度不同；Samba 之 09-14 明顯晚於 ESA 08-31 之實際確認結果，顯示日級預報對高橢圓軌道末段之侷限。本系統數值估算（第 ⑧ 節）與實際確認結果之比較，亦於該節更新。",
+      "anchor": "reentry-forecast"
+    },
+    {
+      "type": "reentry",
+      "anchor": "reentry-estimate",
+      "title": "⑧ 本系統再入落點估算 vs ESA 預報 vs 實際確認結果 [TLE-derived]",
+      "dur": 14,
+      "body": "用公開 TLE 能把再入估到多準？本節以兩階段方法估算，並與 ESA 預報、事後確認結果三方並列比較（不互相背書）。階段一：SGP4/SDP4 由最後 TLE 外推，逐圈找近地點掠過、首次低於 100 km 的那一圈即零階再入圈次，次衛星點為落點；此法能正確指出「哪一圈」，但時間誤差 1 h 即對應經度 15°。階段二：數值傳播（J2＋月日點質量＋NRLMSIS 2.1 阻力＋大氣共轉），以迎風面積 3.8–6.6 m²、密度尺度做 Monte Carlo，密度尺度先以 Salsa 2024-09-08 18:47Z 實際再入回測校準。最新 TLE 已由 Space-Track／CelesTrak 確認（Samba 08-16 之後無更新；Tango 本庫事後補入至 08-30，共 889 筆）。**誠實核對**：本系統階段二 MC 中位估算為 Samba 2026-08-31 19:35 UTC、Tango 2026-09-01 20:46 UTC；ESA 事後確認之實際再入時刻為 Samba 21:39:38 UTC、Tango 21:30:31 UTC——本系統估算分別早了約 2h05m（Samba）與 44 分鐘（Tango）[TLE-derived vs ESA-reported]。相對地，ESA 用最後地面過境資料（08-24）做的操作級預報（Samba 21:41:54、Tango 21:33:20）與實際結果僅差 2-3 分鐘。這個量級差距如實反映：本系統僅用公開 TLE（無地面站即時追蹤、無最新軌道決定）做的數值外推，精度天生遠不及 ESA 用最新測站資料做的操作級預報，兩者不是同一等級的方法，此處並列僅供讀者理解「用多好的資料才能估到多準」，不宣稱本系統方法已達操作級水準。"
+    },
+    {
+      "type": "text",
+      "title": "結語：TLE 能看見的，與看不見的",
+      "dur": 4,
+      "body": "從公開 TLE 就能還原這段旅程的骨架：30 個月單調下降的理想化近地點、1 月那兩次方向相反的 SMA 微幅變化、以及 8 月中下旬戛然而止的資料 [TLE-derived]。看不見的是點火本身、真實 Δv、再入時的解體序列、碎片存活率與熱流——那正是 ESA 要用飛機去現場量測的東西 [ESA-reported]。對本系統而言，Cluster 也是一個提醒：高橢圓軌道的理想化近地點下降由月日攝動主導，與低軌大氣阻力衰減的形狀完全不同，機動偵測的阻力排除旗標（da_monotonic_decay）與近圓 Δv 近似都不能直接套用在這類軌道上 [interpretation]。事後看，ESA 之操作級預報準確到分鐘等級，本系統僅憑公開 TLE 之估算則差了小時等級（見第⑧節）——這正是公開資料與任務遙測之間，可以誠實量化出來的落差 [interpretation]。",
+      "anchor": "closing"
+    }
+  ],
+  "sources": [
+    {
+      "id": "C1",
+      "claim": "2026-01-19／20 兩次小幅點火，Samba 再入點略向東、Tango 略向西，使再入相隔約 24 h",
+      "source": "ESA – Moving satellites to meet a plane for rare reentry data",
+      "url": "https://www.esa.int/Space_Safety/Space_Debris/Moving_satellites_to_meet_a_plane_for_rare_reentry_data",
+      "scope": "點火日期、目的、方向；未公開 Δv"
+    },
+    {
+      "id": "C2",
+      "claim": "Samba 2026-08-31 21:41:54 UTC ±10 min、Tango 2026-09-01 21:33:20 UTC ±10 min 再入（紐西蘭以北南太平洋）",
+      "source": "ESA Rocket Science blog 2026-08-24（CEST 換算 UTC）",
+      "url": "https://blogs.esa.int/rocketscience/2026/08/24/final-cluster-reentries-31-aug-1-sept-2026/",
+      "scope": "預報時刻、不確定度、區域、預報依據（最後地面過境 08-24）"
+    },
+    {
+      "id": "C3",
+      "claim": "同一支空中觀測團隊於相隔 24 h 的兩趟出勤觀測兩次再入；2024 年 Salsa 再入已由飛機觀測",
+      "source": "ESA 文章與 blog（同上）",
+      "url": "https://www.esa.int/Space_Safety/Space_Debris/Moving_satellites_to_meet_a_plane_for_rare_reentry_data",
+      "scope": "任務安排；文中稱「fly out and back twice, 24 hours apart」，未指明機型"
+    },
+    {
+      "id": "C4",
+      "claim": "Cluster 四星 NORAD／國際編號對應（26463/26411/26410/26464）、Salsa 2024-09-08 再入、Rumba 2025 年再入",
+      "source": "CelesTrak SATCAT、Space-Track、ESA Salsa FAQ",
+      "url": "https://www.esa.int/Science_Exploration/Space_Science/Cluster/Frequently_asked_questions_Cluster_s_Salsa_reentry",
+      "scope": "身分與編目、Salsa 再入日期；Rumba 日期為外部任務資訊"
+    },
+    {
+      "id": "C5",
+      "claim": "近地點／SMA／傾角演化、2026-01 相鄰 TLE 之 SMA 變化 +45.5 km（Samba）／−5.2 km（Tango）、軌道週期約 53.5 h",
+      "source": "本系統 TLE 資料庫（Space-Track GP）快照 2026-08-28 11:14 UTC；計算方法見資料口徑",
+      "url": "",
+      "scope": "TLE 平均要素差分之趨勢；非任務遙測"
+    },
+    {
+      "id": "C6",
+      "claim": "Space-Track 18 SDS 60 日衰減預報（Samba 2026-09-14、Tango 2026-09-01，日級）",
+      "source": "Space-Track decay 類別（需帳號）",
+      "url": "https://www.space-track.org/",
+      "scope": "第三方日級預報；非 ESA 官方"
+    },
+    {
+      "id": "C7",
+      "claim": "Samba 於 2026-08-31 21:39:38 UTC、Tango 於 2026-09-01 21:30:31 UTC confirmed 再入南太平洋；ROSIE 空中觀測團隊以 30 具儀器中 29 具成功觀測兩次再入，各追蹤約 50 秒",
+      "source": "ESA – Cluster's encore for reentry science a success",
+      "url": "https://www.esa.int/Space_Safety/Space_Debris/Cluster_s_encore_for_reentry_science_a_success",
+      "scope": "事後正式確認之再入時刻與觀測任務結果"
+    },
+    {
+      "id": "C8",
+      "claim": "ESA Rocket Science 即時直播記錄：Samba 23:39:38 CEST（=21:39:38 UTC）再入；Tango 21:30:31 UTC 再入，最終修正預報收斂至 ±1 秒；Tango 之 Kourou 地面站於再入前約 15 分鐘失去訊號",
+      "source": "ESA Rocket Science blog – Final Cluster reentries live blog（2026-08-30 起即時更新）",
+      "url": "https://blogs.esa.int/rocketscience/2026/08/30/final-cluster-reentries-live-blog/",
+      "scope": "事件當下之即時記錄，時刻精度最高之一手來源"
+    }
+  ],
+  "limits": [
+    [
+      "公開 TLE 歷史",
+      "只能重建公開軌道要素趨勢，不能重建任務遙測；點火、任務成功與實際再入須以 ESA 任務公告為準"
+    ],
+    [
+      "高偏心率軌道",
+      "近圓軌道 Δv≈n·Δa/2 近似不適用；本故事不估算真實 Δv，SMA 變化僅作為軌道調整候選指標"
+    ],
+    [
+      "TLE 平均要素",
+      "理想化 Kepler 近地點高度 ≤0 km 表示幾何軌道穿入參考橢球，不是實際飛行高度"
+    ],
+    [
+      "再入預報與確認",
+      "2026-08-31／09-01 之預報與事後確認時刻均為 ESA 公開資訊，非本系統以 TLE 產生；本系統不重新驗證其不確定度。ESA 未公開精確再入座標，本文件不臆測或反推"
+    ],
+    [
+      "固定協方差",
+      "Pc proxy／3σ 橢球僅為示意，不是操作級碰撞機率（本故事未使用）"
+    ],
+    [
+      "再入估算",
+      "本系統兩階段估算以公開 TLE＋NRLMSIS 為基礎，回測誤差量級以 Salsa 案例為準；不等同 ESA 以實測軌道決定之預報"
+    ]
+  ],
+  "tle_ranges": "Salsa 26411：2024-01-01～2024-09-08（153 筆）；Samba 26410：2024-01-01～2026-08-16（820 筆）；Tango 26464：2024-01-01～2026-08-30（889 筆）"
+}

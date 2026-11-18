@@ -53,6 +53,9 @@ def render_templates() -> None:
         "rpo_cases.html": {"featured": featured, "cases": rest},
         "orbit.html": {},                                   # 軌道要素歷史／雙星比較（src/orbit_history.rs）
         "track.html": {},                                   # 單顆衛星 2D 地面軌跡（/api/sat_tle）
+        "orbit_tuner.html": {},                             # 軌道六參數調整器介紹頁（CTA 連回 /?open=orbit6）
+        "starlink.html": {},                                # Starlink 可見性／普查／離軌（src/starlink.rs）
+        "story.html": {"story_id": "__STORY_ID__"},         # 故事頁（src/story.rs 執行期替換 __STORY_ID__）
     }
     for name, ctx in jobs.items():
         html = env.get_template(name).render(cesium_cdn="", **ctx)
@@ -77,7 +80,7 @@ def render_templates() -> None:
 def copy_static() -> None:
     src = PKG / "web" / "static"
     dst = WEB / "static"
-    for sub in ("js", "css", "data", "vendor"):
+    for sub in ("js", "css", "data", "vendor", "docs"):   # docs：故事頁引用的 PDF、QR 圖、DIA 簡報
         if (dst / sub).exists():
             shutil.rmtree(dst / sub)
         shutil.copytree(src / sub, dst / sub)

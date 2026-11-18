@@ -1,0 +1,61 @@
+{
+  "id": "tasti-2026-t0097",
+  "title": "TASTI 2026 口頭報告（T0097）：模組化互動式太空情勢感知儀表板",
+  "subtitle": "以公開 TLE 做全目錄瞬時鄰近篩選、TCA 精化與在地覆蓋預報——並明確界定 TLE-only 評估的物理限制",
+  "hero_note": "本頁收錄 TASTI 2026（Taiwan International Assembly of Space Science, Technology, and Industry）口頭報告 T0097 之簡報（英文 PDF）與重點摘要。SatDashboard 為篩選與情勢展示層，輸出為候選事件，不取代作業級碰撞風險評估。",
+  "updated": "2026-10-27",
+  "sections": [
+    {
+      "type": "table",
+      "title": "報告資訊與簡報下載",
+      "anchor": "info",
+      "dur": 4,
+      "columns": ["項目", "內容"],
+      "rows": [
+        ["論文編號／形式", "T0097／Oral（TASTI 2026，主題 03 Space Sustainability and Safety · 0304 SSA/SDA）"],
+        ["英文題名", "A Modular Interactive Space Situational Awareness Dashboard: Instantaneous Proximity Screening with TCA Refinement and Regional Coverage Forecasting"],
+        ["作者", "Yu-Ping Lin、Chih-Chien Wu（報告人）、Yi-Shan Li"],
+        ["簡報（PDF，英文）", "[開啟／下載 PDF](/static/docs/TASTI2026_T0097_SatDashboard_oral.pdf)——共 19 頁：正文 12 頁＋系統畫面附錄 7 頁"]
+      ],
+      "note": "簡報內容與此頁下方摘要同源；數字皆為論文所列測試條件下之結果。"
+    },
+    {
+      "type": "embed",
+      "title": "簡報預覽（PDF）",
+      "anchor": "slides",
+      "dur": 6,
+      "url": "/static/docs/TASTI2026_T0097_SatDashboard_oral.pdf",
+      "height": 760
+    },
+    {
+      "type": "table",
+      "title": "主要結果與適用條件",
+      "anchor": "results",
+      "dur": 6,
+      "columns": ["面向", "測試條件下的結果", "解讀界線"],
+      "rows": [
+        ["效能", "全目錄 31,481 顆：首次呼叫約 0.35 s、穩態約 52 ms／快照；SGP4 傳播近線性（5k→31k：2.9→14.7 ms）", "單一 24 核工作站、5 次中位數；與 TLE 時效無關"],
+        ["資料時效", "同一 Starlink 星系（約 10.8k 顆）、10 km 門檻：過期 TLE（18.2 天）31 筆 vs 新鮮 TLE（1.2 天）8 筆，約 4 倍", "單一星系、單一快照；為資料時效效應，不代表方法不穩，亦非通用倍率"],
+        ["TCA 精化", "新鮮資料 8 筆原始候選 → 4 筆 close-approach candidates（快速穿越 5、共軌 2、中速 1）", "候選事件而非已確認接近；快速穿越類 miss 中位數 5.5 km、最小 2.3 km（以 TLE 計算）"],
+        ["SOCRATES 比對", "最近 500 對（736 物件）：相對速度 |Δ| 中位數 0.000 km/s；TCA 時刻 |Δ| 中位數 1.2 s", "支持運動學一致性，並未建立物理準確度；miss distance 未能重現（1.6 km vs 0.18 km），原因尚未釐清（本端 TLE 與 SOCRATES 輸入不同）"]
+      ],
+      "note": "Pc 僅為快速穿越類的排序代理指標（isotropic 一階近似），非經驗證的碰撞機率；共軌或低相對速度情境標示 N/A，不以零代替。"
+    },
+    {
+      "type": "text",
+      "title": "適用邊界（Scope）",
+      "anchor": "scope",
+      "dur": 4,
+      "body": "公開 TLE 不含協方差，位置誤差可達公里級並隨外推時間增長，因此低於公里級的預測 miss distance 不應被視為精確的物理間距。可靠的 miss distance 與碰撞機率評估，須有更高精度的軌道估計與實際不確定度資訊（通常經由作業級 CDM 交換）。SatDashboard 的角色是篩選與排序：在 CDM 為基礎的流程之前，先濾除非接近的偵測並優先排序需進一步審查的候選。"
+    },
+    {
+      "type": "image",
+      "title": "連結條碼：SatDashboard（ATRDC-SatDashboard-i18n）",
+      "anchor": "qr",
+      "dur": 3,
+      "src": "/static/docs/qr_satdashboard_space.png",
+      "alt": "指向 huggingface.co/spaces/RhynoWu/ATRDC-SatDashboard-i18n 的 QR code",
+      "caption": "掃描前往 Space：[huggingface.co/spaces/RhynoWu/ATRDC-SatDashboard-i18n](https://huggingface.co/spaces/RhynoWu/ATRDC-SatDashboard-i18n)；簡報正文末頁亦附同一條碼。"
+    }
+  ]
+}

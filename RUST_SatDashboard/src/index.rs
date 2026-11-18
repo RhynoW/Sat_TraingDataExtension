@@ -165,7 +165,7 @@ fn query_latest_tles(db: &Path, extra_where: Option<&str>) -> anyhow::Result<Vec
 const EMBED_META_CSV: &str = include_str!("../config/sat_metadata.csv");
 
 /// sat_metadata.csv：{norad_id: {欄位: 值}}；磁碟上有檔案就用檔案，否則用內建版
-fn load_meta_csv(p: &Path) -> HashMap<u32, HashMap<String, String>> {
+pub fn load_meta_csv(p: &Path) -> HashMap<u32, HashMap<String, String>> {
     let mut out = HashMap::new();
     let text = match std::fs::read_to_string(p) {
         Ok(t) => t,

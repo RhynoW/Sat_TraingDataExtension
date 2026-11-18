@@ -290,15 +290,20 @@ async fn api_rpo_scene(State(st): St, Path((p, s)): Path<(u32, u32)>, Query(q): 
             return Json(&**v).into_response();
         }
         let cf = rpo::cache_file(&st.cfg, p, s, variant.as_deref());
+        // 檔案快取；舊版（TCA 未精算、無 summary.tca_refine_s）→ 嘗試重算，失敗時仍供應舊快取
+        let mut stale: Option<Value> = None;
         if let Some(v) = std::fs::read(&cf)
             .ok()
             .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
         {
             let mut v = v;
             rpo::refresh_meta(&mut v, &rpo::preset_for(p, s, variant.as_deref()));
-            let v = Arc::new(v);
-            st.rpo_cache.lock().insert(key, v.clone());
-            return Json(&*v).into_response();
+            if v["summary"].get("tca_refine_s").is_some() {
+                let v = Arc::new(v);
+                st.rpo_cache.lock().insert(key, v.clone());
+                return Json(&*v).into_response();
+            }
+            stale = Some(v);
         }
         let idx = st.index();
         let names = |n: u32| idx.sats.get(&n).map(|x| x.name.clone());
@@ -310,6 +315,12 @@ async fn api_rpo_scene(State(st): St, Path((p, s)): Path<(u32, u32)>, Query(q): 
                     tracing::warn!("RPO 場景快取寫入失敗 {}：{e}", cf.display());
                 }
                 let v = Arc::new(v);
+                st.rpo_cache.lock().insert(key, v.clone());
+                Json(&*v).into_response()
+            }
+            Err(e) if stale.is_some() => {
+                tracing::warn!("RPO 場景重算失敗 {p}×{s}，沿用舊快取：{e:#}");
+                let v = Arc::new(stale.unwrap());
                 st.rpo_cache.lock().insert(key, v.clone());
                 Json(&*v).into_response()
             }

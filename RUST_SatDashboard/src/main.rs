@@ -15,6 +15,8 @@ mod lunar;
 mod mission;
 mod orbit_history;
 mod physics;
+mod starlink;
+mod story;
 mod rpo;
 mod state;
 mod tiles;

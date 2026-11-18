@@ -1,0 +1,1065 @@
+{
+ "year": 2026,
+ "method": {
+  "stat": "相鄰 TLE 半長軸跳變 |Δa| 超過門檻（LEO 0.5 km、MEO/GEO 2 km；間隔 ≤5 天）之候選事件",
+  "prc": "prc_maneuver 管線 2026-01~05 旗標事件（da/di/de/dΩ 複合評分）",
+  "dv": "等效 Δv = n·Δa/2（切向脈衝假設，n 為平均運動），非量測值",
+  "caveat": "候選≠確認；替代解釋：TLE 品質波動／軌道決定更新、阻力模型誤差（LEO）、資料缺漏"
+ },
+ "groups": {
+  "gps": {
+   "label": "GPS",
+   "n_sats": 72,
+   "n_with_tle_2026": 72,
+   "n_events": 6,
+   "n_sats_with_event": 5,
+   "n_tle_transitions": 14905,
+   "rate_per_100_sats": 8.33,
+   "rate_per_1000_transitions": 0.4,
+   "median_abs_da_km": 2.203,
+   "monthly": {
+    "2026-07": 4,
+    "2026-08": 1,
+    "2026-09": 1
+   },
+   "top": [
+    {
+     "norad": 26360,
+     "name": "NAVSTAR 47 (USA 150)",
+     "events": 2
+    },
+    {
+     "norad": 35752,
+     "name": "NAVSTAR 64 (USA 206)",
+     "events": 1
+    },
+    {
+     "norad": 40534,
+     "name": "NAVSTAR 73 (USA 260)",
+     "events": 1
+    },
+    {
+     "norad": 36585,
+     "name": "NAVSTAR 65 (USA 213)",
+     "events": 1
+    },
+    {
+     "norad": 41328,
+     "name": "NAVSTAR 76 (USA 266)",
+     "events": 1
+    }
+   ],
+   "events": [
+    {
+     "norad": 36585,
+     "name": "NAVSTAR 65 (USA 213)",
+     "epoch_before": "2026-09-11T00:00",
+     "epoch_after": "2026-09-14T14:50",
+     "gap_h": 86.0,
+     "da_km": -3.84,
+     "dv_ms": -0.28,
+     "regime": "MEO"
+    },
+    {
+     "norad": 35752,
+     "name": "NAVSTAR 64 (USA 206)",
+     "epoch_before": "2026-08-08T17:18",
+     "epoch_after": "2026-08-09T11:02",
+     "gap_h": 18.0,
+     "da_km": -2.39,
+     "dv_ms": -0.174,
+     "regime": "MEO"
+    },
+    {
+     "norad": 40534,
+     "name": "NAVSTAR 73 (USA 260)",
+     "epoch_before": "2026-07-17T23:25",
+     "epoch_after": "2026-07-18T23:21",
+     "gap_h": 24.0,
+     "da_km": -2.22,
+     "dv_ms": -0.162,
+     "regime": "MEO"
+    },
+    {
+     "norad": 41328,
+     "name": "NAVSTAR 76 (USA 266)",
+     "epoch_before": "2026-06-29T20:00",
+     "epoch_after": "2026-07-03T19:43",
+     "gap_h": 95.0,
+     "da_km": -2.18,
+     "dv_ms": -0.159,
+     "regime": "MEO"
+    },
+    {
+     "norad": 26360,
+     "name": "NAVSTAR 47 (USA 150)",
+     "epoch_before": "2026-07-02T22:01",
+     "epoch_after": "2026-07-07T03:10",
+     "gap_h": 101.0,
+     "da_km": 2.11,
+     "dv_ms": 0.154,
+     "regime": "MEO"
+    },
+    {
+     "norad": 26360,
+     "name": "NAVSTAR 47 (USA 150)",
+     "epoch_before": "2026-07-02T15:49",
+     "epoch_after": "2026-07-02T22:01",
+     "gap_h": 7.0,
+     "da_km": -2.1,
+     "dv_ms": -0.153,
+     "regime": "MEO"
+    }
+   ],
+   "source": "stat",
+   "prc_pipeline": null
+  },
+  "beidou": {
+   "label": "北斗/BeiDou",
+   "n_sats": 64,
+   "n_with_tle_2026": 64,
+   "n_events": 59,
+   "n_sats_with_event": 16,
+   "n_tle_transitions": 17103,
+   "rate_per_100_sats": 92.19,
+   "rate_per_1000_transitions": 3.45,
+   "median_abs_da_km": 3.279,
+   "monthly": {
+    "2026-03": 1,
+    "2026-04": 9,
+    "2026-05": 13,
+    "2026-06": 4,
+    "2026-07": 20,
+    "2026-08": 7,
+    "2026-09": 5
+   },
+   "top": [
+    {
+     "norad": 41586,
+     "name": "BEIDOU G7",
+     "events": 8
+    },
+    {
+     "norad": 43683,
+     "name": "BEIDOU 3G1",
+     "events": 8
+    },
+    {
+     "norad": 56564,
+     "name": "BEIDOU 3 G4",
+     "events": 7
+    },
+    {
+     "norad": 45807,
+     "name": "BEIDOU 3 G3",
+     "events": 7
+    },
+    {
+     "norad": 44231,
+     "name": "BEIDOU 2 G8",
+     "events": 6
+    },
+    {
+     "norad": 38091,
+     "name": "BEIDOU G5",
+     "events": 5
+    },
+    {
+     "norad": 40549,
+     "name": "BEIDOU I1 S",
+     "events": 4
+    },
+    {
+     "norad": 43002,
+     "name": "BEIDOU 3 M2",
+     "events": 4
+    },
+    {
+     "norad": 38953,
+     "name": "BEIDOU G6",
+     "events": 2
+    },
+    {
+     "norad": 37256,
+     "name": "BEIDOU IGSO 2",
+     "events": 2
+    },
+    {
+     "norad": 37948,
+     "name": "BEIDOU IGSO 5",
+     "events": 1
+    },
+    {
+     "norad": 43539,
+     "name": "BEIDOU IGSO 7",
+     "events": 1
+    }
+   ],
+   "events": [
+    {
+     "norad": 40549,
+     "name": "BEIDOU I1 S",
+     "epoch_before": "2026-07-02T17:55",
+     "epoch_after": "2026-07-02T19:12",
+     "gap_h": 2.0,
+     "da_km": -120.58,
+     "dv_ms": -4.414,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 43683,
+     "name": "BEIDOU 3G1",
+     "epoch_before": "2026-04-01T20:42",
+     "epoch_after": "2026-04-06T09:18",
+     "gap_h": 109.0,
+     "da_km": -106.83,
+     "dv_ms": -3.91,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 56564,
+     "name": "BEIDOU 3 G4",
+     "epoch_before": "2026-03-26T13:49",
+     "epoch_after": "2026-03-28T05:10",
+     "gap_h": 40.0,
+     "da_km": -94.05,
+     "dv_ms": -3.429,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 37256,
+     "name": "BEIDOU IGSO 2",
+     "epoch_before": "2026-05-05T08:32",
+     "epoch_after": "2026-05-06T08:29",
+     "gap_h": 24.0,
+     "da_km": 41.28,
+     "dv_ms": 1.503,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 37256,
+     "name": "BEIDOU IGSO 2",
+     "epoch_before": "2026-05-06T08:29",
+     "epoch_after": "2026-05-06T19:51",
+     "gap_h": 11.0,
+     "da_km": -41.14,
+     "dv_ms": -1.5,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 40549,
+     "name": "BEIDOU I1 S",
+     "epoch_before": "2026-07-28T19:45",
+     "epoch_after": "2026-07-29T15:16",
+     "gap_h": 20.0,
+     "da_km": 27.24,
+     "dv_ms": 0.992,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 40549,
+     "name": "BEIDOU I1 S",
+     "epoch_before": "2026-07-29T15:16",
+     "epoch_after": "2026-07-29T15:16",
+     "gap_h": 0.0,
+     "da_km": -25.87,
+     "dv_ms": -0.943,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 43002,
+     "name": "BEIDOU 3 M2",
+     "epoch_before": "2026-07-22T12:15",
+     "epoch_after": "2026-07-23T01:08",
+     "gap_h": 13.0,
+     "da_km": -16.95,
+     "dv_ms": -1.149,
+     "regime": "MEO"
+    },
+    {
+     "norad": 43539,
+     "name": "BEIDOU IGSO 7",
+     "epoch_before": "2026-07-16T19:52",
+     "epoch_after": "2026-07-21T16:58",
+     "gap_h": 117.0,
+     "da_km": -14.35,
+     "dv_ms": -0.523,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 37763,
+     "name": "BEIDOU IGSO 4",
+     "epoch_before": "2026-05-07T02:03",
+     "epoch_after": "2026-05-09T13:27",
+     "gap_h": 59.0,
+     "da_km": -10.56,
+     "dv_ms": -0.385,
+     "regime": "GEO/IGSO"
+    }
+   ],
+   "source": "stat",
+   "prc_pipeline": null
+  },
+  "starlink": {
+   "label": "Starlink",
+   "n_sats": 10944,
+   "n_with_tle_2026": 10944,
+   "n_events": 223590,
+   "n_sats_with_event": 8499,
+   "n_tle_transitions": 4708266,
+   "rate_per_100_sats": 2043.04,
+   "rate_per_1000_transitions": 47.49,
+   "median_abs_da_km": 1.252,
+   "monthly": {
+    "2026-03": 3,
+    "2026-04": 28760,
+    "2026-05": 29118,
+    "2026-06": 36653,
+    "2026-07": 57522,
+    "2026-08": 39562,
+    "2026-09": 31972
+   },
+   "top": [
+    {
+     "norad": 53856,
+     "name": "STARLINK-4795",
+     "events": 328
+    },
+    {
+     "norad": 53897,
+     "name": "STARLINK-5035",
+     "events": 317
+    },
+    {
+     "norad": 53492,
+     "name": "STARLINK-4451",
+     "events": 314
+    },
+    {
+     "norad": 53500,
+     "name": "STARLINK-4455",
+     "events": 301
+    },
+    {
+     "norad": 53930,
+     "name": "STARLINK-5010",
+     "events": 292
+    },
+    {
+     "norad": 53017,
+     "name": "STARLINK-4281",
+     "events": 280
+    },
+    {
+     "norad": 53926,
+     "name": "STARLINK-5014",
+     "events": 280
+    },
+    {
+     "norad": 53668,
+     "name": "STARLINK-4458",
+     "events": 271
+    },
+    {
+     "norad": 53590,
+     "name": "STARLINK-4689",
+     "events": 266
+    },
+    {
+     "norad": 53673,
+     "name": "STARLINK-4456",
+     "events": 263
+    },
+    {
+     "norad": 49176,
+     "name": "STARLINK-3069",
+     "events": 255
+    },
+    {
+     "norad": 53467,
+     "name": "STARLINK-4394",
+     "events": 254
+    }
+   ],
+   "events": [
+    {
+     "norad": 69208,
+     "name": "STARLINK-37562",
+     "epoch_before": "2026-06-23T17:06",
+     "epoch_after": "2026-06-26T04:01",
+     "gap_h": 59.0,
+     "da_km": 82.04,
+     "dv_ms": 46.244,
+     "regime": "LEO"
+    },
+    {
+     "norad": 68277,
+     "name": "STARLINK-36989",
+     "epoch_before": "2026-04-24T06:33",
+     "epoch_after": "2026-04-27T17:27",
+     "gap_h": 83.0,
+     "da_km": 72.68,
+     "dv_ms": 41.103,
+     "regime": "LEO"
+    },
+    {
+     "norad": 68081,
+     "name": "STARLINK-37066",
+     "epoch_before": "2026-04-22T23:54",
+     "epoch_after": "2026-04-27T12:58",
+     "gap_h": 109.0,
+     "da_km": 72.66,
+     "dv_ms": 40.937,
+     "regime": "LEO"
+    },
+    {
+     "norad": 100286,
+     "name": "STARLINK-37793",
+     "epoch_before": "2026-09-10T10:27",
+     "epoch_after": "2026-09-14T23:11",
+     "gap_h": 109.0,
+     "da_km": 63.4,
+     "dv_ms": 35.896,
+     "regime": "LEO"
+    },
+    {
+     "norad": 100257,
+     "name": "STARLINK-38167",
+     "epoch_before": "2026-09-22T16:43",
+     "epoch_after": "2026-09-26T22:09",
+     "gap_h": 102.0,
+     "da_km": 62.73,
+     "dv_ms": 35.403,
+     "regime": "LEO"
+    },
+    {
+     "norad": 100033,
+     "name": "STARLINK-37458",
+     "epoch_before": "2026-08-04T13:41",
+     "epoch_after": "2026-08-08T04:55",
+     "gap_h": 87.0,
+     "da_km": 59.69,
+     "dv_ms": 33.823,
+     "regime": "LEO"
+    },
+    {
+     "norad": 67538,
+     "name": "STARLINK-36397",
+     "epoch_before": "2026-04-22T22:30",
+     "epoch_after": "2026-04-27T20:43",
+     "gap_h": 118.0,
+     "da_km": 59.64,
+     "dv_ms": 33.708,
+     "regime": "LEO"
+    },
+    {
+     "norad": 68734,
+     "name": "STARLINK-37349",
+     "epoch_before": "2026-05-21T03:28",
+     "epoch_after": "2026-05-24T20:29",
+     "gap_h": 89.0,
+     "da_km": 57.81,
+     "dv_ms": 32.687,
+     "regime": "LEO"
+    },
+    {
+     "norad": 69947,
+     "name": "STARLINK-37904",
+     "epoch_before": "2026-08-01T08:48",
+     "epoch_after": "2026-08-05T02:00",
+     "gap_h": 90.0,
+     "da_km": 56.71,
+     "dv_ms": 32.183,
+     "regime": "LEO"
+    },
+    {
+     "norad": 100167,
+     "name": "STARLINK-38150",
+     "epoch_before": "2026-07-29T22:39",
+     "epoch_after": "2026-08-03T12:56",
+     "gap_h": 110.0,
+     "da_km": 56.33,
+     "dv_ms": 32.382,
+     "regime": "LEO"
+    }
+   ],
+   "source": "stat",
+   "prc_pipeline": null
+  },
+  "oneweb": {
+   "label": "OneWeb",
+   "n_sats": 654,
+   "n_with_tle_2026": 654,
+   "n_events": 443,
+   "n_sats_with_event": 71,
+   "n_tle_transitions": 365208,
+   "rate_per_100_sats": 67.74,
+   "rate_per_1000_transitions": 1.21,
+   "median_abs_da_km": 1.13,
+   "monthly": {
+    "2026-03": 51,
+    "2026-04": 134,
+    "2026-05": 74,
+    "2026-06": 46,
+    "2026-07": 24,
+    "2026-08": 54,
+    "2026-09": 60
+   },
+   "top": [
+    {
+     "norad": 48212,
+     "name": "ONEWEB-0179",
+     "events": 239
+    },
+    {
+     "norad": 45425,
+     "name": "ONEWEB-0067",
+     "events": 9
+    },
+    {
+     "norad": 50494,
+     "name": "ONEWEB-0419",
+     "events": 8
+    },
+    {
+     "norad": 50502,
+     "name": "ONEWEB-0432",
+     "events": 8
+    },
+    {
+     "norad": 54642,
+     "name": "ONEWEB-0527",
+     "events": 8
+    },
+    {
+     "norad": 49108,
+     "name": "ONEWEB-0330",
+     "events": 7
+    },
+    {
+     "norad": 54679,
+     "name": "ONEWEB-0685",
+     "events": 6
+    },
+    {
+     "norad": 48785,
+     "name": "ONEWEB-0240",
+     "events": 6
+    },
+    {
+     "norad": 45451,
+     "name": "ONEWEB-0087",
+     "events": 6
+    },
+    {
+     "norad": 54678,
+     "name": "ONEWEB-0659",
+     "events": 6
+    },
+    {
+     "norad": 50498,
+     "name": "ONEWEB-0426",
+     "events": 6
+    },
+    {
+     "norad": 55170,
+     "name": "ONEWEB-0629",
+     "events": 6
+    }
+   ],
+   "events": [
+    {
+     "norad": 48212,
+     "name": "ONEWEB-0179",
+     "epoch_before": "2026-03-16T08:02",
+     "epoch_after": "2026-03-19T01:34",
+     "gap_h": 65.0,
+     "da_km": -21.36,
+     "dv_ms": -10.252,
+     "regime": "LEO"
+    },
+    {
+     "norad": 48212,
+     "name": "ONEWEB-0179",
+     "epoch_before": "2026-03-19T01:34",
+     "epoch_after": "2026-03-19T20:00",
+     "gap_h": 19.0,
+     "da_km": -17.39,
+     "dv_ms": -8.374,
+     "regime": "LEO"
+    },
+    {
+     "norad": 48212,
+     "name": "ONEWEB-0179",
+     "epoch_before": "2026-07-30T16:27",
+     "epoch_after": "2026-08-02T15:02",
+     "gap_h": 71.0,
+     "da_km": -13.35,
+     "dv_ms": -6.939,
+     "regime": "LEO"
+    },
+    {
+     "norad": 48212,
+     "name": "ONEWEB-0179",
+     "epoch_before": "2026-08-02T15:02",
+     "epoch_after": "2026-08-03T16:00",
+     "gap_h": 25.0,
+     "da_km": -12.08,
+     "dv_ms": -6.296,
+     "regime": "LEO"
+    },
+    {
+     "norad": 48212,
+     "name": "ONEWEB-0179",
+     "epoch_before": "2026-03-29T04:00",
+     "epoch_after": "2026-03-30T04:00",
+     "gap_h": 24.0,
+     "da_km": -10.78,
+     "dv_ms": -5.309,
+     "regime": "LEO"
+    },
+    {
+     "norad": 48212,
+     "name": "ONEWEB-0179",
+     "epoch_before": "2026-08-04T00:00",
+     "epoch_after": "2026-08-05T08:00",
+     "gap_h": 32.0,
+     "da_km": -8.49,
+     "dv_ms": -4.435,
+     "regime": "LEO"
+    },
+    {
+     "norad": 48212,
+     "name": "ONEWEB-0179",
+     "epoch_before": "2026-03-25T00:00",
+     "epoch_after": "2026-03-25T16:00",
+     "gap_h": 16.0,
+     "da_km": -7.42,
+     "dv_ms": -3.621,
+     "regime": "LEO"
+    },
+    {
+     "norad": 48212,
+     "name": "ONEWEB-0179",
+     "epoch_before": "2026-03-22T06:00",
+     "epoch_after": "2026-03-22T22:00",
+     "gap_h": 16.0,
+     "da_km": -7.18,
+     "dv_ms": -3.48,
+     "regime": "LEO"
+    },
+    {
+     "norad": 48785,
+     "name": "ONEWEB-0240",
+     "epoch_before": "2026-04-07T12:36",
+     "epoch_after": "2026-04-08T21:28",
+     "gap_h": 33.0,
+     "da_km": -5.54,
+     "dv_ms": -2.652,
+     "regime": "LEO"
+    },
+    {
+     "norad": 48212,
+     "name": "ONEWEB-0179",
+     "epoch_before": "2026-03-23T12:00",
+     "epoch_after": "2026-03-24T00:00",
+     "gap_h": 12.0,
+     "da_km": -5.46,
+     "dv_ms": -2.656,
+     "regime": "LEO"
+    }
+   ],
+   "source": "stat",
+   "prc_pipeline": null
+  },
+  "prc_isr": {
+   "label": "大陸 ISR/遙感（含北斗）",
+   "n_sats": 587,
+   "n_with_tle_2026": 587,
+   "n_events": 1197,
+   "n_sats_with_event": 177,
+   "n_tle_transitions": 509301,
+   "rate_per_100_sats": 203.92,
+   "rate_per_1000_transitions": 2.35,
+   "median_abs_da_km": 1.081,
+   "monthly": {
+    "2026-01": 65,
+    "2026-02": 63,
+    "2026-03": 97,
+    "2026-04": 131,
+    "2026-05": 156,
+    "2026-06": 150,
+    "2026-07": 130,
+    "2026-08": 241,
+    "2026-09": 164
+   },
+   "top": [
+    {
+     "norad": 52446,
+     "name": "JILIN-01 GAOFEN 3D 29",
+     "events": 88
+    },
+    {
+     "norad": 52444,
+     "name": "JILIN-01 GAOFEN 3D 27",
+     "events": 87
+    },
+    {
+     "norad": 46459,
+     "name": "JILIN-01 GAOFEN 3G",
+     "events": 79
+    },
+    {
+     "norad": 63431,
+     "name": "HJS-6D",
+     "events": 59
+    },
+    {
+     "norad": 63430,
+     "name": "HJS-6C",
+     "events": 56
+    },
+    {
+     "norad": 63429,
+     "name": "HJS-6B",
+     "events": 54
+    },
+    {
+     "norad": 52908,
+     "name": "YAOGAN-35 02B",
+     "events": 50
+    },
+    {
+     "norad": 46460,
+     "name": "JILIN-01 GAOFEN 3H",
+     "events": 25
+    },
+    {
+     "norad": 53876,
+     "name": "CHUANG XIN 16B",
+     "events": 24
+    },
+    {
+     "norad": 60462,
+     "name": "YAOGAN-43 O1E",
+     "events": 16
+    },
+    {
+     "norad": 60946,
+     "name": "YAOGAN-43 02B",
+     "events": 15
+    },
+    {
+     "norad": 60950,
+     "name": "YAOGAN-43 02F",
+     "events": 14
+    }
+   ],
+   "events": [
+    {
+     "norad": 58204,
+     "name": "TJS 10",
+     "epoch_before": "2026-03-30T15:02",
+     "epoch_after": "2026-03-31T16:43",
+     "gap_h": 25.0,
+     "da_km": -186.79,
+     "dv_ms": -6.821,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 58204,
+     "name": "TJS 10",
+     "epoch_before": "2026-02-03T11:42",
+     "epoch_after": "2026-02-04T17:30",
+     "gap_h": 30.0,
+     "da_km": 140.46,
+     "dv_ms": 5.096,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 43874,
+     "name": "TJS 3",
+     "epoch_before": "2026-05-04T17:58",
+     "epoch_after": "2026-05-06T17:00",
+     "gap_h": 48.0,
+     "da_km": 135.75,
+     "dv_ms": 4.95,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 67433,
+     "name": "YAOGAN-50",
+     "epoch_before": "2026-01-16T04:17",
+     "epoch_after": "2026-01-20T18:11",
+     "gap_h": 110.0,
+     "da_km": 133.23,
+     "dv_ms": 67.009,
+     "regime": "LEO"
+    },
+    {
+     "norad": 43874,
+     "name": "TJS 3",
+     "epoch_before": "2026-02-07T16:58",
+     "epoch_after": "2026-02-08T18:39",
+     "gap_h": 26.0,
+     "da_km": -122.64,
+     "dv_ms": -4.491,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 43874,
+     "name": "TJS 3",
+     "epoch_before": "2026-04-03T16:47",
+     "epoch_after": "2026-04-05T17:58",
+     "gap_h": 49.0,
+     "da_km": -120.95,
+     "dv_ms": -4.432,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 40549,
+     "name": "BEIDOU I1 S",
+     "epoch_before": "2026-07-02T17:55",
+     "epoch_after": "2026-07-02T19:12",
+     "gap_h": 2.0,
+     "da_km": -120.58,
+     "dv_ms": -4.414,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 43683,
+     "name": "BEIDOU 3G1",
+     "epoch_before": "2026-04-01T20:42",
+     "epoch_after": "2026-04-06T09:18",
+     "gap_h": 109.0,
+     "da_km": -106.83,
+     "dv_ms": -3.91,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 55131,
+     "name": "SJ 23",
+     "epoch_before": "2026-05-04T19:15",
+     "epoch_after": "2026-05-06T18:51",
+     "gap_h": 47.0,
+     "da_km": 104.75,
+     "dv_ms": 3.812,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 56564,
+     "name": "BEIDOU 3 G4",
+     "epoch_before": "2026-03-26T13:49",
+     "epoch_after": "2026-03-28T05:10",
+     "gap_h": 40.0,
+     "da_km": -94.05,
+     "dv_ms": -3.429,
+     "regime": "GEO/IGSO"
+    }
+   ],
+   "source": "prc+stat",
+   "prc_pipeline": {
+    "n_events": 217,
+    "n_sats": 79,
+    "monthly": {
+     "2026-01": 48,
+     "2026-02": 52,
+     "2026-03": 34,
+     "2026-04": 46,
+     "2026-05": 37
+    },
+    "severity": {
+     "medium": 16,
+     "small": 174,
+     "large": 2,
+     "none": 25
+    }
+   }
+  },
+  "prc_comm": {
+   "label": "大陸通訊星系",
+   "n_sats": 411,
+   "n_with_tle_2026": 411,
+   "n_events": 6287,
+   "n_sats_with_event": 166,
+   "n_tle_transitions": 240145,
+   "rate_per_100_sats": 1529.68,
+   "rate_per_1000_transitions": 26.18,
+   "median_abs_da_km": 6.052,
+   "monthly": {
+    "2026-04": 132,
+    "2026-05": 1320,
+    "2026-06": 2322,
+    "2026-07": 1532,
+    "2026-08": 761,
+    "2026-09": 220
+   },
+   "top": [
+    {
+     "norad": 69120,
+     "name": "QIANFAN-161",
+     "events": 121
+    },
+    {
+     "norad": 69105,
+     "name": "QIANFAN-146",
+     "events": 118
+    },
+    {
+     "norad": 69121,
+     "name": "QIANFAN-162",
+     "events": 117
+    },
+    {
+     "norad": 69116,
+     "name": "QIANFAN-157",
+     "events": 115
+    },
+    {
+     "norad": 69104,
+     "name": "QIANFAN-145",
+     "events": 113
+    },
+    {
+     "norad": 69114,
+     "name": "QIANFAN-155",
+     "events": 113
+    },
+    {
+     "norad": 69115,
+     "name": "QIANFAN-156",
+     "events": 113
+    },
+    {
+     "norad": 69075,
+     "name": "QIANFAN-129",
+     "events": 109
+    },
+    {
+     "norad": 69117,
+     "name": "QIANFAN-158",
+     "events": 109
+    },
+    {
+     "norad": 69111,
+     "name": "QIANFAN-152",
+     "events": 108
+    },
+    {
+     "norad": 69109,
+     "name": "QIANFAN-150",
+     "events": 107
+    },
+    {
+     "norad": 69119,
+     "name": "QIANFAN-160",
+     "events": 103
+    }
+   ],
+   "events": [
+    {
+     "norad": 37677,
+     "name": "CHINASAT 10",
+     "epoch_before": "2026-09-16T23:16",
+     "epoch_after": "2026-09-19T23:32",
+     "gap_h": 72.0,
+     "da_km": 396.21,
+     "dv_ms": 14.244,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 69350,
+     "name": "QIANFAN-DTC01",
+     "epoch_before": "2026-07-01T23:25",
+     "epoch_after": "2026-07-05T16:46",
+     "gap_h": 89.0,
+     "da_km": 47.86,
+     "dv_ms": 26.685,
+     "regime": "LEO"
+    },
+    {
+     "norad": 69344,
+     "name": "QIANFAN-180",
+     "epoch_before": "2026-07-01T08:37",
+     "epoch_after": "2026-07-05T17:09",
+     "gap_h": 105.0,
+     "da_km": 46.26,
+     "dv_ms": 25.796,
+     "regime": "LEO"
+    },
+    {
+     "norad": 69076,
+     "name": "QIANFAN-130",
+     "epoch_before": "2026-07-04T03:54",
+     "epoch_after": "2026-07-07T16:16",
+     "gap_h": 85.0,
+     "da_km": 42.04,
+     "dv_ms": 20.769,
+     "regime": "LEO"
+    },
+    {
+     "norad": 37677,
+     "name": "CHINASAT 10",
+     "epoch_before": "2026-09-19T23:32",
+     "epoch_after": "2026-09-21T22:18",
+     "gap_h": 47.0,
+     "da_km": -41.31,
+     "dv_ms": -1.487,
+     "regime": "GEO/IGSO"
+    },
+    {
+     "norad": 69339,
+     "name": "QIANFAN-175",
+     "epoch_before": "2026-06-20T10:00",
+     "epoch_after": "2026-06-22T20:00",
+     "gap_h": 58.0,
+     "da_km": 40.22,
+     "dv_ms": 22.658,
+     "regime": "LEO"
+    },
+    {
+     "norad": 69337,
+     "name": "QIANFAN-173",
+     "epoch_before": "2026-06-20T10:00",
+     "epoch_after": "2026-06-22T20:00",
+     "gap_h": 58.0,
+     "da_km": 39.25,
+     "dv_ms": 22.309,
+     "regime": "LEO"
+    },
+    {
+     "norad": 69330,
+     "name": "QIANFAN-166",
+     "epoch_before": "2026-06-20T10:00",
+     "epoch_after": "2026-06-22T20:00",
+     "gap_h": 58.0,
+     "da_km": 38.88,
+     "dv_ms": 22.021,
+     "regime": "LEO"
+    },
+    {
+     "norad": 69342,
+     "name": "QIANFAN-178",
+     "epoch_before": "2026-06-20T10:00",
+     "epoch_after": "2026-06-22T20:00",
+     "gap_h": 58.0,
+     "da_km": 38.61,
+     "dv_ms": 21.877,
+     "regime": "LEO"
+    },
+    {
+     "norad": 69340,
+     "name": "QIANFAN-176",
+     "epoch_before": "2026-06-20T10:00",
+     "epoch_after": "2026-06-22T20:00",
+     "gap_h": 58.0,
+     "da_km": 38.15,
+     "dv_ms": 21.581,
+     "regime": "LEO"
+    }
+   ],
+   "source": "stat",
+   "prc_pipeline": null
+  }
+ }
+}

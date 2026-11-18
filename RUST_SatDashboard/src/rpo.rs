@@ -273,6 +273,30 @@ fn sample(p: &Recs, s: &Recs, t0: DateTime<Utc>, t1: DateTime<Utc>, step_s: f64)
         .collect()
 }
 
+/// TCA 精算步長（秒）與搜尋半寬上限
+pub const TCA_REFINE_S: f64 = 1.0;
+const TCA_REFINE_MAX_HALF_S: f64 = 3600.0;
+
+/// 在取樣最小值 t_c 前後 ± half_s（一個取樣步長）內逐秒重算，回傳 (t, d)；
+/// 同距離取最接近 t_c 者。細取樣（LEO 60 s、GEO 600 s）最小值與真正 TCA 可差半個步長。
+fn refine_tca(
+    p: &Recs,
+    s: &Recs,
+    t_c: DateTime<Utc>,
+    half_s: f64,
+    lo: DateTime<Utc>,
+    hi: DateTime<Utc>,
+) -> Option<(DateTime<Utc>, f64)> {
+    let half = Duration::milliseconds((half_s.clamp(TCA_REFINE_S, TCA_REFINE_MAX_HALF_S) * 1000.0) as i64);
+    let pts = sample(p, s, lo.max(t_c - half), hi.min(t_c + half), TCA_REFINE_S);
+    pts.into_iter()
+        .min_by(|a, b| {
+            a.d.total_cmp(&b.d)
+                .then_with(|| (a.t - t_c).num_milliseconds().abs().cmp(&(b.t - t_c).num_milliseconds().abs()))
+        })
+        .map(|x| (x.t, x.d))
+}
+
 fn pick_focus_center(
     preset: &Value,
     coarse: &[Sample],
@@ -413,8 +437,10 @@ pub fn compute_scene(
     let fh = Duration::milliseconds((focus_hours * 3_600_000.0) as i64);
     let (f0, f1) = (lo.max(fc - fh), hi.min(fc + fh));
     let mut fine = sample(&prec, &srec, f0, f1, fine_step_s);
+    let mut step_used = fine_step_s;
     if fine.is_empty() {
         fine = sample(&prec, &srec, lo, hi, coarse_step_min * 60.0);
+        step_used = coarse_step_min * 60.0;
     }
 
     // RTN（LVLH）：R = 徑向、N = r × v（有限差分速度）、T = N × R
@@ -474,6 +500,11 @@ pub fn compute_scene(
         .min_by(|a, b| round_to(a.1.d, 4).total_cmp(&round_to(b.1.d, 4)))
         .map(|x| x.0)
         .unwrap();
+    // TCA 精算：取樣最小值前後一個步長內逐秒重算（orbit 動畫仍用原取樣）
+    let (tca_t, tca_d) = match refine_tca(&prec, &srec, fine[imin].t, step_used, lo, hi) {
+        Some((t, d)) if d < fine[imin].d => (t, d),
+        _ => (fine[imin].t, fine[imin].d),
+    };
     let g = coarse.iter().min_by(|a, b| a.d.total_cmp(&b.d)).unwrap();
     let get = |k: &str, d: Value| preset.get(k).cloned().unwrap_or(d);
     let meta = json!({
@@ -494,7 +525,9 @@ pub fn compute_scene(
         "engine": "rust",
     });
     let mut summary = json!({
-        "d_min": orbit[imin]["d"], "t_min": orbit[imin]["t"], "pc_max": orbit[imin]["pc"],
+        "d_min": round_to(tca_d, 4), "t_min": iso_z(&tca_t), "pc_max": pc(tca_d),
+        "d_min_sampled": orbit[imin]["d"], "t_min_sampled": orbit[imin]["t"],
+        "tca_refine_s": TCA_REFINE_S,
         "d_min_global": round_to(g.d, 3), "t_min_global": iso_z(&g.t),
         "n_orbit": orbit.len(), "fine_step_s": fine_step_s,
         "n_series": series.len(), "coarse_step_min": round_to(coarse_step_min, 1),

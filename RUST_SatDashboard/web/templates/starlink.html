@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8"/>
+<title>Starlink 台灣服務能力分析</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="stylesheet" href="/static/css/starlink.css?v=__BUILD__"/>
+
+<script>/* HF 代理暫時性 502/503/504：同源 GET fetch 自動重試 3 次（0.8/1.6/2.4 s） */(function(){var f=window.fetch;if(!f)return;window.fetch=function(input,init){var m=((init&&init.method)||(input&&input.method)||'GET').toUpperCase();var u=typeof input==='string'?input:(input&&input.url)||'';var same=u.charAt(0)==='/'||u.indexOf(location.origin)===0;if(m!=='GET'||!same)return f.apply(this,arguments);var self=this,args=arguments;return new Promise(function(res,rej){(function go(n){f.apply(self,args).then(function(r){if((r.status===502||r.status===503||r.status===504)&&n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{res(r);}},function(e){if(n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{rej(e);}});})(0);});};}());</script>
+<script>
+/* 分頁：?tab=census|v3|deorbit（舊 /starlink-census 等網址 302 轉入）；預設台灣服務分析 */
+window.SL_TAB = new URLSearchParams(location.search).get('tab') || 'analysis';
+</script>
+<script src="/static/js/starlink.js?v=__BUILD__" defer></script>
+<script src="/static/js/starlink_tabs.js?v=__BUILD__" defer></script>
+</head>
+<body>
+<div id="topbar">
+  <h1>&#127921; <span data-i18n="app_title">Starlink 台灣服務能力分析</span><span class="sub" data-i18n="app_subtitle">幾何可用性 · 延遲估算 · 天空覆蓋 · 遮蔽模擬</span></h1>
+  <div id="clock">&#8212;</div>
+  <div id="lang-switcher">
+    <button type="button" class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+    <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    <button type="button" class="lang-btn" data-lang="ja" onclick="setLang('ja')">日</button>
+  </div>
+  <button type="button" class="tbtn" onclick="location.href='/taipei'">&#127988; <span data-i18n="nav_taipei">台北覆蓋</span></button>
+  <button type="button" class="tbtn" onclick="location.href='/story'">&#128214; <span data-i18n="nav_story">StoryMap</span></button>
+  <button type="button" class="tbtn" onclick="location.href='/'">&#8592; <span data-i18n="nav_home">主頁</span></button>
+</div>
+
+<nav id="sl-tabs">
+  <button type="button" data-tab="analysis" onclick="slShowTab('analysis')">台灣服務分析</button>
+  <button type="button" data-tab="census" onclick="slShowTab('census')">顆數普查</button>
+  <button type="button" data-tab="v3" onclick="slShowTab('v3')">V3 佈署</button>
+  <button type="button" data-tab="deorbit" onclick="slShowTab('deorbit')">離軌名單</button>
+</nav>
+
+<section id="panel-analysis">
+<!-- 設定欄 -->
+<div id="settings-bar">
+  <span class="sf-label" data-i18n="lbl_lat">緯度</span>
+  <input id="sf-lat"  class="sf-input" type="number" step="0.001" value="25.033" min="-90"  max="90"/>
+  <span class="sf-label" data-i18n="lbl_lon">經度</span>
+  <input id="sf-lon"  class="sf-input" type="number" step="0.001" value="121.565" min="-180" max="180"/>
+  <span class="sf-label" data-i18n="lbl_mask">遮蔽仰角</span>
+  <input id="sf-mask" class="sf-input" type="number" step="1" value="25" min="0" max="85" style="width:60px"/>
+  <span class="sf-label" data-i18n="lbl_generation">世代篩選</span>
+  <select id="sf-generation" class="sf-input" style="width:110px">
+    <option value="all" data-i18n="gen_all">全部</option>
+    <option value="v1.0">v1.0</option>
+    <option value="v1.5">v1.5</option>
+    <option value="v2mini">v2 Mini</option>
+    <option value="v3">V3</option>
+  </select>
+  <span class="sf-label" data-i18n="lbl_dropout">備援折損模擬</span>
+  <input id="sf-dropout" class="sf-input" type="number" step="5" value="0" min="0" max="90" style="width:55px"/>
+  <span class="sf-label">%</span>
+  <span class="sf-label"><span data-i18n="lbl_mask_deg_suffix">°　　城市預設：</span></span>
+  <div id="preset-wrap">
+    <button id="preset-btn" onclick="togglePreset()">&#9660; <span data-i18n="preset_btn">選擇</span></button>
+    <div id="preset-menu">
+      <div class="preset-item" onclick="applyPreset(25.033,121.565,'taipei')"><span data-i18n="city_taipei">台北</span>（25.033N, 121.565E）</div>
+      <div class="preset-item" onclick="applyPreset(24.148,120.674,'taichung')"><span data-i18n="city_taichung">台中</span>（24.148N, 120.674E）</div>
+      <div class="preset-item" onclick="applyPreset(22.999,120.201,'tainan')"><span data-i18n="city_tainan">台南</span>（22.999N, 120.201E）</div>
+      <div class="preset-item" onclick="applyPreset(22.638,120.302,'kaohsiung')"><span data-i18n="city_kaohsiung">高雄</span>（22.638N, 120.302E）</div>
+      <div class="preset-item" onclick="applyPreset(23.977,121.613,'hualien')"><span data-i18n="city_hualien">花蓮</span>（23.977N, 121.613E）</div>
+      <div class="preset-item" onclick="applyPreset(24.433,118.317,'kinmen')"><span data-i18n="city_kinmen">金門</span>（24.433N, 118.317E）</div>
+      <div class="preset-item" onclick="applyPreset(23.569,119.563,'penghu')"><span data-i18n="city_penghu">澎湖</span>（23.569N, 119.563E）</div>
+    </div>
+  </div>
+  <button id="compute-btn" onclick="triggerCompute()">&#9654; <span data-i18n="compute_btn">計算</span></button>
+  <span id="settings-note" data-i18n="settings_note_default">預報時距 24 小時，步長 15 分鐘，Starlink 終端建議遮蔽仰角 25°</span>
+</div>
+
+<div id="main">
+
+  <!-- Loading -->
+  <div id="loading-bar">
+    <div class="spinner"></div>
+    <span id="loading-msg" data-i18n="loading_msg_default">正在向量化計算 6000+ 顆 Starlink 可見性，請稍候...</span>
+  </div>
+
+  <!-- 統計卡片 -->
+  <div id="stats-row" style="display:none">
+    <div class="stat-card">
+      <div class="sc-val" id="st-total">—</div>
+      <div class="sc-label" data-i18n="stat_total">資料庫衛星數</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-val" id="st-mean">—</div>
+      <div class="sc-label" data-i18n="stat_mean">平均可見顆數</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-val" id="st-min">—</div>
+      <div class="sc-label" data-i18n="stat_min">最低可見顆數</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-val" id="st-avail">—</div>
+      <div class="sc-label" data-i18n="stat_avail">幾何可用率</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-val" id="st-rtt-mean">—</div>
+      <div class="sc-label" data-i18n="stat_rtt_mean">平均 RTT 下限</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-val" id="st-rtt-range">—</div>
+      <div class="sc-label" data-i18n="stat_rtt_range">RTT 下限範圍</div>
+      <div id="st-opshell" style="font-size:9px;margin-top:2px;color:#8b949e"></div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-val" id="st-gaps">—</div>
+      <div class="sc-label" data-i18n="stat_gaps">覆蓋空窗次數</div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-val" id="st-excluded">—</div>
+      <div class="sc-label" data-i18n="stat_excluded">已排除離軌中衛星</div>
+      <div style="font-size:9px;margin-top:2px"><a href="?tab=deorbit" onclick="slShowTab('deorbit');return false" style="color:#58a6ff" data-i18n="stat_excluded_link">查看即時離軌名單 →</a></div>
+    </div>
+  </div>
+
+  <!-- 圖表區 -->
+  <div id="charts-row" style="display:none">
+    <!-- 左側：可見性時間軸 + RTT 延遲圖 -->
+    <div class="chart-box" id="timeline-box">
+      <h3>&#128202; <span data-i18n="timeline_title">可見衛星數量時間軸（24 小時）</span></h3>
+      <canvas id="timeline-canvas" height="160"></canvas>
+      <div id="tl-divider"></div>
+      <h3 style="margin-top:6px">&#128225; <span data-i18n="rtt_title">傳播延遲下限（RTT floor，ms）</span></h3>
+      <canvas id="rtt-canvas" height="90"></canvas>
+      <div style="font-size:10px;color:#8b949e;margin-top:3px;text-align:right">
+        <span data-i18n="rtt_note">純幾何傳播延遲（光速 × 斜距 × 2）；不含地面基礎設施，台灣無本地閘道時估計額外加 30~50 ms</span>
+      </div>
+      <div id="timeline-note" style="font-size:10px;color:#8b949e;margin-top:3px;text-align:right"></div>
+    </div>
+
+    <!-- 右側：極座標圖（密度 / 遮蔽模擬 tabs） -->
+    <div class="chart-box" id="polar-box">
+      <div id="polar-tabs">
+        <button class="ptab active" id="tab-density"  onclick="setPolarMode('density')"><span data-i18n="tab_density">密度圖</span></button>
+        <button class="ptab"        id="tab-obstruct" onclick="setPolarMode('obstruct')"><span data-i18n="tab_obstruct">遮蔽模擬</span></button>
+      </div>
+      <canvas id="polar-canvas" width="240" height="240"></canvas>
+      <!-- 密度圖說明 -->
+      <div id="polar-density-note" style="font-size:10px;color:#8b949e;text-align:center;margin-top:4px">
+        <span data-i18n="polar_density_note">中心 = 天頂 &nbsp;·&nbsp; 外環 = 遮蔽仰角 &nbsp;·&nbsp; 顏色越深衛星密度越高</span>
+      </div>
+      <!-- 遮蔽模擬控制（隱藏直到切換） -->
+      <div id="obstruct-controls" style="display:none">
+        <div style="font-size:11px;color:#8b949e;margin:6px 0 4px">
+          &#128247; <span data-i18n="obstruct_hint">點擊天空格子標記遮蔽區域（紅色）</span>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="obtn" onclick="clearObstruction()">&#10005; <span data-i18n="btn_clear_all">清除全部</span></button>
+          <button class="obtn obtn-apply" id="apply-obst-btn" onclick="applyObstruction()">
+            &#9654; <span data-i18n="btn_apply_obst">計算遮蔽影響</span>
+          </button>
+          <span id="block-count" style="font-size:11px;color:#8b949e;align-self:center">
+            已選 0 格
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 遮蔽模擬結果 -->
+  <div id="obst-result" style="display:none">
+    <div class="obst-result-head">
+      <span style="font-size:13px;font-weight:600;color:#e6edf3">&#9888;&#65039; <span data-i18n="obst_result_title">遮蔽模擬結果</span></span>
+      <button class="obtn" onclick="clearObstructionResult()" style="margin-left:auto">&#10005; <span data-i18n="btn_close">關閉</span></button>
+    </div>
+    <div id="obst-compare"></div>
+    <div id="obst-chart-wrap">
+      <h3 style="font-size:12px;color:#8b949e;font-weight:400;margin:6px 0 4px"><span data-i18n="obst_chart_title">遮蔽前後對比</span></h3>
+      <canvas id="obst-canvas" height="120"></canvas>
+    </div>
+    <div id="obst-gaps"></div>
+  </div>
+
+  <!-- 空窗列表 -->
+  <div id="gaps-box" style="display:none">
+    <h3>&#9888;&#65039; <span data-i18n="gaps_box_title">幾何覆蓋空窗（可見衛星數 &lt; 1）</span></h3>
+    <div id="gaps-content"></div>
+  </div>
+
+  <!-- Roadmap -->
+  <div id="roadmap">
+    <h2>&#128203; <span data-i18n="roadmap_title">功能藍圖 — Starlink 台灣分析工具</span></h2>
+
+    <div class="rm-layer">
+      <div class="rm-layer-title" data-i18n="layer1_title">第一層 — 連線品質預測（對一般用戶最直接）</div>
+      <div class="rm-cards">
+        <div class="rm-card">
+          <div class="rm-card-head"><span class="rm-badge done">&#9989; <span data-i18n="badge_done">已實作</span></span><h4 data-i18n="card1_1_title">可見衛星數量時間軸</h4></div>
+          <p data-i18n="card1_1_desc">以用戶座標 + 仰角遮蔽計算 24 小時可見衛星數時間序列，是服務幾何可用性的最佳代理指標。</p>
+        </div>
+        <div class="rm-card">
+          <div class="rm-card-head"><span class="rm-badge done">&#9989; <span data-i18n="badge_done">已實作</span></span><h4 data-i18n="card1_2_title">覆蓋空窗偵測</h4></div>
+          <p data-i18n="card1_2_desc">標出可見數低於門檻的時段。台灣緯度覆蓋極佳，斷線多為遮蔽或雨衰，而非幾何因素。</p>
+        </div>
+        <div class="rm-card">
+          <div class="rm-card-head"><span class="rm-badge done">&#9989; <span data-i18n="badge_done">已實作</span></span><h4 data-i18n="card1_3_title">天空密度覆蓋圖</h4></div>
+          <p data-i18n="card1_3_desc">極座標天空密度圖告訴用戶天線朝哪個方向淨空優先，取代「北半球朝北」的一般經驗法則。</p>
+        </div>
+        <div class="rm-card">
+          <div class="rm-card-head"><span class="rm-badge done">&#9989; <span data-i18n="badge_done">已實作</span></span><h4 data-i18n="card1_4_title">遮蔽模擬</h4></div>
+          <p data-i18n="card1_4_desc">點選天空格子描繪地形 / 建物遮蔽，即時計算扣除遮蔽後的幾何可用率與空窗變化。</p>
+        </div>
+        <div class="rm-card">
+          <div class="rm-card-head"><span class="rm-badge done">&#9989; <span data-i18n="badge_done">已實作</span></span><h4 data-i18n="card1_5_title">傳播延遲下限估計</h4></div>
+          <p data-i18n="card1_5_desc">由最近可見衛星斜距計算光速往返時間（RTT floor）。只計入作業殼層的衛星（門檻依近地點分布自動判定，本次數值見上方「RTT 下限範圍」卡片）：殼層高度約 340–560 km，衛星在天頂時往返約 2.3–3.7 ms，仰角越低越長；加上閘道路由後實際約 25–45 ms。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="rm-layer">
+      <div class="rm-layer-title" data-i18n="layer2_title">第二層 — 進階網路品質分析（重度用戶 / 企業 / 研究者）</div>
+      <div class="rm-cards">
+        <div class="rm-card">
+          <div class="rm-card-head"><span class="rm-badge plan">&#128197; <span data-i18n="badge_plan">規劃中</span></span><h4 data-i18n="card2_1_title">換手頻率估計</h4></div>
+          <p data-i18n="card2_1_desc">追蹤「最高仰角衛星」隨時間的切換次數，換手密集時段對應較高的 jitter。</p>
+        </div>
+        <div class="rm-card">
+          <div class="rm-card-head"><span class="rm-badge plan">&#128197; <span data-i18n="badge_plan">規劃中</span></span><h4 data-i18n="card2_2_title">閘道站可及性分析</h4></div>
+          <p data-i18n="card2_2_desc">判斷每顆衛星是否同時可見日本、菲律賓等鄰近閘道（bent-pipe），或標記具 ISL 星間鏈路的 Gen2 衛星。</p>
+        </div>
+        <div class="rm-card">
+          <div class="rm-card-head"><span class="rm-badge plan">&#128197; <span data-i18n="badge_plan">規劃中</span></span><h4 data-i18n="card2_3_title">雨衰風險指標</h4></div>
+          <p data-i18n="card2_3_desc">Ku/Ka 頻段在台灣強降雨衰減顯著，低仰角鏈路穿越更長雨層路徑，結合即時天氣提供精確服務品質預警。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="rm-layer">
+      <div class="rm-layer-title" data-i18n="layer3_title">第三層 — 台灣情境韌性分析（SSA / 通訊韌性）</div>
+      <div class="rm-cards">
+        <div class="rm-card">
+          <div class="rm-card-head"><span class="rm-badge done">&#9989; <span data-i18n="badge_done">已實作</span></span><h4 data-i18n="card3_1_title">備援情境模擬</h4></div>
+          <p data-i18n="card3_1_desc">隨機折損 0～90% 衛星，觀察台灣可見數與可用率的退化程度（呼應 2024 東部強震海纜受損、單一路徑失效的韌性議題；可與海纜頁 /cable 對照）。</p>
+        </div>
+        <div class="rm-card">
+          <div class="rm-card-head"><span class="rm-badge done">&#9989; <span data-i18n="badge_done">已實作</span></span><h4 data-i18n="card3_2_title">世代 / 機型篩選</h4></div>
+          <p data-i18n="card3_2_desc">依發射日期啟發式區分 v1.0／v1.5／v2 Mini／V3 世代子集合分析可用性；並自動排除近期偵測為離軌中的衛星（詳見「離軌名單」分頁）。</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:12px;padding:10px 12px;background:#161b22;border:1px solid #30363d;
+                border-radius:6px;font-size:11px;color:#8b949e;line-height:1.6">
+      &#128204; <strong style="color:#c9d1d9" data-i18n="status_note_label">現況說明</strong>：<span data-i18n="status_note_body">《電信管理法》第 36 條修正案於 2026 年 7 月 21 日三讀、8 月 5 日公布：以衛星通信技術申請者，經主管機關依國家安全等 7 款事項審酌核准後，得不受外資持股上限與董事長國籍限制；但該條第 9、10 項的施行日期由行政院另定，截至本頁更新時尚未施行；惟截至目前 Starlink 尚未取得正式核准、也還未在台灣商轉。本工具基於公開 TLE 資料計算純幾何可用性，供技術評估與政策討論參考。</span>
+    </div>
+  </div>
+
+</div>
+</section>
+
+<section id="panel-census" class="sl-panel" hidden></section>
+<section id="panel-v3" class="sl-panel" hidden></section>
+<section id="panel-deorbit" class="sl-panel" hidden></section>
+</body>
+</html>
