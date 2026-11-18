@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>操作手冊 — SatDashboard</title>
+<style>
+:root{--bg:#0A0D13;--panel:#12161f;--line:rgba(255,255,255,.10);--ink:#dfe6f0;--muted:#8b96a8;
+      --acc:#35C6F4;--hi:#FFD700;--mono:"Consolas","Courier New",monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.75 "Segoe UI","Microsoft JhengHei",sans-serif}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:28px;max-width:1180px;margin:0 auto;padding:24px 16px 80px}
+nav.toc{position:sticky;top:16px;align-self:start;max-height:calc(100vh - 32px);overflow:auto;
+        background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px}
+nav.toc .home{display:block;color:var(--acc);text-decoration:none;font-family:var(--mono);margin-bottom:8px}
+nav.toc ul{list-style:none;margin:0;padding:0}
+nav.toc ul ul{padding-left:12px}
+nav.toc a{color:var(--ink);text-decoration:none;display:block;padding:2px 0}
+nav.toc a:hover{color:var(--acc)}
+main{min-width:0}
+h1{font-size:26px;margin:0 0 10px;color:#fff}
+h2{font-size:20px;margin:36px 0 10px;padding-top:8px;border-top:1px solid var(--line);color:var(--hi)}
+h3{font-size:16px;margin:24px 0 8px;color:var(--acc)}
+a{color:var(--acc)}
+blockquote{margin:12px 0;padding:8px 14px;background:rgba(53,198,244,.07);border-left:3px solid var(--acc);border-radius:4px;color:var(--ink)}
+blockquote p{margin:4px 0}
+table{border-collapse:collapse;width:100%;margin:10px 0 16px;font-size:14px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+th{background:var(--panel);color:var(--muted);font-weight:600}
+code{font-family:var(--mono);font-size:13px;background:rgba(255,255,255,.07);padding:1px 5px;border-radius:4px}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto}
+pre code{background:none;padding:0}
+hr{display:none}
+@media (max-width:820px){.layout{grid-template-columns:1fr}nav.toc{position:static;max-height:none}}
+@media print{nav.toc{display:none}.layout{display:block}body{background:#fff;color:#000}h2,h3,h1{color:#000}}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc"><a class="home" href="/">&larr; 返回主頁</a><div class="toc">
+<ul>
+<li><a href="#_1">一、系統簡介</a></li>
+<li><a href="#_2">二、單機版下載與安裝</a><ul>
+<li><a href="#_3">資料夾結構</a></li>
+<li><a href="#_4">啟動參數（進階）</a></li>
+</ul>
+</li>
+<li><a href="#3d">三、主畫面（3D 地球儀）</a><ul>
+<li><a href="#1">1. 頂端統計卡</a></li>
+<li><a href="#2">2. 頂端功能按鈕（主選單）</a></li>
+<li><a href="#3">3. 左側面板：搜尋與分類</a></li>
+<li><a href="#4">4. 地球操作</a></li>
+</ul>
+</li>
+<li><a href="#norad">四、NORAD 監測與軌道六參數</a><ul>
+<li><a href="#norad_1">NORAD 監測</a></li>
+<li><a href="#_5">軌道六參數</a></li>
+</ul>
+</li>
+<li><a href="#_6">五、其他分析頁</a><ul>
+<li><a href="#taipei">台北覆蓋分析（/taipei）</a></li>
+<li><a href="#starlink-starlink">Starlink 分析（/starlink）</a></li>
+<li><a href="#rporpo">RPO功能測試（/rpo）</a></li>
+<li><a href="#storymapstory">StoryMap（/story）</a></li>
+</ul>
+</li>
+<li><a href="#lab">六、會合與機動實驗室（/lab）</a><ul>
+<li><a href="#1_1">1. 批次分析</a></li>
+<li><a href="#2-json">2. 場景 JSON</a></li>
+<li><a href="#3_1">3. 避碰決策</a></li>
+<li><a href="#4-rpo">4. RPO 控制</a></li>
+</ul>
+</li>
+<li><a href="#_7">七、衛星任務規劃（僅單機版）</a><ul>
+<li><a href="#_8">網路圖磚面板（單機版）</a></li>
+</ul>
+</li>
+<li><a href="#_9">八、更新（單機版）</a></li>
+<li><a href="#_10">九、常見問題</a></li>
+<li><a href="#_11">版本紀錄</a></li>
+</ul>
+</div>
+</nav>
+<main>
+<h1 id="atrdc-satdashboard-v017">ATRDC SatDashboard 操作手冊（v0.1.7）</h1>
+<blockquote>
+<p>適用版本：Rust 單機版 v0.1.7（2026-11-18）與線上網頁版。
+對象：第一次使用本系統的分析人員；不需要寫程式。</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、系統簡介</h2>
+<p>SatDashboard 是太空態勢儀表板：在 3D 地球上顯示全目錄衛星的即時位置，並提供近距離配對篩選、覆蓋分析、Starlink 分析、故事頁，以及「會合與機動實驗室」（碰撞機率、避碰決策、近距離操作模擬）。</p>
+<p>有兩種使用方式，畫面與操作相同：</p>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>怎麼開</th>
+<th>差異</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>線上網頁版</td>
+<td>瀏覽器開 https://rhynowu-atrdc-satdashboard.hf.space/ 或多語版 https://rhynowu-atrdc-satdashboard-i18n.hf.space/</td>
+<td>不需安裝；沒有「衛星任務規劃」與線上更新</td>
+</tr>
+<tr>
+<td>Rust 單機版（Windows）</td>
+<td>下載 exe 雙擊執行</td>
+<td>離線可用；多了「衛星任務規劃」、網路圖磚面板、自動更新</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">二、單機版下載與安裝</h2>
+<ol>
+<li>依電腦架構下載執行檔（不確定時：設定 → 系統 → 關於 →「系統類型」）：</li>
+<li>Intel／AMD：<a href="https://huggingface.co/datasets/RhynoWu/Rust_SatDashboard/resolve/main/exe/SatDashboard-x64.exe" target="_blank" rel="noopener">SatDashboard-x64.exe</a></li>
+<li>ARM64（Snapdragon 等）：<a href="https://huggingface.co/datasets/RhynoWu/Rust_SatDashboard/resolve/main/exe/SatDashboard-arm64.exe" target="_blank" rel="noopener">SatDashboard-arm64.exe</a></li>
+<li>把 exe 放進一個<strong>新的空資料夾</strong>（例如 <code>D:\SatDashboard\</code>）。</li>
+<li>雙擊執行。若 Windows 跳出 SmartScreen，按「其他資訊」→「仍要執行」。</li>
+<li>會開啟一個黑色主控台視窗，並自動開啟瀏覽器（預設 <code>http://127.0.0.1:5013/</code>；埠被占用時自動往後找）。</li>
+<li>第一次使用時，程式會自動下載衛星資料庫（壓縮檔約 100 MB，解壓後約 200 MB），主控台每 10% 顯示進度，完成後頁面自動重新整理。</li>
+</ol>
+<blockquote>
+<p><strong>結束程式</strong>：關閉主控台視窗，或在視窗內按 Ctrl+C。關閉瀏覽器分頁不會結束程式。</p>
+</blockquote>
+<h3 id="_3">資料夾結構</h3>
+<pre><code>D:\SatDashboard\
+  SatDashboard-x64.exe
+  data\DB\space_db_slim.duckdb     ← 資料庫（自動下載）
+  logo.png                         ← 選用：右下角自訂 Logo
+</code></pre>
+<h3 id="_4">啟動參數（進階）</h3>
+<p>在命令提示字元執行 <code>SatDashboard-x64.exe --help</code> 可看完整說明。常用的有：</p>
+<table>
+<thead>
+<tr>
+<th>參數</th>
+<th>說明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--port 5020</code></td>
+<td>指定 HTTP 埠</td>
+</tr>
+<tr>
+<td><code>--host 0.0.0.0</code></td>
+<td>讓區網其他電腦連入（預設只有本機）</td>
+</tr>
+<tr>
+<td><code>--no-browser</code></td>
+<td>啟動後不自動開瀏覽器</td>
+</tr>
+<tr>
+<td><code>--no-update</code></td>
+<td>不自動檢查更新（頁面上仍可手動檢查）</td>
+</tr>
+<tr>
+<td><code>--db &lt;檔案&gt;</code></td>
+<td>指定資料庫檔</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3d">三、主畫面（3D 地球儀）</h2>
+<h3 id="1">1. 頂端統計卡</h3>
+<table>
+<thead>
+<tr>
+<th>卡片</th>
+<th>意義</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>追蹤物件</td>
+<td>資料庫中目前有效的物件總數</td>
+</tr>
+<tr>
+<td>有效載荷／碎片／火箭體</td>
+<td>依物件類型分類的數量</td>
+</tr>
+<tr>
+<td>近 1 年</td>
+<td>最近一年發射的物件數</td>
+</tr>
+<tr>
+<td>近距離配對</td>
+<td>目前彼此距離低於門檻的物件配對數；<strong>點選可開啟配對清單</strong></td>
+</tr>
+</tbody>
+</table>
+<p>統計卡下方一列顯示資料庫名稱、更新時間、有效衛星數、TLE 日期範圍與檔案大小。</p>
+<h3 id="2">2. 頂端功能按鈕（主選單）</h3>
+<table>
+<thead>
+<tr>
+<th>按鈕</th>
+<th>功能</th>
+<th>詳見</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🎯 NORAD 監測</td>
+<td>同時追蹤多顆指定衛星（依 NORAD 編號）</td>
+<td>第四節</td>
+</tr>
+<tr>
+<td>📡 軌道六參數</td>
+<td>拖曳滑桿調整克卜勒六參數，即時看軌道形狀；可產生 STK Connect 指令</td>
+<td>第四節</td>
+</tr>
+<tr>
+<td>🏴 台北覆蓋分析</td>
+<td>台北上空即時／指定時刻覆蓋、過頂預報、天球軌跡、凌月預報</td>
+<td>第五節</td>
+</tr>
+<tr>
+<td>🎱 Starlink 分析</td>
+<td>台灣地區可見性、星系普查、V3 佈署、離軌名單</td>
+<td>第五節</td>
+</tr>
+<tr>
+<td>🛰 RPO功能測試</td>
+<td>近距離配對的相對接近 3D 場景與碰撞機率</td>
+<td>第五節</td>
+</tr>
+<tr>
+<td>📖 StoryMap</td>
+<td>敘事頁：星系、機動、地基追蹤、碰撞預警整合展示</td>
+<td>第五節</td>
+</tr>
+<tr>
+<td>🧪 機動實驗室</td>
+<td><strong>v0.1.7 新增入口</strong>：會合與機動實驗室</td>
+<td>第六節</td>
+</tr>
+<tr>
+<td>🛰 任務規劃</td>
+<td>僅單機版：地面站下行接收過頂預報與雲量</td>
+<td>第七節</td>
+</tr>
+<tr>
+<td>中／EN／日</td>
+<td>切換介面語言</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>功能頁都會在<strong>新分頁</strong>開啟，地球儀保持在原分頁。</p>
+<h3 id="3">3. 左側面板：搜尋與分類</h3>
+<ul>
+<li><strong>搜尋欄</strong>：輸入 NORAD 編號或衛星名稱（例如 <code>25544</code> 或 <code>ISS</code>），從清單點選即可在地球上定位並顯示軌道。</li>
+<li><strong>分類頁籤</strong>：國家、用途、年代、星座。點選一個分類即只顯示該類衛星；按「返回」回到上一層。</li>
+<li><strong>底圖與向量圖層</strong>：可開關全球國界、SSN 地面觀測站等圖層（單機版預設底圖為「地形＋海底地形」）。</li>
+</ul>
+<h3 id="4">4. 地球操作</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>旋轉</td>
+<td>滑鼠左鍵拖曳</td>
+</tr>
+<tr>
+<td>縮放</td>
+<td>滾輪</td>
+</tr>
+<tr>
+<td>傾斜視角</td>
+<td>右鍵或中鍵拖曳</td>
+</tr>
+<tr>
+<td>回到台灣上空</td>
+<td>右上角 🏠 按鈕</td>
+</tr>
+<tr>
+<td>查看衛星資訊</td>
+<td>點選衛星點</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="norad">四、NORAD 監測與軌道六參數</h2>
+<h3 id="norad_1">NORAD 監測</h3>
+<ol>
+<li>按頂端「🎯 NORAD 監測」開啟面板。</li>
+<li>輸入要追蹤的 NORAD 編號，可同時追蹤多顆；按鈕旁的數字是目前追蹤顆數。</li>
+<li>被追蹤的衛星會在地球上醒目標示，面板列出即時位置。</li>
+</ol>
+<h3 id="_5">軌道六參數</h3>
+<ol>
+<li>按「📡 軌道六參數」開啟調整器。</li>
+<li>可先選預設案例：ISS 國際太空站、GPS 中軌、地球同步軌道、Molniya 大橢圓。</li>
+<li>拖曳六個滑桿：半長軸 a、離心率 e、傾角 i、升交點赤經 Ω、近地點幅角 ω、真近點角 ν。每個參數旁有白話說明。</li>
+<li>面板即時顯示遠地點高度、近地點高度、軌道週期。</li>
+<li>「STK Connect 指令」區塊依目前參數自動產生指令，按「複製指令」可直接貼到 STK 主控台。</li>
+</ol>
+<hr />
+<h2 id="_6">五、其他分析頁</h2>
+<h3 id="taipei">台北覆蓋分析（/taipei）</h3>
+<ul>
+<li>即時或指定時刻，有哪些衛星可看到台北；未來過頂預報清單。</li>
+<li>天球圖顯示過頂軌跡（方位／仰角）；衛星凌月（經過月面或日面）預報。</li>
+</ul>
+<h3 id="starlink-starlink">Starlink 分析（/starlink）</h3>
+<p>頁面上方分頁：</p>
+<ul>
+<li><strong>台灣服務分析</strong>：指定地點的可見衛星數、往返延遲（RTT）、遮蔽評估。</li>
+<li><strong>顆數普查</strong>：各殼層與世代的在軌數量。</li>
+<li><strong>V3 佈署</strong>：V3 衛星的發射與佈署進度。</li>
+<li><strong>離軌名單</strong>：正在降低軌道的衛星與再入預測。</li>
+</ul>
+<h3 id="rporpo">RPO功能測試（/rpo）</h3>
+<ul>
+<li>選一組近距離配對，以歷史 TLE 重建兩顆衛星的相對接近過程（3D），顯示 RTN 分量與 Chan 碰撞機率。</li>
+<li>可切換以任一顆衛星為視角中心；<code>/rpo/cases</code> 為案例總覽。</li>
+</ul>
+<h3 id="storymapstory">StoryMap（/story）</h3>
+<ul>
+<li>故事清單頁列出所有敘事頁，點選卡片進入。</li>
+<li>每個故事整合地圖、統計圖與說明，例如星系生命週期、日本發射、海陸空天整合展示。</li>
+</ul>
+<hr />
+<h2 id="lab">六、會合與機動實驗室（/lab）</h2>
+<p>從主選單按「🧪 機動實驗室」進入。頁面上方有四個分頁，右上角可切換語言、按「返回主頁」。</p>
+<blockquote>
+<p><strong>重要觀念</strong>：TCA 與距離顯示的位數代表數值求解精度，不代表預報準確度。公開 TLE 在低軌道的誤差約為公里級；頁面上的協方差若是「展示模式」，碰撞機率只在該假設下成立。</p>
+</blockquote>
+<h3 id="1_1">1. 批次分析</h3>
+<p>用途：一顆主星對多顆次星，在指定期間內找出所有近距離交會並計算碰撞機率。</p>
+<ol>
+<li><strong>主星 NORAD 編號</strong>：例如 <code>25544</code>。</li>
+<li><strong>起始時刻（UTC）</strong>、<strong>分析天數</strong>（最多 7 天）。</li>
+<li><strong>篩選門檻（km）</strong>：只列出距離低於門檻的交會。</li>
+<li><strong>次星清單</strong>：每行一個 NORAD 編號（最多 200 顆）；或按「載入 CSV 檔」，表頭為
+   <code>norad_id,name,line1,line2,hbr_m,sigma_r_km,sigma_t_km,sigma_n_km</code>。按「檢查清單」先確認格式，錯誤會標出行號與原因。</li>
+<li>可調整粗掃步長、預設硬體半徑（m）、主星與次星的 RTN σ（km）。</li>
+<li>按「執行分析」。</li>
+</ol>
+<p>結果：</p>
+<ul>
+<li>上方摘要：分析配對數、門檻內事件數、最大 Pc（Foster）、最近距離、計算時間。</li>
+<li><strong>事件表</strong>：TCA、次星、距離、相對速度、RTN 分量、接近角、Pc（Foster／Chan）、適用性。點選一列看詳細資料。</li>
+<li><strong>適用性</strong>三種結果：通過初步篩選、未通過初步篩選、無法判定。未通過時，短時交會假設不成立，Pc 僅供參考。</li>
+<li>圖表：距離歷程（對數刻度）、交會平面（B-plane，藍色橢圓為合併協方差 1σ／2σ／3σ，紅圈為合併硬體半徑）。</li>
+<li>「下載事件 CSV」「下載完整 JSON」可保存結果。</li>
+</ul>
+<h3 id="2-json">2. 場景 JSON</h3>
+<p>用途：以標準場景檔（<code>satdash.scenario/v1</code>）描述物件、期間與協方差，執行完整分析。</p>
+<ol>
+<li>從「示範場景」選一個範例，或按「載入 JSON 檔」。</li>
+<li>直接在編輯框修改 JSON。</li>
+<li>按「執行分析」。格式錯誤時顯示錯誤代碼與位置。</li>
+</ol>
+<p>協方差有兩種模式：<strong>展示模式</strong>（固定 RTN σ）與<strong>傳播模式</strong>（6×6 協方差沿軌道傳播，較接近實際）。</p>
+<h3 id="3_1">3. 避碰決策</h3>
+<p>用途：針對一個交會事件，搜尋沿軌道方向（加速或減速）單次推力的避碰方案。</p>
+<ol>
+<li>選「示範案例」（例如「基準：可行」「Δv 預算不足」「二次篩選拒收最省方案」）。</li>
+<li>設定條件：</li>
+<li>機動窗起點／終點（TCA 前幾分鐘）、最短通知時間（分鐘）</li>
+<li>Δv 範圍（m/s）與 Δv 預算</li>
+<li>距離目標（km）、Pc 目標（只在傳播模式協方差時採用）</li>
+<li>網格：機動時刻數、Δv 量級數、驗證上限</li>
+<li>二次篩選追加物體：額外檢查的 NORAD 編號</li>
+<li>按「搜尋避碰方案」。</li>
+</ol>
+<p>結果狀態：</p>
+<table>
+<thead>
+<tr>
+<th>狀態</th>
+<th>意義</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>找到可行方案</td>
+<td>列出建議方案（★）與其他通過驗證的候選</td>
+</tr>
+<tr>
+<td>在指定網格內未找到方案</td>
+<td>不代表不存在方案；可放寬目標、加大 Δv 或網格密度</td>
+</tr>
+<tr>
+<td>限制條件互相衝突</td>
+<td>例如通知時間之後已無合法機動時刻、預算小於最小 Δv</td>
+</tr>
+<tr>
+<td>不需機動</td>
+<td>不機動的交會已符合目標</td>
+</tr>
+<tr>
+<td>找不到目標交會事件</td>
+<td>指定 TCA 附近沒有門檻內事件</td>
+</tr>
+</tbody>
+</table>
+<p>候選方案表列出機動時刻、距 TCA（分）、方向（+T 抬升／−T 降低）、Δv、機動後距離、Pc 前後、軌道半長軸與週期變化、推進劑用量，以及「新增／變近交會」的二次篩選結果。</p>
+<p>圖表：各機動時刻所需最小 Δv、距離歷程（參考與建議方案）、機動前後交會平面、3D 幾何（可切換「TCA 附近」與「全域軌道」，滑鼠拖曳旋轉、滾輪縮放）。</p>
+<h3 id="4-rpo">4. RPO 控制</h3>
+<p>用途：模擬追蹤星接近目標星的近距離操作（RPO），檢查全程是否安全。</p>
+<ol>
+<li>選「示範案例」：V-bar 接近、R-bar 接近、通訊中斷故障注入、各種違規案例。</li>
+<li>設定安全限制：安全區半徑（m）、接近速度上限（m/s）、走廊半角與軸向、被動安全圈數。</li>
+<li>選用：<strong>故障注入</strong>，輸入通訊中斷時刻與觸發時間（秒），驗證預存的撤離脈衝能否把追蹤星帶到安全處。</li>
+<li>按「執行 RPO 模擬」。</li>
+</ol>
+<p>結果：</p>
+<table>
+<thead>
+<tr>
+<th>狀態</th>
+<th>意義</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>通過</td>
+<td>非線性重播沒有違規，所有預存撤離脈衝都安全</td>
+</tr>
+<tr>
+<td>未通過</td>
+<td>有安全違規，或部分撤離脈衝不安全</td>
+</tr>
+<tr>
+<td>設計不可行</td>
+<td>例如轉移脈衝超過單次上限</td>
+</tr>
+</tbody>
+</table>
+<p>摘要卡：總 Δv（設計／重播）、脈衝數、最近距離、最大接近速度、撤離表是否安全、故障注入結果、推進劑。</p>
+<p>圖表：T–R 平面相對軌跡（HCW 設計與非線性重播疊圖）、距離與安全區、接近速度、撤離脈衝的最差距離、3D 相對軌跡；段落表列出每段轉移、駐留、繞飛的到達誤差與違規。</p>
+<hr />
+<h2 id="_7">七、衛星任務規劃（僅單機版）</h2>
+<p>從主選單「🛰 任務規劃」進入，用於規劃地面站接收光學衛星下行資料的時段。</p>
+<ol>
+<li>地面站預設為中央大學太空及遙測研究中心（可在頁面修改座標）；仰角遮罩預設 15°。</li>
+<li>選星系（Vantor 的 WorldView、GeoEye、WorldView Legion）與日期（今天起到第 7 天，以台灣日期選擇）。</li>
+<li>3D 畫面先畫出各衛星的軌道；<strong>點選軌道或左側衛星</strong>後，才顯示該顆衛星的過頂清單。</li>
+<li>過頂清單顯示 AOS／LOS（台灣時間）、時長、最大仰角、方位與雲量。預設不顯示夜間過頂，可取消勾選。</li>
+<li>點選一次過頂：3D 顯示可接收弧段與每 30 秒時間點，天球圖顯示方位／仰角軌跡（★ 為最接近時刻）。</li>
+<li><strong>雲量預報</strong>（未來約 3 天，資料來源 MET Norway）：</li>
+<li>「衛星正下方雲量」色條：沿地面軌跡每 60 秒的雲量，滑鼠移上去看低／中／高雲與降水。</li>
+<li>3D 地面的半透明方格：地面軌跡左右各 5° 的 1° 網格雲量，點方格看細節。</li>
+</ol>
+<blockquote>
+<p>TLE 外推越遠誤差越大；第 5–7 天的過頂時刻只適合粗略規劃。</p>
+</blockquote>
+<h3 id="_8">網路圖磚面板（單機版）</h3>
+<p>地球儀、台北、海纜、任務規劃頁左上角的 🗺 按鈕：可疊加台灣公開 WMTS／WMS 底圖與圖層，以及 Himawari 氣象衛星全圓盤影像。需連網。</p>
+<hr />
+<h2 id="_9">八、更新（單機版）</h2>
+<ul>
+<li>程式啟動 30 秒後自動檢查一次，之後每 6 小時檢查。</li>
+<li>有新版時，地球儀右下角（任務規劃頁在頂列）顯示「資料庫有新版」或「程式有新版」與更新按鈕。</li>
+<li><strong>資料庫更新</strong>：下載完成後自動換上新資料，不必重開程式；舊檔保留一份 <code>.bak</code>。</li>
+<li><strong>程式更新</strong>：下載完成後按「重新啟動」，新版會在新的主控台視窗啟動，頁面自動重新整理。</li>
+<li>所有更新檔都經過數位簽章與 sha256 驗證，驗證不過就不會套用。</li>
+<li>以 <code>--host 0.0.0.0</code> 開放區網時，只有本機可以觸發更新。</li>
+</ul>
+<hr />
+<h2 id="_10">九、常見問題</h2>
+<p><strong>Q1. 雙擊 exe 沒有反應或被擋下？</strong>
+SmartScreen 擋下時按「其他資訊」→「仍要執行」。公司電腦若禁止執行未簽章程式，請改用線上網頁版。</p>
+<p><strong>Q2. 瀏覽器沒有自動開啟？</strong>
+看主控台視窗顯示的網址（例如 <code>http://127.0.0.1:5013/</code>），手動貼到瀏覽器。</p>
+<p><strong>Q3. 地球一片藍或衛星沒有出現？</strong>
+第一次使用時資料庫還在下載，請等主控台顯示完成；頁面會自動重新整理。</p>
+<p><strong>Q4. 資料庫下載中斷？</strong>
+重新啟動程式即可，會從中斷處續傳。也可以手動下載 <code>db/space_db_slim.duckdb.zst</code>，解壓到 exe 旁的 <code>data\DB\space_db_slim.duckdb</code>。</p>
+<p><strong>Q5. 實驗室的碰撞機率可以直接用來決策嗎？</strong>
+不行。公開 TLE 的準確度有限，展示模式協方差是假設值。實際作業應使用精密星曆與營運方提供的協方差（例如 CDM）。</p>
+<p><strong>Q6. 想換右下角 Logo？</strong>
+在 exe 同資料夾放 <code>logo.png</code> 或 <code>logo.jpg</code>（建議正方形、透明背景），重新整理頁面即生效；刪除檔案即恢復。</p>
+<p><strong>Q7. 怎麼查目前版本？</strong>
+地球儀右下角的版本列，或在命令提示字元執行 <code>SatDashboard-x64.exe --version</code>。</p>
+<hr />
+<h2 id="_11">版本紀錄</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>日期</th>
+<th>重點</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v0.1.7</td>
+<td>2026-11-18</td>
+<td>主選單新增「🧪 機動實驗室」按鈕與「📘 操作手冊」入口</td>
+</tr>
+<tr>
+<td>v0.1.6</td>
+<td>2026-11-18</td>
+<td>新增會合與機動實驗室（批次分析、場景 JSON、避碰決策、RPO 控制）；移植 Starlink、StoryMap、Orbit Tuner</td>
+</tr>
+<tr>
+<td>v0.1.5</td>
+<td>2026-11-17</td>
+<td>自訂 Logo；接近事件排除太空站內部配對</td>
+</tr>
+</tbody>
+</table>
+<p>聯絡：<a href="https://www.linkedin.com/in/rhyno-wu-6b766771/" target="_blank" rel="noopener">Rhyno Wu（LinkedIn）</a></p>
+</main>
+</div>
+</body>
+</html>

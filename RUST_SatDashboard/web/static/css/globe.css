@@ -30,6 +30,8 @@ body{font-family:Tahoma,sans-serif;background:#0a0e17;color:#c9d1d9;display:flex
 #story-link:hover{background:#FFD70022}
 #lab-link{color:#FF7AB6;border:1px solid #FF7AB644}
 #lab-link:hover{background:#FF7AB622}
+#manual-link{color:#7CC4FF;border:1px solid #7CC4FF44}
+#manual-link:hover{background:#7CC4FF22}
 #orbit6-btn{font-size:11px;color:#64DD17;background:none;cursor:pointer;font-family:inherit;
   border:1px solid #64DD1744;padding:3px 8px;border-radius:3px;white-space:nowrap;flex-shrink:0}
 #orbit6-btn:hover{background:#64DD1722}

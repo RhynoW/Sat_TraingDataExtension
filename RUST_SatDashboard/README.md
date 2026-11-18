@@ -45,7 +45,8 @@ dist\SatDashboard-arm64.exe      ← Snapdragon 等 ARM64
 | `/starlink` | Starlink 分析（v0.1.6）：可見性／RTT／遮蔽、星系普查、殼層、離軌名單與離軌預測（NRLMSISE-00 完整移植） |
 | `/story`、`/story/{sid}` | StoryMap 故事頁（v0.1.6）：群組統計、ISR 解析度、雷達評估、重訪、軌跡 |
 | `/orbit-tuner` | Orbit Tuner 介紹頁（v0.1.6） |
-| `/lab` | **會合與機動實驗室**（v0.1.6，第二階段 Sprint 0–3）：批次會合分析、場景 JSON、避碰決策、RPO 控制模擬，見下方說明 |
+| `/manual` | 操作手冊（v0.1.7；原稿 `scenario-advanced01/docs/SatDashboard_操作手冊_v*.md`，`tools/build_manual.py` 產生頁面） |
+| `/lab` | **會合與機動實驗室**（v0.1.6，第二階段 Sprint 0–3）：批次會合分析、場景 JSON、避碰決策、RPO 控制模擬；v0.1.7 起主選單「🧪 機動實驗室」可直接進入，見下方說明 |
 | 版本與聯絡 | 主控台啟動訊息、`/api/about`、地球儀右下角與任務規劃頁頂列顯示版本、版本日期（台灣時間，重新建置時由 `build.rs` 產生，可用環境變數 `SATDASH_BUILD_DATE` 指定）與聯絡資訊（[Rhyno Wu，LinkedIn](https://www.linkedin.com/in/rhyno-wu-6b766771/)） |
 | 底圖 | 所有 3D 頁面預設「地形+海底地形 5.4K」（NASA Blue Marble 地形＋海底地形，內嵌於 exe），地球儀左側的底圖選單已隱藏。同步自 Python 版的頁面用 Viewer 的 `imageryProvider` 選項指定底圖，CesiumJS 1.104 起已移除（內附 1.114，原本會顯示一片藍）；`web/ext/standalone_ext.js` 把 Cesium 的預設底圖換成這張 |
 | 啟動視角 | 地球儀與任務規劃頁啟動時（以及 Home 鍵）為台灣上空正上方俯視（`web/ext/standalone_ext.js`） |
@@ -224,6 +225,12 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 ```
 
 ## 版本紀錄
+
+### v0.1.7（2026-11-18）
+
+新增
+- 主選單加入「🧪 機動實驗室」按鈕，點選即在新分頁開啟 `/lab`（繁中／英／日）；先前只能手動輸入網址。
+- 操作手冊 `/manual`：主選單「📘 操作手冊」開啟，涵蓋安裝、主畫面、各分析頁、實驗室、任務規劃、更新與常見問題；同一份手冊也放在 HF dataset 的 `MANUAL.md`。
 
 ### v0.1.6（2026-11-18）
 

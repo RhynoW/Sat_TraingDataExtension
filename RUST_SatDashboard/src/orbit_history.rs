@@ -29,6 +29,7 @@ pub fn extend(r: Router<Arc<AppState>>) -> Router<Arc<AppState>> {
     r.route("/orbit", get(|| async { page("templates/orbit.html") }))
         .route("/track", get(|| async { page("templates/track.html") }))
         .route("/orbit-tuner", get(|| async { page("templates/orbit_tuner.html") }))
+        .route("/manual", get(|| async { page("templates/manual.html") }))
         .route("/api/orbit/history", get(history))
         .route("/api/orbit/limits", get(limits))
 }

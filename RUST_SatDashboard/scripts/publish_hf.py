@@ -6,6 +6,7 @@
   db/space_db_slim.duckdb.zst
   exe/SatDashboard-x64.exe、exe/SatDashboard-arm64.exe
   README.md                dataset 說明
+  MANUAL.md                操作手冊（scenario-advanced01/docs/SatDashboard_操作手冊_v*.md 最新一版）
 
 內容沒變的檔案（sha256 與線上 manifest 相同）不重傳，沿用線上那份。預設上傳後壓縮 dataset 歷史（只留最新版）。
 
@@ -37,6 +38,7 @@ KEY = Path.home() / ".satdashboard" / "update_signing_key.pem"
 PUB = ROOT / "src" / "update_pubkey.hex"
 EXES = {"x86_64": "SatDashboard-x64.exe", "aarch64": "SatDashboard-arm64.exe"}
 DB_NAME = "space_db_slim.duckdb"
+MANUAL_DIR = ROOT.parent / "scenario-advanced01" / "docs"
 
 
 def sha256(p: Path) -> str:
@@ -58,6 +60,13 @@ def remote_manifest(repo: str) -> dict | None:
             return json.loads(r.read())
     except Exception:  # noqa: BLE001  第一次發布時還沒有
         return None
+
+
+def latest_manual() -> Path | None:
+    import re
+    files = sorted(MANUAL_DIR.glob("SatDashboard_操作手冊_v*.md"),
+                   key=lambda f: tuple(int(x) for x in re.findall(r"\d+", f.stem.split("_v")[-1])))
+    return files[-1] if files else None
 
 
 def exe_about(exe: Path) -> dict:
@@ -90,6 +99,8 @@ pretty_name: ATRDC SatDashboard Rust 單機版
 太空態勢儀表板的離線單機版：單一執行檔、不需安裝 Python，雙擊即可在瀏覽器開啟。
 
 __LATEST__
+
+📘 **操作手冊**：[MANUAL.md](https://huggingface.co/datasets/RhynoWu/Rust_SatDashboard/blob/main/MANUAL.md)（程式內也可從主選單「📘 操作手冊」開啟）
 
 ## 下載
 
@@ -148,7 +159,7 @@ D:\SatDashboard\
 - 軌道要素歷史與雙星比較（/orbit）、2D 地面軌跡（/track）
 - 台北覆蓋分析、RPO 相對接近 3D、全球海纜態勢、Himawari 氣象衛星最新全圓盤影像
 - Starlink 分析、StoryMap 故事頁（v0.1.6 起）
-- 會合與機動實驗室 /lab（v0.1.6 起）：批次會合分析與碰撞機率、場景 JSON、沿跡向避碰決策、RPO 接近控制模擬（HCW 設計、非線性重播、安全監控、撤離脈衝驗證）
+- 會合與機動實驗室 /lab（v0.1.6 起；v0.1.7 起主選單「🧪 機動實驗室」直接進入）：批次會合分析與碰撞機率、場景 JSON、沿跡向避碰決策、RPO 接近控制模擬（HCW 設計、非線性重播、安全監控、撤離脈衝驗證）
 
 ## 檔案
 
@@ -253,6 +264,11 @@ def main() -> int:
         (stage / "manifest.json.sig").write_text(key.sign(body).hex() + "\n", encoding="ascii")
         (stage / "README.md").write_text(render_readme(manifest), encoding="utf-8")
         uploads += ["manifest.json", "manifest.json.sig", "README.md"]
+        manual = latest_manual()
+        if manual:
+            shutil.copy2(manual, stage / "MANUAL.md")
+            uploads.append("MANUAL.md")
+            print(f"操作手冊：{manual.name}")
         print("檔案：", ", ".join(uploads))
 
         if a.local:
