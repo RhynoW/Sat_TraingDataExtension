@@ -22,32 +22,53 @@
 - 中文版的對數軸若有負指數，刻度改以一般數字顯示（0.1、1、10），因為微軟正黑體缺數學負號 U+2212。
 - 每次輸出都會檢查兩件事：英文版有沒有殘留中文、黑底版有沒有暗色文字。有問題會印出 `[WARN]`。
 
-## 期末報告（docs/期末報告_20261115.md）圖 1–22
+## 期末報告（docs/期末報告_20261115.md，2026-11-18 第九輪版）圖 1–23
 
-| 圖號 | 檔名（stem） | 狀態 | 產生指令 | 資料來源（快取） |
+23 張全部完成。四版本另複製一份至 `output/final_word/期末報告_FIN-RPT-01_圖片/`（依圖號命名）。
+
+| 圖號 | 檔名（stem） | 狀態 | 產生指令 | 資料來源 |
 |---|---|---|---|---|
 | 1 | fig_sys_architecture | 完成 | `python docs/gen_fig_system_flow.py --pub` | 無（流程圖） |
 | 2 | fig_sys_routing | 完成 | 同上 | 無 |
 | 3 | fig_sys_r7_flow | 完成（內容未改，只加多版本） | 同上 | 無 |
-| 4 | fig_r5_p2_parabola | **未完成** | — | 見下方「未完成清單」 |
-| 5 | fig_r1_nrlmsis_density | **未完成** | — | 同上 |
-| 6 | fig_sigma_vs_altitude | 完成 | `python docs/gen_fig_sigma_vs_altitude.py --pub` | ids_truth_set/ids_sigma_calibration.csv |
+| 4 | fig_r5_p2_parabola | 完成（重寫，2026-11-18） | `python docs/gen_fig_report_r_series.py` p2_parabola | maneuver_strategies_july 常數 |
+| 5 | fig_r1_nrlmsis_density | 完成（重寫） | `python docs/gen_fig_report_r_series.py` nrlmsis_density | pymsis 即時計算 |
+| 6 | fig_paperA_rv1_fig1 | 完成 | `python docs/gen_fig_paperA_rv1.py` | paperA_reviewV1.json、paperA_rv1_*.csv |
 | 7 | fig_nrlmsis_decay_expect | 完成 | `python docs/gen_fig_nrlmsis_decay_expect.py --pub` | data/benchmark/nrlmsis_decay_expect.csv |
 | 8 | fig_perigee_drag_corr_x30 | 完成 | `python docs/analyze_perigee_drag_corr.py --pub --tag=x30` | perigee_drag_corr_{windows,persat,bins}_x30 |
 | 9 | fig_nrlmsis_solar_tracking_x30 | 完成 | `python docs/gen_fig_nrlmsis_solar_tracking.py --pub --tag=x30` | perigee_drag_corr_*_x30、nrlmsis_decay_expect.csv |
 | 10 | fig_fs7_precise_nrlmsis | 完成 | `python docs/gen_fig_fs7_precise_nrlmsis.py --pub` | fs7_precise_decay_windows.csv、fs7_precise_nrlmsis_corr.csv |
-| 11 | fig_r3_joint_element | **未完成** | — | 見下方 |
-| 12 | fig_r9_planupload | **未完成** | — | 見下方 |
-| 13 | fig_r2_starlink_planes | **未完成** | — | 見下方 |
-| 14 | fig_r8_fs_family | **未完成** | — | 見下方 |
-| 15 | fig_r7_fs7_fleet | **未完成** | — | 見下方 |
-| 16 | fig_r4_shenlong_release | **未完成** | — | 見下方 |
-| 17 | fig_r6_shenlong_height | **未完成** | — | 見下方 |
+| 11 | fig_r3_joint_element | 完成（重寫） | `python docs/gen_fig_report_r_series.py` joint_element | 資料庫 TLE（唯讀） |
+| 12 | fig_r9_planupload | 完成（重寫） | `python docs/gen_fig_report_r_series.py` planupload | data/raw/ 之 MEME 發布檔 |
+| 13 | fig_r2_starlink_planes | 完成（重寫） | `python docs/gen_fig_report_r_series.py` starlink_planes | 資料庫 TLE（唯讀） |
+| 14 | fig_r8_fs_family | 完成（重寫） | `python docs/gen_fig_report_r_series.py` fs_family | 資料庫 TLE（唯讀） |
+| 15 | fig_r7_fs7_fleet | 完成（重寫） | `python docs/gen_fig_report_r_series.py` fs7_fleet | 資料庫 TLE（唯讀） |
+| 16 | fig_r4_shenlong_release | 完成（重寫） | `python docs/gen_fig_report_r_series.py` shenlong_release | 資料庫 TLE（唯讀）＋SGP4 |
+| 17 | fig_r6_shenlong_height | 完成（重寫） | `python docs/gen_fig_report_r_series.py` shenlong_height | 資料庫 TLE（唯讀） |
 | 18 | fig_shenlong_2026_rpo | 完成 | `python verify_shenlong_2026_rpo.py --pub` | verify_shenlong_2026_rpo.csv |
 | 19 | fig_tasa15_timeline_r7 | 完成 | `python docs/build_tasa15_ppt.py data/benchmark/tasa15_r7_delivery/r15.json --pub-fig-only` | r15.json 以交付當時資料重建（`docs/build_r15_json.py`） |
-| 20 | fig_sys_app_vs_r7 | 完成 | `python docs/gen_fig_system_flow.py --pub` | 無 |
-| 21 | fig_tasa15_detect_vs_alt_r7 | 完成 | `python docs/gen_fig_tasa15_detect_vs_alt.py data/benchmark/tasa15_r7_delivery/r15.json --pub R7` | 同上；重建之中文白底版與報告原圖逐像素相同 |
-| 22 | fig_drag_resid_threshold | 完成 | `python docs/study_drag_resid_threshold.py --pub` | drag_thr_by_alt_x30.csv、drag_thr_summary_x30.csv |
+| 20 | fig_starlink_v3_profile | 完成 | `python docs/analyze_starlink_v3.py --pub` | 資料庫 TLE |
+| 21 | fig_sys_app_vs_r7 | 完成 | `python docs/gen_fig_system_flow.py --pub` | 無 |
+| 22 | fig_tasa15_detect_vs_alt_r7 | 完成 | `python docs/gen_fig_tasa15_detect_vs_alt.py data/benchmark/tasa15_r7_delivery/r15.json --pub R7` | 同上；重建之中文白底版與報告原圖逐像素相同 |
+| 23 | fig_drag_resid_threshold | 完成 | `python docs/study_drag_resid_threshold.py --pub` | drag_thr_by_alt_x30.csv、drag_thr_summary_x30.csv |
+
+### 圖 4、5、11–17 之重寫說明（2026-11-18）
+
+這 9 張報告原圖找不到原產生程式，改由 `docs/gen_fig_report_r_series.py` 依原圖內容重寫。TLE 圖只用下載時間 ≤ 2026-07-15 之資料（圖 16、17 為 2024 年資料，不設下載時間限制），以對應原圖之資料快照。各圖與原圖核對結果：
+
+| 圖 | 核對項目 | 原圖／報告 | 重繪 | 說明 |
+|---|---|---|---|---|
+| 4 | 參考點、底值、P5 倍率 | 400 km 2.0 km、0.4 km、×1.6 | 相同 | 依委員意見④改直述：標題去「新版程式…實際取值」，刪舊版三段階梯門檻線（報告圖說未提及） |
+| 5 | 曲線形狀、倍數關係 | 600 km 極大／極小約數十倍 | 600 km 約 39 倍；磁暴比中等活動高約 1.5–2 倍 | 原圖之日期與經緯度未記錄，重繪取 2024-06-21 12:00 UTC、0°／0°，絕對值與原圖略有差異（400 km 約高 1.4 倍），不影響圖說 |
+| 11 | 起點高度、升軌段 | 約 270 km → 465 km | 270.5 → 465.7 km，261 筆 | 一致 |
+| 12 | 首值、5846 範圍 | 1,892 m；< 250 m | 1,892 m；最大 256 m | 37471 之 16 點由原始 MEME 檔重算（快取 CSV 只有前 10 點，數值一致）；5846 為 2026-07-04 至 07-08 之 11 對 |
+| 13 | 顆數、面數、異常面 | 10,802 顆／215 面／7 面 | 相同；批量事件日 0 | 視窗為 epoch 2026-06-14 至 07-14（30 天）、下載時間 ≤ 2026-07-15（逐一試算反推）。判定線依程式公式（中位數＋3σ）畫在 0.0215°；原圖之線畫在第 7 面之值（約 0.026°），被標記之 7 面相同 |
+| 14 | 各星高度 | FS-5 723、TRITON 595、FS-8A 564 km | 相同 | 黑底版福衛三號藍色深淺另行配色，反轉後仍可辨 |
+| 15 | FS7-3 末值 | 536 km | 536.3 km | 一致 |
+| 16 | 最近距離、06-06 前最大距離 | 約 0.2 km（05-28 05:43Z）；約 1,700 km | 0.18 km（05-28 05:53Z）；1,744 km | 每 1 分鐘、各用 epoch 最接近該時點之 TLE 做 SGP4（改用「epoch ≤ t 之最新 TLE」則為 0.12 km @ 12:58，與原圖不符）。最近時刻差 10 分鐘，報告已註明不宜逐位解讀 |
+| 17 | 高度差 | 約 1.00 km | 1.01 km | 原圖為黑底外部工具樣式，重繪改為與其他圖一致之樣式 |
+
+報告原圖 `docs/fig_r*.png` 未覆寫，報告本身未修改。
 
 ## 論文一：docs/paper_tle_sma_noise_floor.md
 
@@ -80,7 +101,6 @@
 
 | 圖 | 原因 |
 |---|---|
-| 報告圖 4、5、11–17（fig_r5_p2_parabola、fig_r1_nrlmsis_density、fig_r3_joint_element、fig_r9_planupload、fig_r2_starlink_planes、fig_r8_fs_family、fig_r7_fs7_fleet、fig_r4_shenlong_release、fig_r6_shenlong_height） | 專案內只有 PNG，找不到產生程式。檔名只出現在 build_*_ppt*.py 的插圖引用，git 歷史中也沒有。重繪等於從頭重寫程式，而且多數要重查 DB（MEME 檔、Starlink 軌道面、福衛家族、神龍相對運動），無法保證與報告原圖一致。 |
 | 論文一圖 3（paper2_fig3_shap_importance） | 原圖是 `Orbital_Maneuver_V2/analyze_plan_b_model.py` 以 shap 套件輸出的 shap_summary_bar.png，再手動複製而成。要重算 SHAP 並改寫 shap 內建繪圖，不屬於「讀快取重繪」。 |
 | 論文一圖 4（paper2_fig5_roc_comparison） | 左半部是直接嵌入的點陣圖（compare_models.py 產生的 roc_comparison.png），無法轉成黑底或英文；要重訓 RF／XGBoost 才能重繪 ROC 曲線。 |
 

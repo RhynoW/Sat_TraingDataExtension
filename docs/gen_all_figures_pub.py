@@ -23,6 +23,7 @@ JOBS = [
     ["docs/gen_fig_fs7_precise_nrlmsis.py", "--pub"],
     ["verify_shenlong_2026_rpo.py", "--pub"],
     ["docs/study_drag_resid_threshold.py", "--pub"],
+    ["docs/gen_fig_report_r_series.py"],          # 期末報告圖 4、5、11–17（需 space_db.duckdb，唯讀）
     ["ids_truth_set/ids_detection_curve.py", "--pub"],
     ["ids_truth_set/ids_dv_vector_validate.py", "--pub"],
     ["fs7_injection_sweep.py", "--pub"],
