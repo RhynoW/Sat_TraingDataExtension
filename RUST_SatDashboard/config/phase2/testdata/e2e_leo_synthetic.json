@@ -1,0 +1,96 @@
+{
+ "schema": "satdash.scenario/v1",
+ "id": "e2e-leo-synthetic-01",
+ "description": "Sprint 0 最小端到端案例：合成 LEO 雙星，τ=21600 s 附近約 0.36 km 接近，相對速度約 5.6 km/s",
+ "time": {
+  "system": "UTC",
+  "eop_source": "celestrak EOP-All.csv",
+  "eop_version": "snapshot 2026-11-18"
+ },
+ "frames": {
+  "sgp4_output": "TEME",
+  "propagation": "GCRF"
+ },
+ "objects": [
+  {
+   "role": "primary",
+   "name": "SYN-P",
+   "orbit_regime": "LEO",
+   "ephemeris": {
+    "type": "state",
+    "epoch": "2026-11-20T00:00:00Z",
+    "frame": "GCRF",
+    "r_km": [
+     215.3357059388151,
+     4740.941021012885,
+     4969.580669570353
+    ],
+    "v_kms": [
+     -6.9546790172395765,
+     -2.089713045506579,
+     2.2894798706190342
+    ],
+    "source": "synthetic"
+   },
+   "covariance": {
+    "mode": "demo",
+    "sigma_km": [
+     0.1,
+     0.5,
+     0.1
+    ],
+    "source": "assumed",
+    "independent_of_other": true
+   },
+   "hbr_m": 5.0,
+   "mass_kg": 260.0,
+   "area_to_mass_m2kg": 0.01,
+   "cd": 2.2
+  },
+  {
+   "role": "secondary",
+   "name": "SYN-S",
+   "orbit_regime": "LEO",
+   "ephemeris": {
+    "type": "state",
+    "epoch": "2026-11-20T00:00:00Z",
+    "frame": "GCRF",
+    "r_km": [
+     2515.7309002332604,
+     482.7941530924302,
+     6377.262247932742
+    ],
+    "v_kms": [
+     -6.011275261313622,
+     -3.8341214182882055,
+     2.659751483728053
+    ],
+    "source": "synthetic"
+   },
+   "covariance": {
+    "mode": "demo",
+    "sigma_km": [
+     0.2,
+     1.0,
+     0.2
+    ],
+    "source": "assumed",
+    "independent_of_other": true
+   },
+   "hbr_m": 5.0,
+   "mass_kg": 260.0,
+   "area_to_mass_m2kg": 0.01,
+   "cd": 2.2
+  }
+ ],
+ "screening": {
+  "start": "2026-11-20T00:00:00Z",
+  "duration_s": 43200.0,
+  "step_s": 10.0,
+  "threshold_km": 25.0
+ },
+ "force_model": {
+  "zonal": true,
+  "drag": false
+ }
+}

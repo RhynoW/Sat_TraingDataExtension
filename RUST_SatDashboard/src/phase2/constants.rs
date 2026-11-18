@@ -1,0 +1,32 @@
+//! 凍結的物理常數與數值設定（與 Python scenario04/phase2/constants.py 逐值相同）。
+
+pub const CONSTANTS_VERSION: &str = "phase2-constants-v1";
+
+pub const GM_KM3_S2: f64 = 398600.4418;
+pub const RE_KM: f64 = 6378.137;
+pub const J2: f64 = 1.08262668355e-3;
+pub const J3: f64 = -2.53265648533e-6;
+pub const J4: f64 = -1.61962159137e-6;
+
+pub const OMEGA_E_RAD_S: f64 = 7.292115146706979e-5;
+pub const WGS84_N: i32 = 1;
+
+pub const ARCSEC_TO_RAD: f64 = 4.848136811095359935899141e-6;
+pub const DAY_S: f64 = 86400.0;
+pub const MJD0: f64 = 2400000.5;
+pub const TT_MINUS_TAI_S: f64 = 32.184;
+
+pub const RK4_STEP_LEO_S: f64 = 10.0;
+pub const RK4_STEP_GEO_S: f64 = 60.0;
+pub const PN_NODE_STEP_S: f64 = 3600.0;
+pub const BRENT_XTOL_S: f64 = 1.0e-6;
+pub const GL_RADIAL_N: usize = 32;
+pub const GL_ANGULAR_N: usize = 128;
+pub const CHAN_MAX_TERMS: usize = 200;
+
+pub const SCREEN_K_SIGMA: f64 = 5.0;
+pub const SCREEN_TENC_MAX_FRAC_PERIOD: f64 = 0.01;
+pub const SCREEN_LIN_MAX_FRAC: f64 = 0.1;
+pub const SCREEN_COV_DET_MAX_REL: f64 = 0.10;
+pub const SCREEN_COV_AXIS_MAX_REL: f64 = 0.10;
+pub const SCREEN_COV_ROT_MAX_DEG: f64 = 5.0;

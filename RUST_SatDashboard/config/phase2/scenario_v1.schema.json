@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "satdash.scenario/v1",
+  "title": "SatDashboard Phase 2 場景",
+  "type": "object",
+  "required": ["schema", "id", "time", "frames", "objects", "screening", "force_model"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "satdash.scenario/v1"},
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9_.-]{1,64}$"},
+    "description": {"type": "string"},
+    "time": {
+      "type": "object", "required": ["system"], "additionalProperties": false,
+      "properties": {
+        "system": {"const": "UTC"},
+        "eop_source": {"type": "string"},
+        "eop_version": {"type": "string"},
+        "leap_seconds_version": {"type": "string"},
+        "space_weather_version": {"type": "string"}
+      }
+    },
+    "frames": {
+      "type": "object", "required": ["propagation"], "additionalProperties": false,
+      "properties": {
+        "sgp4_output": {"const": "TEME"},
+        "propagation": {"const": "GCRF"}
+      }
+    },
+    "analysis_time": {"type": "string", "format": "date-time"},
+    "objects": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["role", "name", "ephemeris", "hbr_m"],
+        "additionalProperties": false,
+        "properties": {
+          "role": {"enum": ["primary", "secondary"]},
+          "name": {"type": "string", "minLength": 1},
+          "norad_id": {"type": "integer", "minimum": 0},
+          "orbit_regime": {"enum": ["LEO", "MEO", "GEO", "HEO"]},
+          "ephemeris": {
+            "oneOf": [
+              {"type": "object", "required": ["type", "line1", "line2"], "additionalProperties": false,
+               "properties": {"type": {"const": "TLE"}, "line1": {"type": "string", "minLength": 69, "maxLength": 69},
+                              "line2": {"type": "string", "minLength": 69, "maxLength": 69},
+                              "source": {"type": "string"}, "retrieved": {"type": "string"}}},
+              {"type": "object", "required": ["type", "epoch", "frame", "r_km", "v_kms"], "additionalProperties": false,
+               "properties": {"type": {"const": "state"}, "epoch": {"type": "string", "format": "date-time"},
+                              "frame": {"enum": ["GCRF", "TEME"]},
+                              "r_km": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+                              "v_kms": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+                              "source": {"type": "string"}}}
+            ]
+          },
+          "covariance": {"$ref": "#/$defs/covariance"},
+          "hbr_m": {"type": "number", "exclusiveMinimum": 0},
+          "mass_kg": {"type": "number", "exclusiveMinimum": 0},
+          "area_to_mass_m2kg": {"type": "number", "minimum": 0},
+          "cd": {"type": "number", "minimum": 0},
+          "cr": {"type": "number", "minimum": 0},
+          "propulsion": {
+            "type": "object", "additionalProperties": false,
+            "properties": {
+              "isp_s": {"type": "number", "exclusiveMinimum": 0},
+              "dv_budget_ms": {"type": "number", "minimum": 0},
+              "min_notice_s": {"type": "number", "minimum": 0},
+              "thrust_dirs": {"type": "array", "items": {"enum": ["R", "T", "N", "-R", "-T", "-N"]}}
+            }
+          }
+        }
+      }
+    },
+    "screening": {
+      "type": "object", "required": ["start", "duration_s", "threshold_km"], "additionalProperties": false,
+      "properties": {
+        "start": {"type": "string", "format": "date-time"},
+        "duration_s": {"type": "number", "exclusiveMinimum": 0, "maximum": 2592000},
+        "step_s": {"type": "number", "exclusiveMinimum": 0, "maximum": 600},
+        "threshold_km": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "force_model": {
+      "type": "object", "required": ["zonal", "drag"], "additionalProperties": false,
+      "properties": {
+        "zonal": {"type": "boolean"},
+        "drag": {"type": "boolean"},
+        "density_model": {"enum": ["exponential", "nrlmsise00"]}
+      }
+    },
+    "conjunction": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "tca": {"type": "string", "format": "date-time"},
+        "miss_km": {"type": "number", "minimum": 0},
+        "source": {"type": "string"}
+      }
+    },
+    "maneuver_search": {
+      "type": "object", "required": ["window_rel_tca_s"], "additionalProperties": false,
+      "properties": {
+        "window_rel_tca_s": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+        "dv_ms": {"type": "array", "items": {"type": "number", "minimum": 0}, "minItems": 2, "maxItems": 2},
+        "pc_target": {"type": "number", "exclusiveMinimum": 0, "maximum": 1},
+        "min_miss_km": {"type": "number", "minimum": 0},
+        "feasibility_check": {"type": "boolean"},
+        "secondary_screening": {"type": "object", "properties": {"catalog": {"enum": ["active", "full"]},
+                                "window_days": {"type": "number", "exclusiveMinimum": 0}},
+                                "additionalProperties": false}
+      }
+    },
+    "rpo_limits": {"type": "object"},
+    "monte_carlo": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"n": {"type": "integer", "minimum": 1}, "rng": {"enum": ["pcg64"]},
+                     "seed": {"type": "integer", "minimum": 0}, "samples_file": {"type": ["string", "null"]}}
+    }
+  },
+  "$defs": {
+    "covariance": {
+      "type": "object", "required": ["mode", "source", "independent_of_other"], "additionalProperties": false,
+      "properties": {
+        "mode": {"enum": ["demo", "propagated"]},
+        "epoch": {"type": "string", "format": "date-time"},
+        "frame": {"enum": ["RTN", "GCRF"]},
+        "rtn_definition": {"type": "string"},
+        "velocity_convention": {"enum": ["inertial_velocity_components", "rotating_frame_derivative"]},
+        "units": {"type": "object", "additionalProperties": false,
+                  "properties": {"pos": {"const": "km"}, "vel": {"const": "km/s"}, "cross": {"const": "km^2/s"}}},
+        "sigma_km": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+        "matrix_6x6": {"type": "array", "minItems": 6, "maxItems": 6,
+                       "items": {"type": "array", "items": {"type": "number"}, "minItems": 6, "maxItems": 6}},
+        "source": {"enum": ["assumed", "cdm", "od"]},
+        "independent_of_other": {"type": "boolean"},
+        "propagation": {"type": "object"},
+        "maneuver_execution_error": {"type": "object"}
+      }
+    }
+  }
+}

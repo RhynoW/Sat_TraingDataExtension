@@ -1,0 +1,41 @@
+{
+ "note": "以 e2e_leo_synthetic.json 為基底套用 ops 後驗證，比對 expected_codes（排序後集合）。op: set 設值、del 刪除；path 為鍵或索引串列。",
+ "base": "e2e_leo_synthetic.json",
+ "cases": [
+  {"name": "base_valid", "ops": [], "expected_codes": []},
+  {"name": "missing_screening", "ops": [{"op": "del", "path": ["screening"]}], "expected_codes": ["E_SCHEMA"]},
+  {"name": "wrong_schema_id", "ops": [{"op": "set", "path": ["schema"], "value": "satdash.scenario/v0"}], "expected_codes": ["E_SCHEMA"]},
+  {"name": "extra_top_field", "ops": [{"op": "set", "path": ["foo"], "value": 1}], "expected_codes": ["E_SCHEMA"]},
+  {"name": "time_not_utc", "ops": [{"op": "set", "path": ["time", "system"], "value": "TT"}], "expected_codes": ["E_SCHEMA"]},
+  {"name": "frame_not_gcrf", "ops": [{"op": "set", "path": ["frames", "propagation"], "value": "TEME"}], "expected_codes": ["E_SCHEMA"]},
+  {"name": "one_object_only", "ops": [{"op": "del", "path": ["objects", 1]}], "expected_codes": ["E_SCHEMA"]},
+  {"name": "state_missing_epoch", "ops": [{"op": "del", "path": ["objects", 0, "ephemeris", "epoch"]}], "expected_codes": ["E_SCHEMA"]},
+  {"name": "r_km_two_elements", "ops": [{"op": "set", "path": ["objects", 0, "ephemeris", "r_km"], "value": [7000.0, 0.0]}], "expected_codes": ["E_SCHEMA"]},
+  {"name": "hbr_zero", "ops": [{"op": "set", "path": ["objects", 0, "hbr_m"], "value": 0}], "expected_codes": ["E_SCHEMA"]},
+  {"name": "epoch_no_timezone", "ops": [{"op": "set", "path": ["objects", 0, "ephemeris", "epoch"], "value": "2026-11-20T00:00:00"}], "expected_codes": ["E_TIME_PARSE"]},
+  {"name": "duplicate_role", "ops": [{"op": "set", "path": ["objects", 1, "role"], "value": "primary"}], "expected_codes": ["E_ROLE_DUPLICATE"]},
+  {"name": "demo_sigma_missing", "ops": [{"op": "del", "path": ["objects", 0, "covariance", "sigma_km"]}], "expected_codes": ["E_COV_SIGMA_MISSING"]},
+  {"name": "demo_sigma_negative", "ops": [{"op": "set", "path": ["objects", 0, "covariance", "sigma_km"], "value": [0.1, -0.5, 0.1]}], "expected_codes": ["E_COV_SIGMA_NONPOSITIVE"]},
+  {"name": "dependent_errors", "ops": [{"op": "set", "path": ["objects", 0, "covariance", "independent_of_other"], "value": false}], "expected_codes": ["E_COV_DEPENDENCE_UNSUPPORTED"]},
+  {"name": "propagated_valid", "ops": [{"op": "set", "path": ["objects", 0, "covariance"], "value": {"mode": "propagated", "epoch": "2026-11-20T00:00:00Z", "frame": "RTN", "velocity_convention": "inertial_velocity_components", "units": {"pos": "km", "vel": "km/s", "cross": "km^2/s"}, "matrix_6x6": [[0.01,0,0,0,0,0],[0,0.25,0,0,0,0],[0,0,0.01,0,0,0],[0,0,0,1e-8,0,0],[0,0,0,0,1e-8,0],[0,0,0,0,0,1e-8]], "source": "assumed", "independent_of_other": true}}], "expected_codes": []},
+  {"name": "propagated_missing_epoch_units_convention", "ops": [{"op": "set", "path": ["objects", 0, "covariance"], "value": {"mode": "propagated", "frame": "RTN", "matrix_6x6": [[0.01,0,0,0,0,0],[0,0.25,0,0,0,0],[0,0,0.01,0,0,0],[0,0,0,1e-8,0,0],[0,0,0,0,1e-8,0],[0,0,0,0,0,1e-8]], "source": "assumed", "independent_of_other": true}}], "expected_codes": ["E_COV_EPOCH_MISSING", "E_COV_UNITS_MISSING", "E_COV_VELOCITY_CONVENTION_MISSING"]},
+  {"name": "propagated_gcrf_no_convention_ok", "ops": [{"op": "set", "path": ["objects", 0, "covariance"], "value": {"mode": "propagated", "epoch": "2026-11-20T00:00:00Z", "frame": "GCRF", "units": {"pos": "km", "vel": "km/s", "cross": "km^2/s"}, "matrix_6x6": [[0.01,0,0,0,0,0],[0,0.25,0,0,0,0],[0,0,0.01,0,0,0],[0,0,0,1e-8,0,0],[0,0,0,0,1e-8,0],[0,0,0,0,0,1e-8]], "source": "assumed", "independent_of_other": true}}], "expected_codes": []},
+  {"name": "propagated_missing_frame_matrix", "ops": [{"op": "set", "path": ["objects", 0, "covariance"], "value": {"mode": "propagated", "epoch": "2026-11-20T00:00:00Z", "units": {"pos": "km", "vel": "km/s", "cross": "km^2/s"}, "source": "assumed", "independent_of_other": true}}], "expected_codes": ["E_COV_FRAME_MISSING", "E_COV_MATRIX_MISSING"]},
+  {"name": "cov_not_symmetric", "ops": [{"op": "set", "path": ["objects", 0, "covariance"], "value": {"mode": "propagated", "epoch": "2026-11-20T00:00:00Z", "frame": "GCRF", "units": {"pos": "km", "vel": "km/s", "cross": "km^2/s"}, "matrix_6x6": [[0.01,0.001,0,0,0,0],[0,0.25,0,0,0,0],[0,0,0.01,0,0,0],[0,0,0,1e-8,0,0],[0,0,0,0,1e-8,0],[0,0,0,0,0,1e-8]], "source": "assumed", "independent_of_other": true}}], "expected_codes": ["E_COV_NOT_SYMMETRIC"]},
+  {"name": "cov_not_positive_definite", "ops": [{"op": "set", "path": ["objects", 0, "covariance"], "value": {"mode": "propagated", "epoch": "2026-11-20T00:00:00Z", "frame": "GCRF", "units": {"pos": "km", "vel": "km/s", "cross": "km^2/s"}, "matrix_6x6": [[0.01,0.2,0,0,0,0],[0.2,0.25,0,0,0,0],[0,0,0.01,0,0,0],[0,0,0,1e-8,0,0],[0,0,0,0,1e-8,0],[0,0,0,0,0,1e-8]], "source": "assumed", "independent_of_other": true}}], "expected_codes": ["E_COV_NOT_POSITIVE_DEFINITE"]},
+  {"name": "drag_params_missing", "ops": [{"op": "set", "path": ["force_model", "drag"], "value": true}, {"op": "del", "path": ["objects", 1, "cd"]}], "expected_codes": ["E_DRAG_PARAMS_MISSING"]},
+  {"name": "window_order_bad", "ops": [{"op": "set", "path": ["maneuver_search"], "value": {"window_rel_tca_s": [-1800, -86400]}}], "expected_codes": ["E_WINDOW_ORDER"]},
+  {"name": "window_after_tca", "ops": [{"op": "set", "path": ["maneuver_search"], "value": {"window_rel_tca_s": [-3600, 600]}}], "expected_codes": ["E_WINDOW_ORDER"]},
+  {"name": "dv_range_bad", "ops": [{"op": "set", "path": ["maneuver_search"], "value": {"window_rel_tca_s": [-86400, -1800], "dv_ms": [2.0, 0.05]}}], "expected_codes": ["E_DV_RANGE_ORDER"]},
+  {"name": "notice_window_conflict", "ops": [
+     {"op": "set", "path": ["analysis_time"], "value": "2026-11-20T00:00:00Z"},
+     {"op": "set", "path": ["conjunction"], "value": {"tca": "2026-11-20T06:00:00Z"}},
+     {"op": "set", "path": ["objects", 0, "propulsion"], "value": {"isp_s": 220, "dv_budget_ms": 5.0, "min_notice_s": 43200}},
+     {"op": "set", "path": ["maneuver_search"], "value": {"window_rel_tca_s": [-86400, -1800]}}], "expected_codes": ["E_NOTICE_WINDOW_CONFLICT"]},
+  {"name": "notice_window_ok", "ops": [
+     {"op": "set", "path": ["analysis_time"], "value": "2026-11-19T00:00:00Z"},
+     {"op": "set", "path": ["conjunction"], "value": {"tca": "2026-11-20T06:00:00Z"}},
+     {"op": "set", "path": ["objects", 0, "propulsion"], "value": {"isp_s": 220, "dv_budget_ms": 5.0, "min_notice_s": 43200}},
+     {"op": "set", "path": ["maneuver_search"], "value": {"window_rel_tca_s": [-86400, -1800]}}], "expected_codes": []}
+ ]
+}

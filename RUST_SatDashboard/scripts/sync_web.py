@@ -126,7 +126,19 @@ def copy_embedded_data() -> None:
     print("copy config/sat_metadata.csv, web/assets/geojson/*")
 
 
+def copy_phase2_testdata() -> None:
+    """第二階段共用測試資料與場景 schema（Python 與 Rust 跨語言比對用同一份檔案）。"""
+    src = PKG / "phase2"
+    dst = ROOT / "config" / "phase2"
+    if (dst / "testdata").exists():
+        shutil.rmtree(dst / "testdata")
+    shutil.copytree(src / "testdata", dst / "testdata")
+    shutil.copy2(src / "scenario_v1.schema.json", dst / "scenario_v1.schema.json")
+    print("copy config/phase2/testdata, config/phase2/scenario_v1.schema.json")
+
+
 if __name__ == "__main__":
+    copy_phase2_testdata()
     copy_embedded_data()
     render_templates()
     copy_static()

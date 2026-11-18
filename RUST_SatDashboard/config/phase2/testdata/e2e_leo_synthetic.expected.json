@@ -1,0 +1,235 @@
+{
+ "status": "ok",
+ "scenario_id": "e2e-leo-synthetic-01",
+ "provenance": {
+  "code_version": "phase2-sprint0",
+  "constants_version": "phase2-constants-v1",
+  "eop": {
+   "file": "eop_snapshot_20261118.csv",
+   "sha256": "346d920b48a5e16a",
+   "mjd_range": [
+    60310.0,
+    61542.0
+   ],
+   "last_observed": "2026-11-17"
+  },
+  "frames": {
+   "sgp4_output": "TEME",
+   "propagation": "GCRF",
+   "precession_nutation": "IAU-2006/2000A CIO (xy06+s06), dX/dY applied"
+  },
+  "integrator": {
+   "method": "RK4 fixed-step",
+   "step_s": 10.0,
+   "interpolation": "quintic Hermite (r, v, a)"
+  },
+  "force_model": {
+   "two_body": true,
+   "zonal": "J2-J4",
+   "drag": null
+  }
+ },
+ "search": {
+  "node_step_s": 10.0,
+  "threshold_km": 25.0,
+  "root_xtol_s": 1e-06,
+  "note": "節點間距內的多重極小值不保證辨識",
+  "n_minima": 17,
+  "global_min": {
+   "tca_utc": "2026-11-20T05:59:59.953373Z",
+   "miss_km": 0.23157618339677885,
+   "flag": "interior"
+  }
+ },
+ "events": [
+  {
+   "tca_utc": "2026-11-20T05:12:41.713318Z",
+   "tca_tau_s": 18761.71331773043,
+   "flag": "interior",
+   "miss_km": 21.554813098494098,
+   "v_rel_kms": 5.9291536034941705,
+   "miss_rtn_km": [
+    5.34204596459406,
+    19.221634085845793,
+    -8.16096168922684
+   ],
+   "approach_angle_deg": 45.80027107873519,
+   "accuracy_note": "TCA 與距離為數值解（求根容差 1e-6 s）；預報準確度受輸入狀態與模型不確定性限制",
+   "applicability": {
+    "status": "passes_initial_screen",
+    "reasons": [],
+    "metrics": {
+     "t_enc_s": 0.8110393310592964,
+     "period_s": 5676.99363912749,
+     "t_enc_frac_period": 0.00014286423107283012,
+     "sigma_v_km": 0.48087767723257285,
+     "delta_lin_km": 2.380582658924422e-06,
+     "delta_lin_ref_km": 0.23360679820001337,
+     "covariance_note": "展示模式：協方差假設在交會期間不變，未檢查協方差變化"
+    },
+    "thresholds": {
+     "k_sigma": 5.0,
+     "tenc_max_frac_period": 0.01,
+     "lin_max_frac": 0.1,
+     "cov_det_max_rel": 0.1,
+     "cov_axis_max_rel": 0.1,
+     "cov_rot_max_deg": 5.0
+    },
+    "note": "待驗證的啟發式篩選，非二維方法有效性的證明"
+   },
+   "bplane": {
+    "miss_km": [
+     21.554813098494098,
+     1.2993645924213045e-15
+    ],
+    "cov_km2": [
+     [
+      1.0054393919339266,
+      -0.2459589629488217
+     ],
+     [
+      -0.2459589629488217,
+      0.11331726760547887
+     ]
+    ]
+   },
+   "pc": {
+    "foster": 2.8780167248096653e-218,
+    "chan": 2.6234228278087083e-218,
+    "hbr_km": 0.01,
+    "covariance_mode": "demo",
+    "covariance_source": [
+     "assumed",
+     "assumed"
+    ],
+    "interpretation": "通過目前啟發式篩選；Pc 為展示模式假設下的值"
+   }
+  },
+  {
+   "tca_utc": "2026-11-20T05:59:59.953373Z",
+   "tca_tau_s": 21599.953373472705,
+   "flag": "interior",
+   "miss_km": 0.23157618339677885,
+   "v_rel_kms": 5.9274593241826254,
+   "miss_rtn_km": [
+    0.19999445994904663,
+    0.10754673367247686,
+    0.04542515583560578
+   ],
+   "approach_angle_deg": 45.80000000457071,
+   "accuracy_note": "TCA 與距離為數值解（求根容差 1e-6 s）；預報準確度受輸入狀態與模型不確定性限制",
+   "applicability": {
+    "status": "passes_initial_screen",
+    "reasons": [],
+    "metrics": {
+     "t_enc_s": 0.8120734550156864,
+     "period_s": 5676.978033106912,
+     "t_enc_frac_period": 0.0001430467847999145,
+     "sigma_v_km": 0.48135323728539303,
+     "delta_lin_km": 9.16096914516736e-08,
+     "delta_lin_ref_km": 0.23360679817010976,
+     "covariance_note": "展示模式：協方差假設在交會期間不變，未檢查協方差變化"
+    },
+    "thresholds": {
+     "k_sigma": 5.0,
+     "tenc_max_frac_period": 0.01,
+     "lin_max_frac": 0.1,
+     "cov_det_max_rel": 0.1,
+     "cov_axis_max_rel": 0.1,
+     "cov_rot_max_deg": 5.0
+    },
+    "note": "待驗證的啟發式篩選，非二維方法有效性的證明"
+   },
+   "bplane": {
+    "miss_km": [
+     0.23157618339677885,
+     -3.942578258279677e-19
+    ],
+    "cov_km2": [
+     [
+      0.3087899979507525,
+      0.44334337557596115
+     ],
+     [
+      0.44334337557596115,
+      0.8095090630041196
+     ]
+    ]
+   },
+   "pc": {
+    "foster": 0.0001440885963897957,
+    "chan": 0.0001440882174577875,
+    "hbr_km": 0.01,
+    "covariance_mode": "demo",
+    "covariance_source": [
+     "assumed",
+     "assumed"
+    ],
+    "interpretation": "通過目前啟發式篩選；Pc 為展示模式假設下的值"
+   }
+  },
+  {
+   "tca_utc": "2026-11-20T06:47:18.311825Z",
+   "tca_tau_s": 24438.311825314864,
+   "flag": "interior",
+   "miss_km": 22.7345962134442,
+   "v_rel_kms": 5.929264667550011,
+   "miss_rtn_km": [
+    5.282549558036774,
+    -20.354107336697588,
+    8.640998187792318
+   ],
+   "approach_angle_deg": 45.801151463237595,
+   "accuracy_note": "TCA 與距離為數值解（求根容差 1e-6 s）；預報準確度受輸入狀態與模型不確定性限制",
+   "applicability": {
+    "status": "passes_initial_screen",
+    "reasons": [],
+    "metrics": {
+     "t_enc_s": 0.8110447484600697,
+     "period_s": 5676.99298615759,
+     "t_enc_frac_period": 0.000142865201778066,
+     "sigma_v_km": 0.4808898970846277,
+     "delta_lin_km": 2.487142961555748e-06,
+     "delta_lin_ref_km": 0.23360679818360555,
+     "covariance_note": "展示模式：協方差假設在交會期間不變，未檢查協方差變化"
+    },
+    "thresholds": {
+     "k_sigma": 5.0,
+     "tenc_max_frac_period": 0.01,
+     "lin_max_frac": 0.1,
+     "cov_det_max_rel": 0.1,
+     "cov_axis_max_rel": 0.1,
+     "cov_rot_max_deg": 5.0
+    },
+    "note": "待驗證的啟發式篩選，非二維方法有效性的證明"
+   },
+   "bplane": {
+    "miss_km": [
+     22.734596213444203,
+     -1.062708098541881e-15
+    ],
+    "cov_km2": [
+     [
+      1.0129924574791358,
+      0.23170927487548995
+     ],
+     [
+      0.23170927487548995,
+      0.10575244940280068
+     ]
+    ]
+   },
+   "pc": {
+    "foster": 1.9211639948471006e-226,
+    "chan": 1.758695313476614e-226,
+    "hbr_km": 0.01,
+    "covariance_mode": "demo",
+    "covariance_source": [
+     "assumed",
+     "assumed"
+    ],
+    "interpretation": "通過目前啟發式篩選；Pc 為展示模式假設下的值"
+   }
+  }
+ ]
+}
