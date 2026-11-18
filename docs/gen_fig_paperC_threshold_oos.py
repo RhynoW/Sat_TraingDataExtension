@@ -50,7 +50,7 @@ def _panel_fp(ax, g, title, band=True):
     ax.set_yticklabels([t("0", "0"), "0.1", "0.43", "1", "10", "100"])
     ax.set_xticks(range(300, 1001, 100))
     ax.set_xlabel(t("高度檔（km）", "Altitude bin (km)"))
-    ax.set_ylabel(t("樣本外誤報／千星日", "Out-of-sample false alarms\nper 1,000 satellite-days"))
+    ax.set_ylabel(t("樣本外誤報／千星日", "Out-of-sample flags\nper 1,000 satellite-days"))
     ax.set_title(title, loc="left")
     ax.grid(alpha=0.3, which="major")
 
@@ -73,14 +73,14 @@ def draw():
     ax[2].set_yticklabels(["0.05", "0.1", "0.2", "0.5", "1", "2"])
     ax[2].set_xticks(range(300, 1001, 100))
     ax[2].set_xlabel(t("高度檔（km）", "Altitude bin (km)"))
-    ax[2].set_ylabel(t("90% 偵測之最小 |Δa|（km）", "Minimum |Δa| for 90% detection (km)"))
+    ax[2].set_ylabel(t("90% 偵測之最小 |Δa|（km）", "90% residual-injection detection floor (km)"))
     ax[2].set_title(t("(c) 注入測試（5-fold 測試集）", "(c) Injection test (5-fold test sets)"), loc="left")
     ax[2].grid(alpha=0.3, which="major")
     h, l = ax[0].get_legend_handles_labels()
     fig.legend(h, l, loc="lower center", ncol=5, bbox_to_anchor=(0.5, -0.02), fontsize=6.3)
     fig.text(0.01, -0.075, t("虛線：目標每千星日 0.43 件。空心灰圈：訓練或測試星日不足 1000/0.43 之檔（一件即超過目標，無法驗證）。(a) 直線為 20 次重複之 5–95 百分位。",
-                             "Dashed line: target 0.43 false alarms per 1,000 satellite-days. Open grey circles: bins with fewer than 1000/0.43 training or test satellite-days (a single event "
-                             "exceeds the target). Vertical lines in (a): 5th–95th percentiles over 20 repeats."),
+                             "Dashed line: benchmark 0.43 flags per 1,000 satellite-days. Open grey circles: bins with fewer than 1000/0.43 training or test satellite-days (a single event "
+                             "exceeds the benchmark). Vertical lines in (a): 5th–95th percentiles over 20 repeats."),
              fontsize=5.8, color=st.GRAY)
     fig.tight_layout(rect=(0, 0.08, 1, 1), w_pad=1.2)
     return fig

@@ -1,6 +1,8 @@
-# 以 425 顆被動低軌衛星與福衛七號精密軌道驗證 NRLMSIS 2.1 衰減率預測：兼論阻力殘差篩檢門檻之高度相依性
+# 以 425 顆近地點分檔低軌衛星與福衛七號精密軌道驗證 NRLMSIS 2.1 衰減率預測：兼論阻力殘差篩檢門檻之高度相依性
 
-**Validating NRLMSIS 2.1 Orbital-Decay Predictions with 425 Passive LEO Satellites and FORMOSAT-7 Precise Orbits: Implications for Altitude-Dependent Drag-Residual Screening Thresholds**
+**Validating NRLMSIS 2.1 Orbital-Decay Predictions with 425 Perigee-Binned LEO Satellites and FORMOSAT-7 Precise Orbits: Implications for Altitude-Dependent Drag-Residual Screening Thresholds**
+
+> **版本狀態（2026-11-18）**：本中文稿為早期草稿，數字與論述未與英文投稿稿同步。對外版本以 docs/paper_nrlmsis_drag_validation_EN.md 為準。425 顆中 309 顆為名義被動、116 顆有升軌紀錄。
 
 作者：（待填）　　機構：（待填）　　通訊：（待填）
 目標期刊：（見論文規劃文件）　　主題領域：熱層密度模型／軌道衰減／太空態勢感知
