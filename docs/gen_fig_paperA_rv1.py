@@ -106,7 +106,7 @@ def fig2():
         ax.xaxis.set_minor_formatter(NullFormatter()); ax.yaxis.set_minor_formatter(NullFormatter())
     a1.set_xlim(0.01, 300); a1.set_ylim(1e-4, 1.2)
     a1.set_xlabel(t("|步階判定量|（m）", "|Step statistic| (m)")); a1.set_ylabel(t("超越機率", "Exceedance probability"))
-    a1.set_title(t("(A) 靜默弧段上之零假設分布（Jason-3）", "(A) Null distribution on quiescent arcs (Jason-3)"), fontsize=11)
+    a1.set_title(t("(A) 靜默弧段上之零假設分布（Jason-3）", "(A) Null distribution on maneuver-free arcs (Jason-3)"), fontsize=11)
     a1.grid(True, which="both", alpha=0.25); a1.legend(loc="lower left", fontsize=8.3, framealpha=0.95)
     nz = DET[DET.da_true_m > 0]; z = DET[DET.da_true_m == 0]
     det = nz.abs_obs_m >= thr["p99"]
@@ -115,8 +115,11 @@ def fig2():
     a2.scatter(nz.da_true_m[~det], nz.abs_obs_m[~det], s=70, marker="x", color="#c0392b", lw=1.8, zorder=5,
                label=t(f"真值非零、未檢出 {int((~det).sum())}", f"Non-zero truth, missed: {int((~det).sum())}"))
     if len(z):
-        a2.scatter([1.0] * len(z), z.abs_obs_m, s=70, marker="D", facecolor="none", edgecolor=C2, lw=1.6, zorder=5,
-                   label=t("SMA 真值為零之窗（發射後第 4 天；繪於 x = 1 m）", "Window with zero SMA truth (launch + 4 d; plotted at x = 1 m)"))
+        zr = z.iloc[0]
+        a2.text(0.98, 0.04, t(f"另有 1 窗 SMA 真值為零（2016-01-21，兩次反向法向點火）：\n觀測 |步階| {zr.abs_obs_m:.0f} m，未繪於對數軸",
+                              f"Not plotted: 1 window with zero logged SMA change (2016-01-21,\ntwo opposite normal burns); observed |step| {zr.abs_obs_m:.0f} m"),
+                transform=a2.transAxes, ha="right", va="bottom", fontsize=8.2, color="#555555",
+                bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#bbbbbb", lw=0.8))
     lim = [0.2, 2e4]
     a2.plot(lim, lim, color=CG, lw=1.0, ls=":")
     a2.axhline(thr["p99"], color=C3, lw=1.3)
@@ -126,7 +129,7 @@ def fig2():
         ax.xaxis.set_minor_formatter(NullFormatter()); ax.yaxis.set_minor_formatter(NullFormatter())
     a2.set_xlabel(t("IDS 真值 |Δa|（窗內淨變化，m）", "IDS truth |Δa| (net per window, m)"))
     a2.set_ylabel(t("TLE 觀測 |步階|（m）", "TLE-observed |step| (m)"))
-    a2.set_title(t(f"(B) {len(DET)} 個 IDS 記錄之機動窗", f"(B) {len(DET)} IDS-logged maneuver windows"), fontsize=11)
+    a2.set_title(t(f"(B) {len(nz)} 個 SMA 真值非零之機動窗", f"(B) {len(nz)} logged windows with non-zero SMA change"), fontsize=11)
     a2.grid(True, which="both", alpha=0.25); a2.legend(loc="upper left", fontsize=8.3, framealpha=0.95)
     fig.tight_layout()
     return fig
@@ -154,7 +157,7 @@ def fig3():
     a2.axhline(floor, color=C2, lw=1.4,
                label=t(f"TLE 法向 Δv 雜訊尺度 ≈ {floor:.1f} mm/s（靜默弧段 Δi 步階）",
                        f"TLE normal-Δv noise scale ≈ {floor:.1f} mm/s (quiet-arc Δi steps)"))
-    a2.axhline(3 * floor, color=C2, lw=1.2, ls="--", label=t(f"3 倍 ≈ {3*floor:.0f} mm/s", f"3× ≈ {3*floor:.0f} mm/s"))
+    a2.axhline(3 * floor, color=C2, lw=1.2, ls="--", label=t(f"3 倍 ≈ {3*floor:.0f} mm/s（描述性參考，非偵測極限）", f"3× ≈ {3*floor:.0f} mm/s (descriptive reference, not a detection limit)"))
     for s_, col, mk in (("CryoSat-2", C1, "o"), ("SWOT", "#7b4fbf", "s")):
         g = cc[cc.sat == s_]
         a2.scatter(np.arange(len(g)) + (0 if s_ == "CryoSat-2" else len(cc[cc.sat == "CryoSat-2"])),

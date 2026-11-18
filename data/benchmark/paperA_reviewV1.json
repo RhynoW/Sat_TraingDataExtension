@@ -915,7 +915,7 @@
  },
  "_meta": {
   "script": "docs/paperA_reviewV1_analysis.py",
-  "run_utc": "2026-11-18T07:00:51+00:00",
+  "run_utc": "2026-11-18T07:28:29+00:00",
   "db": "space_db.duckdb（read_only）",
   "nboot": 2000,
   "seed": 20261118
@@ -2338,6 +2338,1284 @@
    ],
    "s_res_c_median": 0.809,
    "s_diff_dt_median": 0.218
+  }
+ },
+ "rv2": {
+  "influ": {
+   "swot_full": {
+    "r": 0.52,
+    "slope": 1.584
+   },
+   "swot_loo_r_range": [
+    0.513,
+    0.949
+   ],
+   "swot_loo_slope_range": [
+    0.844,
+    1.731
+   ],
+   "swot_most_influential": {
+    "win_start_tai": "2023-01-27T04:59:00",
+    "n_burns": 1,
+    "truth_mm_s": 19.2,
+    "rec_mm_s": 81.99,
+    "r_without": 0.949,
+    "slope_without": 0.844
+   },
+   "bootstrap_unit": "logged window（每窗一筆；同窗多次點火已合併）",
+   "jason3_cp95": {
+    "3sres": [
+     0.921,
+     1.0
+    ],
+    "p99": [
+     0.921,
+     1.0
+    ],
+    "p997": [
+     0.856,
+     0.984
+    ],
+    "max_null": [
+     0.729,
+     0.916
+    ]
+   }
+  },
+  "aic": {
+   "likelihood": "log10 σ 之獨立高斯誤差、共同變異數；參數以普通最小平方（最大概似）重估；k 含變異數",
+   "ols_fit": {
+    "sigma0_m": 0.0447,
+    "A_m": 22.49,
+    "H_km": 79.0
+   },
+   "aic": {
+    "constant": -0.8,
+    "per_group": -117.9,
+    "altitude": -118.4
+   },
+   "k": {
+    "constant": 2,
+    "per_group": 5,
+    "altitude": 4
+   },
+   "satellites": [
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44343,
+     "alt_km": 546.962,
+     "inc_deg": 23.999,
+     "sigma_m": 2.46,
+     "n_tle": 1950
+    },
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44349,
+     "alt_km": 557.065,
+     "inc_deg": 23.998,
+     "sigma_m": 2.64,
+     "n_tle": 1954
+    },
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44350,
+     "alt_km": 556.945,
+     "inc_deg": 23.999,
+     "sigma_m": 2.63,
+     "n_tle": 1984
+    },
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44351,
+     "alt_km": 551.166,
+     "inc_deg": 23.998,
+     "sigma_m": 2.21,
+     "n_tle": 2285
+    },
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44353,
+     "alt_km": 557.146,
+     "inc_deg": 23.998,
+     "sigma_m": 2.25,
+     "n_tle": 1963
+    },
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44358,
+     "alt_km": 556.942,
+     "inc_deg": 23.999,
+     "sigma_m": 2.66,
+     "n_tle": 1961
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 22076,
+     "alt_km": 1344.716,
+     "inc_deg": 66.041,
+     "sigma_m": 0.05,
+     "n_tle": 17515
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 26997,
+     "alt_km": 1332.587,
+     "inc_deg": 66.04,
+     "sigma_m": 0.08,
+     "n_tle": 12967
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 33105,
+     "alt_km": 1318.092,
+     "inc_deg": 66.04,
+     "sigma_m": 0.07,
+     "n_tle": 12543
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 41240,
+     "alt_km": 1344.869,
+     "inc_deg": 66.041,
+     "sigma_m": 0.06,
+     "n_tle": 10145
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 46984,
+     "alt_km": 1344.87,
+     "inc_deg": 66.041,
+     "sigma_m": 0.05,
+     "n_tle": 5018
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 27386,
+     "alt_km": 772.965,
+     "inc_deg": 98.382,
+     "sigma_m": 0.21,
+     "n_tle": 27929
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 36508,
+     "alt_km": 726.541,
+     "inc_deg": 92.026,
+     "sigma_m": 0.18,
+     "n_tle": 12441
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 39086,
+     "alt_km": 791.663,
+     "inc_deg": 98.546,
+     "sigma_m": 0.06,
+     "n_tle": 11083
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 41335,
+     "alt_km": 809.796,
+     "inc_deg": 98.625,
+     "sigma_m": 0.06,
+     "n_tle": 16148
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 43437,
+     "alt_km": 809.797,
+     "inc_deg": 98.626,
+     "sigma_m": 0.14,
+     "n_tle": 6734
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 54754,
+     "alt_km": 900.34,
+     "inc_deg": 77.61,
+     "sigma_m": 0.09,
+     "n_tle": 4242
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 37781,
+     "alt_km": 975.404,
+     "inc_deg": 99.331,
+     "sigma_m": 0.06,
+     "n_tle": 21327
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 46469,
+     "alt_km": 959.081,
+     "inc_deg": 65.996,
+     "sigma_m": 0.02,
+     "n_tle": 12022
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 48621,
+     "alt_km": 959.082,
+     "inc_deg": 65.998,
+     "sigma_m": 0.02,
+     "n_tle": 10946
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 20436,
+     "alt_km": 693.822,
+     "inc_deg": 98.702,
+     "sigma_m": 0.46,
+     "n_tle": 31356
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 22823,
+     "alt_km": 836.842,
+     "inc_deg": 98.682,
+     "sigma_m": 0.15,
+     "n_tle": 24671
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 25260,
+     "alt_km": 832.222,
+     "inc_deg": 98.613,
+     "sigma_m": 0.3,
+     "n_tle": 29771
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 27421,
+     "alt_km": 832.174,
+     "inc_deg": 98.586,
+     "sigma_m": 0.32,
+     "n_tle": 28440
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 27391,
+     "alt_km": 469.978,
+     "inc_deg": 89.011,
+     "sigma_m": 2.41,
+     "n_tle": 8502
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 27392,
+     "alt_km": 470.174,
+     "inc_deg": 89.011,
+     "sigma_m": 2.26,
+     "n_tle": 8324
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 43476,
+     "alt_km": 495.824,
+     "inc_deg": 88.988,
+     "sigma_m": 0.52,
+     "n_tle": 8188
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 43477,
+     "alt_km": 495.843,
+     "inc_deg": 88.988,
+     "sigma_m": 0.51,
+     "n_tle": 8185
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 66514,
+     "alt_km": 1344.869,
+     "inc_deg": 66.041,
+     "sigma_m": 0.02,
+     "n_tle": 1275
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 66010,
+     "alt_km": 469.851,
+     "inc_deg": 53.159,
+     "sigma_m": 14.74,
+     "n_tle": 422
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 66189,
+     "alt_km": 482.326,
+     "inc_deg": 53.159,
+     "sigma_m": 15.37,
+     "n_tle": 414
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 63873,
+     "alt_km": 579.172,
+     "inc_deg": 70.001,
+     "sigma_m": 3.91,
+     "n_tle": 527
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 60130,
+     "alt_km": 477.874,
+     "inc_deg": 53.16,
+     "sigma_m": 9.44,
+     "n_tle": 418
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 59089,
+     "alt_km": 490.195,
+     "inc_deg": 43.002,
+     "sigma_m": 9.35,
+     "n_tle": 369
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 67200,
+     "alt_km": 579.176,
+     "inc_deg": 70.001,
+     "sigma_m": 3.41,
+     "n_tle": 514
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 69141,
+     "alt_km": 472.656,
+     "inc_deg": 97.285,
+     "sigma_m": 9.87,
+     "n_tle": 333
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 57848,
+     "alt_km": 482.359,
+     "inc_deg": 53.16,
+     "sigma_m": 9.7,
+     "n_tle": 431
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 53740,
+     "alt_km": 496.197,
+     "inc_deg": 53.159,
+     "sigma_m": 7.63,
+     "n_tle": 564
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 64740,
+     "alt_km": 469.844,
+     "inc_deg": 53.159,
+     "sigma_m": 12.0,
+     "n_tle": 420
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 50177,
+     "alt_km": 493.243,
+     "inc_deg": 53.161,
+     "sigma_m": 4.07,
+     "n_tle": 449
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 65082,
+     "alt_km": 469.807,
+     "inc_deg": 53.159,
+     "sigma_m": 15.67,
+     "n_tle": 422
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 49751,
+     "alt_km": 546.876,
+     "inc_deg": 53.161,
+     "sigma_m": 4.72,
+     "n_tle": 497
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 68010,
+     "alt_km": 490.156,
+     "inc_deg": 43.001,
+     "sigma_m": 15.0,
+     "n_tle": 371
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 67601,
+     "alt_km": 472.666,
+     "inc_deg": 97.284,
+     "sigma_m": 13.96,
+     "n_tle": 451
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 52090,
+     "alt_km": 545.959,
+     "inc_deg": 53.161,
+     "sigma_m": 6.41,
+     "n_tle": 471
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 66854,
+     "alt_km": 490.154,
+     "inc_deg": 43.001,
+     "sigma_m": 14.99,
+     "n_tle": 377
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 66625,
+     "alt_km": 469.835,
+     "inc_deg": 53.159,
+     "sigma_m": 12.95,
+     "n_tle": 431
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 52138,
+     "alt_km": 546.883,
+     "inc_deg": 53.161,
+     "sigma_m": 5.29,
+     "n_tle": 459
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 62311,
+     "alt_km": 469.92,
+     "inc_deg": 53.159,
+     "sigma_m": 13.74,
+     "n_tle": 421
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 64919,
+     "alt_km": 482.19,
+     "inc_deg": 53.159,
+     "sigma_m": 14.0,
+     "n_tle": 411
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 54067,
+     "alt_km": 546.861,
+     "inc_deg": 53.161,
+     "sigma_m": 3.22,
+     "n_tle": 470
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 53779,
+     "alt_km": 521.323,
+     "inc_deg": 53.161,
+     "sigma_m": 5.9,
+     "n_tle": 447
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 58069,
+     "alt_km": 490.193,
+     "inc_deg": 43.003,
+     "sigma_m": 6.77,
+     "n_tle": 373
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 64281,
+     "alt_km": 482.265,
+     "inc_deg": 53.159,
+     "sigma_m": 15.64,
+     "n_tle": 420
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 48483,
+     "alt_km": 477.864,
+     "inc_deg": 53.16,
+     "sigma_m": 15.65,
+     "n_tle": 394
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 67877,
+     "alt_km": 479.889,
+     "inc_deg": 53.159,
+     "sigma_m": 18.68,
+     "n_tle": 429
+    }
+   ]
+  },
+  "normal": {
+   "null_quantiles": {
+    "SWOT": {
+     "n": 1661,
+     "q99_di_mdeg": 3.396,
+     "q99_sinidOm_mdeg": 4.991,
+     "q99_planechange_dvN_mm_s": 984.9,
+     "median_planechange_dvN_mm_s": 7.91
+    },
+    "CryoSat-2": {
+     "n": 7138,
+     "q99_di_mdeg": 0.949,
+     "q99_sinidOm_mdeg": 0.666,
+     "q99_planechange_dvN_mm_s": 154.9,
+     "median_planechange_dvN_mm_s": 8.61
+    }
+   },
+   "n_single": 238,
+   "n_multi": 13,
+   "single_dvN": {
+    "n": 238,
+    "r": 0.063,
+    "r_ci": [
+     -0.259,
+     0.338
+    ],
+    "slope": 78.941,
+    "slope_ci": [
+     -282.08,
+     444.38
+    ],
+    "intercept_mm_s": -48.01,
+    "bias_median_mm_s": -0.06,
+    "mae_median_mm_s": 8.5,
+    "rmse_mm_s": 389.83,
+    "truth_median_abs_mm_s": 0.18
+   },
+   "single_truth_abs_median_mm_s": 0.184,
+   "multi_di_obs_vs_ref": {
+    "n": 13,
+    "r": -0.287,
+    "r_ci": [
+     -0.831,
+     0.345
+    ],
+    "slope": -11.444,
+    "slope_ci": [
+     -61.235,
+     10.339
+    ],
+    "intercept_mm_s": -0.03,
+    "bias_median_mm_s": -0.01,
+    "mae_median_mm_s": 0.04,
+    "rmse_mm_s": 0.13,
+    "truth_median_abs_mm_s": 0.0
+   },
+   "multi_sinidOm_obs_vs_ref": {
+    "n": 13,
+    "r": 0.414,
+    "r_ci": [
+     -0.126,
+     0.738
+    ],
+    "slope": 15.647,
+    "slope_ci": [
+     -4.724,
+     34.38
+    ],
+    "intercept_mm_s": 0.04,
+    "bias_median_mm_s": -0.01,
+    "mae_median_mm_s": 0.05,
+    "rmse_mm_s": 0.12,
+    "truth_median_abs_mm_s": 0.0
+   },
+   "ref_planechange_max_mdeg": 0.0129,
+   "ref_planechange_median_mdeg": 0.00139,
+   "ref_di_max_mdeg": 0.0129,
+   "ref_sinidOm_max_mdeg": 0.0076,
+   "tle_field_quantum_mdeg": {
+    "inclination": 0.1,
+    "raan": 0.1,
+    "sini_raan_SWOT": 0.0977,
+    "sini_raan_CryoSat2": 0.0999
+   }
+  },
+  "dur": {
+   "window_duration_h": {
+    "Jason-3": {
+     "n": 86,
+     "p10": 0.0,
+     "median": 0.0,
+     "p90": 2.93,
+     "max": 3.33
+    },
+    "SWOT": {
+     "n": 90,
+     "p10": 0.0,
+     "median": 0.0,
+     "p90": 0.02,
+     "max": 0.23
+    },
+    "CryoSat-2": {
+     "n": 242,
+     "p10": 0.02,
+     "median": 0.05,
+     "p90": 0.4,
+     "max": 9.83
+    }
+   },
+   "sensitivity": {
+    "CryoSat-2": {
+     "0h": {
+      "n": 7112,
+      "q99_m": 16.99,
+      "median_m": 1.954,
+      "exceed_at_q99_2p5h": 0.0098
+     },
+     "2.5h": {
+      "n": 7138,
+      "q99_m": 17.08,
+      "median_m": 2.017,
+      "exceed_at_q99_2p5h": 0.0101
+     },
+     "12h": {
+      "n": 6967,
+      "q99_m": 19.01,
+      "median_m": 2.225,
+      "exceed_at_q99_2p5h": 0.0158
+     },
+     "24h": {
+      "n": 6734,
+      "q99_m": 21.33,
+      "median_m": 2.474,
+      "exceed_at_q99_2p5h": 0.0226
+     },
+     "random_offset_q99_range_m": [
+      17.08,
+      17.34
+     ]
+    },
+    "Jason-2": {
+     "0h": {
+      "n": 5264,
+      "q99_m": 2.95,
+      "median_m": 0.394,
+      "exceed_at_q99_2p5h": 0.0093
+     },
+     "2.5h": {
+      "n": 5279,
+      "q99_m": 3.16,
+      "median_m": 0.406,
+      "exceed_at_q99_2p5h": 0.01
+     },
+     "12h": {
+      "n": 5069,
+      "q99_m": 3.27,
+      "median_m": 0.442,
+      "exceed_at_q99_2p5h": 0.0107
+     },
+     "24h": {
+      "n": 5109,
+      "q99_m": 3.25,
+      "median_m": 0.494,
+      "exceed_at_q99_2p5h": 0.0104
+     },
+     "random_offset_q99_range_m": [
+      2.45,
+      3.16
+     ]
+    },
+    "Jason-3": {
+     "0h": {
+      "n": 6449,
+      "q99_m": 1.96,
+      "median_m": 0.434,
+      "exceed_at_q99_2p5h": 0.0093
+     },
+     "2.5h": {
+      "n": 6421,
+      "q99_m": 2.0,
+      "median_m": 0.448,
+      "exceed_at_q99_2p5h": 0.0101
+     },
+     "12h": {
+      "n": 6395,
+      "q99_m": 2.18,
+      "median_m": 0.494,
+      "exceed_at_q99_2p5h": 0.0147
+     },
+     "24h": {
+      "n": 6338,
+      "q99_m": 2.46,
+      "median_m": 0.562,
+      "exceed_at_q99_2p5h": 0.0252
+     },
+     "random_offset_q99_range_m": [
+      1.95,
+      1.96
+     ]
+    },
+    "Sentinel-6A": {
+     "0h": {
+      "n": 3653,
+      "q99_m": 2.4,
+      "median_m": 0.315,
+      "exceed_at_q99_2p5h": 0.0096
+     },
+     "2.5h": {
+      "n": 3646,
+      "q99_m": 2.44,
+      "median_m": 0.323,
+      "exceed_at_q99_2p5h": 0.0101
+     },
+     "12h": {
+      "n": 3629,
+      "q99_m": 2.72,
+      "median_m": 0.359,
+      "exceed_at_q99_2p5h": 0.0135
+     },
+     "24h": {
+      "n": 3608,
+      "q99_m": 3.06,
+      "median_m": 0.406,
+      "exceed_at_q99_2p5h": 0.0161
+     },
+     "random_offset_q99_range_m": [
+      2.4,
+      2.5
+     ]
+    },
+    "SWOT": {
+     "0h": {
+      "n": 1674,
+      "q99_m": 46.42,
+      "median_m": 2.421,
+      "exceed_at_q99_2p5h": 0.0096
+     },
+     "2.5h": {
+      "n": 1661,
+      "q99_m": 57.16,
+      "median_m": 2.503,
+      "exceed_at_q99_2p5h": 0.0102
+     },
+     "12h": {
+      "n": 1614,
+      "q99_m": 45.23,
+      "median_m": 2.776,
+      "exceed_at_q99_2p5h": 0.0099
+     },
+     "24h": {
+      "n": 1575,
+      "q99_m": 41.43,
+      "median_m": 3.114,
+      "exceed_at_q99_2p5h": 0.0076
+     },
+     "random_offset_q99_range_m": [
+      28.82,
+      47.36
+     ]
+    }
+   }
+  },
+  "counts": {
+   "lag_counts": [
+    {
+     "lag_bin": "3-6h",
+     "n_sat": 13,
+     "n_arc": 894,
+     "n_pair": 19238
+    },
+    {
+     "lag_bin": "6-12h",
+     "n_sat": 13,
+     "n_arc": 981,
+     "n_pair": 58660
+    },
+    {
+     "lag_bin": "12-24h",
+     "n_sat": 13,
+     "n_arc": 993,
+     "n_pair": 107637
+    },
+    {
+     "lag_bin": "24-48h",
+     "n_sat": 13,
+     "n_arc": 1041,
+     "n_pair": 225086
+    },
+    {
+     "lag_bin": "48-96h",
+     "n_sat": 13,
+     "n_arc": 1044,
+     "n_pair": 435406
+    },
+    {
+     "lag_bin": "96-192h",
+     "n_sat": 13,
+     "n_arc": 1038,
+     "n_pair": 759013
+    }
+   ],
+   "arc_equal_weight": {
+    "median_over_sats_s_res": 0.821,
+    "median_over_sats_s_diff": 0.173,
+    "per_sat": {
+     "CryoSat-2": [
+      0.923,
+      0.208
+     ],
+     "Envisat": [
+      1.567,
+      0.437
+     ],
+     "HY-2A": [
+      3.429,
+      3.405
+     ],
+     "HY-2C": [
+      0.825,
+      0.173
+     ],
+     "HY-2D": [
+      0.899,
+      0.166
+     ],
+     "Jason-1": [
+      0.821,
+      0.203
+     ],
+     "Jason-2": [
+      0.468,
+      0.148
+     ],
+     "Jason-3": [
+      0.221,
+      0.071
+     ],
+     "SARAL": [
+      1.995,
+      1.207
+     ],
+     "Sentinel-3A": [
+      0.337,
+      0.101
+     ],
+     "Sentinel-3B": [
+      0.49,
+      0.186
+     ],
+     "Sentinel-6A": [
+      0.419,
+      0.059
+     ],
+     "SWOT": [
+      0.275,
+      0.104
+     ]
+    }
+   },
+   "satellite_bootstrap_ci": {
+    "s_res_c": [
+     0.354,
+     0.962
+    ],
+    "s_diff_dt": [
+     0.082,
+     0.157
+    ]
+   }
+  },
+  "holdout": {
+   "per_sat": {
+    "CryoSat-2": {
+     "cv5_exceed_q99": 0.0111,
+     "cv5_exceed_q997": 0.0035,
+     "n_test": 7138,
+     "temporal_q99_cal_m": 9.29,
+     "temporal_exceed_val": 0.1531,
+     "temporal_exceed_val_ci": [
+      0.1033,
+      0.2161
+     ],
+     "n_cal": 4140,
+     "n_val": 2998,
+     "n_arc_cal": 99,
+     "n_arc_val": 100
+    },
+    "Envisat": {
+     "cv5_exceed_q99": 0.0115,
+     "cv5_exceed_q997": 0.0034,
+     "n_test": 4960,
+     "temporal_q99_cal_m": 29.91,
+     "temporal_exceed_val": 0.0015,
+     "temporal_exceed_val_ci": [
+      0.0,
+      0.0051
+     ],
+     "n_cal": 2954,
+     "n_val": 2006,
+     "n_arc_cal": 64,
+     "n_arc_val": 65
+    },
+    "HY-2A": {
+     "cv5_exceed_q99": 0.0111,
+     "cv5_exceed_q997": 0.0033,
+     "n_test": 5124,
+     "temporal_q99_cal_m": 10.74,
+     "temporal_exceed_val": 0.0049,
+     "temporal_exceed_val_ci": [
+      0.0006,
+      0.0134
+     ],
+     "n_cal": 2275,
+     "n_val": 2849,
+     "n_arc_cal": 27,
+     "n_arc_val": 27
+    },
+    "HY-2C": {
+     "cv5_exceed_q99": 0.0102,
+     "cv5_exceed_q997": 0.0044,
+     "n_test": 3433,
+     "temporal_q99_cal_m": 13.35,
+     "temporal_exceed_val": 0.0039,
+     "temporal_exceed_val_ci": [
+      0.0,
+      0.011
+     ],
+     "n_cal": 1893,
+     "n_val": 1540,
+     "n_arc_cal": 23,
+     "n_arc_val": 24
+    },
+    "HY-2D": {
+     "cv5_exceed_q99": 0.0101,
+     "cv5_exceed_q997": 0.0043,
+     "n_test": 3055,
+     "temporal_q99_cal_m": 16.37,
+     "temporal_exceed_val": 0.0048,
+     "temporal_exceed_val_ci": [
+      0.0,
+      0.0129
+     ],
+     "n_cal": 1587,
+     "n_val": 1468,
+     "n_arc_cal": 22,
+     "n_arc_val": 23
+    },
+    "Jason-1": {
+     "cv5_exceed_q99": 0.0105,
+     "cv5_exceed_q997": 0.0031,
+     "n_test": 4183,
+     "temporal_q99_cal_m": 6.58,
+     "temporal_exceed_val": 0.0093,
+     "temporal_exceed_val_ci": [
+      0.0014,
+      0.0212
+     ],
+     "n_cal": 2566,
+     "n_val": 1617,
+     "n_arc_cal": 34,
+     "n_arc_val": 34
+    },
+    "Jason-2": {
+     "cv5_exceed_q99": 0.01,
+     "cv5_exceed_q997": 0.0028,
+     "n_test": 5279,
+     "temporal_q99_cal_m": 4.39,
+     "temporal_exceed_val": 0.0,
+     "temporal_exceed_val_ci": [
+      0.0,
+      0.0
+     ],
+     "n_cal": 2773,
+     "n_val": 2506,
+     "n_arc_cal": 27,
+     "n_arc_val": 27
+    },
+    "Jason-3": {
+     "cv5_exceed_q99": 0.0111,
+     "cv5_exceed_q997": 0.0044,
+     "n_test": 6421,
+     "temporal_q99_cal_m": 1.82,
+     "temporal_exceed_val": 0.0259,
+     "temporal_exceed_val_ci": [
+      0.0121,
+      0.0423
+     ],
+     "n_cal": 4373,
+     "n_val": 2048,
+     "n_arc_cal": 29,
+     "n_arc_val": 29
+    },
+    "SARAL": {
+     "cv5_exceed_q99": 0.0357,
+     "cv5_exceed_q997": 0.0082,
+     "n_test": 7598,
+     "temporal_q99_cal_m": 34.95,
+     "temporal_exceed_val": 0.0003,
+     "temporal_exceed_val_ci": [
+      0.0,
+      0.0012
+     ],
+     "n_cal": 148,
+     "n_val": 7450,
+     "n_arc_cal": 23,
+     "n_arc_val": 23
+    },
+    "SWOT": {
+     "cv5_exceed_q99": 0.0132,
+     "cv5_exceed_q997": 0.0132,
+     "n_test": 1661,
+     "temporal_q99_cal_m": 90.94,
+     "temporal_exceed_val": 0.0,
+     "temporal_exceed_val_ci": [
+      0.0,
+      0.0
+     ],
+     "n_cal": 629,
+     "n_val": 1032,
+     "n_arc_cal": 26,
+     "n_arc_val": 26
+    },
+    "Sentinel-3A": {
+     "cv5_exceed_q99": 0.0108,
+     "cv5_exceed_q997": 0.0033,
+     "n_test": 5465,
+     "temporal_q99_cal_m": 8.67,
+     "temporal_exceed_val": 0.1497,
+     "temporal_exceed_val_ci": [
+      0.0907,
+      0.2216
+     ],
+     "n_cal": 4162,
+     "n_val": 1303,
+     "n_arc_cal": 65,
+     "n_arc_val": 66
+    },
+    "Sentinel-3B": {
+     "cv5_exceed_q99": 0.0104,
+     "cv5_exceed_q997": 0.0033,
+     "n_test": 3960,
+     "temporal_q99_cal_m": 8.63,
+     "temporal_exceed_val": 0.1966,
+     "temporal_exceed_val_ci": [
+      0.1276,
+      0.2816
+     ],
+     "n_cal": 2841,
+     "n_val": 1119,
+     "n_arc_cal": 55,
+     "n_arc_val": 56
+    },
+    "Sentinel-6A": {
+     "cv5_exceed_q99": 0.0104,
+     "cv5_exceed_q997": 0.0041,
+     "n_test": 3646,
+     "temporal_q99_cal_m": 3.24,
+     "temporal_exceed_val": 0.0,
+     "temporal_exceed_val_ci": [
+      0.0,
+      0.0
+     ],
+     "n_cal": 1638,
+     "n_val": 2008,
+     "n_arc_cal": 11,
+     "n_arc_val": 11
+    }
+   },
+   "cv5_q99_median": 0.0108,
+   "cv5_q99_range": [
+    0.01,
+    0.0357
+   ],
+   "cv5_q997_median": 0.0035,
+   "temporal_median": 0.0048,
+   "temporal_range": [
+    0.0,
+    0.1966
+   ]
+  },
+  "nonov": {
+   "support_d": 6.104,
+   "per_sat": {
+    "CryoSat-2": {
+     "n": 697,
+     "n_arc": 199,
+     "fap_3sres": 0.4003,
+     "fap_3sres_ci": [
+      0.3329,
+      0.4698
+     ],
+     "fap_q99": 0.0172,
+     "fap_q99_ci": [
+      0.0075,
+      0.0287
+     ]
+    },
+    "Envisat": {
+     "n": 452,
+     "n_arc": 129,
+     "fap_3sres": 0.2699,
+     "fap_3sres_ci": [
+      0.2204,
+      0.3259
+     ],
+     "fap_q99": 0.0265,
+     "fap_q99_ci": [
+      0.0105,
+      0.0447
+     ]
+    },
+    "HY-2A": {
+     "n": 436,
+     "n_arc": 54,
+     "fap_3sres": 0.0803,
+     "fap_3sres_ci": [
+      0.0498,
+      0.1167
+     ],
+     "fap_q99": 0.0229,
+     "fap_q99_ci": [
+      0.0077,
+      0.0431
+     ]
+    },
+    "HY-2C": {
+     "n": 289,
+     "n_arc": 47,
+     "fap_3sres": 0.3599,
+     "fap_3sres_ci": [
+      0.2857,
+      0.442
+     ],
+     "fap_q99": 0.0311,
+     "fap_q99_ci": [
+      0.0132,
+      0.0519
+     ]
+    },
+    "HY-2D": {
+     "n": 258,
+     "n_arc": 45,
+     "fap_3sres": 0.376,
+     "fap_3sres_ci": [
+      0.2923,
+      0.473
+     ],
+     "fap_q99": 0.0349,
+     "fap_q99_ci": [
+      0.0138,
+      0.0593
+     ]
+    },
+    "Jason-1": {
+     "n": 502,
+     "n_arc": 68,
+     "fap_3sres": 0.1056,
+     "fap_3sres_ci": [
+      0.0864,
+      0.1288
+     ],
+     "fap_q99": 0.0279,
+     "fap_q99_ci": [
+      0.0153,
+      0.0423
+     ]
+    },
+    "Jason-2": {
+     "n": 527,
+     "n_arc": 54,
+     "fap_3sres": 0.1556,
+     "fap_3sres_ci": [
+      0.1145,
+      0.2026
+     ],
+     "fap_q99": 0.0304,
+     "fap_q99_ci": [
+      0.0191,
+      0.0416
+     ]
+    },
+    "Jason-3": {
+     "n": 534,
+     "n_arc": 58,
+     "fap_3sres": 0.2135,
+     "fap_3sres_ci": [
+      0.1503,
+      0.294
+     ],
+     "fap_q99": 0.0243,
+     "fap_q99_ci": [
+      0.01,
+      0.0438
+     ]
+    },
+    "SARAL": {
+     "n": 642,
+     "n_arc": 46,
+     "fap_3sres": 0.2601,
+     "fap_3sres_ci": [
+      0.08,
+      0.5387
+     ],
+     "fap_q99": 0.0202,
+     "fap_q99_ci": [
+      0.0045,
+      0.0434
+     ]
+    },
+    "SWOT": {
+     "n": 165,
+     "n_arc": 52,
+     "fap_3sres": 0.9636,
+     "fap_3sres_ci": [
+      0.929,
+      0.9936
+     ],
+     "fap_q99": 0.0242,
+     "fap_q99_ci": [
+      0.0,
+      0.0606
+     ]
+    },
+    "Sentinel-3A": {
+     "n": 487,
+     "n_arc": 131,
+     "fap_3sres": 0.922,
+     "fap_3sres_ci": [
+      0.8869,
+      0.9588
+     ],
+     "fap_q99": 0.0123,
+     "fap_q99_ci": [
+      0.0038,
+      0.0238
+     ]
+    },
+    "Sentinel-3B": {
+     "n": 368,
+     "n_arc": 111,
+     "fap_3sres": 0.6658,
+     "fap_3sres_ci": [
+      0.5656,
+      0.7711
+     ],
+     "fap_q99": 0.0109,
+     "fap_q99_ci": [
+      0.0025,
+      0.0227
+     ]
+    },
+    "Sentinel-6A": {
+     "n": 301,
+     "n_arc": 22,
+     "fap_3sres": 0.0399,
+     "fap_3sres_ci": [
+      0.0199,
+      0.0612
+     ],
+     "fap_q99": 0.0033,
+     "fap_q99_ci": [
+      0.0,
+      0.0103
+     ]
+    }
+   }
   }
  }
 }

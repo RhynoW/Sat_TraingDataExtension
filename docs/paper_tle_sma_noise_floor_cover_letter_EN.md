@@ -5,13 +5,13 @@ The Editor-in-Chief
 
 Dear Editor,
 
-We submit the manuscript "Variability of TLE-Derived Semi-Major Axis on Operator-Logged Maneuver-Free Arcs: Error Correlation, Empirical Step Thresholds and Δv Recoverability, with Application to FORMOSAT" for consideration as a research article in *Acta Astronautica*.
+We submit the manuscript "TLE-Derived Semi-Major-Axis Variability on Operator-Logged Maneuver-Free Arcs: Residual Dependence and Empirical Maneuver Thresholds, with Application to FORMOSAT" for consideration as a research article in *Acta Astronautica*.
 
 Maneuver screening from public Two-Line Elements (TLEs) thresholds the change in the TLE-derived semi-major axis, yet the variability behind such thresholds is rarely measured on intervals known to be free of maneuvers, and thresholds are usually set as a multiple of a single-sample scale without checking the distribution of the actual decision statistic. Using maneuver-free arcs defined by the operator logs of thirteen International DORIS Service altimetry satellites, the manuscript reports:
 
-1. An arc-scale variability of 0.23–2.08 m (median 0.75 m) at 719–1338 km, and strongly correlated errors between consecutive element sets (median lag-one correlation 0.93), which make adjacent-difference scales an increment measure rather than a single-element-set error.
-2. A calibration of the step statistic on 61,923 pseudo-event windows: a nominal 3σ threshold gives false-alarm probabilities of 3–96% per window, and empirical thresholds of 2–57 m are needed; for Jason-3 the calibrated threshold still detects 67 of 68 logged SMA maneuvers in known windows.
-3. A test against operator three-component Δv showing satellite-dependent agreement of the along-track component on clean brackets (pooled r = 0.942), and an application to the FORMOSAT series that separates candidate maneuvers from constellation-wide common-mode steps.
+1. An arc-scale variability of 0.23–2.08 m (median 0.75 m) at 719–1338 km, and strong persistence of adjacent detrended residuals (median lag-one Spearman correlation 0.81), which makes adjacent-difference scales an increment measure rather than a single-element-set error.
+2. A calibration of the step statistic on 61,923 pseudo-event windows: a nominal 3σ threshold gives false-alarm probabilities of 3–96% per window, and in-sample empirical thresholds of 2–57 m are needed, which transfer between held-out arcs but drift over mission time; for Jason-3 a 2.0 m threshold flags 67 of 68 logged SMA maneuvers in known windows.
+3. A test against operator three-component Δv showing satellite-dependent agreement of the along-track component on clean brackets (pooled r = 0.942), and an application to the FORMOSAT series that separates candidate maneuvers from apparent constellation-wide steps caused by differencing across gaps in the TLE series.
 
 The results provide a measured, statistic-specific basis for calibrating maneuver-screening thresholds in space situational awareness.
 

@@ -816,8 +816,301 @@ def sec_fs3():
 SECTIONS["fs3"] = sec_fs3
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# rv2：第二輪審查（Review V2）補測
+#   counts   lag bin 之弧段／配對／衛星數；逐弧段 MAD 中位（等權弧段）對照；衛星層 bootstrap
+#   holdout  以弧段分組之 5 折交叉驗證與時間切分（前半弧段校準、後半驗證）之樣本外 exceedance
+#   dur      虛擬窗長 0／2.5／12／24 h 與隨機起點之敏感度；真實窗長分布
+#   nonov    非重疊子樣本（相鄰虛擬窗之完整括號支撐不重疊）逐星 FAP 與 CI
+#   normal   單次點火窗之法向 Δv；多次點火窗之營運方預測平面變化向量對 TLE 觀測；法向估計器零假設分位數
+#   influ    SWOT 逐窗剔除之 r／斜率影響；Jason-3 檢出比例 Clopper–Pearson CI
+#   aic      高度模型以高斯似然（普通最小平方）重估之 AIC
+# ═══════════════════════════════════════════════════════════════════════════════
+def _cp(k, n, a=0.05):
+    from scipy.stats import beta
+    lo = beta.ppf(a / 2, k, n - k + 1) if k > 0 else 0.0
+    hi = beta.ppf(1 - a / 2, k + 1, n - k) if k < n else 1.0
+    return [_r(lo), _r(hi)]
+
+
+def rv2_counts():
+    rows, per_arc = [], []
+    for nid, name, iid in TARGETS:
+        t, (a,) = load(nid)
+        t, a = thin(t, a)
+        P = arc_pieces(t, a, quiets(iid))
+        for lo, hi in zip(LAG_BINS_H[:-1], LAG_BINS_H[1:]):
+            narc = npair = 0
+            for tt, _, rr in P:
+                T = (tt[None, :] - tt[:, None]) / 3600.0
+                m = int(((T >= lo) & (T < hi)).sum())
+                if m:
+                    narc += 1
+                    npair += m
+            rows.append(dict(sat=name, lag_bin=f"{lo}-{hi}h", n_arc=narc, n_pair=npair))
+        arc_res = [mad_c(p[2]) * 1e3 for p in P]
+        arc_dif = [mad_c(np.diff(p[2])) / math.sqrt(2) * 1e3 for p in P if len(p[2]) > 3]
+        per_arc.append(dict(sat=name, arcmed_s_res=float(np.median(arc_res)), arcmed_s_diff=float(np.median(arc_dif))))
+    C = pd.DataFrame(rows)
+    agg = C.groupby("lag_bin", sort=False).agg(n_sat=("n_arc", lambda x: int((x > 0).sum())),
+                                               n_arc=("n_arc", "sum"), n_pair=("n_pair", "sum")).reset_index()
+    C.to_csv(BENCH / "paperA_rv2_lag_counts.csv", index=False, encoding="utf-8-sig")
+    A = pd.DataFrame(per_arc)
+    est = json.loads(OUT_JSON.read_text(encoding="utf-8"))["est"]["per_sat"]
+    sres = np.array([est[n]["s_res_c"] for n in A.sat])
+    sdif = np.array([est[n]["s_diff_dt"] for n in A.sat])
+    bs_r, bs_d = [], []
+    for _ in range(NBOOT):
+        i = RNG.integers(0, len(sres), len(sres))
+        bs_r.append(np.median(sres[i]))
+        bs_d.append(np.median(sdif[i]))
+    return dict(lag_counts=agg.to_dict("records"),
+                arc_equal_weight=dict(median_over_sats_s_res=_r(A.arcmed_s_res.median()),
+                                      median_over_sats_s_diff=_r(A.arcmed_s_diff.median()),
+                                      per_sat={r.sat: [_r(r.arcmed_s_res), _r(r.arcmed_s_diff)] for r in A.itertuples()}),
+                satellite_bootstrap_ci=dict(s_res_c=[_r(np.percentile(bs_r, 2.5)), _r(np.percentile(bs_r, 97.5))],
+                                            s_diff_dt=[_r(np.percentile(bs_d, 2.5)), _r(np.percentile(bs_d, 97.5))]))
+
+
+def rv2_holdout():
+    PS = pd.read_csv(BENCH / "paperA_rv1_pseudo_steps.csv")
+    out = {}
+    for name, g in PS.groupby("sat"):
+        v = g.step_m.abs().values
+        arc = g.arc.values
+        ua = np.unique(arc)
+        folds = np.array_split(RNG.permutation(ua), 5)
+        ex99 = ex997 = n_te = 0
+        for f in folds:
+            te = np.isin(arc, f)
+            if te.sum() == 0 or (~te).sum() < 100:
+                continue
+            q99 = np.percentile(v[~te], 99)
+            q997 = np.percentile(v[~te], 99.7)
+            ex99 += int((v[te] >= q99).sum())
+            ex997 += int((v[te] >= q997).sum())
+            n_te += int(te.sum())
+        order = g.groupby("arc").t.min().sort_values().index.values
+        cal = np.isin(arc, order[:len(order) // 2])
+        val = ~cal
+        q99t = np.percentile(v[cal], 99)
+        va = np.unique(arc[val])
+        grp = {u: np.where(arc == u)[0] for u in va}
+        eb = []
+        for _ in range(NBOOT):
+            idx = np.concatenate([grp[u] for u in RNG.choice(va, len(va))])
+            eb.append((v[idx] >= q99t).mean())
+        out[name] = dict(cv5_exceed_q99=_r(ex99 / n_te, 4), cv5_exceed_q997=_r(ex997 / n_te, 4), n_test=n_te,
+                         temporal_q99_cal_m=_r(q99t, 2), temporal_exceed_val=_r(float((v[val] >= q99t).mean()), 4),
+                         temporal_exceed_val_ci=[_r(np.percentile(eb, 2.5), 4), _r(np.percentile(eb, 97.5), 4)],
+                         n_cal=int(cal.sum()), n_val=int(val.sum()), n_arc_cal=int(len(order) // 2),
+                         n_arc_val=int(len(order) - len(order) // 2))
+    V = pd.DataFrame(out).T
+    c99 = V.cv5_exceed_q99.astype(float)
+    tv = V.temporal_exceed_val.astype(float)
+    return dict(per_sat=out, cv5_q99_median=_r(c99.median(), 4), cv5_q99_range=[_r(c99.min(), 4), _r(c99.max(), 4)],
+                cv5_q997_median=_r(V.cv5_exceed_q997.astype(float).median(), 4),
+                temporal_median=_r(tv.median(), 4), temporal_range=[_r(tv.min(), 4), _r(tv.max(), 4)])
+
+
+def rv2_dur():
+    df = pd.read_csv(TRUTH)
+    wd = {}
+    for nid, name in ((41240, "Jason-3"), (54754, "SWOT"), (36508, "CryoSat-2")):
+        w = df[df.norad == nid].drop_duplicates(["win_start_tai", "win_end_tai"])
+        h = (pd.to_datetime(w.win_end_tai) - pd.to_datetime(w.win_start_tai)).dt.total_seconds() / 3600
+        wd[name] = dict(n=int(len(h)), p10=_r(h.quantile(.1), 2), median=_r(h.median(), 2),
+                        p90=_r(h.quantile(.9), 2), max=_r(h.max(), 2))
+    res = {}
+    for nid, name, iid in [x for x in TARGETS if x[1] in ("Jason-3", "SWOT", "CryoSat-2", "Sentinel-6A", "Jason-2")]:
+        t, (a,) = load(nid)
+        qs = quiets(iid)
+        rr, vv = {}, {}
+        for wh in (0.0, 2.5, 12.0, 24.0):
+            v = np.abs(np.array([p[2] for p in pseudo_steps(t, a, qs, win_h=wh)])) * 1e3
+            vv[wh] = v
+            rr[f"{wh:g}h"] = dict(n=int(len(v)), q99_m=_r(np.percentile(v, 99), 2), median_m=_r(np.median(v), 3))
+        base = np.percentile(vv[2.5], 99)
+        for wh in vv:
+            rr[f"{wh:g}h"]["exceed_at_q99_2p5h"] = _r(float((vv[wh] >= base).mean()), 4)
+        offs = []
+        for _ in range(5):
+            o = RNG.uniform(0, 12) * 3600
+            v = np.abs(np.array([p[2] for p in pseudo_steps(t, a, [(s_ + o, e_) for s_, e_ in qs])])) * 1e3
+            offs.append(np.percentile(v, 99))
+        rr["random_offset_q99_range_m"] = [_r(min(offs), 2), _r(max(offs), 2)]
+        res[name] = rr
+    return dict(window_duration_h=wd, sensitivity=res)
+
+
+def rv2_nonov():
+    PS = pd.read_csv(BENCH / "paperA_rv1_pseudo_steps.csv")
+    far = json.loads(OUT_JSON.read_text(encoding="utf-8"))["far"]["per_sat"]
+    sup = (2.5 / 24 + 2 * BR_OUT_D) * 86400
+    out = {}
+    for name, g in PS.groupby("sat"):
+        g = g.sort_values("t")
+        keep, last = [], {}
+        for i, r in enumerate(g.itertuples()):
+            if r.arc not in last or r.t - last[r.arc] >= sup:
+                keep.append(i)
+                last[r.arc] = r.t
+        h = g.iloc[keep]
+        v = h.step_m.abs().values
+        arc = h.arc.values
+        thr3 = far[name]["thr_3sres_m"]
+        q99 = far[name]["q99_m"]
+        ua = np.unique(arc)
+        grp = {u: np.where(arc == u)[0] for u in ua}
+        fb, fq = [], []
+        for _ in range(NBOOT):
+            idx = np.concatenate([grp[u] for u in RNG.choice(ua, len(ua))])
+            fb.append((v[idx] >= thr3).mean())
+            fq.append((v[idx] >= q99).mean())
+        out[name] = dict(n=int(len(v)), n_arc=int(len(ua)), fap_3sres=_r((v >= thr3).mean(), 4),
+                         fap_3sres_ci=[_r(np.percentile(fb, 2.5), 4), _r(np.percentile(fb, 97.5), 4)],
+                         fap_q99=_r((v >= q99).mean(), 4),
+                         fap_q99_ci=[_r(np.percentile(fq, 2.5), 4), _r(np.percentile(fq, 97.5), 4)])
+    return dict(support_d=_r(sup / 86400, 3), per_sat=out)
+
+
+def rv2_normal():
+    df = pd.read_csv(TRUTH)
+    recs, nullq = [], {}
+    for nid, name, iid in [(54754, "SWOT", "SWOT1"), (36508, "CryoSat-2", "CRYO2")]:
+        rows = con().execute("SELECT epoch_utc, inclination_deg, raan_deg, sma_km, line1, line2 FROM raw_tle_archive "
+                             "WHERE norad_id=? ORDER BY epoch_utc", [nid]).fetchall()
+        t = np.array([r[0].timestamp() for r in rows])
+        inc = np.array([r[1] for r in rows])
+        om = np.degrees(np.unwrap(np.radians([r[2] for r in rows])))
+        a = np.array([r[3] for r in rows])
+        L1 = [r[4] for r in rows]
+        L2 = [r[5] for r in rows]
+        si = math.sin(math.radians(float(np.median(inc))))
+        vbar = math.sqrt(MU / float(np.median(a)))
+        PI = pseudo_steps(t, inc, quiets(iid), fn=lin_step)
+        PO = {(k, c): x for k, c, x in pseudo_steps(t, om, quiets(iid), fn=lin_step)}
+        pairs = [(x, PO[(k, c)] * si) for k, c, x in PI if (k, c) in PO]
+        di_ = np.abs([p[0] for p in pairs])
+        do_ = np.abs([p[1] for p in pairs])
+        tot = np.hypot(di_, do_)
+        nullq[name] = dict(n=int(len(pairs)), q99_di_mdeg=_r(np.percentile(di_, 99) * 1e3, 3),
+                           q99_sinidOm_mdeg=_r(np.percentile(do_, 99) * 1e3, 3),
+                           q99_planechange_dvN_mm_s=_r(vbar * math.radians(np.percentile(tot, 99)) * 1e6, 1),
+                           median_planechange_dvN_mm_s=_r(vbar * math.radians(np.median(tot)) * 1e6, 2))
+        for (ws, we), g in df[df.norad == nid].groupby(["win_start_tai", "win_end_tai"]):
+            s_ep, e_ep = tai2ep(ws), tai2ep(we)
+            di = lin_step(t, inc, s_ep, e_ep)
+            dO = lin_step(t, om, s_ep, e_ep)
+            k0 = int(np.searchsorted(t, s_ep)) - 1
+            if di is None or dO is None or k0 < 0:
+                continue
+            ii = math.radians(float(inc[k0]))
+            pi_ref = po_ref = 0.0
+            us, ok = [], True
+            for _, b in g.iterrows():
+                ul = arg_lat(L1[k0], L2[k0], utc2ep(b["epoch_utc"]))
+                if ul is None:
+                    ok = False
+                    break
+                u, _, vv = ul
+                us.append(u)
+                pi_ref += math.cos(u) * b["dv_cross"] / (vv * 1e3)
+                po_ref += math.sin(u) * b["dv_cross"] / (vv * 1e3)
+            if not ok:
+                continue
+            v = math.sqrt(MU / float(a[k0]))
+            single = len(g) == 1
+            dvN_single = (v * (math.cos(us[0]) * math.radians(di) + math.sin(us[0]) * math.sin(ii) * math.radians(dO)) * 1e3
+                          if single else np.nan)
+            recs.append(dict(sat=name, win_start_tai=ws, n_burns=len(g), single=single,
+                             dvN_truth=float(g.dv_cross.sum()), dvN_abs_truth=float(g.dv_cross.abs().sum()),
+                             dvN_rec_single=dvN_single,
+                             ref_di_mdeg=math.degrees(pi_ref) * 1e3, ref_sinidOm_mdeg=math.degrees(po_ref) * 1e3,
+                             obs_di_mdeg=di * 1e3, obs_sinidOm_mdeg=dO * math.sin(ii) * 1e3))
+    D = pd.DataFrame(recs)
+    D.to_csv(BENCH / "paperA_rv2_normal.csv", index=False, encoding="utf-8-sig")
+    s1 = D[D.single & (D.dvN_abs_truth > 0)]
+    m = D[~D.single & (D.dvN_abs_truth > 0)]
+    ref_mag = np.hypot(D.ref_di_mdeg, D.ref_sinidOm_mdeg)
+    return dict(null_quantiles=nullq, n_single=int(len(s1)), n_multi=int(len(m)),
+                single_dvN=reg_stats(s1.dvN_truth, s1.dvN_rec_single),
+                single_truth_abs_median_mm_s=_r(s1.dvN_abs_truth.median() * 1e3, 3),
+                multi_di_obs_vs_ref=reg_stats(m.ref_di_mdeg / 1e3, m.obs_di_mdeg / 1e3),
+                multi_sinidOm_obs_vs_ref=reg_stats(m.ref_sinidOm_mdeg / 1e3, m.obs_sinidOm_mdeg / 1e3),
+                ref_planechange_max_mdeg=_r(ref_mag.max(), 4), ref_planechange_median_mdeg=_r(ref_mag.median(), 5),
+                ref_di_max_mdeg=_r(D.ref_di_mdeg.abs().max(), 4), ref_sinidOm_max_mdeg=_r(D.ref_sinidOm_mdeg.abs().max(), 4),
+                tle_field_quantum_mdeg=dict(inclination=0.1, raan=0.1,
+                                            sini_raan_SWOT=_r(0.1 * math.sin(math.radians(77.6)), 4),
+                                            sini_raan_CryoSat2=_r(0.1 * math.sin(math.radians(92.0)), 4)))
+
+
+def rv2_influ():
+    D = pd.read_csv(BENCH / "paperA_rv1_dv_vector.csv")
+    s = D[(D.sat == "SWOT") & (D.clean == 1) & (D.dv_along_truth.abs() > 1e-6)].reset_index(drop=True)
+    x = s.dv_along_truth.values
+    y = s.dv_along_rec.values
+    full = dict(r=_r(np.corrcoef(x, y)[0, 1]), slope=_r(np.polyfit(x, y, 1)[0]))
+    loo = []
+    for i in range(len(s)):
+        m = np.arange(len(s)) != i
+        loo.append((i, np.corrcoef(x[m], y[m])[0, 1], np.polyfit(x[m], y[m], 1)[0]))
+    L = pd.DataFrame(loo, columns=["i", "r", "slope"])
+    k = int(L.r.idxmax())
+    w = s.iloc[k]
+    det = json.loads(OUT_JSON.read_text(encoding="utf-8"))["det"]
+    return dict(swot_full=full, swot_loo_r_range=[_r(L.r.min()), _r(L.r.max())],
+                swot_loo_slope_range=[_r(L.slope.min()), _r(L.slope.max())],
+                swot_most_influential=dict(win_start_tai=w.win_start_tai, n_burns=int(w.n_burns),
+                                           truth_mm_s=_r(w.dv_along_truth * 1e3, 2), rec_mm_s=_r(w.dv_along_rec * 1e3, 2),
+                                           r_without=_r(L.r[k]), slope_without=_r(L.slope[k])),
+                bootstrap_unit="logged window（每窗一筆；同窗多次點火已合併）",
+                jason3_cp95={k_: _cp(v_, det["n_nonzero_truth"]) for k_, v_ in det["detected_nonzero"].items()})
+
+
+def rv2_aic():
+    from scipy.optimize import least_squares
+    d = pd.read_csv(BENCH / "tle_noise_floor_map.csv").dropna(subset=["sigma_m"]).copy()
+    d["sigma_m"] = d.sigma_m.clip(lower=0.02)
+    h, ls = d.alt_km.values, np.log10(d.sigma_m.values)
+    n = len(ls)
+    f = least_squares(lambda p: np.log10(sigma_th(h, np.abs(p))) - ls, x0=[0.05, 10.0, 120.0])
+    p = np.abs(f.x)
+    rss = float(np.sum(f.fun ** 2))
+    gm = d.groupby("group").sigma_m.transform(lambda x: np.log10(x).mean()).values
+    rss_g = float(np.sum((ls - gm) ** 2))
+    rss_c = float(np.sum((ls - ls.mean()) ** 2))
+    kg = d.group.nunique()
+
+    def aic(r, k):
+        return n * math.log(r / n) + 2 * (k + 1)
+    return dict(likelihood="log10 σ 之獨立高斯誤差、共同變異數；參數以普通最小平方（最大概似）重估；k 含變異數",
+                ols_fit=dict(sigma0_m=_r(p[0], 4), A_m=_r(p[1], 2), H_km=_r(p[2], 1)),
+                aic=dict(constant=_r(aic(rss_c, 1), 1), per_group=_r(aic(rss_g, kg), 1), altitude=_r(aic(rss, 3), 1)),
+                k=dict(constant=2, per_group=kg + 1, altitude=4),
+                satellites=d[["group", "norad", "alt_km", "inc_deg", "sigma_m", "n_tle"]].round(3).to_dict("records"))
+
+
+def sec_rv2():
+    prev = json.loads(OUT_JSON.read_text(encoding="utf-8")).get("rv2", {})
+    only = [x for x in sys.argv[2:]] or ["counts", "holdout", "dur", "nonov", "normal", "influ", "aic"]
+    fns = dict(counts=rv2_counts, holdout=rv2_holdout, dur=rv2_dur, nonov=rv2_nonov,
+               normal=rv2_normal, influ=rv2_influ, aic=rv2_aic)
+    for k in only:
+        prev[k] = fns[k]()
+        print(f"── {k}")
+        print(json.dumps({kk: vv for kk, vv in prev[k].items() if kk != "satellites"}, ensure_ascii=False, default=str)[:3000])
+    save("rv2", prev)
+    return prev
+
+
+SECTIONS["rv2"] = sec_rv2
+
+
 if __name__ == "__main__":
-    args = sys.argv[1:] or list(SECTIONS)
+    args = sys.argv[1:] or [k for k in SECTIONS if k != "rv2"]
+    if args[0] == "rv2":
+        args = ["rv2"]
     for a_ in args:
         print(f"\n══════ {a_} ══════")
         SECTIONS[a_]()
