@@ -461,7 +461,7 @@ The planned extensions are:
 
 ## 7. Discussion and Limitations
 
-**Operational implications.** Under the evaluated detector, the reliable detection threshold of TLE-based maneuver detection is not a constant but a function of (σ_TLE, Δt, ȧ_drag). The inference "no maneuver was seen in TLEs, therefore none occurred" is defensible only when the hypothesized maneuver's SNR_eff lies well above the calibrated detection scale, for a detector of the same family under comparable data conditions. Even then it holds only at the detector level. Section 5.5(c) shows that small, isolated real maneuvers often leave no TLE response at all.
+**Operational implications.** Under the evaluated detector, the reliable detection threshold of TLE-based maneuver detection is not a constant but a function of (σ_TLE, Δt, ȧ_drag). The inference "no maneuver was seen in TLEs, therefore none occurred" is defensible only when the hypothesized maneuver's SNR_eff lies well above the calibrated detection scale, for a detector of the same family under comparable data conditions. Even then it holds only at the detector level. Section 5.5(c) shows that small, isolated real maneuvers often leave no TLE response at all. Conversely, differences taken across multi-day gaps in a retrieved TLE series accumulate natural decay: in the FORMOSAT-7 TLE series of 2025–2026, apparent constellation-wide negative steps of −40 to −127 m span common gaps of 1.2–6.8 d and, in three of four clusters, are mostly accumulated decay [11], so step statistics should account for gaps.
 
 > **Box 2 — Operational reading, for the evaluated FS7/D1 configuration only.** For a satellite with median TLE update interval Δt, robust residual scale σ_TLE, and drag rate |ȧ|, the semi-major-axis step needed for a detection probability p is approximately
 >
@@ -592,7 +592,7 @@ leoOrb SP3 products are publicly distributed by TACC (file versions, download da
 8. W. S. Schreiner et al., "COSMIC-2 radio occultation constellation: First results," *Geophysical Research Letters*, 47(4), e2019GL086841, 2020. doi:10.1029/2019GL086841.
 9. Taiwan Analysis Center for COSMIC (TACC), *FORMOSAT-7/COSMIC-2 near-real-time data products (leoOrb precise orbit files)*, https://tacc.cwa.gov.tw, accessed August 2026.
 10. S. Hilla, *The Extended Standard Product 3 Orbit Format (SP3-c)*, National Geodetic Survey / International GNSS Service, 2010.
-11. [Authors], "Empirical characterization of TLE-derived semi-major-axis noise from DORIS-certified quiescent arcs and its application to FORMOSAT maneuver analysis," manuscript in preparation, 2026.
+11. [Authors], "TLE-derived semi-major-axis variability on operator-logged maneuver-free arcs: residual dependence and empirical maneuver thresholds, with application to FORMOSAT," submitted to *Acta Astronautica*, 2026.
 12. W. E. Parker, R. Linares, "Satellite drag analysis during the May 2024 Gannon geomagnetic storm," *Journal of Spacecraft and Rockets*, 61(5), 2024. doi:10.2514/1.A36164.
 13. J. M. Picone, A. E. Hedin, D. P. Drob, A. C. Aikin, "NRLMSISE-00 empirical model of the atmosphere: Statistical comparisons and scientific issues," *Journal of Geophysical Research: Space Physics*, 107(A12), 1468, 2002. doi:10.1029/2002JA009430.
 14. J. Matzka, C. Stolle, Y. Yamazaki, O. Bronkalla, A. Morschhauser, "The geomagnetic Kp index and derived indices of geomagnetic activity," *Space Weather*, 19(5), e2020SW002641, 2021. doi:10.1029/2020SW002641. Data: GFZ Potsdam, Kp_ap_Ap_SN_F107 file, https://kp.gfz.de, accessed November 2026.
