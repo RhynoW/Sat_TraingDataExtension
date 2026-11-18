@@ -1,4 +1,4 @@
-//! Conjunction & Maneuver Lab（第二階段 Sprint 1／2）：頁面與 API，路徑與 JSON 形狀同 Python api/lab.py。
+//! Conjunction & Maneuver Lab（第二階段 Sprint 1／2／3）：頁面與 API，路徑與 JSON 形狀同 Python api/lab.py。
 //!
 //! GET  /lab                 頁面
 //! GET  /api/lab/demo        示範場景清單（含完整場景 JSON）
@@ -8,6 +8,8 @@
 //! POST /api/lab/csv/parse   CSV 文字 → 解析結果與錯誤（前端預覽）
 //! GET  /api/lab/maneuver/demo  避碰示範案例（maneuver_cases.json 套用 ops 後的完整場景）
 //! POST /api/lab/maneuver    {"scenario": 場景, "screening_norad_ids": [...]} → 避碰決策報告（Sprint 2）
+//! GET  /api/lab/rpo/demo    RPO 示範案例（rpo_cases.json 套用 ops 後的完整場景）
+//! POST /api/lab/rpo         {"scenario": 場景} → RPO 控制模擬報告（Sprint 3）
 //!
 //! EOP：資料目錄 DB\EOP-All.csv（或資料庫同目錄）存在時優先使用，否則用內嵌的凍結快照。
 
@@ -23,7 +25,7 @@ use axum::{Json, Router};
 use once_cell::sync::OnceCell;
 use serde_json::{json, Value};
 
-use crate::phase2::{apply_ops, batch, csvio, e2e, eop::Eop, maneuver};
+use crate::phase2::{apply_ops, batch, csvio, e2e, eop::Eop, maneuver, rpo};
 use crate::state::AppState;
 
 type St = State<Arc<AppState>>;
@@ -39,6 +41,8 @@ const DEMOS: [&str; 3] = [
 
 const MANEUVER_CASES: &str = include_str!("../config/phase2/testdata/maneuver_cases.json");
 const MANEUVER_BASE: &str = include_str!("../config/phase2/testdata/maneuver_leo.json");
+const RPO_CASES: &str = include_str!("../config/phase2/testdata/rpo_cases.json");
+const RPO_BASE: &str = include_str!("../config/phase2/testdata/rpo_vbar.json");
 const MAX_SCREENING_OBJECTS: usize = 200;
 
 static EOP: OnceCell<Arc<Eop>> = OnceCell::new();
@@ -52,6 +56,8 @@ pub fn extend(r: Router<Arc<AppState>>) -> Router<Arc<AppState>> {
         .route("/api/lab/csv/parse", post(csv_parse))
         .route("/api/lab/maneuver/demo", get(maneuver_demo))
         .route("/api/lab/maneuver", post(maneuver_api))
+        .route("/api/lab/rpo/demo", get(rpo_demo))
+        .route("/api/lab/rpo", post(rpo_api))
 }
 
 /// 執行期 EOP（與 Python default_eop 相同：程序內只載入一次）
@@ -173,8 +179,17 @@ async fn batch_csv(body: Bytes) -> Resp {
 }
 
 async fn maneuver_demo() -> Resp {
-    let cases: Value = serde_json::from_str(MANEUVER_CASES).expect("內嵌避碰案例");
-    let base: Value = serde_json::from_str(MANEUVER_BASE).expect("內嵌避碰場景");
+    cases_demo(MANEUVER_CASES, MANEUVER_BASE)
+}
+
+async fn rpo_demo() -> Resp {
+    cases_demo(RPO_CASES, RPO_BASE)
+}
+
+/// 案例檔（cases＋ops）套用到基準場景後的示範清單（同 Python lab_maneuver_demo／lab_rpo_demo）
+fn cases_demo(cases: &str, base: &str) -> Resp {
+    let cases: Value = serde_json::from_str(cases).expect("內嵌示範案例");
+    let base: Value = serde_json::from_str(base).expect("內嵌示範場景");
     let out: Vec<Value> = cases["cases"].as_array().unwrap().iter()
         .map(|c| json!({"id": c["name"], "scenario": apply_ops(&base, &c["ops"])})).collect();
     let mut r = Json(json!({"description": base.get("description").cloned().unwrap_or(json!("")), "scenarios": out})).into_response();
@@ -244,6 +259,18 @@ async fn maneuver_api(State(st): St, body: Bytes) -> Resp {
             rep["screening_unresolved"] = json!(unresolved);
             json_status(rep, StatusCode::OK)
         }
+        Err(e) => json_status(json!({"status": "error", "error": e}), StatusCode::BAD_REQUEST),
+    }
+}
+
+async fn rpo_api(State(st): St, body: Bytes) -> Resp {
+    let Some(b) = body_json(&body).filter(|b| b.get("scenario").map(Value::is_object).unwrap_or(false)) else {
+        return json_status(json!({"status": "error", "error": "需要 {\"scenario\": 場景 JSON}"}), StatusCode::BAD_REQUEST);
+    };
+    let sc = b["scenario"].clone();
+    let eop = default_eop(&st);
+    match blocking(move || rpo::run(&sc, &eop)).await {
+        Ok(rep) => json_status(rep, StatusCode::OK),
         Err(e) => json_status(json!({"status": "error", "error": e}), StatusCode::BAD_REQUEST),
     }
 }

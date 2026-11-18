@@ -15,7 +15,7 @@ use super::forces::ForceModel;
 use super::frames::{earth_rotation, teme_to_gcrf, EarthRotationTable};
 use super::integrator::propagate;
 use super::la::norm;
-use super::rtn::{cov_rtn_to_gcrf, rtn_matrix};
+use super::rtn::{cov_rtn_to_gcrf, rtn_matrix, rtn_offset_to_gcrf};
 use super::schema::validate;
 use super::tca::{find_minima_adaptive, AdaptiveParams};
 use super::timescale::{seconds_between, UtcTime};
@@ -291,25 +291,38 @@ impl<'e> Context<'e> {
 
     pub fn ephemerides(&self) -> anyhow::Result<Ephs<'_>> {
         let (start, dur, step) = (self.start, self.dur, self.step);
-        let mut list: Vec<Box<dyn Ephemeris + '_>> = Vec::new();
-        let mut t0s: Vec<f64> = Vec::new();
+        let n = self.roles.len();
+        let mut slots: Vec<Option<Box<dyn Ephemeris + '_>>> = (0..n).map(|_| None).collect();
+        let mut t0s: Vec<f64> = vec![0.0; n];
         let mut prov = Map::new();
-        for (role, o) in &self.roles {
+        // 同 Python：依 ("primary", "secondary") 順序處理（rtn_offset 物體需要先有主星星曆）
+        for want in ["primary", "secondary"] {
+            let Some(i) = self.roles.iter().position(|(r, _)| r == want) else { continue };
+            let (role, o) = &self.roles[i];
             let use_sgp4 = o["ephemeris"]["type"] == "TLE" && (self.mode == "auto" || self.mode == "sgp4");
-            if use_sgp4 {
+            if o["ephemeris"]["type"] == "rtn_offset" {
+                let ip = self.idx("primary");
+                let (rt, vt) = slots[ip].as_ref().expect("rtn_offset 需要主星星曆").rv(0.0);
+                let (r0, v0) = rtn_offset_to_gcrf(rt, vt, v3(&o["ephemeris"]["r_m"]), v3(&o["ephemeris"]["v_ms"]));
+                let fm = object_force_model(o, self.zonal, self.drag);
+                slots[i] = Some(Box::new(NumericalEphemeris::new(propagate(r0, v0, 0.0, dur, step, &fm, Some(&self.ert)))));
+                prov.insert(role.clone(), json!(format!("numerical RK4 {} s, {}", py_g(step), fm_repr(&fm))));
+                t0s[i] = 0.0;
+            } else if use_sgp4 {
                 let e = Sgp4Ephemeris::new(o["ephemeris"]["line1"].as_str().unwrap(), o["ephemeris"]["line2"].as_str().unwrap(),
                     start, &self.ert, (0.0, dur))?;
-                list.push(Box::new(e));
+                slots[i] = Some(Box::new(e));
                 prov.insert(role.clone(), json!("SGP4 (WGS-72, opsmode i) → GCRF"));
-                t0s.push(0.0);
+                t0s[i] = 0.0;
             } else {
                 let (r0, v0, t0) = initial_state_gcrf(o, &start, self.eop)?;
                 let fm = object_force_model(o, self.zonal, self.drag);
-                list.push(Box::new(NumericalEphemeris::new(propagate(r0, v0, t0, dur, step, &fm, Some(&self.ert)))));
+                slots[i] = Some(Box::new(NumericalEphemeris::new(propagate(r0, v0, t0, dur, step, &fm, Some(&self.ert)))));
                 prov.insert(role.clone(), json!(format!("numerical RK4 {} s, {}", py_g(step), fm_repr(&fm))));
-                t0s.push(t0);
+                t0s[i] = t0;
             }
         }
+        let list = slots.into_iter().map(|e| e.expect("物體角色須為 primary／secondary")).collect();
         Ok(Ephs { list, t0s, prov })
     }
 

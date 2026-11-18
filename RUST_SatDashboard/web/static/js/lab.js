@@ -4,7 +4,7 @@
 const I18N = {
   zh: {
     page_title: '會合與機動實驗室', nav_home: '返回主頁',
-    subtitle: '第二階段 Sprint 2：會合事件核心與避碰決策',
+    subtitle: '第二階段 Sprint 3：會合事件核心、避碰決策與 RPO 控制模擬',
     tab_batch: '批次分析', tab_scenario: '場景 JSON',
     f_primary: '主星 NORAD 編號', f_start: '起始時刻（UTC）', f_duration: '分析天數（≤ 7）', f_threshold: '篩選門檻（km）',
     f_coarse: '粗掃步長（秒）', f_hbr: '預設硬體半徑（m）', f_sig_p: '主星 RTN σ（km，逗號分隔）', f_sig_s: '次星預設 RTN σ（km）',
@@ -32,7 +32,7 @@ const I18N = {
   },
   en: {
     page_title: 'Conjunction & Maneuver Lab', nav_home: 'Home',
-    subtitle: 'Phase 2 Sprint 2: conjunction core and collision-avoidance decisions',
+    subtitle: 'Phase 2 Sprint 3: conjunction core, collision-avoidance decisions and RPO control simulation',
     tab_batch: 'Batch analysis', tab_scenario: 'Scenario JSON',
     f_primary: 'Primary NORAD ID', f_start: 'Start (UTC)', f_duration: 'Days (≤ 7)', f_threshold: 'Screening threshold (km)',
     f_coarse: 'Coarse step (s)', f_hbr: 'Default hard-body radius (m)', f_sig_p: 'Primary RTN σ (km, comma separated)', f_sig_s: 'Default secondary RTN σ (km)',
@@ -60,7 +60,7 @@ const I18N = {
   },
   ja: {
     page_title: '会合・軌道変更ラボ', nav_home: 'ホームへ',
-    subtitle: 'フェーズ2 スプリント2：会合イベント中核と衝突回避の意思決定',
+    subtitle: 'フェーズ2 スプリント3：会合イベント中核、衝突回避の意思決定、RPO 制御シミュレーション',
     tab_batch: 'バッチ解析', tab_scenario: 'シナリオ JSON',
     f_primary: '主衛星 NORAD 番号', f_start: '開始時刻（UTC）', f_duration: '解析日数（7 日以内）', f_threshold: 'スクリーニング閾値（km）',
     f_coarse: '粗探索ステップ（秒）', f_hbr: '既定の物体半径（m）', f_sig_p: '主衛星 RTN σ（km、カンマ区切り）', f_sig_s: '副衛星の既定 RTN σ（km）',
@@ -105,6 +105,7 @@ function setLang(lang) {
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
   if (STATE) render();
   if (window.labManeuverRender) window.labManeuverRender();
+  if (window.labRpoRender) window.labRpoRender();
 }
 window.setLang = setLang;
 
@@ -389,6 +390,7 @@ function init() {
     document.querySelectorAll('.pane').forEach(p => p.classList.toggle('on', p.id === 'pane-' + b.dataset.pane));
     document.body.dataset.pane = b.dataset.pane;
     if (b.dataset.pane === 'maneuver' && window.labManeuverRender) window.labManeuverRender();
+    if (b.dataset.pane === 'rpo' && window.labRpoRender) window.labRpoRender();
   });
   $('b-run').onclick = runBatch;
   $('b-check').onclick = checkCsv;

@@ -1,0 +1,327 @@
+{
+ "note": "以 rpo_vbar.json 為底，依序套用 ops（set 設值、del 刪除；path 為鍵或索引）。expected 為 Python 參考輸出摘要。",
+ "base": "rpo_vbar.json",
+ "cases": [
+  {
+   "name": "base_nominal",
+   "ops": [],
+   "expected": {
+    "status": "pass",
+    "reasons": [],
+    "reason": null,
+    "violation_types": [],
+    "n_burns": 16,
+    "total_dv_ms": 5.2230366909565875,
+    "checks": {
+     "nominal_violations": 0,
+     "abort_entries": 17,
+     "abort_entries_safe": 17,
+     "fault_abort_safe": null
+    }
+   }
+  },
+  {
+   "name": "fault_comm_loss",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "rpo",
+      "fault"
+     ],
+     "value": {
+      "comm_loss_start_s": 19000.0
+     }
+    }
+   ],
+   "expected": {
+    "status": "pass",
+    "reasons": [],
+    "reason": null,
+    "violation_types": [],
+    "n_burns": 16,
+    "total_dv_ms": 5.2230366909565875,
+    "checks": {
+     "nominal_violations": 0,
+     "abort_entries": 17,
+     "abort_entries_safe": 17,
+     "fault_abort_safe": true
+    }
+   }
+  },
+  {
+   "name": "keep_out_violation",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "rpo_limits",
+      "keep_out_m"
+     ],
+     "value": 350.0
+    }
+   ],
+   "expected": {
+    "status": "fail",
+    "reasons": [
+     "nominal_violations",
+     "abort_unsafe"
+    ],
+    "reason": null,
+    "violation_types": [
+     "keep_out"
+    ],
+    "n_burns": 16,
+    "total_dv_ms": 5.2230366909565875,
+    "checks": {
+     "nominal_violations": 2,
+     "abort_entries": 17,
+     "abort_entries_safe": 16,
+     "fault_abort_safe": null
+    }
+   }
+  },
+  {
+   "name": "corridor_violation",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "rpo",
+      "sequence",
+      4,
+      "corridor"
+     ],
+     "value": true
+    }
+   ],
+   "expected": {
+    "status": "fail",
+    "reasons": [
+     "nominal_violations"
+    ],
+    "reason": null,
+    "violation_types": [
+     "corridor"
+    ],
+    "n_burns": 16,
+    "total_dv_ms": 5.2230366909565875,
+    "checks": {
+     "nominal_violations": 1,
+     "abort_entries": 17,
+     "abort_entries_safe": 17,
+     "fault_abort_safe": null
+    }
+   }
+  },
+  {
+   "name": "closing_speed_violation",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "rpo_limits",
+      "max_closing_ms"
+     ],
+     "value": 0.2
+    }
+   ],
+   "expected": {
+    "status": "fail",
+    "reasons": [
+     "nominal_violations"
+    ],
+    "reason": null,
+    "violation_types": [
+     "closing_speed"
+    ],
+    "n_burns": 16,
+    "total_dv_ms": 5.2230366909565875,
+    "checks": {
+     "nominal_violations": 2,
+     "abort_entries": 17,
+     "abort_entries_safe": 17,
+     "fault_abort_safe": null
+    }
+   }
+  },
+  {
+   "name": "abort_dv_too_small",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "rpo",
+      "abort",
+      "max_dv_ms"
+     ],
+     "value": 0.02
+    }
+   ],
+   "expected": {
+    "status": "fail",
+    "reasons": [
+     "abort_unsafe"
+    ],
+    "reason": null,
+    "violation_types": [],
+    "n_burns": 16,
+    "total_dv_ms": 5.2230366909565875,
+    "checks": {
+     "nominal_violations": 0,
+     "abort_entries": 17,
+     "abort_entries_safe": 8,
+     "fault_abort_safe": null
+    }
+   }
+  },
+  {
+   "name": "rbar_approach",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "objects",
+      1,
+      "ephemeris",
+      "r_m"
+     ],
+     "value": [
+      0.0,
+      -3000.0,
+      0.0
+     ]
+    },
+    {
+     "op": "set",
+     "path": [
+      "rpo",
+      "sequence"
+     ],
+     "value": [
+      {
+       "type": "transfer",
+       "to_rtn_m": [
+        -1200.0,
+        0.0,
+        0.0
+       ],
+       "duration_s": 2400.0,
+       "label": "V-bar 3 km→R-bar 1.2 km"
+      },
+      {
+       "type": "hold",
+       "duration_s": 300.0,
+       "deadband_m": 25.0,
+       "label": "駐留 R-bar 1.2 km"
+      },
+      {
+       "type": "transfer",
+       "to_rtn_m": [
+        -900.0,
+        0.0,
+        0.0
+       ],
+       "duration_s": 600.0,
+       "label": "R-bar 1.2 km→900 m"
+      },
+      {
+       "type": "transfer",
+       "to_rtn_m": [
+        -650.0,
+        0.0,
+        0.0
+       ],
+       "duration_s": 600.0,
+       "label": "R-bar 900→650 m"
+      },
+      {
+       "type": "transfer",
+       "to_rtn_m": [
+        -450.0,
+        0.0,
+        0.0
+       ],
+       "duration_s": 600.0,
+       "label": "R-bar 650→450 m"
+      },
+      {
+       "type": "transfer",
+       "to_rtn_m": [
+        -350.0,
+        0.0,
+        0.0
+       ],
+       "duration_s": 600.0,
+       "label": "R-bar 450→350 m"
+      },
+      {
+       "type": "hold",
+       "duration_s": 600.0,
+       "deadband_m": 15.0,
+       "label": "駐留 R-bar 350 m"
+      }
+     ]
+    },
+    {
+     "op": "set",
+     "path": [
+      "rpo_limits",
+      "corridor_axis"
+     ],
+     "value": "-R"
+    },
+    {
+     "op": "set",
+     "path": [
+      "rpo_limits",
+      "max_closing_ms"
+     ],
+     "value": 0.8
+    }
+   ],
+   "expected": {
+    "status": "pass",
+    "reasons": [],
+    "reason": null,
+    "violation_types": [],
+    "n_burns": 14,
+    "total_dv_ms": 11.220773576928131,
+    "checks": {
+     "nominal_violations": 0,
+     "abort_entries": 8,
+     "abort_entries_safe": 8,
+     "fault_abort_safe": null
+    }
+   }
+  },
+  {
+   "name": "transfer_dv_exceeds",
+   "ops": [
+    {
+     "op": "set",
+     "path": [
+      "rpo",
+      "sequence",
+      0
+     ],
+     "value": {
+      "type": "transfer",
+      "to_rtn_m": [
+       -500.0,
+       -2000.0,
+       0.0
+      ],
+      "duration_s": 5550.0,
+      "label": "接近整數週期的轉移"
+     }
+    }
+   ],
+   "expected": {
+    "status": "invalid_design",
+    "reasons": null,
+    "reason": "transfer_dv_exceeds"
+   }
+  }
+ ]
+}

@@ -5,6 +5,7 @@
 //!   schema-cases <schema_cases.json>                 （base 路徑相對於 cases 檔）
 //!   e2e <scenario.json> <eop.csv>
 //!   maneuver <scenario.json> <eop.csv>              → 避碰決策報告（同 Python maneuver.run）
+//!   rpo <scenario.json> <eop.csv>                   → RPO 控制模擬報告（同 Python rpo.run）
 //!   sgp4 <input.json>          {"tles":[{"line1","line2"}],"times":[iso]}
 //!   frames <input.json> <eop.csv>   {"cases":[{"t":iso,"r_teme":[3],"v_teme":[3]}]}
 //!   propagate <input.json> <eop.csv> {"epoch","r_km","v_kms","duration_s","step_s","zonal","drag","ballistic_m2_kg","out_times":[τ]}
@@ -24,7 +25,7 @@ mod phase2;
 use std::path::Path;
 
 use phase2::eop::Eop;
-use phase2::{batch, covprop, csvio, e2e, ephemeris, maneuver, frames, integrator, kepler, pc, schema, screening, tca, timescale::UtcTime, V3};
+use phase2::{batch, covprop, csvio, e2e, ephemeris, maneuver, rpo, frames, integrator, kepler, pc, schema, screening, tca, timescale::UtcTime, V3};
 use serde_json::{json, Value};
 
 fn read(p: &str) -> anyhow::Result<Value> {
@@ -57,6 +58,7 @@ fn main() -> anyhow::Result<()> {
         }
         "e2e" => e2e::run(&read(&args[2])?, &Eop::load(Path::new(&args[3]))?)?,
         "maneuver" => maneuver::run(&read(&args[2])?, &Eop::load(Path::new(&args[3]))?)?,
+        "rpo" => rpo::run(&read(&args[2])?, &Eop::load(Path::new(&args[3]))?)?,
         "sgp4" => {
             let inp = read(&args[2])?;
             let times: Vec<UtcTime> = inp["times"].as_array().unwrap().iter().map(|t| UtcTime::parse(t.as_str().unwrap()).unwrap()).collect();

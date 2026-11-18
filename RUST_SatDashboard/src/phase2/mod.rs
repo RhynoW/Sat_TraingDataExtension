@@ -1,4 +1,4 @@
-//! 第二階段：會合評估、避碰決策與 RPO 控制模擬（Sprint 0 規格與測試骨架＋Sprint 1 自適應搜尋、協方差傳播、批次＋Sprint 2 避碰決策）。
+//! 第二階段：會合評估、避碰決策與 RPO 控制模擬（Sprint 0 規格與測試骨架＋Sprint 1 自適應搜尋、協方差傳播、批次＋Sprint 2 避碰決策＋Sprint 3 RPO 控制模擬）。
 //!
 //! Python `scenario-advanced01/scenario04/phase2/` 的同演算法移植；兩邊以 `config/phase2/testdata/`
 //! （由 scripts/sync_web.py 自 Python 版同步）共用測試資料比對。模組對應關係與 Python 相同。
@@ -18,6 +18,7 @@ pub mod integrator;
 pub mod kepler;
 pub mod maneuver;
 pub mod pc;
+pub mod rpo;
 pub mod rtn;
 pub mod schema;
 pub mod screening;
@@ -29,6 +30,8 @@ mod tests;
 mod tests_sprint1;
 #[cfg(test)]
 mod tests_sprint2;
+#[cfg(test)]
+mod tests_sprint3;
 
 pub type V3 = [f64; 3];
 pub type M3 = [[f64; 3]; 3];

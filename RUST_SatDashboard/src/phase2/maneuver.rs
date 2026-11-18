@@ -43,7 +43,7 @@ fn f(v: &Value) -> f64 {
 }
 
 /// Python round(x, n)（十進位精確捨入）
-fn py_round(x: f64, n: usize) -> f64 {
+pub fn py_round(x: f64, n: usize) -> f64 {
     format!("{x:.n$}").parse().unwrap()
 }
 

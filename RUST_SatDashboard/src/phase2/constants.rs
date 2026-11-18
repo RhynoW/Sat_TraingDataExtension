@@ -56,3 +56,33 @@ pub const MAN_G0_MS2: f64 = 9.80665;
 pub const MAN_PREFILTER_MARGIN_KM: f64 = 25.0;
 pub const MAN_TARGET_MATCH_FRAC_PERIOD: f64 = 0.25;
 pub const MAN_PLOT_POINTS: usize = 241;
+
+// RPO 控制模擬（Sprint 3）
+pub const RPO_RETARGET_S: f64 = 600.0;
+pub const RPO_DEADBAND_M: f64 = 20.0;
+pub const RPO_MAX_BURN_MS: f64 = 2.0;
+pub const RPO_ABORT_UPDATE_S: f64 = 900.0;
+pub const RPO_ABORT_MIN_DV_MS: f64 = 0.01;
+pub const RPO_ABORT_MAX_DV_MS: f64 = 1.0;
+pub const RPO_ABORT_N_DV: usize = 25;
+pub const RPO_ABORT_MARGIN: f64 = 1.5;
+pub const RPO_ABORT_ESCAPE_FACTOR: f64 = 1.5;
+pub const RPO_ABORT_SAMPLE_S: f64 = 30.0;
+pub const RPO_EXEC_MAG_FRAC: f64 = 0.05;
+pub const RPO_EXEC_POINT_DEG: f64 = 2.0;
+pub const RPO_HCW_ECC_MAX: f64 = 0.01;
+pub const RPO_HCW_RANGE_FRAC_MAX: f64 = 0.005;
+pub const RPO_TIMELINE_MAX: usize = 1000;
+/// RPO_LIMITS_DEFAULT（鍵順序同 Python）
+pub fn rpo_limits_default() -> serde_json::Map<String, serde_json::Value> {
+    let serde_json::Value::Object(m) = serde_json::json!({"keep_out_m": 200.0, "max_closing_ms": 0.5,
+        "corridor_half_angle_deg": 10.0, "corridor_axis": "-T", "corridor_range_m": 1000.0, "closing_range_m": 1000.0})
+    else { unreachable!() };
+    m
+}
+/// RPO_COMM_LOSS_DEFAULT
+pub fn rpo_comm_loss_default() -> serde_json::Map<String, serde_json::Value> {
+    let serde_json::Value::Object(m) = serde_json::json!({"strategy": "abort_to_hold", "trigger_s": 600.0, "safe_orbits": 3.0})
+    else { unreachable!() };
+    m
+}

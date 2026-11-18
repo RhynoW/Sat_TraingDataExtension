@@ -144,7 +144,16 @@ fn check_ephemeris(c: &mut Ctx, e: &Value, pe: &str) {
                 string(c, em, "source", pe, 0);
             }
         }
-        _ => c.err(pe, "type 須為 TLE 或 state"),
+        Some("rtn_offset") => {
+            if let Some(em) = obj(c, e, pe, &["type", "of", "r_m", "v_ms"], &["type", "of", "r_m", "v_ms", "velocity_convention", "source"]) {
+                konst(c, em, "of", pe, "primary");
+                num_array(c, em, "r_m", pe, 3, false);
+                num_array(c, em, "v_ms", pe, 3, false);
+                konst(c, em, "velocity_convention", pe, "rotating_frame_derivative");
+                string(c, em, "source", pe, 0);
+            }
+        }
+        _ => c.err(pe, "type 須為 TLE、state 或 rtn_offset"),
     }
 }
 
@@ -185,11 +194,99 @@ fn check_covariance(c: &mut Ctx, v: &Value, path: &str) {
     }
 }
 
+fn str_max(c: &mut Ctx, m: &Map<String, Value>, k: &str, path: &str, max_len: usize) {
+    if let Some(v) = m.get(k) {
+        match v.as_str() {
+            Some(s) if s.chars().count() <= max_len => {}
+            _ => c.err(&format!("{path}/{k}"), "須為字串且不超過長度上限"),
+        }
+    }
+}
+
+fn check_rpo_limits(c: &mut Ctx, v: &Value) {
+    let p = "/rpo_limits";
+    let Some(m) = obj(c, v, p, &[], &["keep_out_m", "max_closing_ms", "corridor_half_angle_deg", "corridor_axis",
+        "corridor_range_m", "closing_range_m", "fov_deg", "comm_loss"]) else { return };
+    for k in ["keep_out_m", "max_closing_ms", "corridor_range_m", "closing_range_m", "fov_deg"] {
+        num(c, m, k, p, Some((0.0, true)), None);
+    }
+    num(c, m, "corridor_half_angle_deg", p, Some((0.0, true)), Some(90.0));
+    enumv(c, m, "corridor_axis", p, &["+R", "-R", "+T", "-T", "+N", "-N"]);
+    if let Some(cl) = m.get("comm_loss") {
+        let pc = "/rpo_limits/comm_loss";
+        if let Some(cm) = obj(c, cl, pc, &[], &["strategy", "trigger_s", "safe_orbits"]) {
+            konst(c, cm, "strategy", pc, "abort_to_hold");
+            num(c, cm, "trigger_s", pc, Some((0.0, false)), None);
+            num(c, cm, "safe_orbits", pc, Some((0.0, true)), Some(10.0));
+        }
+    }
+}
+
+fn check_rpo(c: &mut Ctx, v: &Value) {
+    let p = "/rpo";
+    let Some(m) = obj(c, v, p, &["sequence"], &["sequence", "control", "abort", "fault"]) else { return };
+    if let Some(sq) = m.get("sequence") {
+        match sq.as_array() {
+            Some(a) if !a.is_empty() && a.len() <= 50 => {
+                for (i, it) in a.iter().enumerate() {
+                    let ps = format!("{p}/sequence/{i}");
+                    let (req, allowed): (&[&str], &[&str]) = match it.get("type").and_then(Value::as_str) {
+                        Some("transfer") => (&["type", "to_rtn_m", "duration_s"], &["type", "to_rtn_m", "duration_s", "corridor", "label"]),
+                        Some("hold") => (&["type", "duration_s"], &["type", "duration_s", "deadband_m", "at_rtn_m", "corridor", "label"]),
+                        Some("fly_around") => (&["type", "revolutions"], &["type", "revolutions", "corridor", "label"]),
+                        _ => {
+                            c.err(&ps, "段落 type 須為 transfer、hold 或 fly_around");
+                            continue;
+                        }
+                    };
+                    let Some(sm) = obj(c, it, &ps, req, allowed) else { continue };
+                    num_array(c, sm, "to_rtn_m", &ps, 3, false);
+                    num_array(c, sm, "at_rtn_m", &ps, 3, false);
+                    num(c, sm, "duration_s", &ps, Some((0.0, true)), Some(86400.0));
+                    num(c, sm, "deadband_m", &ps, Some((0.0, true)), None);
+                    num(c, sm, "revolutions", &ps, Some((0.0, true)), Some(5.0));
+                    boolean(c, sm, "corridor", &ps);
+                    str_max(c, sm, "label", &ps, 40);
+                }
+            }
+            _ => c.err(&format!("{p}/sequence"), "須為 1–50 個段落的陣列"),
+        }
+    }
+    if let Some(ct) = m.get("control") {
+        let pc = "/rpo/control";
+        if let Some(cm) = obj(c, ct, pc, &[], &["retarget_s", "deadband_m", "max_burn_ms"]) {
+            for k in ["retarget_s", "deadband_m", "max_burn_ms"] {
+                num(c, cm, k, pc, Some((0.0, true)), None);
+            }
+        }
+    }
+    if let Some(ab) = m.get("abort") {
+        let pa = "/rpo/abort";
+        if let Some(am) = obj(c, ab, pa, &[], &["update_s", "max_dv_ms", "margin", "execution_error"]) {
+            num(c, am, "update_s", pa, Some((0.0, true)), None);
+            num(c, am, "max_dv_ms", pa, Some((0.0, true)), None);
+            num(c, am, "margin", pa, Some((1.0, false)), None);
+            if let Some(ee) = am.get("execution_error") {
+                let pe = "/rpo/abort/execution_error";
+                if let Some(em) = obj(c, ee, pe, &[], &["mag_frac_sigma", "point_deg_sigma"]) {
+                    num(c, em, "mag_frac_sigma", pe, Some((0.0, false)), None);
+                    num(c, em, "point_deg_sigma", pe, Some((0.0, false)), None);
+                }
+            }
+        }
+    }
+    if let Some(f) = m.get("fault") {
+        if let Some(fm) = obj(c, f, "/rpo/fault", &[], &["comm_loss_start_s"]) {
+            num(c, fm, "comm_loss_start_s", "/rpo/fault", Some((0.0, false)), None);
+        }
+    }
+}
+
 fn check_structure(sc: &Value) -> Vec<String> {
     let mut c = Ctx { errs: vec![] };
     let Some(top) = obj(&mut c, sc, "", &["schema", "id", "time", "frames", "objects", "screening", "force_model"],
         &["schema", "id", "description", "time", "frames", "analysis_time", "objects", "screening", "force_model",
-          "conjunction", "maneuver_search", "rpo_limits", "monte_carlo"]) else { return c.errs };
+          "conjunction", "maneuver_search", "rpo_limits", "monte_carlo", "rpo"]) else { return c.errs };
     konst(&mut c, top, "schema", "", "satdash.scenario/v1");
     if let Some(id) = top.get("id") {
         let ok = id.as_str().map(|s| !s.is_empty() && s.len() <= 64
@@ -321,7 +418,12 @@ fn check_structure(sc: &Value) -> Vec<String> {
             }
         }
     }
-    is_obj(&mut c, top, "rpo_limits", "");
+    if let Some(rl) = top.get("rpo_limits") {
+        check_rpo_limits(&mut c, rl);
+    }
+    if let Some(r) = top.get("rpo") {
+        check_rpo(&mut c, r);
+    }
     if let Some(mc) = top.get("monte_carlo") {
         if let Some(m) = obj(&mut c, mc, "/monte_carlo", &[], &["n", "rng", "seed", "samples_file"]) {
             int(&mut c, m, "n", "/monte_carlo", 1);
@@ -400,6 +502,10 @@ pub fn validate(sc: &Value) -> Validation {
     let scr = &sc["screening"];
     if scr.get("propagator").and_then(Value::as_str) == Some("sgp4") && objs.iter().any(|o| o["ephemeris"]["type"] != "TLE") {
         codes.insert("E_PROPAGATOR_SGP4_NEEDS_TLE");
+    }
+    let is_rtn = |o: &Value| o["ephemeris"]["type"] == "rtn_offset";
+    if objs.iter().any(|o| o["role"] == "primary" && is_rtn(o)) || scr_objs.into_iter().flatten().any(is_rtn) {
+        codes.insert("E_RTN_OFFSET_ROLE");
     }
     if let Some(ms) = scr.get("min_step_s").and_then(Value::as_f64) {
         if ms > scr.get("coarse_step_s").and_then(Value::as_f64).unwrap_or(60.0) {

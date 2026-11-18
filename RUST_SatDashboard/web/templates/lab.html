@@ -61,6 +61,9 @@ tbody tr.sel{background:#1f2a3a}
 #csvmsg div{font-size:11.5px}
 body[data-pane=maneuver] #results{display:none!important}
 body:not([data-pane=maneuver]) #m-results{display:none!important}
+body[data-pane=rpo] #results{display:none!important}
+body:not([data-pane=rpo]) #r-results{display:none!important}
+#r-results{padding:0 22px 40px;display:none}
 #m-results{padding:0 22px 40px;display:none}
 .banner{border:1px solid var(--line2);border-left:4px solid var(--mut);border-radius:6px;padding:10px 14px;margin-bottom:12px;background:var(--panel);line-height:1.6}
 .banner b{color:var(--hi);font-size:14px}
@@ -73,11 +76,12 @@ body:not([data-pane=maneuver]) #m-results{display:none!important}
 </style>
 <script src="/static/js/lab.js?v=__BUILD__" defer></script>
 <script src="/static/js/lab_maneuver.js?v=__BUILD__" defer></script>
+<script src="/static/js/lab_rpo.js?v=__BUILD__" defer></script>
 </head>
 <body>
 <div id="hdr">
   <h1>&#128752; <span data-i18n="page_title">會合與機動實驗室</span></h1>
-  <span class="sub" data-i18n="subtitle">第二階段 Sprint 2：會合事件核心與避碰決策</span>
+  <span class="sub" data-i18n="subtitle">第二階段 Sprint 3：會合事件核心、避碰決策與 RPO 控制模擬</span>
   <span class="sp"></span>
   <div id="lang-switcher">
     <button type="button" class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
@@ -91,6 +95,7 @@ body:not([data-pane=maneuver]) #m-results{display:none!important}
   <button type="button" class="tab on" data-pane="batch" data-i18n="tab_batch">批次分析</button>
   <button type="button" class="tab" data-pane="scenario" data-i18n="tab_scenario">場景 JSON</button>
   <button type="button" class="tab" data-pane="maneuver" data-i18n="tab_maneuver">避碰決策</button>
+  <button type="button" class="tab" data-pane="rpo" data-i18n="tab_rpo">RPO 控制</button>
 </div>
 
 <div class="pane on" id="pane-batch">
@@ -154,7 +159,42 @@ body:not([data-pane=maneuver]) #m-results{display:none!important}
   <p class="hint" style="margin-top:8px" data-i18n="m_note">沿跡向單脈衝：在機動窗起點取主星狀態建立不機動的參考軌跡，所有候選方案自同一軌跡分岔；線性 STM 預篩整個網格，再以非線性傳播驗證、重新搜尋 TCA、重算 Pc 並做二次篩選。</p>
 </div>
 
+<div class="pane" id="pane-rpo">
+  <div class="form">
+    <label><span data-i18n="r_case">示範案例</span><select id="r-case"></select></label>
+    <label><span data-i18n="r_keep">安全區半徑（m）</span><input id="r-keep" type="number" min="1" step="10"/></label>
+    <label><span data-i18n="r_close">接近速度上限（m/s）</span><input id="r-close" type="number" min="0.01" step="0.05"/></label>
+    <label><span data-i18n="r_corr">走廊半角（°）</span><input id="r-corr" type="number" min="1" max="90" step="1"/></label>
+    <label><span data-i18n="r_axis">走廊軸向</span><select id="r-axis"><option>-T</option><option>+T</option><option>-R</option><option>+R</option><option>-N</option><option>+N</option></select></label>
+    <label><span data-i18n="r_fault">故障注入：通訊中斷時刻（秒，空白＝不注入）</span><input id="r-fault" type="number" min="0" step="10"/></label>
+    <label><span data-i18n="r_trigger">中斷觸發時間（秒）</span><input id="r-trigger" type="number" min="0" step="10"/></label>
+    <label><span data-i18n="r_orbits">被動安全圈數</span><input id="r-orbits" type="number" min="0.5" max="10" step="0.5"/></label>
+    <label class="wide"><span data-i18n="f_json">場景 JSON（satdash.scenario/v1）</span><textarea id="r-json" style="min-height:160px"></textarea></label>
+  </div>
+  <div class="row">
+    <input type="file" id="r-file" accept=".json" style="display:none"/>
+    <button type="button" class="sec" id="r-load" data-i18n="btn_load_json">載入 JSON 檔</button>
+    <button type="button" class="pri" id="r-run" data-i18n="r_run">執行 RPO 模擬</button>
+  </div>
+  <div id="r-msg" class="hint" style="margin-top:8px"></div>
+  <p class="hint" style="margin-top:8px" data-i18n="r_note">同一控制律分別在 HCW 線性模型（設計）與 GCRF 數值傳播（J2–J4＋差分阻力，閉迴路重播）中執行；全時間軸檢查安全區、接近速度與走廊；每個控制段預存撤離脈衝並以 5 種執行誤差情境驗證被動安全。</p>
+</div>
+
 <div id="status"></div>
+
+<div id="r-results">
+  <div class="banner" id="r-banner"></div>
+  <div class="kpis" id="r-kpis"></div>
+  <div class="row" style="margin:0 0 8px">
+    <button type="button" class="sec" id="r-dl" data-i18n="btn_dl_json">下載完整 JSON</button>
+    <span class="hint" id="r-meta"></span>
+  </div>
+  <div id="r-detail" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:12px"></div>
+  <div class="tblwrap" style="margin-top:12px"><table>
+    <thead><tr id="r-thead"></tr></thead>
+    <tbody id="r-tbody"></tbody>
+  </table></div>
+</div>
 
 <div id="m-results">
   <div class="banner" id="m-banner"></div>
