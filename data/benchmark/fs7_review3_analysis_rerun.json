@@ -1,0 +1,223 @@
+{
+  "identifiability": {
+    "c_hat": 0.32,
+    "profile_ci95": [
+      0.28,
+      0.4
+    ],
+    "joint_boot_corr_logc_logsnr50": -0.98,
+    "per_drag_band_c": {
+      "low": 0.28,
+      "mid": 0.32,
+      "high": 0.32
+    },
+    "wording": "jointly calibrated"
+  },
+  "parameterization_table": [
+    {
+      "model": "c=1 (v2 隱含)",
+      "snr50": 1.23,
+      "beta": 5.0,
+      "snr90": 3.39,
+      "held_out_logloss": 0.1241
+    },
+    {
+      "model": "c=0.32 (全資料 MLE)",
+      "snr50": 3.5,
+      "beta": 5.04,
+      "snr90": 9.55,
+      "held_out_logloss": 0.1236
+    },
+    {
+      "model": "free fit on cal (c=0.28)",
+      "snr50": 3.87,
+      "beta": 5.04,
+      "snr90": 10.57,
+      "held_out_logloss": 0.1237
+    },
+    {
+      "model": "no-drag (Δa/σ)",
+      "snr50": 8.74,
+      "beta": 4.38,
+      "snr90": 27.72,
+      "held_out_logloss": 0.1413
+    }
+  ],
+  "da90_backcalc": [
+    {
+      "decim": 1,
+      "drag": "high",
+      "sigma_m": 5.5,
+      "adot_mday": 76.8,
+      "dt_day": 0.53,
+      "pred_da90_m": 138,
+      "obs_da90_m": 200
+    },
+    {
+      "decim": 1,
+      "drag": "low",
+      "sigma_m": 1.1,
+      "adot_mday": 18.5,
+      "dt_day": 0.33,
+      "pred_da90_m": 22,
+      "obs_da90_m": 50
+    },
+    {
+      "decim": 1,
+      "drag": "mid",
+      "sigma_m": 2.6,
+      "adot_mday": 46.9,
+      "dt_day": 0.4,
+      "pred_da90_m": 64,
+      "obs_da90_m": 100
+    },
+    {
+      "decim": 2,
+      "drag": "high",
+      "sigma_m": 10.7,
+      "adot_mday": 74.6,
+      "dt_day": 0.99,
+      "pred_da90_m": 254,
+      "obs_da90_m": 300
+    },
+    {
+      "decim": 2,
+      "drag": "low",
+      "sigma_m": 2.2,
+      "adot_mday": 18.5,
+      "dt_day": 0.87,
+      "pred_da90_m": 55,
+      "obs_da90_m": 50
+    },
+    {
+      "decim": 2,
+      "drag": "mid",
+      "sigma_m": 5.4,
+      "adot_mday": 46.4,
+      "dt_day": 0.99,
+      "pred_da90_m": 153,
+      "obs_da90_m": 100
+    },
+    {
+      "decim": 4,
+      "drag": "high",
+      "sigma_m": 20.8,
+      "adot_mday": 76.2,
+      "dt_day": 1.98,
+      "pred_da90_m": 515,
+      "obs_da90_m": 500
+    },
+    {
+      "decim": 4,
+      "drag": "low",
+      "sigma_m": 3.6,
+      "adot_mday": 18.5,
+      "dt_day": 1.72,
+      "pred_da90_m": 106,
+      "obs_da90_m": 100
+    },
+    {
+      "decim": 4,
+      "drag": "mid",
+      "sigma_m": 8.7,
+      "adot_mday": 46.4,
+      "dt_day": 1.8,
+      "pred_da90_m": 274,
+      "obs_da90_m": 200
+    }
+  ],
+  "calibration": {
+    "bins": [
+      {
+        "p_mean": 0.375,
+        "y_rate": 0.253,
+        "n": 700
+      },
+      {
+        "p_mean": 0.84,
+        "y_rate": 0.784,
+        "n": 700
+      },
+      {
+        "p_mean": 0.957,
+        "y_rate": 0.971,
+        "n": 699
+      },
+      {
+        "p_mean": 0.986,
+        "y_rate": 0.999,
+        "n": 700
+      },
+      {
+        "p_mean": 0.995,
+        "y_rate": 1.0,
+        "n": 699
+      },
+      {
+        "p_mean": 0.998,
+        "y_rate": 1.0,
+        "n": 700
+      },
+      {
+        "p_mean": 0.999,
+        "y_rate": 1.0,
+        "n": 699
+      },
+      {
+        "p_mean": 1.0,
+        "y_rate": 1.0,
+        "n": 700
+      },
+      {
+        "p_mean": 1.0,
+        "y_rate": 1.0,
+        "n": 699
+      },
+      {
+        "p_mean": 1.0,
+        "y_rate": 1.0,
+        "n": 700
+      }
+    ],
+    "slope": 2.82,
+    "note": "slope≈1 表示機率校準良好（以 logit(p) 為單一特徵之再校準斜率）"
+  },
+  "selection_bias": {
+    "exclusion_rate_by_bin": {
+      "1-50": 0.29,
+      "50-100": 0.24,
+      "100-300": 0.18,
+      "300-1k": 0.2,
+      "1-3k": 0.35
+    },
+    "exclusion_rate_by_campaign": {
+      "2024-07": 0.24,
+      "2024-11/12": 0.54,
+      "2025-05": 0.0,
+      "2025-07/08": 0.07,
+      "2026-01": 0.43
+    },
+    "verdict": "排除率若隨幅度/期間系統性變化→正文標 potential selection bias"
+  },
+  "confusion": {
+    "unit": "event-level TP/FN（96 件）；FP/TN 以 pseudo-event（n=1141）計，FPR=FP/(FP+TN)",
+    "thr_45m": {
+      "TP": 37,
+      "FN": 59,
+      "FP": 75,
+      "TN": 1066,
+      "recall": 0.385,
+      "FPR_per_pseudo_event": 0.066,
+      "precision_vs_pseudo": 0.33
+    },
+    "thr_unified3sig": {
+      "TP": 45,
+      "FN": 51,
+      "FP": 588,
+      "TN": 553,
+      "recall": 0.469,
+      "FPR_per_pseudo_event": 0.515,
+      "precision_vs_pseudo": 0.071
+    }
+  }
+}

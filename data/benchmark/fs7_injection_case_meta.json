@@ -1,0 +1,26 @@
+{
+  "norad": 44350,
+  "sp3": "L79",
+  "win_start_index": 120,
+  "win_len": 40,
+  "decim": 1,
+  "drag_tercile": "mid",
+  "window_start_utc": "2024-03-04 07:27:20.799360",
+  "window_end_utc": "2024-03-23 13:21:28.856736",
+  "inj_index": 20,
+  "inj_epoch_utc": "2024-03-14 21:26:02.046336",
+  "da_m": 100.0,
+  "sigma_tle_m": 2.7677053276610444,
+  "adot_m_per_day": -48.69884504853657,
+  "dt_median_day": 0.3968402777754818,
+  "mad_scale_of_differences_m": 21.0977115005081,
+  "mad_threshold_m": 63.29313450152431,
+  "cusum_k": 0.5,
+  "cusum_h": 5.0,
+  "tolerance_samples": 2,
+  "flags": [
+    20
+  ],
+  "hit": true,
+  "trials_csv_check": "sigma/adot/dt 與 fs7_injection_trials.csv 一致"
+}

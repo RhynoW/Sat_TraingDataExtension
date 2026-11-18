@@ -63,15 +63,18 @@
 
 | 圖號 | 檔名（stem） | 狀態 | 產生指令 |
 |---|---|---|---|
-| Fig. 1（資料與方法流程） | — | **無圖檔** | 專案內沒有此圖，也沒有產生程式 |
-| Fig. 2（單一注入案例） | — | **無圖檔** | 同上 |
+| Fig. 1（資料與方法流程） | fig_fs7_method_flow | 完成 | `python docs/gen_fig_fs7_method_flow.py --pub`（純繪圖，無資料輸入） |
+| Fig. 2（單一注入案例） | fig_fs7_injection_case | 完成 | `python docs/gen_fig_fs7_injection_case.py --pub`（讀 fs7_injection_case.csv／_meta.json；快取由不加 --pub 之預設執行以 DB read_only 產生） |
 | Fig. 3 | fig_fs7_injection_recall | 完成 | `python fs7_injection_sweep.py --pub`（讀 fs7_injection_sweep.csv、fs7_injection_trials.csv） |
 | Fig. 4 | fig_fs7_injection_collapse | 完成 | 同上（同一指令產生 Fig. 3 與 Fig. 4） |
 | Fig. 5 | fig_fs7_injection_metrics | 完成 | `python fs7_injection_sweep_v3.py --pub`（讀 fs7_injection_metrics.csv） |
-| Fig. 6（實際事件比較） | — | **無圖檔** | 專案內沒有此圖，也沒有產生程式 |
-| Fig. S1／S2 | fig_fs7_profile_likelihood、fig_fs7_joint_likelihood | **未完成** | 見下方 |
+| Fig. 6（實際事件比較） | fig_fs7_real_event_recall | 完成 | `python docs/gen_fig_fs7_real_event_recall.py --pub`（讀 fs7_tle_recall_unified_20260825.csv、fs7_events_2024.csv；先核對 Table 4） |
+| Fig. S1 | fig_fs7_profile_likelihood、fig_fs7_joint_likelihood | 完成 | `python docs/gen_fig_fs7_model_supplement.py --pub`（讀 fs7_review3_profile_grid.csv、fs7_review3_joint_boot.csv、fs7_review4_joint_grid.csv；網格由 `python fs7_review3_analysis.py && python fs7_review4_analysis.py` 產生，需 DB read_only） |
+| Fig. S2 | fig_fs7_reliability | 完成 | 同上（讀 fs7_review4_heldout_predictions.csv） |
 | Fig. S3 | fig_tle_noise_floor_map_contour | 完成 | `python fs7_noise_floor_map_v2.py --pub`（讀 tle_noise_floor_map.csv） |
-| Fig. S4（納入／排除事件分布） | — | **無圖檔** | 專案內沒有此圖，也沒有產生程式 |
+| Fig. S4（納入／排除事件分布） | fig_fs7_event_selection | 完成 | `python docs/gen_fig_fs7_event_selection.py --pub`（讀 fs7_tle_recall_unified_20260825.csv） |
+
+論文二新增圖（Fig. 1、2、6、S1、S2、S4）共用 `docs/fs7_fig_style.py`：期刊版面（單欄 8.5 cm／雙欄 17.5 cm、字級 6.5–7.5 pt）；不加 `--pub` 時輸出 `docs/<stem>.png`（600 dpi，英文白底）與 `.pdf`。
 
 ## 未完成清單與原因
 
@@ -80,8 +83,6 @@
 | 報告圖 4、5、11–17（fig_r5_p2_parabola、fig_r1_nrlmsis_density、fig_r3_joint_element、fig_r9_planupload、fig_r2_starlink_planes、fig_r8_fs_family、fig_r7_fs7_fleet、fig_r4_shenlong_release、fig_r6_shenlong_height） | 專案內只有 PNG，找不到產生程式。檔名只出現在 build_*_ppt*.py 的插圖引用，git 歷史中也沒有。重繪等於從頭重寫程式，而且多數要重查 DB（MEME 檔、Starlink 軌道面、福衛家族、神龍相對運動），無法保證與報告原圖一致。 |
 | 論文一圖 3（paper2_fig3_shap_importance） | 原圖是 `Orbital_Maneuver_V2/analyze_plan_b_model.py` 以 shap 套件輸出的 shap_summary_bar.png，再手動複製而成。要重算 SHAP 並改寫 shap 內建繪圖，不屬於「讀快取重繪」。 |
 | 論文一圖 4（paper2_fig5_roc_comparison） | 左半部是直接嵌入的點陣圖（compare_models.py 產生的 roc_comparison.png），無法轉成黑底或英文；要重訓 RF／XGBoost 才能重繪 ROC 曲線。 |
-| 論文二 Fig. S1／S2（fig_fs7_profile_likelihood、fig_fs7_joint_likelihood） | 圖中的 profile likelihood 曲線、聯合似然網格與 reliability 曲線沒有存檔（json 只存摘要值）。要重跑 fs7_review3／review4，包含 200 次 cluster bootstrap 擬合及讀 DB 取窗起點時間。 |
-| 論文二 Fig. 1、2、6、S4 | 專案內沒有這些圖檔或產生程式（論文只寫了 caption）。 |
 
 ## 已知差異與注意事項
 
@@ -92,6 +93,12 @@
   - 圖中擬合值為 H = 77 km、R² = 0.89，但論文內文寫 H = 79 km、R² = 0.87，需要作者確認。
 - 原報告圖 18（fig_shenlong_2026_rpo.png，中文）的「≈」與對數刻度負號，在原檔中是缺字方塊；四版本已用字型 fallback 修正。原檔未動。
 - `fig_starlink_v3_profile/` 目錄不是本批程式產生的，不在上述對照表內。
+- 論文二新增圖之數字核對（細節見各程式主控台輸出）：
+  - Fig. 6：Table 4 各箱 n、兩門檻召回、Wilson CI、平均預測機率全部一致；但 CSV 之 p_pred 是以全資料描述性係數（c = 0.32、SNR₅₀ = 3.77、β = 5.25）計算，Table 4 表註寫「calibration-period coefficients」不符（改用校準期係數 0.28／3.87／5.04 時為 0.31／0.61／0.68／0.71／0.67），需作者確認表註。
+  - Fig. S4：campaign 排除率實際為 0.00–0.54（2025-05 為 0/8），與補充材料一致；論文正文 §2.6 寫 0.07–0.54。
+  - Fig. S2：校準截距 −0.63 為 fs7_final_supplement.py 以四捨五入係數（0.28／3.87／5.04）重建之值；以未四捨五入係數之逐試驗預測重算為 −0.62。fs7_review4_analysis.json 之 calib_intercept（−0.27）換算少乘 ln 10，不採用。
+  - Fig. S1：聯合網格峰值依網格解析度而異（26×26：c = 0.33、SNR₅₀ = 3.70；61×61：0.32、3.77；47 點 profile：0.316、3.77），三者對數似然差 < 0.4，屬窄脊線上之取樣差異。
+  - fs7_review3_analysis.py 重跑：模型相關摘要值全部一致；第 6 節 pseudo-event 混淆表因 DB 新增 TLE 而改變（n 1,131 → 1,141），另存 fs7_review3_analysis_rerun.json，原 json 未動。
 
 ## r15.json 之重建（報告圖 19、21）
 
