@@ -32,7 +32,11 @@ pub struct Eop {
 
 impl Eop {
     pub fn load(path: &Path) -> anyhow::Result<Self> {
-        let raw = std::fs::read(path)?;
+        Self::from_bytes(path, std::fs::read(path)?)
+    }
+
+    /// 由記憶體內容載入（內嵌快照用）；path 只用於版本資訊的檔名
+    pub fn from_bytes(path: &Path, raw: Vec<u8>) -> anyhow::Result<Self> {
         let sha = format!("{:x}", Sha256::digest(&raw));
         let text = String::from_utf8(raw)?;
         let mut lines = text.lines();

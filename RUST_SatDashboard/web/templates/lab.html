@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+
+<script>/* HF 代理暫時性 502/503/504：同源 GET fetch 自動重試 3 次（0.8/1.6/2.4 s） */(function(){var f=window.fetch;if(!f)return;window.fetch=function(input,init){var m=((init&&init.method)||(input&&input.method)||'GET').toUpperCase();var u=typeof input==='string'?input:(input&&input.url)||'';var same=u.charAt(0)==='/'||u.indexOf(location.origin)===0;if(m!=='GET'||!same)return f.apply(this,arguments);var self=this,args=arguments;return new Promise(function(res,rej){(function go(n){f.apply(self,args).then(function(r){if((r.status===502||r.status===503||r.status===504)&&n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{res(r);}},function(e){if(n<3){setTimeout(function(){go(n+1);},800*(n+1));}else{rej(e);}});})(0);});};}());</script>
+<title>會合與機動實驗室 — Conjunction &amp; Maneuver Lab</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+:root{color-scheme:dark;--bg:#0d1117;--panel:#161b22;--line:#21262d;--line2:#30363d;--fg:#c9d1d9;--hi:#e6edf3;--mut:#8b949e;--acc:#58a6ff;--ok:#3fb950;--warn:#d29922;--crit:#f85149}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);font-family:'Segoe UI',Tahoma,'Microsoft JhengHei',sans-serif;min-height:100vh;font-size:13px}
+#hdr{display:flex;align-items:center;gap:14px;padding:14px 22px;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+#hdr h1{font-size:17px;color:var(--hi);font-weight:600}
+#hdr .sub{font-size:12px;color:var(--mut)}
+#hdr .sp{flex:1}
+#hdr a{color:var(--acc);font-size:12.5px;text-decoration:none;border:1px solid var(--line2);border-radius:5px;padding:5px 11px;background:#21262d}
+#lang-switcher{display:flex;gap:4px}
+.lang-btn{padding:4px 8px;background:#21262d;color:var(--mut);border:1px solid var(--line2);border-radius:4px;font-size:11px;cursor:pointer}
+.lang-btn.active{background:#A855F7;color:#fff;border-color:#A855F7}
+#tabs{display:flex;gap:6px;padding:12px 22px 0}
+.tab{background:transparent;color:var(--mut);border:1px solid var(--line2);border-bottom:none;border-radius:6px 6px 0 0;padding:7px 14px;cursor:pointer;font-size:12.5px}
+.tab.on{background:var(--panel);color:var(--hi)}
+.pane{display:none;background:var(--panel);border:1px solid var(--line);margin:0 22px;padding:14px;border-radius:0 6px 6px 6px}
+.pane.on{display:block}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px 16px}
+.form label{display:flex;flex-direction:column;gap:4px;color:var(--mut);font-size:12px}
+.form input,.form textarea,.form select{background:var(--bg);color:var(--fg);border:1px solid var(--line2);border-radius:4px;padding:6px 8px;font-size:12.5px;font-family:inherit}
+.form textarea{font-family:Consolas,monospace;font-size:11.5px;min-height:110px;resize:vertical}
+.wide{grid-column:1/-1}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+button.pri{background:#1f6feb;color:#fff;border:0;border-radius:5px;padding:7px 18px;font-size:12.5px;cursor:pointer}
+button.pri:disabled{opacity:.5;cursor:wait}
+button.sec{background:#21262d;color:var(--fg);border:1px solid var(--line2);border-radius:5px;padding:6px 12px;font-size:12px;cursor:pointer}
+.hint{font-size:11.5px;color:var(--mut);line-height:1.6}
+.err{color:var(--crit)}
+#status{padding:10px 22px;color:var(--mut);min-height:20px}
+#status b{color:var(--hi)}
+#results{padding:0 22px 40px;display:none}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.kpi .v{font-size:19px;color:var(--hi);font-variant-numeric:tabular-nums}
+.kpi .l{font-size:11.5px;color:var(--mut);margin-top:2px}
+.tblwrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:12px;min-width:980px}
+th,td{padding:6px 9px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th{color:var(--mut);font-weight:500;cursor:pointer;user-select:none;position:sticky;top:0;background:var(--panel)}
+td.l,th.l{text-align:left}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#1c2128}
+tbody tr.sel{background:#1f2a3a}
+.badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;border:1px solid currentColor}
+.b-pass{color:var(--ok)}.b-fail{color:var(--warn)}.b-und{color:var(--mut)}
+#detail{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:12px;margin-top:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0}
+.card h3{font-size:13.5px;color:var(--hi);font-weight:600;margin-bottom:4px}
+.card canvas{width:100%;display:block}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px}
+.kv dt{color:var(--mut)}.kv dd{color:var(--hi);font-variant-numeric:tabular-nums;word-break:break-word}
+.acc{border-left:3px solid var(--warn);padding:6px 10px;margin-top:8px;font-size:11.5px;line-height:1.6;color:var(--fg)}
+#csvmsg div{font-size:11.5px}
+</style>
+<script src="/static/js/lab.js?v=__BUILD__" defer></script>
+</head>
+<body>
+<div id="hdr">
+  <h1>&#128752; <span data-i18n="page_title">會合與機動實驗室</span></h1>
+  <span class="sub" data-i18n="subtitle">第二階段 Sprint 1：會合事件核心（近接極小值搜尋、碰撞機率、適用性篩選）</span>
+  <span class="sp"></span>
+  <div id="lang-switcher">
+    <button type="button" class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
+    <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+    <button type="button" class="lang-btn" data-lang="ja" onclick="setLang('ja')">日</button>
+  </div>
+  <a href="/">&#8592; <span data-i18n="nav_home">返回主頁</span></a>
+</div>
+
+<div id="tabs">
+  <button type="button" class="tab on" data-pane="batch" data-i18n="tab_batch">批次分析</button>
+  <button type="button" class="tab" data-pane="scenario" data-i18n="tab_scenario">場景 JSON</button>
+</div>
+
+<div class="pane on" id="pane-batch">
+  <div class="form">
+    <label><span data-i18n="f_primary">主星 NORAD 編號</span><input id="b-primary" value="25544" inputmode="numeric"/></label>
+    <label><span data-i18n="f_start">起始時刻（UTC）</span><input id="b-start" type="datetime-local" step="1"/></label>
+    <label><span data-i18n="f_duration">分析天數（≤ 7）</span><input id="b-days" type="number" min="0.05" max="7" step="0.05" value="1"/></label>
+    <label><span data-i18n="f_threshold">篩選門檻（km）</span><input id="b-thr" type="number" min="0.01" step="0.1" value="100"/></label>
+    <label><span data-i18n="f_coarse">粗掃步長（秒）</span><input id="b-coarse" type="number" min="1" max="600" step="1" value="60"/></label>
+    <label><span data-i18n="f_hbr">預設硬體半徑（m）</span><input id="b-hbr" type="number" min="0.1" step="0.5" value="5"/></label>
+    <label><span data-i18n="f_sig_p">主星 RTN σ（km，逗號分隔）</span><input id="b-sigp" value="0.1, 0.5, 0.1"/></label>
+    <label><span data-i18n="f_sig_s">次星預設 RTN σ（km）</span><input id="b-sigs" value="0.2, 1.0, 0.2"/></label>
+    <label class="wide"><span data-i18n="f_secondaries">次星清單：每行一個 NORAD 編號，或 CSV（表頭 norad_id,name,line1,line2,hbr_m,sigma_r_km,sigma_t_km,sigma_n_km）</span>
+      <textarea id="b-secs">48274
+68762
+59103</textarea></label>
+  </div>
+  <div class="row">
+    <input type="file" id="b-file" accept=".csv,.txt" style="display:none"/>
+    <button type="button" class="sec" id="b-load" data-i18n="btn_load_csv">載入 CSV 檔</button>
+    <button type="button" class="sec" id="b-check" data-i18n="btn_check_csv">檢查清單</button>
+    <button type="button" class="pri" id="b-run" data-i18n="btn_run">執行分析</button>
+  </div>
+  <div id="csvmsg" class="hint" style="margin-top:8px"></div>
+  <p class="hint" style="margin-top:8px" data-i18n="batch_note">星曆：SGP4（WGS-72）轉 GCRF；搜尋：自適應細分，保證門檻內、相隔超過 1 秒的近接都會被找到；協方差：展示模式（固定 RTN σ、忽略相關項）。</p>
+</div>
+
+<div class="pane" id="pane-scenario">
+  <div class="form">
+    <label><span data-i18n="f_demo">示範場景</span><select id="s-demo"></select></label>
+    <label class="wide"><span data-i18n="f_json">場景 JSON（satdash.scenario/v1）</span><textarea id="s-json" style="min-height:220px"></textarea></label>
+  </div>
+  <div class="row">
+    <input type="file" id="s-file" accept=".json" style="display:none"/>
+    <button type="button" class="sec" id="s-load" data-i18n="btn_load_json">載入 JSON 檔</button>
+    <button type="button" class="pri" id="s-run" data-i18n="btn_run">執行分析</button>
+  </div>
+  <div id="s-msg" class="hint" style="margin-top:8px"></div>
+</div>
+
+<div id="status"></div>
+
+<div id="results">
+  <div class="kpis" id="kpis"></div>
+  <div class="row" style="margin:0 0 8px">
+    <button type="button" class="sec" id="dl-csv" data-i18n="btn_dl_csv">下載事件 CSV</button>
+    <button type="button" class="sec" id="dl-json" data-i18n="btn_dl_json">下載完整 JSON</button>
+    <span class="hint" id="search-meta"></span>
+  </div>
+  <div class="tblwrap"><table>
+    <thead><tr id="thead"></tr></thead>
+    <tbody id="tbody"></tbody>
+  </table></div>
+  <div id="detail"></div>
+</div>
+</body>
+</html>

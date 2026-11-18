@@ -1,0 +1,216 @@
+{
+ "schema": "satdash.scenario/v1",
+ "id": "e2e-leo-propagated-01",
+ "description": "合成 LEO 雙星；協方差為傳播模式（RTN 6×6，慣性速度分量），沿數值軌跡以 J2–J4 變分方程傳播 6 小時到 TCA",
+ "time": {
+  "system": "UTC",
+  "eop_source": "celestrak EOP-All.csv",
+  "eop_version": "snapshot 2026-11-18"
+ },
+ "frames": {
+  "sgp4_output": "TEME",
+  "propagation": "GCRF"
+ },
+ "objects": [
+  {
+   "role": "primary",
+   "name": "SYN-P",
+   "orbit_regime": "LEO",
+   "ephemeris": {
+    "type": "state",
+    "epoch": "2026-11-20T00:00:00Z",
+    "frame": "GCRF",
+    "r_km": [
+     215.3357059388151,
+     4740.941021012885,
+     4969.580669570353
+    ],
+    "v_kms": [
+     -6.9546790172395765,
+     -2.089713045506579,
+     2.2894798706190342
+    ],
+    "source": "synthetic"
+   },
+   "covariance": {
+    "mode": "propagated",
+    "epoch": "2026-11-20T00:00:00Z",
+    "frame": "RTN",
+    "velocity_convention": "inertial_velocity_components",
+    "units": {
+     "pos": "km",
+     "vel": "km/s",
+     "cross": "km^2/s"
+    },
+    "matrix_6x6": [
+     [
+      0.0025000000000000005,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0.04000000000000001,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0.0025000000000000005,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      1e-08,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      1e-08,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1e-08
+     ]
+    ],
+    "source": "assumed",
+    "independent_of_other": true,
+    "propagation": {
+     "method": "numerical_variational_gcrf",
+     "process_noise": {
+      "model": "none",
+      "q_km2_s3": 0.0
+     }
+    }
+   },
+   "hbr_m": 5.0,
+   "mass_kg": 260.0,
+   "area_to_mass_m2kg": 0.01,
+   "cd": 2.2
+  },
+  {
+   "role": "secondary",
+   "name": "SYN-S",
+   "orbit_regime": "LEO",
+   "ephemeris": {
+    "type": "state",
+    "epoch": "2026-11-20T00:00:00Z",
+    "frame": "GCRF",
+    "r_km": [
+     2515.7309002332604,
+     482.7941530924302,
+     6377.262247932742
+    ],
+    "v_kms": [
+     -6.011275261313622,
+     -3.8341214182882055,
+     2.659751483728053
+    ],
+    "source": "synthetic"
+   },
+   "covariance": {
+    "mode": "propagated",
+    "epoch": "2026-11-20T00:00:00Z",
+    "frame": "RTN",
+    "velocity_convention": "inertial_velocity_components",
+    "units": {
+     "pos": "km",
+     "vel": "km/s",
+     "cross": "km^2/s"
+    },
+    "matrix_6x6": [
+     [
+      0.010000000000000002,
+      0,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0.16000000000000003,
+      0,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0.010000000000000002,
+      0,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      4e-08,
+      0,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      4e-08,
+      0
+     ],
+     [
+      0,
+      0,
+      0,
+      0,
+      0,
+      4e-08
+     ]
+    ],
+    "source": "assumed",
+    "independent_of_other": true,
+    "propagation": {
+     "method": "numerical_variational_gcrf",
+     "process_noise": {
+      "model": "none",
+      "q_km2_s3": 0.0
+     }
+    }
+   },
+   "hbr_m": 5.0,
+   "mass_kg": 260.0,
+   "area_to_mass_m2kg": 0.01,
+   "cd": 2.2
+  }
+ ],
+ "screening": {
+  "start": "2026-11-20T00:00:00Z",
+  "duration_s": 28800.0,
+  "step_s": 10.0,
+  "threshold_km": 25.0
+ },
+ "force_model": {
+  "zonal": true,
+  "drag": false
+ }
+}

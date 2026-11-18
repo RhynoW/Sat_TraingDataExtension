@@ -109,7 +109,12 @@ pub fn pc_chan(miss: [f64; 2], c2: &[[f64; 2]; 2], hbr_km: f64) -> anyhow::Resul
     let ym = -st * miss[0] + ct * miss[1];
     let u = hbr_km * hbr_km / (sx * sy);
     let v = xm * xm / l1 + ym * ym / l2;
-    let kmax = CHAN_MAX_TERMS + 60;
+    // Pc = Σ_m w_m · tail_m，w_m = e^{−v/2}(v/2)^m/m!（遞迴，不溢位）；tail_m 為 Poisson 尾項（由大 k 往小 k 累加）
+    if 0.5 * v > 700.0 {
+        return Ok(0.0);
+    }
+    let max_terms = CHAN_MAX_TERMS + (0.5 * v).ceil() as usize;
+    let kmax = max_terms + 60;
     let mut pk = vec![0.0; kmax + 1];
     pk[0] = (-0.5 * u).exp();
     for k in 1..=kmax {
@@ -121,16 +126,16 @@ pub fn pc_chan(miss: [f64; 2], c2: &[[f64; 2]; 2], hbr_km: f64) -> anyhow::Resul
         acc += pk[k];
         tail[k - 1] = acc;
     }
-    let (mut tv, mut total) = (1.0, 0.0);
-    for m in 0..CHAN_MAX_TERMS {
+    let (mut w, mut total) = ((-0.5 * v).exp(), 0.0);
+    for m in 0..max_terms {
         if m > 0 {
-            tv *= 0.5 * v / m as f64;
+            w *= 0.5 * v / m as f64;
         }
-        let term = tv * tail[m];
+        let term = w * tail[m];
         total += term;
-        if m > 2 && term < 1e-18 * total.max(1e-300) {
+        if m as f64 > 0.5 * v + 2.0 && term < 1e-18 * total.max(1e-300) {
             break;
         }
     }
-    Ok((-0.5 * v).exp() * total)
+    Ok(total)
 }

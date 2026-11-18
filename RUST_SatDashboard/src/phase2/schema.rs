@@ -240,11 +240,14 @@ fn check_structure(sc: &Value) -> Vec<String> {
         }
     }
     if let Some(s) = top.get("screening") {
-        if let Some(m) = obj(&mut c, s, "/screening", &["start", "duration_s", "threshold_km"], &["start", "duration_s", "step_s", "threshold_km"]) {
+        if let Some(m) = obj(&mut c, s, "/screening", &["start", "duration_s", "threshold_km"], &["start", "duration_s", "step_s", "threshold_km", "propagator", "coarse_step_s", "min_step_s"]) {
             string(&mut c, m, "start", "/screening", 0);
             num(&mut c, m, "duration_s", "/screening", Some((0.0, true)), Some(2592000.0));
             num(&mut c, m, "step_s", "/screening", Some((0.0, true)), Some(600.0));
             num(&mut c, m, "threshold_km", "/screening", Some((0.0, true)), None);
+            enumv(&mut c, m, "propagator", "/screening", &["auto", "sgp4", "numerical"]);
+            num(&mut c, m, "coarse_step_s", "/screening", Some((0.0, true)), Some(3600.0));
+            num(&mut c, m, "min_step_s", "/screening", Some((0.0, true)), Some(60.0));
         }
     }
     if let Some(f) = top.get("force_model") {
@@ -346,6 +349,27 @@ pub fn validate(sc: &Value) -> Validation {
     }
     if objs[0]["role"] == objs[1]["role"] {
         codes.insert("E_ROLE_DUPLICATE");
+    }
+    let scr = &sc["screening"];
+    if scr.get("propagator").and_then(Value::as_str) == Some("sgp4") && objs.iter().any(|o| o["ephemeris"]["type"] != "TLE") {
+        codes.insert("E_PROPAGATOR_SGP4_NEEDS_TLE");
+    }
+    if let Some(ms) = scr.get("min_step_s").and_then(Value::as_f64) {
+        if ms > scr.get("coarse_step_s").and_then(Value::as_f64).unwrap_or(60.0) {
+            codes.insert("E_MIN_STEP_GT_COARSE");
+        }
+    }
+    for o in objs {
+        let Some(cov) = o.get("covariance") else { continue };
+        if cov.get("mode").and_then(Value::as_str) == Some("propagated") {
+            if let Some(ep) = cov.get("epoch").and_then(Value::as_str) {
+                let rf = if o["ephemeris"]["type"] == "state" { s(&o["ephemeris"]["epoch"]) } else { s(&scr["start"]) };
+                let dt = seconds_between(&UtcTime::parse(&rf).unwrap(), &UtcTime::parse(ep).unwrap());
+                if dt.abs() > 1e-6 {
+                    codes.insert("E_COV_EPOCH_MISMATCH");
+                }
+            }
+        }
     }
     let drag = sc["force_model"]["drag"].as_bool().unwrap_or(false);
     for o in objs {

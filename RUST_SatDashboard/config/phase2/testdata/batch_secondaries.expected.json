@@ -1,0 +1,56 @@
+{
+ "rows": [
+  {
+   "norad_id": 48274,
+   "hbr_m": 15.0,
+   "sigma_r_km": 0.3,
+   "sigma_t_km": 1.5,
+   "sigma_n_km": 0.3,
+   "name": "CSS",
+   "line": 3
+  },
+  {
+   "norad_id": 68762,
+   "name": "COSMOS 2612",
+   "line": 4
+  },
+  {
+   "norad_id": 59103,
+   "line1": "1 59103U 24043F   26321.84312757  .00004291  00000-0  28265-3 0  9994",
+   "line2": "2 59103  97.8564 102.9869 0006456 148.7558 211.4055 15.08059579148294",
+   "hbr_m": 3.0,
+   "name": "ICEYE-X36",
+   "line": 5
+  },
+  {
+   "norad_id": 69673,
+   "sigma_r_km": 0.2,
+   "sigma_t_km": 0.8,
+   "sigma_n_km": 0.2,
+   "name": "SZ object",
+   "line": 11
+  }
+ ],
+ "error_codes": [
+  [
+   6,
+   "CSV_BAD_NUMBER"
+  ],
+  [
+   7,
+   "CSV_MISSING_ID_OR_TLE"
+  ],
+  [
+   8,
+   "CSV_DUPLICATE"
+  ],
+  [
+   9,
+   "CSV_BAD_NUMBER"
+  ],
+  [
+   10,
+   "CSV_BAD_TLE"
+  ]
+ ]
+}

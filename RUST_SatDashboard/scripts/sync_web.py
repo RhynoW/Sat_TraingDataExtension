@@ -56,6 +56,7 @@ def render_templates() -> None:
         "orbit_tuner.html": {},                             # 軌道六參數調整器介紹頁（CTA 連回 /?open=orbit6）
         "starlink.html": {},                                # Starlink 可見性／普查／離軌（src/starlink.rs）
         "story.html": {"story_id": "__STORY_ID__"},         # 故事頁（src/story.rs 執行期替換 __STORY_ID__）
+        "lab.html": {},                                     # 第二階段 Conjunction & Maneuver Lab（src/lab.rs）
     }
     for name, ctx in jobs.items():
         html = env.get_template(name).render(cesium_cdn="", **ctx)

@@ -42,7 +42,12 @@ impl UtcTime {
         }
         let secs = (self.mjd - MJD_UNIX0) * 86400 + whole;
         let dt = DateTime::from_timestamp(secs, (us * 1000) as u32).unwrap();
-        dt.format("%Y-%m-%dT%H:%M:%S%.6fZ").to_string()
+        // 與 Python datetime.isoformat() 相同：微秒為 0 時不輸出小數部
+        if us == 0 {
+            dt.format("%Y-%m-%dT%H:%M:%SZ").to_string()
+        } else {
+            dt.format("%Y-%m-%dT%H:%M:%S%.6fZ").to_string()
+        }
     }
 
     pub fn tt_jd(&self, dat_s: f64) -> (f64, f64) {

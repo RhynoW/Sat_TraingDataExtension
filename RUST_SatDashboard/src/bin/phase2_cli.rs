@@ -9,13 +9,21 @@
 //!   propagate <input.json> <eop.csv> {"epoch","r_km","v_kms","duration_s","step_s","zonal","drag","ballistic_m2_kg","out_times":[τ]}
 //!   kepler-tca <input.json>    {"cases":[{"e1":[6],"e2":[6],"t1","step","cov3":[[3]],"hbr_km"}]}
 //!   pc <input.json>            {"cases":[{"miss":[2],"c2":[[2]],"hbr_km"}]}
+//!   adaptive-tle <input.json> <eop.csv>
+//!       {"start","duration_s","coarse_step_s","threshold_km","min_step_s"?,"pairs":[{"p":{"line1","line2"},"s":{...}}]}
+//!       → [{"minima":[{"tau","miss_km","v_rel_kms","flag"}],"n_evals"}]（all_minima，依 τ 排序）
+//!   covprop <input.json> <eop.csv>
+//!       {"epoch","r_km","v_kms","P0":6×6 GCRF,"duration_s","state_step_s","cov_step_s","zonal","q_km2_s3","out_times":[τ]}
+//!       → [{"P":6×6}]（地球定向表範圍 [−1, duration_s+1] s，與 Python 測試相同）
+//!   csv-parse <file.csv>       → {"rows","errors"}（同 Python parse_secondaries）
+//!   batch <request.json> <eop.csv> <tle_fixture.json>   → 批次報告（TLE 由 fixture 的 "tles" 查詢）
 #[path = "../phase2/mod.rs"]
 mod phase2;
 
 use std::path::Path;
 
 use phase2::eop::Eop;
-use phase2::{e2e, frames, integrator, kepler, pc, schema, screening, tca, timescale::UtcTime, V3};
+use phase2::{batch, covprop, csvio, e2e, ephemeris, frames, integrator, kepler, pc, schema, screening, tca, timescale::UtcTime, V3};
 use serde_json::{json, Value};
 
 fn read(p: &str) -> anyhow::Result<Value> {
@@ -161,6 +169,63 @@ fn main() -> anyhow::Result<()> {
                 json!({"foster": pc::pc_foster(m, &c2, h).ok(), "chan": pc::pc_chan(m, &c2, h).ok()})
             }).collect();
             json!(res)
+        }
+        "adaptive-tle" => {
+            let inp = read(&args[2])?;
+            let eop = Eop::load(Path::new(&args[3]))?;
+            let start = UtcTime::parse(inp["start"].as_str().unwrap())?;
+            let dur = inp["duration_s"].as_f64().unwrap();
+            let ert = frames::EarthRotationTable::new(start, -1.0, dur + 1.0, &eop)?;
+            let mut res = Vec::new();
+            for pr in inp["pairs"].as_array().unwrap() {
+                let mk = |o: &Value| ephemeris::Sgp4Ephemeris::new(o["line1"].as_str().unwrap(), o["line2"].as_str().unwrap(), start, &ert, (0.0, dur));
+                let (p, s) = (mk(&pr["p"])?, mk(&pr["s"])?);
+                let rel = ephemeris::RelativeState::new(&p, &s);
+                let r = tca::find_minima_adaptive(&|t| rel.rv(t), &|t| rel.rva(t), 0.0, dur, tca::AdaptiveParams {
+                    coarse_step: inp["coarse_step_s"].as_f64().unwrap_or(phase2::constants::SEARCH_COARSE_STEP_S),
+                    threshold_km: inp["threshold_km"].as_f64(),
+                    min_step: inp.get("min_step_s").and_then(Value::as_f64).unwrap_or(phase2::constants::SEARCH_MIN_STEP_S),
+                    ..Default::default()
+                });
+                let minima: Vec<Value> = r.all_minima.iter().map(|a| json!({"tau": a.tau, "miss_km": a.miss_km,
+                    "v_rel_kms": phase2::la::norm(a.v_rel), "flag": a.flag})).collect();
+                res.push(json!({"minima": minima, "n_evals": rel.n_evals.get()}));
+            }
+            json!(res)
+        }
+        "covprop" => {
+            let c = read(&args[2])?;
+            let eop = Eop::load(Path::new(&args[3]))?;
+            let ep = UtcTime::parse(c["epoch"].as_str().unwrap())?;
+            let dur = c["duration_s"].as_f64().unwrap();
+            let zonal = c["zonal"].as_bool().unwrap_or(true);
+            let ert = frames::EarthRotationTable::new(ep, -1.0, dur + 1.0, &eop)?;
+            let fm = phase2::forces::ForceModel::new(zonal, false, 0.0);
+            let eph = ephemeris::NumericalEphemeris::new(integrator::propagate(v3(&c["r_km"]), v3(&c["v_kms"]), 0.0, dur,
+                c["state_step_s"].as_f64().unwrap(), &fm, Some(&ert)));
+            let p0: Vec<Vec<f64>> = c["P0"].as_array().unwrap().iter()
+                .map(|r| r.as_array().unwrap().iter().map(|x| x.as_f64().unwrap()).collect()).collect();
+            let trk = covprop::CovarianceTrack::new(&eph, covprop::m6_from(&p0), 0.0, dur, c["cov_step_s"].as_f64().unwrap(),
+                Some(&ert), zonal, c["q_km2_s3"].as_f64().unwrap_or(0.0));
+            let mut res = Vec::new();
+            for t in c["out_times"].as_array().unwrap() {
+                res.push(json!({"P": covprop::m6_to_vec(&trk.at(t.as_f64().unwrap())?)}));
+            }
+            json!(res)
+        }
+        "csv-parse" => csvio::parse_secondaries(&std::fs::read_to_string(&args[2])?),
+        "batch" => {
+            let body = read(&args[2])?;
+            let eop = Eop::load(Path::new(&args[3]))?;
+            anyhow::ensure!(args.len() >= 5, "用法：phase2_cli batch <request.json> <eop.csv> <tle_fixture.json>");
+            let fx = read(&args[4])?;
+            let lookup = |n: i64| fx["tles"].get(n.to_string()).map(|t| (
+                t["name"].as_str().unwrap_or("").to_string(), t["line1"].as_str().unwrap_or("").to_string(),
+                t["line2"].as_str().unwrap_or("").to_string()));
+            match batch::prepare_request(&body) {
+                Ok((req, _parsed)) => batch::run_batch(&req, &eop, &lookup)?,
+                Err(e) => e,
+            }
         }
         other => anyhow::bail!("未知子命令 {other}"),
     };

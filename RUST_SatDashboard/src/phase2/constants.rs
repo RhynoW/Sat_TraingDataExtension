@@ -24,6 +24,21 @@ pub const GL_RADIAL_N: usize = 32;
 pub const GL_ANGULAR_N: usize = 128;
 pub const CHAN_MAX_TERMS: usize = 200;
 
+// 自適應近接搜尋（Sprint 1）
+pub const SEARCH_COARSE_STEP_S: f64 = 60.0;
+pub const SEARCH_MIN_STEP_S: f64 = 1.0;
+pub const SEARCH_SUBDIVIDE: usize = 6;
+pub const SEARCH_ACCEL_BOUND_KM_S2: f64 = 0.02;
+pub const SEARCH_LOW_VREL_KM_S: f64 = 0.01;
+pub const SEARCH_TIDAL_COEF_S2: f64 = 4.7e-6;
+pub const SEARCH_PERT_ACCEL_KM_S2: f64 = 3.0e-5;
+pub const SEARCH_OMEGA_MAX_RAD_S: f64 = 1.3e-3;
+
+// 協方差傳播（Sprint 1）
+pub const COV_STEP_LEO_S: f64 = 20.0;
+pub const COV_STEP_GEO_S: f64 = 300.0;
+pub const COV_JAC_DR_KM: f64 = 1.0e-3;
+
 pub const SCREEN_K_SIGMA: f64 = 5.0;
 pub const SCREEN_TENC_MAX_FRAC_PERIOD: f64 = 0.01;
 pub const SCREEN_LIN_MAX_FRAC: f64 = 0.1;

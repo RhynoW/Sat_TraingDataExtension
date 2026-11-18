@@ -36,6 +36,11 @@
      {"op": "set", "path": ["analysis_time"], "value": "2026-11-19T00:00:00Z"},
      {"op": "set", "path": ["conjunction"], "value": {"tca": "2026-11-20T06:00:00Z"}},
      {"op": "set", "path": ["objects", 0, "propulsion"], "value": {"isp_s": 220, "dv_budget_ms": 5.0, "min_notice_s": 43200}},
-     {"op": "set", "path": ["maneuver_search"], "value": {"window_rel_tca_s": [-86400, -1800]}}], "expected_codes": []}
+     {"op": "set", "path": ["maneuver_search"], "value": {"window_rel_tca_s": [-86400, -1800]}}], "expected_codes": []},
+  {"name": "sprint1_search_fields_ok", "ops": [{"op": "set", "path": ["screening", "propagator"], "value": "numerical"}, {"op": "set", "path": ["screening", "coarse_step_s"], "value": 120}, {"op": "set", "path": ["screening", "min_step_s"], "value": 1}], "expected_codes": []},
+  {"name": "propagator_bad_enum", "ops": [{"op": "set", "path": ["screening", "propagator"], "value": "hpop"}], "expected_codes": ["E_SCHEMA"]},
+  {"name": "propagator_sgp4_with_state", "ops": [{"op": "set", "path": ["screening", "propagator"], "value": "sgp4"}], "expected_codes": ["E_PROPAGATOR_SGP4_NEEDS_TLE"]},
+  {"name": "min_step_gt_coarse", "ops": [{"op": "set", "path": ["screening", "coarse_step_s"], "value": 5}, {"op": "set", "path": ["screening", "min_step_s"], "value": 10}], "expected_codes": ["E_MIN_STEP_GT_COARSE"]},
+  {"name": "cov_epoch_mismatch", "ops": [{"op": "set", "path": ["objects", 0, "covariance"], "value": {"mode": "propagated", "epoch": "2026-11-20T01:00:00Z", "frame": "GCRF", "units": {"pos": "km", "vel": "km/s", "cross": "km^2/s"}, "matrix_6x6": [[0.01,0,0,0,0,0],[0,0.25,0,0,0,0],[0,0,0.01,0,0,0],[0,0,0,1e-8,0,0],[0,0,0,0,1e-8,0],[0,0,0,0,0,1e-8]], "source": "assumed", "independent_of_other": true}}], "expected_codes": ["E_COV_EPOCH_MISMATCH"]}
  ]
 }

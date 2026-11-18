@@ -1,0 +1,10 @@
+{
+ "primary": {
+  "norad_id": 25544
+ },
+ "secondaries_csv": "# 批次次星範例：norad_id 或 TLE；可選 hbr_m 與 RTN σ\nnorad_id,name,line1,line2,hbr_m,sigma_r_km,sigma_t_km,sigma_n_km\n48274,CSS,,,15,0.3,1.5,0.3\n68762,COSMOS 2612,,,,,,\n59103,ICEYE-X36,\"1 59103U 24043F   26321.84312757  .00004291  00000-0  28265-3 0  9994\",\"2 59103  97.8564 102.9869 0006456 148.7558 211.4055 15.08059579148294\",3,,,\nabc,bad id,,,,,,\n,no id,,,,,,\n48274,dup,,,,,,\n67689,neg hbr,,,-2,,,\n99999,short tle,1 99999U,2 99999,,,,\n69673,SZ object,,,,0.2,0.8,0.2\n",
+ "start": "2026-11-18T00:00:00Z",
+ "duration_s": 86400.0,
+ "threshold_km": 100.0,
+ "coarse_step_s": 60.0
+}
