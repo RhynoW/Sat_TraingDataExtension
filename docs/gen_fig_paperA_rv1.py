@@ -74,7 +74,7 @@ def fig1():
     med = LAG.groupby("lag_bin").ratio.median().reindex(bins).values
     a2.plot(xc, med, color=C1, lw=2.6, marker="o", label=t("13 顆中位", "Median of 13 satellites"))
     a2.axhline(1.0, color=CG, ls=":", lw=1.2)
-    a2.text(4, 1.03, t("不相關誤差之預期值", "Expected for uncorrelated errors"), fontsize=8.8, color="#555555", va="bottom")
+    a2.text(4, 1.03, t("獨立同分布高斯殘差之參考值", "Reference for i.i.d. Gaussian residuals"), fontsize=8.8, color="#555555", va="bottom")
     a2.set_xscale("log"); a2.xaxis.set_major_formatter(plain); a2.xaxis.set_minor_formatter(NullFormatter())
     a2.set_xticks([3, 6, 12, 24, 48, 96, 192])
     a2.set_ylim(0, 1.6)
@@ -152,11 +152,12 @@ def fig3():
     a1.grid(True, alpha=0.25); a1.legend(loc="upper left", fontsize=8.6)
     cc = DV[DV.dv_cross_abs_truth > 0]
     nf = X["noise_quiet"]
-    floor = np.mean([nf[s_]["dvN_equiv_from_di_mm_s"] for s_ in nf])
+    nq = J["rv2"]["normal"]["null_quantiles"]
+    floor = np.mean([nq[s_]["median_planechange_dvN_mm_s"] for s_ in nq])
     a2.axhspan(0, floor, color=C2, alpha=0.13, lw=0)
     a2.axhline(floor, color=C2, lw=1.4,
-               label=t(f"TLE 法向 Δv 雜訊尺度 ≈ {floor:.1f} mm/s（靜默弧段 Δi 步階）",
-                       f"TLE normal-Δv noise scale ≈ {floor:.1f} mm/s (quiet-arc Δi steps)"))
+               label=t(f"靜默弧段平面變化向量範數中位 ≈ {floor:.1f} mm/s（等效法向 Δv）",
+                       f"Median quiet-arc plane-change norm ≈ {floor:.1f} mm/s (equivalent normal Δv)"))
     a2.axhline(3 * floor, color=C2, lw=1.2, ls="--", label=t(f"3 倍 ≈ {3*floor:.0f} mm/s（描述性參考，非偵測極限）", f"3× ≈ {3*floor:.0f} mm/s (descriptive reference, not a detection limit)"))
     for s_, col, mk in (("CryoSat-2", C1, "o"), ("SWOT", "#7b4fbf", "s")):
         g = cc[cc.sat == s_]

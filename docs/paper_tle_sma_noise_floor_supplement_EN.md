@@ -6,11 +6,11 @@ Sections S1–S2 and S5–S8 are reproduced by `docs/paperA_reviewV1_analysis.py
 
 ## Section S1. Sensitivity of the variability estimates to processing choices (main Section 3.2)
 
-The estimation of Section 2.2 is repeated on the 3 × 3 × 3 grid of Section 2.3. Over all 27 configurations the median σ_res ranges from 0.56 to 0.89 m, the median s_Δ from 0.109 to 0.124 m and the median robust lag-one correlation ρ̂₁ from 0.87 to 0.97. Table S1 shows one-at-a-time changes from the baseline (full grid: `data/benchmark/paperA_rv1_sensitivity.csv`).
+The estimation of Section 2.2 is repeated on the 3 × 3 × 3 grid of Section 2.3. Over all 27 configurations the median σ_res ranges from 0.56 to 0.89 m, the median s_Δ from 0.109 to 0.124 m and the median scale-ratio persistence index P from 0.87 to 0.97. P is a distribution-dependent diagnostic and is not interpreted as an autocorrelation estimate (main Section 2.2). Table S1 shows one-at-a-time changes from the baseline (full grid: `data/benchmark/paperA_rv1_sensitivity.csv`).
 
 **Table S1 — One-at-a-time sensitivity of the thirteen-satellite medians.**
 
-| configuration | median σ_res (m) | median s_Δ (m) | median ρ̂₁ |
+| configuration | median σ_res (m) | median s_Δ (m) | median P |
 |---|--:|--:|--:|
 | baseline (thinning 3 h, trimming 0.75 d, degree rule 0) | 0.753 | 0.118 | 0.926 |
 | thinning 1.5 h | 0.740 | 0.110 | 0.937 |
@@ -46,7 +46,7 @@ For Jason-3 the drift-corrected statistic flags 54 of 68 logged windows with non
 
 Pairs are pooled over all within-arc residual pairs of each satellite; every bin contains all thirteen satellites (3–6 h: 894 arcs, 19,238 pairs; 6–12 h: 981 arcs, 58,660 pairs; 12–24 h: 993 arcs, 107,637 pairs; 24–48 h: 1,041 arcs, 225,086 pairs; 48–96 h: 1,044 arcs, 435,406 pairs; 96–192 h: 1,038 arcs, 759,013 pairs; per-satellite counts in `data/benchmark/paperA_rv2_lag_counts.csv`).
 
-**Table S3 — Increment scale s(τ)/σ_res by separation τ between element sets** (ordered by σ_res; 1 is expected for independent residuals).
+**Table S3 — Increment scale s(τ)/σ_res by separation τ between element sets** (ordered by σ_res; the value 1 corresponds to independent, identically distributed Gaussian residuals; independence alone does not fix this MAD-based ratio).
 
 | satellite | 3–6 h | 6–12 h | 12–24 h | 24–48 h | 48–96 h | 96–192 h |
 |---|--:|--:|--:|--:|--:|--:|
@@ -88,7 +88,7 @@ No operator-logged maneuver-free arcs exist for Starlink. Table S4 lists the est
 | STARLINK-3005, 60-day raw differences | MAD of all adjacent differences over 60 days, no exclusion | 30.33 m (35/141 differences > 0.3 km) |
 | STARLINK-3005, sliding windows | as for the 30-satellite estimate | 3.86 m (8/17 clean windows) |
 
-The filtered medians do not represent propulsion-free samples (see below). The J2 amplitude quoted below is the order-of-magnitude value J2·R_E²/a; the circular-orbit short-period amplitude of the osculating SMA, (3/2)J2(R_E²/a)sin²i, is about 6.2 km at 53° inclination. The self-consistency estimates change between data snapshots because the TLE archive used for Starlink is a rolling window; the maneuver-free-arc results of the main text are computed on one fixed snapshot. The filtered medians are an order-of-magnitude guide only: the ephemeris SMA is osculating, its J2 short-period amplitude at a = 6850 km is 6.43 km, and the median day-to-day truth SMA change (6486 m/day for the 152 satellites) is dominated by aliased short-period terms rather than thrust. Weekly median prediction error versus F10.7: Spearman ρ = 0.564 (p = 0.0078, 21 weeks); point-wise ρ = 0.063 (F10.7 at epoch) and -0.037 (change of F10.7 over the propagation).
+The filtered medians do not represent propulsion-free samples (see below). The J2 amplitude quoted below is the order-of-magnitude value J2·R_E²/a; the circular-orbit short-period amplitude of the osculating SMA, (3/2)J2(R_E²/a)sin²i, is about 6.2 km at 53° inclination. The self-consistency estimates change between data snapshots because the TLE archive used for Starlink is a rolling window; the maneuver-free-arc results of the main text are computed on one fixed snapshot. The filtered medians are an order-of-magnitude guide only: the ephemeris SMA is osculating, the order-of-magnitude value J2·R_E²/a at a = 6850 km is 6.43 km, and the median day-to-day truth SMA change (6486 m/day for the 152 satellites) is dominated by aliased short-period terms rather than thrust. Weekly median prediction error versus F10.7: Spearman ρ = 0.564 (p = 0.0078, 21 weeks); point-wise ρ = 0.063 (F10.7 at epoch) and -0.037 (change of F10.7 over the propagation).
 
 ## Section S4. FORMOSAT-7 statistics (main Section 5.3)
 
@@ -177,120 +177,120 @@ Maneuver-free arcs are the intervals between consecutive entries of the IDS mane
 
 ## Section S6. Non-overlapping subsets and held-out transfer of the empirical thresholds (main Section 3.3)
 
-Non-overlapping subset: within each arc, pseudo-windows are retained in time order only if the full bracket support of the retained window (2.5 h + 2 × 3 d = 6.1 d) does not overlap that of the previous retained window. Cross-validation: arcs are randomly assigned to five folds; the 99th percentile is estimated from the other four folds and its exceedance counted on the held-out fold, pooled over folds. Temporal split: arcs are ordered by start time, the earlier half calibrates the 99th percentile and the later half validates it. Intervals: 95% arc bootstrap.
+Non-overlapping subset: within each arc, pseudo-windows are retained in time order only if the full bracket support of the retained window (2.5 h + 2 × 3 d = 6.1 d) does not overlap that of the previous retained window. Cross-validation: arcs are randomly assigned to five folds; the 99th percentile is estimated from the other four folds and its exceedance counted on the held-out fold, pooled over folds. Chronological split: arcs are ordered by start time and split by count (not elapsed time or window count); the earlier half calibrates the 99th percentile and the later half validates it. Intervals: 95% nested arc bootstrap (calibration arcs resampled and the threshold re-estimated; validation arcs resampled). A second random fold assignment (main Section 3.3) gives 1.0–1.3% for twelve satellites and 3.6% for SARAL; the fold partition affects the per-satellite rates.
 
-**Table S8 — Non-overlapping false-alarm probabilities and held-out exceedance** (ordered by σ_res; all rates in %, 95% arc-bootstrap intervals in parentheses; FAP at q99 uses the all-window 99th percentile of Table 2; windows: non-overlapping subset; 5-fold: held-out exceedance of the fold-specific q99; q99 early: q99 from the earlier half of arcs; later arcs: its exceedance in the later half).
+**Table S8 — Non-overlapping false-alarm probabilities and held-out exceedance** (ordered by σ_res; rates in %). Non-overlap: windows of the non-overlapping subset and their false-alarm probabilities at 3σ_res and at the all-window q99 of Table 2. 5-fold: exceedances / held-out windows, pooled over folds (fold-level q99 and counts in `paperA_reviewV1.json`, key rv3.cvfold). Chronological: cut date (first epoch of the validation arcs), calibration/validation arc counts, exceedances / validation windows, and the nested arc-bootstrap interval, in which the threshold is re-estimated on resampled calibration arcs. Zero observed exceedances yield an interval degenerate at zero when no resampled arc contains an exceedance; such intervals are not interpreted as evidence of zero future false-alarm probability.
 
-| satellite | windows | FAP at 3σ_res | FAP at q99 (CI) | 5-fold | q99 early (m) | later arcs (CI) |
-|---|--:|--:|--:|--:|--:|--:|
-| Sentinel-3A | 487 | 92.2 | 1.2 (0.4–2.4) | 1.1 | 8.7 | 15.0 (9.1–22.2) |
-| Jason-3 | 534 | 21.3 | 2.4 (1.0–4.4) | 1.1 | 1.8 | 2.6 (1.2–4.2) |
-| SWOT | 165 | 96.4 | 2.4 (0.0–6.1) | 1.3 | 90.9 | 0.0 (0.0–0.0) |
-| Sentinel-3B | 368 | 66.6 | 1.1 (0.2–2.3) | 1.0 | 8.6 | 19.7 (12.8–28.2) |
-| Jason-2 | 527 | 15.6 | 3.0 (1.9–4.2) | 1.0 | 4.4 | 0.0 (0.0–0.0) |
-| Sentinel-6A | 301 | 4.0 | 0.3 (0.0–1.0) | 1.0 | 3.2 | 0.0 (0.0–0.0) |
-| Jason-1 | 502 | 10.6 | 2.8 (1.5–4.2) | 1.1 | 6.6 | 0.9 (0.1–2.1) |
-| HY-2D | 258 | 37.6 | 3.5 (1.4–5.9) | 1.0 | 16.4 | 0.5 (0.0–1.3) |
-| HY-2C | 289 | 36.0 | 3.1 (1.3–5.2) | 1.0 | 13.3 | 0.4 (0.0–1.1) |
-| CryoSat-2 | 697 | 40.0 | 1.7 (0.8–2.9) | 1.1 | 9.3 | 15.3 (10.3–21.6) |
-| SARAL | 642 | 26.0 | 2.0 (0.4–4.3) | 3.6 | 35.0 | 0.0 (0.0–0.1) |
-| Envisat | 452 | 27.0 | 2.6 (1.1–4.5) | 1.1 | 29.9 | 0.1 (0.0–0.5) |
-| HY-2A | 436 | 8.0 | 2.3 (0.8–4.3) | 1.1 | 10.7 | 0.5 (0.1–1.3) |
+| satellite | non-overlap windows | FAP 3σ_res | FAP q99 | 5-fold | cut date | arcs | later exceedance | nested CI |
+|---|--:|--:|--:|--:|---|--:|--:|--:|
+| Sentinel-3A | 487 | 92.2 | 1.2 | 59/5465 (1.1) | 2023-05-20 | 65/66 | 195/1303 (15.0) | 5.3–39.1 |
+| Jason-3 | 534 | 21.3 | 2.4 | 65/6421 (1.0) | 2022-12-17 | 29/29 | 53/2048 (2.6) | 0.0–35.6 |
+| SWOT | 165 | 96.4 | 2.4 | 25/1661 (1.5) | 2024-08-27 | 26/26 | 0/1032 (0.0) | 0.0–2.3 |
+| Sentinel-3B | 368 | 66.6 | 1.1 | 42/3960 (1.1) | 2023-10-02 | 55/56 | 220/1119 (19.7) | 11.9–41.3 |
+| Jason-2 | 527 | 15.6 | 3.0 | 55/5279 (1.0) | 2014-07-14 | 27/27 | 0/2506 (0.0) | degenerate at 0 |
+| Sentinel-6A | 301 | 4.0 | 0.3 | 40/3646 (1.1) | 2023-08-07 | 11/11 | 0/2008 (0.0) | degenerate at 0 |
+| Jason-1 | 502 | 10.6 | 2.8 | 45/4183 (1.1) | 2007-08-26 | 34/34 | 15/1617 (0.9) | 0.1–2.2 |
+| HY-2D | 258 | 37.6 | 3.5 | 41/3055 (1.3) | 2024-02-24 | 22/23 | 7/1468 (0.5) | 0.0–1.2 |
+| HY-2C | 289 | 36.0 | 3.1 | 41/3433 (1.2) | 2024-01-02 | 23/24 | 6/1540 (0.4) | 0.0–1.2 |
+| CryoSat-2 | 697 | 40.0 | 1.7 | 82/7138 (1.1) | 2020-03-02 | 99/100 | 459/2998 (15.3) | 7.2–25.2 |
+| SARAL | 642 | 26.0 | 2.0 | 241/7598 (3.2) | 2015-04-14 | 23/23 | 2/7450 (0.0) | 0.0–0.1 |
+| Envisat | 452 | 27.0 | 2.6 | 51/4960 (1.0) | 2007-10-28 | 64/65 | 3/2006 (0.1) | 0.0–0.6 |
+| HY-2A | 436 | 8.0 | 2.3 | 73/5124 (1.4) | 2015-07-19 | 27/27 | 14/2849 (0.5) | 0.0–1.6 |
 
-## Section S7. FORMOSAT-7 clustered negative steps and TLE-series gaps (main Section 5.3)
+## Section S7. FORMOSAT-7 clustered negative differences and gaps in the retrieved TLE series (main Section 5.3)
 
-For each satellite and cluster, the largest negative adjacent step in the cluster period is listed with the epochs of the element sets before and after it; TLE epochs bracket, but are not, any physical event time. Rate: linear SMA rate over the 10 days before the gap. Residual: raw step minus the mean of the pre- and post-gap 10-day rates multiplied by the gap length. Output: `data/benchmark/paperA_rv2_fs7_commonmode.csv`.
+For each satellite and cluster, the largest negative adjacent difference in the cluster period is listed with the epochs of the element sets before and after it; these epochs bracket, but are not, any physical event time. Rates are linear SMA rates (± standard error; number of element sets) over the 10 days before and after the gap. R = Δa_raw − ½(ȧ_pre + ȧ_post)Δt is a retrospective correction using data on both sides of the gap; R_pre = Δa_raw − ȧ_pre·Δt uses pre-gap data only. In the archive, element sets with epochs from 12 to 17 April 2026 exist for 973 objects, compared with 29,421 for 1–6 April 2026; the first post-gap FORMOSAT-7 element sets were downloaded on 2 May 2026. Output: `data/benchmark/paperA_rv3_fs7_gap.csv`.
 
-**Table S9 — Event matrix of the clustered negative steps** (satellite: FORMOSAT-7 number).
+**Table S9 — Event matrix of the clustered negative differences** (satellite: FORMOSAT-7 number).
 
-| satellite | cluster | epoch before (UTC) | epoch after (UTC) | gap (d) | raw step (m) | pre-gap rate (m/d) | residual after decay (m) |
-|---|---|---|---|--:|--:|--:|--:|
-| 7-1 | Jan | 2025-12-30 13:08 | 2026-01-01 06:41 | 1.73 | -62.4 | -25.2 | -15.9 |
-| 7-1 | Mar/Apr | 2026-03-29 00:35 | 2026-03-31 23:01 | 2.93 | -74.7 | -17.6 | -18.9 |
-| 7-1 | Apr | 2026-04-11 10:18 | 2026-04-18 05:34 | 6.80 | -61.2 | -19.0 | +51.9 |
-| 7-1 | Jun | 2026-06-01 05:51 | 2026-06-06 04:16 | 4.93 | -84.7 | -16.1 | -11.5 |
-| 7-2 | Jan | 2025-12-30 20:36 | 2026-01-01 15:45 | 1.80 | -64.7 | -26.3 | -18.2 |
-| 7-2 | Mar/Apr | 2026-03-29 01:39 | 2026-04-01 00:05 | 2.93 | -73.2 | -19.2 | -15.4 |
-| 7-2 | Apr | 2026-04-11 17:47 | 2026-04-17 14:37 | 5.87 | -51.3 | -18.5 | +38.4 |
-| 7-2 | Jun | 2026-06-02 11:44 | 2026-06-06 11:45 | 4.00 | -59.4 | -19.2 | +2.7 |
-| 7-3 | Jan | 2025-12-30 20:04 | 2026-01-01 00:39 | 1.19 | -60.4 | -41.1 | -14.7 |
-| 7-3 | Mar/Apr | 2026-03-29 03:12 | 2026-03-31 21:51 | 2.78 | -126.5 | -33.6 | -27.5 |
-| 7-3 | Apr | 2026-04-11 19:40 | 2026-04-17 16:52 | 5.88 | -90.3 | -35.3 | +80.2 |
-| 7-3 | Jun | 2026-06-01 10:53 | 2026-06-05 14:49 | 4.16 | -121.8 | -31.8 | -10.7 |
-| 7-4 | Jan | 2025-12-30 15:16 | 2026-01-01 13:36 | 1.93 | -74.2 | -25.4 | -24.8 |
-| 7-4 | Mar/Apr | 2026-03-29 04:19 | 2026-03-31 18:44 | 2.60 | -61.0 | -18.6 | -7.4 |
-| 7-4 | Apr | 2026-04-11 14:02 | 2026-04-17 18:53 | 6.20 | -50.2 | -20.0 | +50.4 |
-| 7-4 | Jun | 2026-06-02 07:59 | 2026-06-04 20:48 | 2.53 | -39.8 | -16.9 | -2.1 |
-| 7-5 | Jan | 2025-12-30 13:40 | 2026-01-01 02:26 | 1.53 | -59.7 | -28.0 | -18.2 |
-| 7-5 | Mar/Apr | 2026-03-29 02:43 | 2026-04-01 01:08 | 2.93 | -71.4 | -16.8 | -14.6 |
-| 7-5 | Apr | 2026-04-11 01:14 | 2026-04-17 20:29 | 6.80 | -64.3 | -21.0 | +54.9 |
-| 7-5 | Jun | 2026-06-02 19:11 | 2026-06-05 04:48 | 2.40 | -40.5 | -19.3 | -0.0 |
-| 7-6 | Jan | 2025-12-30 11:01 | 2026-01-01 04:34 | 1.73 | -68.3 | -26.9 | -19.9 |
-| 7-6 | Mar/Apr | 2026-03-28 20:51 | 2026-04-01 04:53 | 3.33 | -68.8 | -18.3 | -4.0 |
-| 7-6 | Apr | 2026-04-11 12:59 | 2026-04-17 21:02 | 6.34 | -58.0 | -18.6 | +44.0 |
-| 7-6 | Jun | 2026-06-01 03:43 | 2026-06-06 08:33 | 5.20 | -91.1 | -16.4 | -11.1 |
+| sat. | cluster | epoch before (UTC) | epoch after (UTC) | gap (d) | raw (m) | ȧ_pre (m/d) | ȧ_post (m/d) | R (m) | R_pre (m) |
+|---|---|---|---|--:|--:|--:|--:|--:|--:|
+| 7-1 | Jan | 2025-12-30 13:08 | 2026-01-01 06:41 | 1.73 | -62.4 | -25.2 ± 0.6 (24) | -28.6 ± 0.5 (28) | -15.9 | -18.7 |
+| 7-1 | Mar/Apr | 2026-03-29 00:35 | 2026-03-31 23:01 | 2.93 | -74.7 | -17.6 ± 0.1 (29) | -20.4 ± 0.8 (24) | -18.9 | -23.0 |
+| 7-1 | Apr | 2026-04-11 10:18 | 2026-04-18 05:34 | 6.80 | -61.2 | -19.0 ± 0.8 (25) | -14.3 ± 0.5 (25) | +51.9 | +67.7 |
+| 7-1 | Jun | 2026-06-01 05:51 | 2026-06-06 04:16 | 4.93 | -84.7 | -16.1 ± 0.3 (23) | -13.5 ± 0.1 (26) | -11.5 | -5.1 |
+| 7-2 | Jan | 2025-12-30 20:36 | 2026-01-01 15:45 | 1.80 | -64.7 | -26.3 ± 0.6 (30) | -25.4 ± 0.5 (25) | -18.2 | -17.3 |
+| 7-2 | Mar/Apr | 2026-03-29 01:39 | 2026-04-01 00:05 | 2.93 | -73.2 | -19.2 ± 0.1 (32) | -20.2 ± 0.6 (28) | -15.4 | -16.9 |
+| 7-2 | Apr | 2026-04-11 17:47 | 2026-04-17 14:37 | 5.87 | -51.3 | -18.5 ± 0.5 (30) | -12.1 ± 0.4 (24) | +38.4 | +57.0 |
+| 7-2 | Jun | 2026-06-02 11:44 | 2026-06-06 11:45 | 4.00 | -59.4 | -19.2 ± 0.2 (25) | -11.9 ± 0.1 (17) | +2.7 | +17.3 |
+| 7-3 | Jan | 2025-12-30 20:04 | 2026-01-01 00:39 | 1.19 | -60.4 | -41.1 ± 0.7 (27) | -35.5 ± 0.9 (22) | -14.7 | -11.4 |
+| 7-3 | Mar/Apr | 2026-03-29 03:12 | 2026-03-31 21:51 | 2.78 | -126.5 | -33.6 ± 0.3 (25) | -37.7 ± 1.2 (21) | -27.5 | -33.2 |
+| 7-3 | Apr | 2026-04-11 19:40 | 2026-04-17 16:52 | 5.88 | -90.3 | -35.3 ± 1.3 (21) | -22.7 ± 0.6 (20) | +80.2 | +117.4 |
+| 7-3 | Jun | 2026-06-01 10:53 | 2026-06-05 14:49 | 4.16 | -121.8 | -31.8 ± 0.5 (22) | -21.6 ± 0.3 (23) | -10.7 | +10.4 |
+| 7-4 | Jan | 2025-12-30 15:16 | 2026-01-01 13:36 | 1.93 | -74.2 | -25.4 ± 0.6 (29) | -25.8 ± 0.5 (23) | -24.8 | -25.2 |
+| 7-4 | Mar/Apr | 2026-03-29 04:19 | 2026-03-31 18:44 | 2.60 | -61.0 | -18.6 ± 0.2 (27) | -22.6 ± 0.7 (27) | -7.4 | -12.5 |
+| 7-4 | Apr | 2026-04-11 14:02 | 2026-04-17 18:53 | 6.20 | -50.2 | -20.0 ± 0.7 (27) | -12.5 ± 0.5 (23) | +50.4 | +73.7 |
+| 7-4 | Jun | 2026-06-02 07:59 | 2026-06-04 20:48 | 2.53 | -39.8 | -16.9 ± 0.2 (19) | -12.9 ± 0.2 (12) | -2.1 | +3.0 |
+| 7-5 | Jan | 2025-12-30 13:40 | 2026-01-01 02:26 | 1.53 | -59.7 | -28.0 ± 0.6 (27) | -26.3 ± 0.8 (24) | -18.2 | -16.8 |
+| 7-5 | Mar/Apr | 2026-03-29 02:43 | 2026-04-01 01:08 | 2.93 | -71.4 | -16.8 ± 0.1 (21) | -21.9 ± 0.7 (24) | -14.6 | -22.1 |
+| 7-5 | Apr | 2026-04-11 01:14 | 2026-04-17 20:29 | 6.80 | -64.3 | -21.0 ± 0.7 (24) | -14.0 ± 0.5 (23) | +54.9 | +78.7 |
+| 7-5 | Jun | 2026-06-02 19:11 | 2026-06-05 04:48 | 2.40 | -40.5 | -19.3 ± 0.3 (25) | -14.4 ± 0.2 (22) | -0.0 | +6.0 |
+| 7-6 | Jan | 2025-12-30 11:01 | 2026-01-01 04:34 | 1.73 | -68.3 | -26.9 ± 0.6 (29) | -29.0 ± 0.6 (35) | -19.9 | -21.8 |
+| 7-6 | Mar/Apr | 2026-03-28 20:51 | 2026-04-01 04:53 | 3.33 | -68.8 | -18.3 ± 0.1 (25) | -20.6 ± 0.6 (24) | -4.0 | -7.9 |
+| 7-6 | Apr | 2026-04-11 12:59 | 2026-04-17 21:02 | 6.34 | -58.0 | -18.6 ± 0.6 (23) | -13.6 ± 0.6 (16) | +44.0 | +59.7 |
+| 7-6 | Jun | 2026-06-01 03:43 | 2026-06-06 08:33 | 5.20 | -91.1 | -16.4 ± 0.3 (27) | -14.4 ± 0.1 (18) | -11.1 | -6.0 |
 
 ## Section S8. Altitude-model data and model comparison (main Sections 2.7 and 3.6)
 
-Self-consistency scale: robust spread within sliding 40-TLE windows after linear detrending, excluding steps larger than 0.3 km, median over windows; values below 0.02 m are set to 0.02 m. Model comparison: log10 σ with independent Gaussian errors and common variance; parameters re-estimated by ordinary least squares (maximum likelihood); the variance is counted as a parameter (k = 2, 5 and 4 for the constant, per-group and altitude models). AIC: constant -0.8, per-group -117.9, altitude -118.4 (least-squares H = 79.0 km). Data: `data/benchmark/tle_noise_floor_map.csv` (59 listed objects; 3 Starlink satellites near 365 km without a valid estimate are omitted).
+Self-consistency scale: robust spread within sliding 40-TLE windows after linear detrending, excluding steps larger than 0.3 km, median over windows. Altitude: a − 6378.137 km, consistent with Table 1 (the source table used 6371 km; values here are converted). The source table is rounded to 0.01 m; the 3 values below 0.02 m (0.00, 0.01 and 0.01 m) are set to 0.02 m. Floor sensitivity: σ₀ = 0.0454, 0.0379 and 0.0359 m and H = 77.33, 77.41 and 77.57 km for floors of 0.02, 0.01 and 0.005 m. Model comparison: log10 σ with independent Gaussian errors and common variance; parameters re-estimated by ordinary least squares (maximum likelihood); the variance is counted as a parameter (k = 2, 5 and 4 for the constant, per-group and altitude models). AIC: constant -0.8, per-group -117.9, altitude -118.4 (least-squares H = 79.0 km). Data: `data/benchmark/tle_noise_floor_map.csv` (59 listed objects; 3 Starlink satellites near 358 km without a valid estimate are omitted).
 
 **Table S10 — The 56 satellites of the altitude model.**
 
 | group | NORAD | altitude (km) | inclination (deg) | self-consistency scale (m) | TLEs |
 |---|---|--:|--:|--:|--:|
-| 14 altimetry (benchmark) | 36508 | 727 | 92.03 | 0.18 | 12,441 |
-| 14 altimetry (benchmark) | 27386 | 773 | 98.38 | 0.21 | 27,929 |
-| 14 altimetry (benchmark) | 39086 | 792 | 98.55 | 0.06 | 11,083 |
-| 14 altimetry (benchmark) | 41335 | 810 | 98.62 | 0.06 | 16,148 |
-| 14 altimetry (benchmark) | 43437 | 810 | 98.63 | 0.14 | 6,734 |
-| 14 altimetry (benchmark) | 54754 | 900 | 77.61 | 0.09 | 4,242 |
-| 14 altimetry (benchmark) | 46469 | 959 | 66.00 | 0.02 | 12,022 |
-| 14 altimetry (benchmark) | 48621 | 959 | 66.00 | 0.02 | 10,946 |
-| 14 altimetry (benchmark) | 37781 | 975 | 99.33 | 0.06 | 21,327 |
-| 14 altimetry (benchmark) | 33105 | 1318 | 66.04 | 0.07 | 12,543 |
-| 14 altimetry (benchmark) | 26997 | 1333 | 66.04 | 0.08 | 12,967 |
-| 14 altimetry (benchmark) | 22076 | 1345 | 66.04 | 0.05 | 17,515 |
-| 14 altimetry (benchmark) | 41240 | 1345 | 66.04 | 0.06 | 10,145 |
-| 14 altimetry (benchmark) | 46984 | 1345 | 66.04 | 0.05 | 5,018 |
-| 9 hold-out (SPOT/GRACE/S6B) | 27391 | 470 | 89.01 | 2.41 | 8,502 |
-| 9 hold-out (SPOT/GRACE/S6B) | 27392 | 470 | 89.01 | 2.26 | 8,324 |
-| 9 hold-out (SPOT/GRACE/S6B) | 43476 | 496 | 88.99 | 0.52 | 8,188 |
-| 9 hold-out (SPOT/GRACE/S6B) | 43477 | 496 | 88.99 | 0.51 | 8,185 |
-| 9 hold-out (SPOT/GRACE/S6B) | 20436 | 694 | 98.70 | 0.46 | 31,356 |
-| 9 hold-out (SPOT/GRACE/S6B) | 27421 | 832 | 98.59 | 0.32 | 28,440 |
-| 9 hold-out (SPOT/GRACE/S6B) | 25260 | 832 | 98.61 | 0.30 | 29,771 |
-| 9 hold-out (SPOT/GRACE/S6B) | 22823 | 837 | 98.68 | 0.15 | 24,671 |
-| 9 hold-out (SPOT/GRACE/S6B) | 66514 | 1345 | 66.04 | 0.02 | 1,275 |
-| FORMOSAT-7 (calibration) | 44343 | 547 | 24.00 | 2.46 | 1,950 |
-| FORMOSAT-7 (calibration) | 44351 | 551 | 24.00 | 2.21 | 2,285 |
-| FORMOSAT-7 (calibration) | 44358 | 557 | 24.00 | 2.66 | 1,961 |
-| FORMOSAT-7 (calibration) | 44350 | 557 | 24.00 | 2.63 | 1,984 |
-| FORMOSAT-7 (calibration) | 44349 | 557 | 24.00 | 2.64 | 1,954 |
-| FORMOSAT-7 (calibration) | 44353 | 557 | 24.00 | 2.25 | 1,963 |
-| Starlink sample (train domain) | 65082 | 470 | 53.16 | 15.67 | 422 |
-| Starlink sample (train domain) | 66625 | 470 | 53.16 | 12.95 | 431 |
-| Starlink sample (train domain) | 64740 | 470 | 53.16 | 12.00 | 420 |
-| Starlink sample (train domain) | 66010 | 470 | 53.16 | 14.74 | 422 |
-| Starlink sample (train domain) | 62311 | 470 | 53.16 | 13.74 | 421 |
-| Starlink sample (train domain) | 69141 | 473 | 97.28 | 9.87 | 333 |
-| Starlink sample (train domain) | 67601 | 473 | 97.28 | 13.96 | 451 |
-| Starlink sample (train domain) | 48483 | 478 | 53.16 | 15.65 | 394 |
-| Starlink sample (train domain) | 60130 | 478 | 53.16 | 9.44 | 418 |
-| Starlink sample (train domain) | 67877 | 480 | 53.16 | 18.68 | 429 |
-| Starlink sample (train domain) | 64919 | 482 | 53.16 | 14.00 | 411 |
-| Starlink sample (train domain) | 64281 | 482 | 53.16 | 15.64 | 420 |
-| Starlink sample (train domain) | 66189 | 482 | 53.16 | 15.37 | 414 |
-| Starlink sample (train domain) | 57848 | 482 | 53.16 | 9.70 | 431 |
-| Starlink sample (train domain) | 66854 | 490 | 43.00 | 14.99 | 377 |
-| Starlink sample (train domain) | 68010 | 490 | 43.00 | 15.00 | 371 |
-| Starlink sample (train domain) | 58069 | 490 | 43.00 | 6.77 | 373 |
-| Starlink sample (train domain) | 59089 | 490 | 43.00 | 9.35 | 369 |
-| Starlink sample (train domain) | 50177 | 493 | 53.16 | 4.07 | 449 |
-| Starlink sample (train domain) | 53740 | 496 | 53.16 | 7.63 | 564 |
-| Starlink sample (train domain) | 53779 | 521 | 53.16 | 5.90 | 447 |
-| Starlink sample (train domain) | 52090 | 546 | 53.16 | 6.41 | 471 |
-| Starlink sample (train domain) | 54067 | 547 | 53.16 | 3.22 | 470 |
-| Starlink sample (train domain) | 49751 | 547 | 53.16 | 4.72 | 497 |
-| Starlink sample (train domain) | 52138 | 547 | 53.16 | 5.29 | 459 |
-| Starlink sample (train domain) | 63873 | 579 | 70.00 | 3.91 | 527 |
-| Starlink sample (train domain) | 67200 | 579 | 70.00 | 3.41 | 514 |
+| 14 altimetry (benchmark) | 36508 | 719 | 92.03 | 0.18 | 12,441 |
+| 14 altimetry (benchmark) | 27386 | 766 | 98.38 | 0.21 | 27,929 |
+| 14 altimetry (benchmark) | 39086 | 785 | 98.55 | 0.06 | 11,083 |
+| 14 altimetry (benchmark) | 41335 | 803 | 98.62 | 0.06 | 16,148 |
+| 14 altimetry (benchmark) | 43437 | 803 | 98.63 | 0.14 | 6,734 |
+| 14 altimetry (benchmark) | 54754 | 893 | 77.61 | 0.09 | 4,242 |
+| 14 altimetry (benchmark) | 46469 | 952 | 66.00 | 0.02 | 12,022 |
+| 14 altimetry (benchmark) | 48621 | 952 | 66.00 | 0.02 | 10,946 |
+| 14 altimetry (benchmark) | 37781 | 968 | 99.33 | 0.06 | 21,327 |
+| 14 altimetry (benchmark) | 33105 | 1311 | 66.04 | 0.07 | 12,543 |
+| 14 altimetry (benchmark) | 26997 | 1325 | 66.04 | 0.08 | 12,967 |
+| 14 altimetry (benchmark) | 22076 | 1338 | 66.04 | 0.05 | 17,515 |
+| 14 altimetry (benchmark) | 41240 | 1338 | 66.04 | 0.06 | 10,145 |
+| 14 altimetry (benchmark) | 46984 | 1338 | 66.04 | 0.05 | 5,018 |
+| 9 hold-out (SPOT/GRACE/S6B) | 27391 | 463 | 89.01 | 2.41 | 8,502 |
+| 9 hold-out (SPOT/GRACE/S6B) | 27392 | 463 | 89.01 | 2.26 | 8,324 |
+| 9 hold-out (SPOT/GRACE/S6B) | 43476 | 489 | 88.99 | 0.52 | 8,188 |
+| 9 hold-out (SPOT/GRACE/S6B) | 43477 | 489 | 88.99 | 0.51 | 8,185 |
+| 9 hold-out (SPOT/GRACE/S6B) | 20436 | 687 | 98.70 | 0.46 | 31,356 |
+| 9 hold-out (SPOT/GRACE/S6B) | 27421 | 825 | 98.59 | 0.32 | 28,440 |
+| 9 hold-out (SPOT/GRACE/S6B) | 25260 | 825 | 98.61 | 0.30 | 29,771 |
+| 9 hold-out (SPOT/GRACE/S6B) | 22823 | 830 | 98.68 | 0.15 | 24,671 |
+| 9 hold-out (SPOT/GRACE/S6B) | 66514 | 1338 | 66.04 | 0.02 | 1,275 |
+| FORMOSAT-7 (calibration) | 44343 | 540 | 24.00 | 2.46 | 1,950 |
+| FORMOSAT-7 (calibration) | 44351 | 544 | 24.00 | 2.21 | 2,285 |
+| FORMOSAT-7 (calibration) | 44358 | 550 | 24.00 | 2.66 | 1,961 |
+| FORMOSAT-7 (calibration) | 44350 | 550 | 24.00 | 2.63 | 1,984 |
+| FORMOSAT-7 (calibration) | 44349 | 550 | 24.00 | 2.64 | 1,954 |
+| FORMOSAT-7 (calibration) | 44353 | 550 | 24.00 | 2.25 | 1,963 |
+| Starlink sample (train domain) | 65082 | 463 | 53.16 | 15.67 | 422 |
+| Starlink sample (train domain) | 66625 | 463 | 53.16 | 12.95 | 431 |
+| Starlink sample (train domain) | 64740 | 463 | 53.16 | 12.00 | 420 |
+| Starlink sample (train domain) | 66010 | 463 | 53.16 | 14.74 | 422 |
+| Starlink sample (train domain) | 62311 | 463 | 53.16 | 13.74 | 421 |
+| Starlink sample (train domain) | 69141 | 466 | 97.28 | 9.87 | 333 |
+| Starlink sample (train domain) | 67601 | 466 | 97.28 | 13.96 | 451 |
+| Starlink sample (train domain) | 48483 | 471 | 53.16 | 15.65 | 394 |
+| Starlink sample (train domain) | 60130 | 471 | 53.16 | 9.44 | 418 |
+| Starlink sample (train domain) | 67877 | 473 | 53.16 | 18.68 | 429 |
+| Starlink sample (train domain) | 64919 | 475 | 53.16 | 14.00 | 411 |
+| Starlink sample (train domain) | 64281 | 475 | 53.16 | 15.64 | 420 |
+| Starlink sample (train domain) | 66189 | 475 | 53.16 | 15.37 | 414 |
+| Starlink sample (train domain) | 57848 | 475 | 53.16 | 9.70 | 431 |
+| Starlink sample (train domain) | 66854 | 483 | 43.00 | 14.99 | 377 |
+| Starlink sample (train domain) | 68010 | 483 | 43.00 | 15.00 | 371 |
+| Starlink sample (train domain) | 58069 | 483 | 43.00 | 6.77 | 373 |
+| Starlink sample (train domain) | 59089 | 483 | 43.00 | 9.35 | 369 |
+| Starlink sample (train domain) | 50177 | 486 | 53.16 | 4.07 | 449 |
+| Starlink sample (train domain) | 53740 | 489 | 53.16 | 7.63 | 564 |
+| Starlink sample (train domain) | 53779 | 514 | 53.16 | 5.90 | 447 |
+| Starlink sample (train domain) | 52090 | 539 | 53.16 | 6.41 | 471 |
+| Starlink sample (train domain) | 54067 | 540 | 53.16 | 3.22 | 470 |
+| Starlink sample (train domain) | 49751 | 540 | 53.16 | 4.72 | 497 |
+| Starlink sample (train domain) | 52138 | 540 | 53.16 | 5.29 | 459 |
+| Starlink sample (train domain) | 63873 | 572 | 70.00 | 3.91 | 527 |
+| Starlink sample (train domain) | 67200 | 572 | 70.00 | 3.41 | 514 |

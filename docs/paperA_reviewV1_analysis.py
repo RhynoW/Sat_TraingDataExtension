@@ -1107,10 +1107,183 @@ def sec_rv2():
 SECTIONS["rv2"] = sec_rv2
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# rv3：第三輪審查（Review V3）補算
+#   temporal  時間切分之切點日期、期間、弧段／窗數、超越次數；巢狀 bootstrap（校準弧段重抽並重估 q99）
+#   cvfold    5 折交叉驗證逐折 q99、超越次數與窗數
+#   gap       福衛七號群集：前後 10 天斜率、樣本數、斜率標準誤、僅用空檔前之殘差；資料庫全體物件數
+#   dur33     Jason-3 窗長 3.3 h 之 q99
+#   alt       高度改以 RE = 6378.137 km 重擬合；0.02 m 下限之敏感度與受影響筆數
+# ═══════════════════════════════════════════════════════════════════════════════
+def rv3_temporal():
+    PS = pd.read_csv(BENCH / "paperA_rv1_pseudo_steps.csv")
+    out = {}
+    for name, g in PS.groupby("sat"):
+        v = g.step_m.abs().values
+        arc = g.arc.values
+        start = g.groupby("arc").t.min().sort_values()
+        order = start.index.values
+        half = len(order) // 2
+        cal_arcs, val_arcs = order[:half], order[half:]
+        cal = np.isin(arc, cal_arcs)
+        val = ~cal
+        q = np.percentile(v[cal], 99)
+        k = int((v[val] >= q).sum())
+        gc = {u: np.where(arc == u)[0] for u in cal_arcs}
+        gv = {u: np.where(arc == u)[0] for u in val_arcs}
+        nest = []
+        for _ in range(NBOOT):
+            ic = np.concatenate([gc[u] for u in RNG.choice(cal_arcs, len(cal_arcs))])
+            iv = np.concatenate([gv[u] for u in RNG.choice(val_arcs, len(val_arcs))])
+            nest.append((v[iv] >= np.percentile(v[ic], 99)).mean())
+        f = lambda x: dt.datetime.fromtimestamp(x).strftime("%Y-%m-%d")
+        tcal_end = g[cal].t.max()
+        tval_start = g[val].t.min()
+        out[name] = dict(cut_date=f(tval_start), cal_period=[f(g[cal].t.min()), f(tcal_end)],
+                         val_period=[f(tval_start), f(g[val].t.max())],
+                         n_arc_cal=int(half), n_arc_val=int(len(order) - half),
+                         n_win_cal=int(cal.sum()), n_win_val=int(val.sum()), q99_cal_m=_r(q, 2),
+                         exceed_count=k, exceed_rate=_r(k / int(val.sum()), 4),
+                         nested_ci=[_r(np.percentile(nest, 2.5), 4), _r(np.percentile(nest, 97.5), 4)],
+                         n_val_arcs_with_exceed=int(len({a_ for a_ in arc[val][v[val] >= q]})))
+    return out
+
+
+def rv3_cvfold():
+    PS = pd.read_csv(BENCH / "paperA_rv1_pseudo_steps.csv")
+    rng = np.random.default_rng(20261118)
+    out = {}
+    for name, g in PS.groupby("sat"):
+        v = g.step_m.abs().values
+        arc = g.arc.values
+        folds = np.array_split(rng.permutation(np.unique(arc)), 5)
+        rows = []
+        for f_ in folds:
+            te = np.isin(arc, f_)
+            q = np.percentile(v[~te], 99)
+            rows.append(dict(n_arc=int(len(f_)), n_win=int(te.sum()), q99_m=_r(q, 2), exceed=int((v[te] >= q).sum())))
+        K = sum(r["exceed"] for r in rows)
+        N = sum(r["n_win"] for r in rows)
+        out[name] = dict(folds=rows, exceed=K, n=N, rate=_r(K / N, 4))
+    return out
+
+
+def rv3_gap():
+    rows = []
+    for n, nm in [(44349, "7-1"), (44351, "7-2"), (44343, "7-3"), (44350, "7-4"), (44358, "7-5"), (44353, "7-6")]:
+        r = con().execute("select epoch_utc, sma_km from raw_tle_archive where norad_id=? and epoch_utc>='2025-11-01' "
+                          "and epoch_utc<'2026-11-18' order by 1", [n]).fetchdf().drop_duplicates("epoch_utc").reset_index(drop=True)
+        t = (r.epoch_utc - r.epoch_utc[0]).dt.total_seconds().values / 86400
+        a = r.sma_km.values * 1000
+        for lab, a0, b0 in [("Jan", "2025-12-30", "2026-01-03"), ("Mar/Apr", "2026-03-30", "2026-04-03"),
+                            ("Apr", "2026-04-15", "2026-04-20"), ("Jun", "2026-06-03", "2026-06-08")]:
+            w = r[(r.epoch_utc >= a0) & (r.epoch_utc < b0)].index
+            d = np.diff(a)
+            k = w[np.argmin(d[w - 1])]
+            gap = t[k] - t[k - 1]
+            mp = (t >= t[k - 1] - 10) & (t <= t[k - 1])
+            mq = (t >= t[k]) & (t <= t[k] + 10)
+
+            def fit(m):
+                x, y = t[m], a[m]
+                c_, cov = np.polyfit(x, y, 1, cov=True)
+                return c_[0], math.sqrt(cov[0, 0]), int(m.sum())
+            rp, sp, npre = fit(mp)
+            rq, sq, npost = fit(mq)
+            raw = d[k - 1]
+            rows.append(dict(sat=nm, event=lab, before=str(r.epoch_utc[k - 1])[:16], after=str(r.epoch_utc[k])[:16],
+                             gap_d=round(gap, 2), raw_m=round(raw, 1), rate_pre=round(rp, 1), se_pre=round(sp, 1), n_pre=npre,
+                             rate_post=round(rq, 1), se_post=round(sq, 1), n_post=npost,
+                             resid_prepost=round(raw - 0.5 * (rp + rq) * gap, 1), resid_preonly=round(raw - rp * gap, 1)))
+    D = pd.DataFrame(rows)
+    D.to_csv(BENCH / "paperA_rv3_fs7_gap.csv", index=False, encoding="utf-8-sig")
+    med = D.groupby("event", sort=False).agg(raw_abs=("raw_m", lambda x: x.abs().median()),
+                                             res_abs=("resid_prepost", lambda x: x.abs().median()),
+                                             res_pre_abs=("resid_preonly", lambda x: x.abs().median()))
+    cnt = {}
+    for a0, b0, lab in [("2026-04-12", "2026-04-17", "Apr gap"), ("2026-04-01", "2026-04-06", "reference 5 d"),
+                        ("2026-03-30", "2026-03-31", "Mar gap 1 d"), ("2025-12-31", "2026-01-01", "Jan gap 1 d"),
+                        ("2026-05-20", "2026-05-21", "reference 1 d")]:
+        cnt[lab] = int(con().execute("select count(distinct norad_id) from raw_tle_archive where epoch_utc>=? and epoch_utc<?",
+                                     [a0, b0]).fetchone()[0])
+    return dict(rows=D.to_dict("records"), cluster_median_abs=med.round(1).reset_index().to_dict("records"),
+                archive_objects_with_tles=cnt,
+                post_gap_download="FORMOSAT-7-1 之 2026-04-18 元素集於 2026-05-02 15:47 UTC 回補下載")
+
+
+def rv3_dur33():
+    t, (a,) = load(41240)
+    out = {}
+    for wh in (2.5, 3.3):
+        v = np.abs([p[2] for p in pseudo_steps(t, a, quiets("JASO3"), win_h=wh)]) * 1e3
+        out[f"{wh}h"] = _r(np.percentile(v, 99), 3)
+    return out
+
+
+def rv3_alt():
+    d0 = pd.read_csv(BENCH / "tle_noise_floor_map.csv").dropna(subset=["sigma_m"]).copy()
+    d0["alt_km"] = d0.alt_km - (RE - 6371.0)            # 原 CSV 高度以 6371 km 計 → 改以 6378.137 km
+    res = {}
+    for floor in (0.02, 0.01, 0.005):
+        d = d0.copy()
+        n_aff = int((d.sigma_m < floor).sum())
+        d["sigma_m"] = d.sigma_m.clip(lower=floor)
+        h, s = d.alt_km.values, d.sigma_m.values
+        p, r2, rr = fit_alt(h, s)
+        B = []
+        for _ in range(NBOOT if floor == 0.02 else 500):
+            i = RNG.integers(0, len(d), len(d))
+            B.append(fit_alt(h[i], s[i])[0])
+        B = np.array(B)
+        ci = {k: [_r(np.percentile(B[:, j], 2.5), 3), _r(np.percentile(B[:, j], 97.5), 3)]
+              for j, k in enumerate(("sigma0_m", "A_m", "H_km"))}
+        s800 = sigma_th(800.0, B.T)
+        res[str(floor)] = dict(n_affected=n_aff, fit=dict(sigma0_m=_r(p[0], 4), A_m=_r(p[1], 2), H_km=_r(p[2], 2), R2_log=_r(r2, 4)),
+                               ci95=ci, s800_m=_r(sigma_th(800.0, p), 3),
+                               s800_ci=[_r(np.percentile(s800, 2.5), 3), _r(np.percentile(s800, 97.5), 3)])
+    d = d0.copy()
+    d["sigma_m"] = d.sigma_m.clip(lower=0.02)
+    h, s = d.alt_km.values, d.sigma_m.values
+    groups = {}
+    for g_ in d.group.unique():
+        m = d.group != g_
+        pg, r2g, _ = fit_alt(h[m], s[m])
+        groups[g_] = dict(H_km=_r(pg[2], 1), A_m=_r(pg[1], 2), s800_m=_r(sigma_th(800.0, pg), 3))
+    from scipy.optimize import least_squares
+    ls = np.log10(s)
+    n = len(ls)
+    f = least_squares(lambda q: np.log10(sigma_th(h, np.abs(q))) - ls, x0=[0.05, 10.0, 120.0])
+    rss = float(np.sum(f.fun ** 2))
+    gm = d.groupby("group").sigma_m.transform(lambda x: np.log10(x).mean()).values
+    aic = lambda r_, k: n * math.log(r_ / n) + 2 * (k + 1)
+    return dict(reference_radius_km=RE, alt_range_km=[_r(h.min(), 0), _r(h.max(), 0)], by_floor=res,
+                leave_group_out=groups,
+                aic=dict(constant=_r(aic(float(np.sum((ls - ls.mean()) ** 2)), 1), 1),
+                         per_group=_r(aic(float(np.sum((ls - gm) ** 2)), d.group.nunique()), 1),
+                         altitude=_r(aic(rss, 3), 1), ols_H_km=_r(np.abs(f.x)[2], 1)),
+                satellites=d[["group", "norad", "alt_km", "inc_deg", "sigma_m", "n_tle"]].round(3).to_dict("records"))
+
+
+def sec_rv3():
+    prev = json.loads(OUT_JSON.read_text(encoding="utf-8")).get("rv3", {})
+    only = sys.argv[2:] or ["temporal", "cvfold", "gap", "dur33", "alt"]
+    fns = dict(temporal=rv3_temporal, cvfold=rv3_cvfold, gap=rv3_gap, dur33=rv3_dur33, alt=rv3_alt)
+    for k in only:
+        prev[k] = fns[k]()
+        print(f"── {k}")
+        print(json.dumps({kk: vv for kk, vv in (prev[k].items() if isinstance(prev[k], dict) else [])
+                          if kk not in ("satellites", "rows")}, ensure_ascii=False, default=str)[:3500])
+    save("rv3", prev)
+    return prev
+
+
+SECTIONS["rv3"] = sec_rv3
+
+
 if __name__ == "__main__":
-    args = sys.argv[1:] or [k for k in SECTIONS if k != "rv2"]
-    if args[0] == "rv2":
-        args = ["rv2"]
+    args = sys.argv[1:] or [k for k in SECTIONS if k not in ("rv2", "rv3")]
+    if args[0] in ("rv2", "rv3"):
+        args = [args[0]]
     for a_ in args:
         print(f"\n══════ {a_} ══════")
         SECTIONS[a_]()

@@ -915,7 +915,7 @@
  },
  "_meta": {
   "script": "docs/paperA_reviewV1_analysis.py",
-  "run_utc": "2026-11-18T07:28:29+00:00",
+  "run_utc": "2026-11-18T07:40:32+00:00",
   "db": "space_db.duckdb（read_only）",
   "nboot": 2000,
   "seed": 20261118
@@ -3616,6 +3616,1789 @@
      ]
     }
    }
+  }
+ },
+ "rv3": {
+  "temporal": {
+   "CryoSat-2": {
+    "cut_date": "2020-03-02",
+    "cal_period": [
+     "2010-04-19",
+     "2020-02-23"
+    ],
+    "val_period": [
+     "2020-03-02",
+     "2026-08-02"
+    ],
+    "n_arc_cal": 99,
+    "n_arc_val": 100,
+    "n_win_cal": 4140,
+    "n_win_val": 2998,
+    "q99_cal_m": 9.29,
+    "exceed_count": 459,
+    "exceed_rate": 0.1531,
+    "nested_ci": [
+     0.0716,
+     0.2524
+    ],
+    "n_val_arcs_with_exceed": 46
+   },
+   "Envisat": {
+    "cut_date": "2007-10-28",
+    "cal_period": [
+     "2002-04-23",
+     "2007-10-20"
+    ],
+    "val_period": [
+     "2007-10-28",
+     "2012-03-31"
+    ],
+    "n_arc_cal": 64,
+    "n_arc_val": 65,
+    "n_win_cal": 2954,
+    "n_win_val": 2006,
+    "q99_cal_m": 29.91,
+    "exceed_count": 3,
+    "exceed_rate": 0.0015,
+    "nested_ci": [
+     0.0,
+     0.0058
+    ],
+    "n_val_arcs_with_exceed": 1
+   },
+   "HY-2A": {
+    "cut_date": "2015-07-19",
+    "cal_period": [
+     "2011-10-02",
+     "2015-07-11"
+    ],
+    "val_period": [
+     "2015-07-19",
+     "2020-06-04"
+    ],
+    "n_arc_cal": 27,
+    "n_arc_val": 27,
+    "n_win_cal": 2275,
+    "n_win_val": 2849,
+    "q99_cal_m": 10.74,
+    "exceed_count": 14,
+    "exceed_rate": 0.0049,
+    "nested_ci": [
+     0.0003,
+     0.0161
+    ],
+    "n_val_arcs_with_exceed": 5
+   },
+   "HY-2C": {
+    "cut_date": "2024-01-02",
+    "cal_period": [
+     "2020-10-24",
+     "2023-12-25"
+    ],
+    "val_period": [
+     "2024-01-02",
+     "2026-07-30"
+    ],
+    "n_arc_cal": 23,
+    "n_arc_val": 24,
+    "n_win_cal": 1893,
+    "n_win_val": 1540,
+    "q99_cal_m": 13.35,
+    "exceed_count": 6,
+    "exceed_rate": 0.0039,
+    "nested_ci": [
+     0.0,
+     0.012
+    ],
+    "n_val_arcs_with_exceed": 1
+   },
+   "HY-2D": {
+    "cut_date": "2024-02-24",
+    "cal_period": [
+     "2021-06-23",
+     "2024-02-17"
+    ],
+    "val_period": [
+     "2024-02-24",
+     "2026-08-10"
+    ],
+    "n_arc_cal": 22,
+    "n_arc_val": 23,
+    "n_win_cal": 1587,
+    "n_win_val": 1468,
+    "q99_cal_m": 16.37,
+    "exceed_count": 7,
+    "exceed_rate": 0.0048,
+    "nested_ci": [
+     0.0,
+     0.0121
+    ],
+    "n_val_arcs_with_exceed": 1
+   },
+   "Jason-1": {
+    "cut_date": "2007-08-26",
+    "cal_period": [
+     "2001-12-24",
+     "2007-08-15"
+    ],
+    "val_period": [
+     "2007-08-26",
+     "2012-10-23"
+    ],
+    "n_arc_cal": 34,
+    "n_arc_val": 34,
+    "n_win_cal": 2566,
+    "n_win_val": 1617,
+    "q99_cal_m": 6.58,
+    "exceed_count": 15,
+    "exceed_rate": 0.0093,
+    "nested_ci": [
+     0.0013,
+     0.0217
+    ],
+    "n_val_arcs_with_exceed": 5
+   },
+   "Jason-2": {
+    "cut_date": "2014-07-14",
+    "cal_period": [
+     "2008-07-11",
+     "2014-07-06"
+    ],
+    "val_period": [
+     "2014-07-14",
+     "2019-09-06"
+    ],
+    "n_arc_cal": 27,
+    "n_arc_val": 27,
+    "n_win_cal": 2773,
+    "n_win_val": 2506,
+    "q99_cal_m": 4.39,
+    "exceed_count": 0,
+    "exceed_rate": 0.0,
+    "nested_ci": [
+     0.0,
+     0.0
+    ],
+    "n_val_arcs_with_exceed": 0
+   },
+   "Jason-3": {
+    "cut_date": "2022-12-17",
+    "cal_period": [
+     "2016-02-15",
+     "2022-12-09"
+    ],
+    "val_period": [
+     "2022-12-17",
+     "2026-08-02"
+    ],
+    "n_arc_cal": 29,
+    "n_arc_val": 29,
+    "n_win_cal": 4373,
+    "n_win_val": 2048,
+    "q99_cal_m": 1.82,
+    "exceed_count": 53,
+    "exceed_rate": 0.0259,
+    "nested_ci": [
+     0.0,
+     0.3562
+    ],
+    "n_val_arcs_with_exceed": 10
+   },
+   "SARAL": {
+    "cut_date": "2015-04-14",
+    "cal_period": [
+     "2013-03-08",
+     "2015-03-12"
+    ],
+    "val_period": [
+     "2015-04-14",
+     "2026-06-28"
+    ],
+    "n_arc_cal": 23,
+    "n_arc_val": 23,
+    "n_win_cal": 148,
+    "n_win_val": 7450,
+    "q99_cal_m": 34.95,
+    "exceed_count": 2,
+    "exceed_rate": 0.0003,
+    "nested_ci": [
+     0.0,
+     0.0014
+    ],
+    "n_val_arcs_with_exceed": 1
+   },
+   "SWOT": {
+    "cut_date": "2024-08-27",
+    "cal_period": [
+     "2023-01-19",
+     "2024-08-19"
+    ],
+    "val_period": [
+     "2024-08-27",
+     "2026-08-16"
+    ],
+    "n_arc_cal": 26,
+    "n_arc_val": 26,
+    "n_win_cal": 629,
+    "n_win_val": 1032,
+    "q99_cal_m": 90.94,
+    "exceed_count": 0,
+    "exceed_rate": 0.0,
+    "nested_ci": [
+     0.0,
+     0.0231
+    ],
+    "n_val_arcs_with_exceed": 0
+   },
+   "Sentinel-3A": {
+    "cut_date": "2023-05-20",
+    "cal_period": [
+     "2016-03-11",
+     "2023-05-12"
+    ],
+    "val_period": [
+     "2023-05-20",
+     "2026-09-07"
+    ],
+    "n_arc_cal": 65,
+    "n_arc_val": 66,
+    "n_win_cal": 4162,
+    "n_win_val": 1303,
+    "q99_cal_m": 8.67,
+    "exceed_count": 195,
+    "exceed_rate": 0.1497,
+    "nested_ci": [
+     0.0527,
+     0.3912
+    ],
+    "n_val_arcs_with_exceed": 30
+   },
+   "Sentinel-3B": {
+    "cut_date": "2023-10-02",
+    "cal_period": [
+     "2018-05-14",
+     "2023-09-24"
+    ],
+    "val_period": [
+     "2023-10-02",
+     "2026-08-22"
+    ],
+    "n_arc_cal": 55,
+    "n_arc_val": 56,
+    "n_win_cal": 2841,
+    "n_win_val": 1119,
+    "q99_cal_m": 8.63,
+    "exceed_count": 220,
+    "exceed_rate": 0.1966,
+    "nested_ci": [
+     0.1195,
+     0.4133
+    ],
+    "n_val_arcs_with_exceed": 31
+   },
+   "Sentinel-6A": {
+    "cut_date": "2023-08-07",
+    "cal_period": [
+     "2020-12-22",
+     "2023-07-29"
+    ],
+    "val_period": [
+     "2023-08-07",
+     "2026-08-23"
+    ],
+    "n_arc_cal": 11,
+    "n_arc_val": 11,
+    "n_win_cal": 1638,
+    "n_win_val": 2008,
+    "q99_cal_m": 3.24,
+    "exceed_count": 0,
+    "exceed_rate": 0.0,
+    "nested_ci": [
+     0.0,
+     0.0
+    ],
+    "n_val_arcs_with_exceed": 0
+   }
+  },
+  "cvfold": {
+   "CryoSat-2": {
+    "folds": [
+     {
+      "n_arc": 40,
+      "n_win": 1229,
+      "q99_m": 16.88,
+      "exceed": 18
+     },
+     {
+      "n_arc": 40,
+      "n_win": 1415,
+      "q99_m": 18.22,
+      "exceed": 5
+     },
+     {
+      "n_arc": 40,
+      "n_win": 1437,
+      "q99_m": 15.67,
+      "exceed": 44
+     },
+     {
+      "n_arc": 40,
+      "n_win": 1742,
+      "q99_m": 18.69,
+      "exceed": 0
+     },
+     {
+      "n_arc": 39,
+      "n_win": 1315,
+      "q99_m": 17.01,
+      "exceed": 15
+     }
+    ],
+    "exceed": 82,
+    "n": 7138,
+    "rate": 0.0115
+   },
+   "Envisat": {
+    "folds": [
+     {
+      "n_arc": 26,
+      "n_win": 678,
+      "q99_m": 25.61,
+      "exceed": 7
+     },
+     {
+      "n_arc": 26,
+      "n_win": 1331,
+      "q99_m": 26.69,
+      "exceed": 11
+     },
+     {
+      "n_arc": 26,
+      "n_win": 1067,
+      "q99_m": 24.69,
+      "exceed": 15
+     },
+     {
+      "n_arc": 26,
+      "n_win": 879,
+      "q99_m": 27.61,
+      "exceed": 4
+     },
+     {
+      "n_arc": 25,
+      "n_win": 1005,
+      "q99_m": 24.8,
+      "exceed": 14
+     }
+    ],
+    "exceed": 51,
+    "n": 4960,
+    "rate": 0.0103
+   },
+   "HY-2A": {
+    "folds": [
+     {
+      "n_arc": 11,
+      "n_win": 767,
+      "q99_m": 8.74,
+      "exceed": 49
+     },
+     {
+      "n_arc": 11,
+      "n_win": 1318,
+      "q99_m": 9.8,
+      "exceed": 21
+     },
+     {
+      "n_arc": 11,
+      "n_win": 1142,
+      "q99_m": 10.45,
+      "exceed": 2
+     },
+     {
+      "n_arc": 11,
+      "n_win": 945,
+      "q99_m": 10.45,
+      "exceed": 0
+     },
+     {
+      "n_arc": 10,
+      "n_win": 952,
+      "q99_m": 10.44,
+      "exceed": 1
+     }
+    ],
+    "exceed": 73,
+    "n": 5124,
+    "rate": 0.0142
+   },
+   "HY-2C": {
+    "folds": [
+     {
+      "n_arc": 10,
+      "n_win": 762,
+      "q99_m": 13.14,
+      "exceed": 1
+     },
+     {
+      "n_arc": 10,
+      "n_win": 723,
+      "q99_m": 12.32,
+      "exceed": 10
+     },
+     {
+      "n_arc": 9,
+      "n_win": 481,
+      "q99_m": 10.37,
+      "exceed": 19
+     },
+     {
+      "n_arc": 9,
+      "n_win": 695,
+      "q99_m": 12.38,
+      "exceed": 9
+     },
+     {
+      "n_arc": 9,
+      "n_win": 772,
+      "q99_m": 13.01,
+      "exceed": 2
+     }
+    ],
+    "exceed": 41,
+    "n": 3433,
+    "rate": 0.0119
+   },
+   "HY-2D": {
+    "folds": [
+     {
+      "n_arc": 9,
+      "n_win": 720,
+      "q99_m": 14.44,
+      "exceed": 10
+     },
+     {
+      "n_arc": 9,
+      "n_win": 634,
+      "q99_m": 16.01,
+      "exceed": 0
+     },
+     {
+      "n_arc": 9,
+      "n_win": 547,
+      "q99_m": 15.5,
+      "exceed": 2
+     },
+     {
+      "n_arc": 9,
+      "n_win": 472,
+      "q99_m": 15.53,
+      "exceed": 1
+     },
+     {
+      "n_arc": 9,
+      "n_win": 682,
+      "q99_m": 11.72,
+      "exceed": 28
+     }
+    ],
+    "exceed": 41,
+    "n": 3055,
+    "rate": 0.0134
+   },
+   "Jason-1": {
+    "folds": [
+     {
+      "n_arc": 14,
+      "n_win": 782,
+      "q99_m": 6.36,
+      "exceed": 13
+     },
+     {
+      "n_arc": 14,
+      "n_win": 852,
+      "q99_m": 6.54,
+      "exceed": 9
+     },
+     {
+      "n_arc": 14,
+      "n_win": 1195,
+      "q99_m": 6.55,
+      "exceed": 12
+     },
+     {
+      "n_arc": 13,
+      "n_win": 726,
+      "q99_m": 6.94,
+      "exceed": 1
+     },
+     {
+      "n_arc": 13,
+      "n_win": 628,
+      "q99_m": 6.42,
+      "exceed": 10
+     }
+    ],
+    "exceed": 45,
+    "n": 4183,
+    "rate": 0.0108
+   },
+   "Jason-2": {
+    "folds": [
+     {
+      "n_arc": 11,
+      "n_win": 790,
+      "q99_m": 3.45,
+      "exceed": 0
+     },
+     {
+      "n_arc": 11,
+      "n_win": 1259,
+      "q99_m": 2.84,
+      "exceed": 17
+     },
+     {
+      "n_arc": 11,
+      "n_win": 1277,
+      "q99_m": 2.97,
+      "exceed": 14
+     },
+     {
+      "n_arc": 11,
+      "n_win": 956,
+      "q99_m": 2.81,
+      "exceed": 15
+     },
+     {
+      "n_arc": 10,
+      "n_win": 997,
+      "q99_m": 3.21,
+      "exceed": 9
+     }
+    ],
+    "exceed": 55,
+    "n": 5279,
+    "rate": 0.0104
+   },
+   "Jason-3": {
+    "folds": [
+     {
+      "n_arc": 12,
+      "n_win": 1569,
+      "q99_m": 2.1,
+      "exceed": 7
+     },
+     {
+      "n_arc": 12,
+      "n_win": 1332,
+      "q99_m": 1.95,
+      "exceed": 20
+     },
+     {
+      "n_arc": 12,
+      "n_win": 1303,
+      "q99_m": 1.95,
+      "exceed": 22
+     },
+     {
+      "n_arc": 11,
+      "n_win": 1132,
+      "q99_m": 2.03,
+      "exceed": 8
+     },
+     {
+      "n_arc": 11,
+      "n_win": 1085,
+      "q99_m": 2.02,
+      "exceed": 8
+     }
+    ],
+    "exceed": 65,
+    "n": 6421,
+    "rate": 0.0101
+   },
+   "SARAL": {
+    "folds": [
+     {
+      "n_arc": 10,
+      "n_win": 648,
+      "q99_m": 17.07,
+      "exceed": 13
+     },
+     {
+      "n_arc": 9,
+      "n_win": 1531,
+      "q99_m": 18.09,
+      "exceed": 1
+     },
+     {
+      "n_arc": 9,
+      "n_win": 2156,
+      "q99_m": 18.25,
+      "exceed": 1
+     },
+     {
+      "n_arc": 9,
+      "n_win": 652,
+      "q99_m": 17.35,
+      "exceed": 4
+     },
+     {
+      "n_arc": 9,
+      "n_win": 2611,
+      "q99_m": 11.94,
+      "exceed": 222
+     }
+    ],
+    "exceed": 241,
+    "n": 7598,
+    "rate": 0.0317
+   },
+   "SWOT": {
+    "folds": [
+     {
+      "n_arc": 11,
+      "n_win": 450,
+      "q99_m": 75.34,
+      "exceed": 1
+     },
+     {
+      "n_arc": 11,
+      "n_win": 342,
+      "q99_m": 8.17,
+      "exceed": 23
+     },
+     {
+      "n_arc": 10,
+      "n_win": 314,
+      "q99_m": 73.88,
+      "exceed": 0
+     },
+     {
+      "n_arc": 10,
+      "n_win": 301,
+      "q99_m": 70.69,
+      "exceed": 1
+     },
+     {
+      "n_arc": 10,
+      "n_win": 254,
+      "q99_m": 71.6,
+      "exceed": 0
+     }
+    ],
+    "exceed": 25,
+    "n": 1661,
+    "rate": 0.0151
+   },
+   "Sentinel-3A": {
+    "folds": [
+     {
+      "n_arc": 27,
+      "n_win": 1439,
+      "q99_m": 13.44,
+      "exceed": 1
+     },
+     {
+      "n_arc": 26,
+      "n_win": 1042,
+      "q99_m": 12.59,
+      "exceed": 10
+     },
+     {
+      "n_arc": 26,
+      "n_win": 704,
+      "q99_m": 12.47,
+      "exceed": 10
+     },
+     {
+      "n_arc": 26,
+      "n_win": 1383,
+      "q99_m": 12.34,
+      "exceed": 18
+     },
+     {
+      "n_arc": 26,
+      "n_win": 897,
+      "q99_m": 12.06,
+      "exceed": 20
+     }
+    ],
+    "exceed": 59,
+    "n": 5465,
+    "rate": 0.0108
+   },
+   "Sentinel-3B": {
+    "folds": [
+     {
+      "n_arc": 23,
+      "n_win": 739,
+      "q99_m": 15.73,
+      "exceed": 0
+     },
+     {
+      "n_arc": 22,
+      "n_win": 830,
+      "q99_m": 13.97,
+      "exceed": 10
+     },
+     {
+      "n_arc": 22,
+      "n_win": 1066,
+      "q99_m": 16.18,
+      "exceed": 1
+     },
+     {
+      "n_arc": 22,
+      "n_win": 694,
+      "q99_m": 12.74,
+      "exceed": 20
+     },
+     {
+      "n_arc": 22,
+      "n_win": 631,
+      "q99_m": 13.75,
+      "exceed": 11
+     }
+    ],
+    "exceed": 42,
+    "n": 3960,
+    "rate": 0.0106
+   },
+   "Sentinel-6A": {
+    "folds": [
+     {
+      "n_arc": 5,
+      "n_win": 910,
+      "q99_m": 2.47,
+      "exceed": 8
+     },
+     {
+      "n_arc": 5,
+      "n_win": 783,
+      "q99_m": 2.54,
+      "exceed": 6
+     },
+     {
+      "n_arc": 4,
+      "n_win": 765,
+      "q99_m": 2.65,
+      "exceed": 1
+     },
+     {
+      "n_arc": 4,
+      "n_win": 550,
+      "q99_m": 2.08,
+      "exceed": 25
+     },
+     {
+      "n_arc": 4,
+      "n_win": 638,
+      "q99_m": 2.65,
+      "exceed": 0
+     }
+    ],
+    "exceed": 40,
+    "n": 3646,
+    "rate": 0.011
+   }
+  },
+  "gap": {
+   "rows": [
+    {
+     "sat": "7-1",
+     "event": "Jan",
+     "before": "2025-12-30 13:08",
+     "after": "2026-01-01 06:41",
+     "gap_d": 1.73,
+     "raw_m": -62.4,
+     "rate_pre": -25.2,
+     "se_pre": 0.6,
+     "n_pre": 24,
+     "rate_post": -28.6,
+     "se_post": 0.5,
+     "n_post": 28,
+     "resid_prepost": -15.9,
+     "resid_preonly": -18.7
+    },
+    {
+     "sat": "7-1",
+     "event": "Mar/Apr",
+     "before": "2026-03-29 00:35",
+     "after": "2026-03-31 23:01",
+     "gap_d": 2.93,
+     "raw_m": -74.7,
+     "rate_pre": -17.6,
+     "se_pre": 0.1,
+     "n_pre": 29,
+     "rate_post": -20.4,
+     "se_post": 0.8,
+     "n_post": 24,
+     "resid_prepost": -18.9,
+     "resid_preonly": -23.0
+    },
+    {
+     "sat": "7-1",
+     "event": "Apr",
+     "before": "2026-04-11 10:18",
+     "after": "2026-04-18 05:34",
+     "gap_d": 6.8,
+     "raw_m": -61.2,
+     "rate_pre": -19.0,
+     "se_pre": 0.8,
+     "n_pre": 25,
+     "rate_post": -14.3,
+     "se_post": 0.5,
+     "n_post": 25,
+     "resid_prepost": 51.9,
+     "resid_preonly": 67.7
+    },
+    {
+     "sat": "7-1",
+     "event": "Jun",
+     "before": "2026-06-01 05:51",
+     "after": "2026-06-06 04:16",
+     "gap_d": 4.93,
+     "raw_m": -84.7,
+     "rate_pre": -16.1,
+     "se_pre": 0.3,
+     "n_pre": 23,
+     "rate_post": -13.5,
+     "se_post": 0.1,
+     "n_post": 26,
+     "resid_prepost": -11.5,
+     "resid_preonly": -5.1
+    },
+    {
+     "sat": "7-2",
+     "event": "Jan",
+     "before": "2025-12-30 20:36",
+     "after": "2026-01-01 15:45",
+     "gap_d": 1.8,
+     "raw_m": -64.7,
+     "rate_pre": -26.3,
+     "se_pre": 0.6,
+     "n_pre": 30,
+     "rate_post": -25.4,
+     "se_post": 0.5,
+     "n_post": 25,
+     "resid_prepost": -18.2,
+     "resid_preonly": -17.3
+    },
+    {
+     "sat": "7-2",
+     "event": "Mar/Apr",
+     "before": "2026-03-29 01:39",
+     "after": "2026-04-01 00:05",
+     "gap_d": 2.93,
+     "raw_m": -73.2,
+     "rate_pre": -19.2,
+     "se_pre": 0.1,
+     "n_pre": 32,
+     "rate_post": -20.2,
+     "se_post": 0.6,
+     "n_post": 28,
+     "resid_prepost": -15.4,
+     "resid_preonly": -16.9
+    },
+    {
+     "sat": "7-2",
+     "event": "Apr",
+     "before": "2026-04-11 17:47",
+     "after": "2026-04-17 14:37",
+     "gap_d": 5.87,
+     "raw_m": -51.3,
+     "rate_pre": -18.5,
+     "se_pre": 0.5,
+     "n_pre": 30,
+     "rate_post": -12.1,
+     "se_post": 0.4,
+     "n_post": 24,
+     "resid_prepost": 38.4,
+     "resid_preonly": 57.0
+    },
+    {
+     "sat": "7-2",
+     "event": "Jun",
+     "before": "2026-06-02 11:44",
+     "after": "2026-06-06 11:45",
+     "gap_d": 4.0,
+     "raw_m": -59.4,
+     "rate_pre": -19.2,
+     "se_pre": 0.2,
+     "n_pre": 25,
+     "rate_post": -11.9,
+     "se_post": 0.1,
+     "n_post": 17,
+     "resid_prepost": 2.7,
+     "resid_preonly": 17.3
+    },
+    {
+     "sat": "7-3",
+     "event": "Jan",
+     "before": "2025-12-30 20:04",
+     "after": "2026-01-01 00:39",
+     "gap_d": 1.19,
+     "raw_m": -60.4,
+     "rate_pre": -41.1,
+     "se_pre": 0.7,
+     "n_pre": 27,
+     "rate_post": -35.5,
+     "se_post": 0.9,
+     "n_post": 22,
+     "resid_prepost": -14.7,
+     "resid_preonly": -11.4
+    },
+    {
+     "sat": "7-3",
+     "event": "Mar/Apr",
+     "before": "2026-03-29 03:12",
+     "after": "2026-03-31 21:51",
+     "gap_d": 2.78,
+     "raw_m": -126.5,
+     "rate_pre": -33.6,
+     "se_pre": 0.3,
+     "n_pre": 25,
+     "rate_post": -37.7,
+     "se_post": 1.2,
+     "n_post": 21,
+     "resid_prepost": -27.5,
+     "resid_preonly": -33.2
+    },
+    {
+     "sat": "7-3",
+     "event": "Apr",
+     "before": "2026-04-11 19:40",
+     "after": "2026-04-17 16:52",
+     "gap_d": 5.88,
+     "raw_m": -90.3,
+     "rate_pre": -35.3,
+     "se_pre": 1.3,
+     "n_pre": 21,
+     "rate_post": -22.7,
+     "se_post": 0.6,
+     "n_post": 20,
+     "resid_prepost": 80.2,
+     "resid_preonly": 117.4
+    },
+    {
+     "sat": "7-3",
+     "event": "Jun",
+     "before": "2026-06-01 10:53",
+     "after": "2026-06-05 14:49",
+     "gap_d": 4.16,
+     "raw_m": -121.8,
+     "rate_pre": -31.8,
+     "se_pre": 0.5,
+     "n_pre": 22,
+     "rate_post": -21.6,
+     "se_post": 0.3,
+     "n_post": 23,
+     "resid_prepost": -10.7,
+     "resid_preonly": 10.4
+    },
+    {
+     "sat": "7-4",
+     "event": "Jan",
+     "before": "2025-12-30 15:16",
+     "after": "2026-01-01 13:36",
+     "gap_d": 1.93,
+     "raw_m": -74.2,
+     "rate_pre": -25.4,
+     "se_pre": 0.6,
+     "n_pre": 29,
+     "rate_post": -25.8,
+     "se_post": 0.5,
+     "n_post": 23,
+     "resid_prepost": -24.8,
+     "resid_preonly": -25.2
+    },
+    {
+     "sat": "7-4",
+     "event": "Mar/Apr",
+     "before": "2026-03-29 04:19",
+     "after": "2026-03-31 18:44",
+     "gap_d": 2.6,
+     "raw_m": -61.0,
+     "rate_pre": -18.6,
+     "se_pre": 0.2,
+     "n_pre": 27,
+     "rate_post": -22.6,
+     "se_post": 0.7,
+     "n_post": 27,
+     "resid_prepost": -7.4,
+     "resid_preonly": -12.5
+    },
+    {
+     "sat": "7-4",
+     "event": "Apr",
+     "before": "2026-04-11 14:02",
+     "after": "2026-04-17 18:53",
+     "gap_d": 6.2,
+     "raw_m": -50.2,
+     "rate_pre": -20.0,
+     "se_pre": 0.7,
+     "n_pre": 27,
+     "rate_post": -12.5,
+     "se_post": 0.5,
+     "n_post": 23,
+     "resid_prepost": 50.4,
+     "resid_preonly": 73.7
+    },
+    {
+     "sat": "7-4",
+     "event": "Jun",
+     "before": "2026-06-02 07:59",
+     "after": "2026-06-04 20:48",
+     "gap_d": 2.53,
+     "raw_m": -39.8,
+     "rate_pre": -16.9,
+     "se_pre": 0.2,
+     "n_pre": 19,
+     "rate_post": -12.9,
+     "se_post": 0.2,
+     "n_post": 12,
+     "resid_prepost": -2.1,
+     "resid_preonly": 3.0
+    },
+    {
+     "sat": "7-5",
+     "event": "Jan",
+     "before": "2025-12-30 13:40",
+     "after": "2026-01-01 02:26",
+     "gap_d": 1.53,
+     "raw_m": -59.7,
+     "rate_pre": -28.0,
+     "se_pre": 0.6,
+     "n_pre": 27,
+     "rate_post": -26.3,
+     "se_post": 0.8,
+     "n_post": 24,
+     "resid_prepost": -18.2,
+     "resid_preonly": -16.8
+    },
+    {
+     "sat": "7-5",
+     "event": "Mar/Apr",
+     "before": "2026-03-29 02:43",
+     "after": "2026-04-01 01:08",
+     "gap_d": 2.93,
+     "raw_m": -71.4,
+     "rate_pre": -16.8,
+     "se_pre": 0.1,
+     "n_pre": 21,
+     "rate_post": -21.9,
+     "se_post": 0.7,
+     "n_post": 24,
+     "resid_prepost": -14.6,
+     "resid_preonly": -22.1
+    },
+    {
+     "sat": "7-5",
+     "event": "Apr",
+     "before": "2026-04-11 01:14",
+     "after": "2026-04-17 20:29",
+     "gap_d": 6.8,
+     "raw_m": -64.3,
+     "rate_pre": -21.0,
+     "se_pre": 0.7,
+     "n_pre": 24,
+     "rate_post": -14.0,
+     "se_post": 0.5,
+     "n_post": 23,
+     "resid_prepost": 54.9,
+     "resid_preonly": 78.7
+    },
+    {
+     "sat": "7-5",
+     "event": "Jun",
+     "before": "2026-06-02 19:11",
+     "after": "2026-06-05 04:48",
+     "gap_d": 2.4,
+     "raw_m": -40.5,
+     "rate_pre": -19.3,
+     "se_pre": 0.3,
+     "n_pre": 25,
+     "rate_post": -14.4,
+     "se_post": 0.2,
+     "n_post": 22,
+     "resid_prepost": -0.0,
+     "resid_preonly": 6.0
+    },
+    {
+     "sat": "7-6",
+     "event": "Jan",
+     "before": "2025-12-30 11:01",
+     "after": "2026-01-01 04:34",
+     "gap_d": 1.73,
+     "raw_m": -68.3,
+     "rate_pre": -26.9,
+     "se_pre": 0.6,
+     "n_pre": 29,
+     "rate_post": -29.0,
+     "se_post": 0.6,
+     "n_post": 35,
+     "resid_prepost": -19.9,
+     "resid_preonly": -21.8
+    },
+    {
+     "sat": "7-6",
+     "event": "Mar/Apr",
+     "before": "2026-03-28 20:51",
+     "after": "2026-04-01 04:53",
+     "gap_d": 3.33,
+     "raw_m": -68.8,
+     "rate_pre": -18.3,
+     "se_pre": 0.1,
+     "n_pre": 25,
+     "rate_post": -20.6,
+     "se_post": 0.6,
+     "n_post": 24,
+     "resid_prepost": -4.0,
+     "resid_preonly": -7.9
+    },
+    {
+     "sat": "7-6",
+     "event": "Apr",
+     "before": "2026-04-11 12:59",
+     "after": "2026-04-17 21:02",
+     "gap_d": 6.34,
+     "raw_m": -58.0,
+     "rate_pre": -18.6,
+     "se_pre": 0.6,
+     "n_pre": 23,
+     "rate_post": -13.6,
+     "se_post": 0.6,
+     "n_post": 16,
+     "resid_prepost": 44.0,
+     "resid_preonly": 59.7
+    },
+    {
+     "sat": "7-6",
+     "event": "Jun",
+     "before": "2026-06-01 03:43",
+     "after": "2026-06-06 08:33",
+     "gap_d": 5.2,
+     "raw_m": -91.1,
+     "rate_pre": -16.4,
+     "se_pre": 0.3,
+     "n_pre": 27,
+     "rate_post": -14.4,
+     "se_post": 0.1,
+     "n_post": 18,
+     "resid_prepost": -11.1,
+     "resid_preonly": -6.0
+    }
+   ],
+   "cluster_median_abs": [
+    {
+     "event": "Jan",
+     "raw_abs": 63.6,
+     "res_abs": 18.2,
+     "res_pre_abs": 18.0
+    },
+    {
+     "event": "Mar/Apr",
+     "raw_abs": 72.3,
+     "res_abs": 15.0,
+     "res_pre_abs": 19.5
+    },
+    {
+     "event": "Apr",
+     "raw_abs": 59.6,
+     "res_abs": 51.2,
+     "res_pre_abs": 70.7
+    },
+    {
+     "event": "Jun",
+     "raw_abs": 72.0,
+     "res_abs": 6.7,
+     "res_pre_abs": 6.0
+    }
+   ],
+   "archive_objects_with_tles": {
+    "Apr gap": 973,
+    "reference 5 d": 29421,
+    "Mar gap 1 d": 730,
+    "Jan gap 1 d": 547,
+    "reference 1 d": 27426
+   },
+   "post_gap_download": "FORMOSAT-7-1 之 2026-04-18 元素集於 2026-05-02 15:47 UTC 回補下載"
+  },
+  "dur33": {
+   "2.5h": 1.996,
+   "3.3h": 1.997
+  },
+  "alt": {
+   "reference_radius_km": 6378.137,
+   "alt_range_km": [
+    463.0,
+    1338.0
+   ],
+   "by_floor": {
+    "0.02": {
+     "n_affected": 3,
+     "fit": {
+      "sigma0_m": 0.0454,
+      "A_m": 22.33,
+      "H_km": 77.33,
+      "R2_log": 0.8855
+     },
+     "ci95": {
+      "sigma0_m": [
+       0.029,
+       0.069
+      ],
+      "A_m": [
+       15.082,
+       33.205
+      ],
+      "H_km": [
+       64.213,
+       90.023
+      ]
+     },
+     "s800_m": 0.135,
+     "s800_ci": [
+      0.081,
+      0.208
+     ]
+    },
+    "0.01": {
+     "n_affected": 1,
+     "fit": {
+      "sigma0_m": 0.0379,
+      "A_m": 22.34,
+      "H_km": 77.41,
+      "R2_log": 0.8771
+     },
+     "ci95": {
+      "sigma0_m": [
+       0.019,
+       0.066
+      ],
+      "A_m": [
+       15.415,
+       32.163
+      ],
+      "H_km": [
+       64.85,
+       90.154
+      ]
+     },
+     "s800_m": 0.133,
+     "s800_ci": [
+      0.078,
+      0.197
+     ]
+    },
+    "0.005": {
+     "n_affected": 1,
+     "fit": {
+      "sigma0_m": 0.0359,
+      "A_m": 22.28,
+      "H_km": 77.57,
+      "R2_log": 0.8727
+     },
+     "ci95": {
+      "sigma0_m": [
+       0.014,
+       0.067
+      ],
+      "A_m": [
+       15.315,
+       33.259
+      ],
+      "H_km": [
+       64.674,
+       87.922
+      ]
+     },
+     "s800_m": 0.133,
+     "s800_ci": [
+      0.077,
+      0.198
+     ]
+    }
+   },
+   "leave_group_out": {
+    "FORMOSAT-7 (calibration)": {
+     "H_km": 77.4,
+     "A_m": 23.49,
+     "s800_m": 0.141
+    },
+    "14 altimetry (benchmark)": {
+     "H_km": 93.4,
+     "A_m": 18.1,
+     "s800_m": 0.251
+    },
+    "9 hold-out (SPOT/GRACE/S6B)": {
+     "H_km": 62.7,
+     "A_m": 36.97,
+     "s800_m": 0.081
+    },
+    "Starlink sample (train domain)": {
+     "H_km": 111.3,
+     "A_m": 5.04,
+     "s800_m": 0.145
+    }
+   },
+   "aic": {
+    "constant": -0.8,
+    "per_group": -117.9,
+    "altitude": -118.4,
+    "ols_H_km": 79.0
+   },
+   "satellites": [
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44343,
+     "alt_km": 539.825,
+     "inc_deg": 23.999,
+     "sigma_m": 2.46,
+     "n_tle": 1950
+    },
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44349,
+     "alt_km": 549.928,
+     "inc_deg": 23.998,
+     "sigma_m": 2.64,
+     "n_tle": 1954
+    },
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44350,
+     "alt_km": 549.808,
+     "inc_deg": 23.999,
+     "sigma_m": 2.63,
+     "n_tle": 1984
+    },
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44351,
+     "alt_km": 544.029,
+     "inc_deg": 23.998,
+     "sigma_m": 2.21,
+     "n_tle": 2285
+    },
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44353,
+     "alt_km": 550.009,
+     "inc_deg": 23.998,
+     "sigma_m": 2.25,
+     "n_tle": 1963
+    },
+    {
+     "group": "FORMOSAT-7 (calibration)",
+     "norad": 44358,
+     "alt_km": 549.805,
+     "inc_deg": 23.999,
+     "sigma_m": 2.66,
+     "n_tle": 1961
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 22076,
+     "alt_km": 1337.579,
+     "inc_deg": 66.041,
+     "sigma_m": 0.05,
+     "n_tle": 17515
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 26997,
+     "alt_km": 1325.45,
+     "inc_deg": 66.04,
+     "sigma_m": 0.08,
+     "n_tle": 12967
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 33105,
+     "alt_km": 1310.955,
+     "inc_deg": 66.04,
+     "sigma_m": 0.07,
+     "n_tle": 12543
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 41240,
+     "alt_km": 1337.732,
+     "inc_deg": 66.041,
+     "sigma_m": 0.06,
+     "n_tle": 10145
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 46984,
+     "alt_km": 1337.733,
+     "inc_deg": 66.041,
+     "sigma_m": 0.05,
+     "n_tle": 5018
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 27386,
+     "alt_km": 765.828,
+     "inc_deg": 98.382,
+     "sigma_m": 0.21,
+     "n_tle": 27929
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 36508,
+     "alt_km": 719.404,
+     "inc_deg": 92.026,
+     "sigma_m": 0.18,
+     "n_tle": 12441
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 39086,
+     "alt_km": 784.526,
+     "inc_deg": 98.546,
+     "sigma_m": 0.06,
+     "n_tle": 11083
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 41335,
+     "alt_km": 802.659,
+     "inc_deg": 98.625,
+     "sigma_m": 0.06,
+     "n_tle": 16148
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 43437,
+     "alt_km": 802.66,
+     "inc_deg": 98.626,
+     "sigma_m": 0.14,
+     "n_tle": 6734
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 54754,
+     "alt_km": 893.203,
+     "inc_deg": 77.61,
+     "sigma_m": 0.09,
+     "n_tle": 4242
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 37781,
+     "alt_km": 968.267,
+     "inc_deg": 99.331,
+     "sigma_m": 0.06,
+     "n_tle": 21327
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 46469,
+     "alt_km": 951.944,
+     "inc_deg": 65.996,
+     "sigma_m": 0.02,
+     "n_tle": 12022
+    },
+    {
+     "group": "14 altimetry (benchmark)",
+     "norad": 48621,
+     "alt_km": 951.945,
+     "inc_deg": 65.998,
+     "sigma_m": 0.02,
+     "n_tle": 10946
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 20436,
+     "alt_km": 686.685,
+     "inc_deg": 98.702,
+     "sigma_m": 0.46,
+     "n_tle": 31356
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 22823,
+     "alt_km": 829.705,
+     "inc_deg": 98.682,
+     "sigma_m": 0.15,
+     "n_tle": 24671
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 25260,
+     "alt_km": 825.085,
+     "inc_deg": 98.613,
+     "sigma_m": 0.3,
+     "n_tle": 29771
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 27421,
+     "alt_km": 825.037,
+     "inc_deg": 98.586,
+     "sigma_m": 0.32,
+     "n_tle": 28440
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 27391,
+     "alt_km": 462.841,
+     "inc_deg": 89.011,
+     "sigma_m": 2.41,
+     "n_tle": 8502
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 27392,
+     "alt_km": 463.037,
+     "inc_deg": 89.011,
+     "sigma_m": 2.26,
+     "n_tle": 8324
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 43476,
+     "alt_km": 488.687,
+     "inc_deg": 88.988,
+     "sigma_m": 0.52,
+     "n_tle": 8188
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 43477,
+     "alt_km": 488.706,
+     "inc_deg": 88.988,
+     "sigma_m": 0.51,
+     "n_tle": 8185
+    },
+    {
+     "group": "9 hold-out (SPOT/GRACE/S6B)",
+     "norad": 66514,
+     "alt_km": 1337.732,
+     "inc_deg": 66.041,
+     "sigma_m": 0.02,
+     "n_tle": 1275
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 66010,
+     "alt_km": 462.714,
+     "inc_deg": 53.159,
+     "sigma_m": 14.74,
+     "n_tle": 422
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 66189,
+     "alt_km": 475.189,
+     "inc_deg": 53.159,
+     "sigma_m": 15.37,
+     "n_tle": 414
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 63873,
+     "alt_km": 572.035,
+     "inc_deg": 70.001,
+     "sigma_m": 3.91,
+     "n_tle": 527
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 60130,
+     "alt_km": 470.737,
+     "inc_deg": 53.16,
+     "sigma_m": 9.44,
+     "n_tle": 418
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 59089,
+     "alt_km": 483.058,
+     "inc_deg": 43.002,
+     "sigma_m": 9.35,
+     "n_tle": 369
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 67200,
+     "alt_km": 572.039,
+     "inc_deg": 70.001,
+     "sigma_m": 3.41,
+     "n_tle": 514
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 69141,
+     "alt_km": 465.519,
+     "inc_deg": 97.285,
+     "sigma_m": 9.87,
+     "n_tle": 333
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 57848,
+     "alt_km": 475.222,
+     "inc_deg": 53.16,
+     "sigma_m": 9.7,
+     "n_tle": 431
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 53740,
+     "alt_km": 489.06,
+     "inc_deg": 53.159,
+     "sigma_m": 7.63,
+     "n_tle": 564
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 64740,
+     "alt_km": 462.707,
+     "inc_deg": 53.159,
+     "sigma_m": 12.0,
+     "n_tle": 420
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 50177,
+     "alt_km": 486.106,
+     "inc_deg": 53.161,
+     "sigma_m": 4.07,
+     "n_tle": 449
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 65082,
+     "alt_km": 462.67,
+     "inc_deg": 53.159,
+     "sigma_m": 15.67,
+     "n_tle": 422
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 49751,
+     "alt_km": 539.739,
+     "inc_deg": 53.161,
+     "sigma_m": 4.72,
+     "n_tle": 497
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 68010,
+     "alt_km": 483.019,
+     "inc_deg": 43.001,
+     "sigma_m": 15.0,
+     "n_tle": 371
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 67601,
+     "alt_km": 465.529,
+     "inc_deg": 97.284,
+     "sigma_m": 13.96,
+     "n_tle": 451
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 52090,
+     "alt_km": 538.822,
+     "inc_deg": 53.161,
+     "sigma_m": 6.41,
+     "n_tle": 471
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 66854,
+     "alt_km": 483.017,
+     "inc_deg": 43.001,
+     "sigma_m": 14.99,
+     "n_tle": 377
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 66625,
+     "alt_km": 462.698,
+     "inc_deg": 53.159,
+     "sigma_m": 12.95,
+     "n_tle": 431
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 52138,
+     "alt_km": 539.746,
+     "inc_deg": 53.161,
+     "sigma_m": 5.29,
+     "n_tle": 459
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 62311,
+     "alt_km": 462.783,
+     "inc_deg": 53.159,
+     "sigma_m": 13.74,
+     "n_tle": 421
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 64919,
+     "alt_km": 475.053,
+     "inc_deg": 53.159,
+     "sigma_m": 14.0,
+     "n_tle": 411
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 54067,
+     "alt_km": 539.724,
+     "inc_deg": 53.161,
+     "sigma_m": 3.22,
+     "n_tle": 470
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 53779,
+     "alt_km": 514.186,
+     "inc_deg": 53.161,
+     "sigma_m": 5.9,
+     "n_tle": 447
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 58069,
+     "alt_km": 483.056,
+     "inc_deg": 43.003,
+     "sigma_m": 6.77,
+     "n_tle": 373
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 64281,
+     "alt_km": 475.128,
+     "inc_deg": 53.159,
+     "sigma_m": 15.64,
+     "n_tle": 420
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 48483,
+     "alt_km": 470.727,
+     "inc_deg": 53.16,
+     "sigma_m": 15.65,
+     "n_tle": 394
+    },
+    {
+     "group": "Starlink sample (train domain)",
+     "norad": 67877,
+     "alt_km": 472.752,
+     "inc_deg": 53.159,
+     "sigma_m": 18.68,
+     "n_tle": 429
+    }
+   ]
   }
  }
 }
