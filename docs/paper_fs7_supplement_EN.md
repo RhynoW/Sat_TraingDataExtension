@@ -1,6 +1,6 @@
 # Supplementary Material for "Detector-Level Sensitivity of Maneuver Detection from Public Two-Line Elements: An Empirical Model Calibrated Against FORMOSAT-7 Precise Orbits"
 
-**Revisions.** Section S17 (Tables S36–S43), Section S18 (Table S44, moved from the main text) and Table S1b are new in R2 (generated from `fs7_review6_analysis.json` by `docs/gen_fs7_supplement_r2.py`). Sections S11–S16 (Tables S28–S35, Fig. S5) are new in this revision and are generated from `fs7_review5_analysis.json` by `docs/gen_fs7_supplement_r1.py`; Section S9 is updated for the symmetric decision rules.
+**Revisions.** Section S17 (Tables S36–S43), Section S18 (Table S44, moved from the main text) and Table S1b are new in R2; Section S19 (Tables S45–S48, generated from `fs7_review7_analysis.json` by `docs/gen_fs7_supplement_r3.py`) is new in the final revision (generated from `fs7_review6_analysis.json` by `docs/gen_fs7_supplement_r2.py`). Sections S11–S16 (Tables S28–S35, Fig. S5) are new in this revision and are generated from `fs7_review5_analysis.json` by `docs/gen_fs7_supplement_r1.py`; Section S9 is updated for the symmetric decision rules.
 
 **Target journal:** Advances in Space Research
 
@@ -28,6 +28,7 @@ This supplement provides the tables, definitions and figures referred to in the 
 - Section S16 — Decomposition of real-event outcomes (Tables S34–S35) — *new in R1*
 - Section S17 — R2 robustness analyses: TLE-response sensitivity, contamination by source, independent-event check, sign sensitivity, E1 logistic, wide-grid c and the SNR-floor artifact, drag proxies, D1 parameter sensitivity (Tables S36–S43) — *new in R2*
 - Section S18 — Conditions of applicability and requirements for transfer (Table S44) — *moved from the main text in R2*
+- Section S19 — Final-round checks: pre-event window covariates, SP3 overlap arcs, rule-S sign components, √Δt parameters (Tables S45–S48) — *new in the final revision*
 
 ---
 
@@ -61,6 +62,7 @@ This supplement provides the tables, definitions and figures referred to in the 
 | §4.4 model-implied Δa₉₀ | `fs7_review3_analysis.json` (`da90_backcalc`) | `fs7_review3_analysis.py` |
 | §4.4 r₁ stratification | `fs7_review5_analysis.json` (`autocorr_stratification`) | `fs7_review5_analysis.py` |
 | §4.5 metrics suite | `fs7_injection_metrics.csv`; `fs7_law_fit_v3.json`; `fs7_supplement_tables.json` (`S7_metrics`) | `fs7_injection_sweep_v3.py`; `docs/fs7_supplement_tables.py` |
+| §4.3 √Δt coefficients; §5.4 rule-S sign components; §5.5 window covariates, overlap arcs, wrong-sign detail | `fs7_review7_analysis.json` | `fs7_review7_analysis.py` |
 | §4.5 D1 parameter sensitivity | `fs7_review6_analysis.json` (`m9`); `fs7_review6_detector_sensitivity.csv` | `fs7_review6_analysis.py` |
 | Table 4 (real-event recall) | `fs7_tle_recall_unified_20260825.csv` | `fs7_tle_recall_unified.py` |
 | §5 E1 logistic comparison | `fs7_review6_analysis.json` (`M2`) | `fs7_review6_analysis.py` |
@@ -681,7 +683,7 @@ Shared TLE interval (another verified event between the last pre-event and first
 
 **Table S35 — TLE response class by amplitude bin and pre-event trend status** (evaluable events). ratio = (TLE a − pre-window linear trend)/SP3 step for each TLE in [t_end+2h, t_end+3d]; immediate: first ratio in [0.5, 2]; delayed: a later TLE in [0.5, 2]; none: all |ratio| < 0.5; other: remaining (e.g. > 2 or opposite sign, typically subsequent burns). Contaminated: an SP3 candidate of any verdict with |step| ≥ 500 m lies in the pre-event trend window.
 
-| bin | clean: immediate / delayed / none / other | contaminated: immediate / delayed / none / other |
+| bin | large-candidate-free: immediate / delayed / none / other | contaminated: immediate / delayed / none / other |
 |---|---|---|
 | 1–50 m | 0 / 5 / 9 / 16 | 0 / 0 / 0 / 7 |
 | 50–100 m | 0 / 0 / 10 / 1 | 0 / 0 / 0 / 5 |
@@ -714,12 +716,12 @@ Source for every table in this section: `fs7_review6_analysis.json`, produced by
 | 131 verified, 45 m, rule S | detected | 37 | 0.28 [0.16, 0.39] |
 | 131 verified, 45 m, rule S | below_threshold | 43 | 0.33 [0.22, 0.48] |
 | 131 verified, 45 m, rule S | sign_mismatch | 16 | 0.12 [0.06, 0.18] |
-| clean 50–300 m (n = 22) | immediate | 0 | 0.00 [0.00, 0.00] |
-| clean 50–300 m (n = 22) | delayed | 3 | 0.14 [0.00, 0.41] |
-| clean 50–300 m (n = 22) | none | 17 | 0.77 [0.50, 0.97] |
-| clean 50–300 m (n = 22) | other | 2 | 0.09 [0.00, 0.22] |
+| large-candidate-free 50–300 m (n = 22) | immediate | 0 | 0.00 [0.00, 0.00] |
+| large-candidate-free 50–300 m (n = 22) | delayed | 3 | 0.14 [0.00, 0.41] |
+| large-candidate-free 50–300 m (n = 22) | none | 17 | 0.77 [0.50, 0.97] |
+| large-candidate-free 50–300 m (n = 22) | other | 2 | 0.09 [0.00, 0.22] |
 
-**Table S37 — Sensitivity of the TLE-response classification** (clean-window events; ratio cut c means a response requires a ratio in [c, 1/c], and 'none' requires |ratio| < c at every TLE in the window).
+**Table S37 — Sensitivity of the TLE-response classification** (large-candidate-free events, i.e. no SP3 candidate ≥ 500 m in the pre-event window; ratio cut c means a response requires a ratio in [c, 1/c], and 'none' requires |ratio| < c at every TLE in the window).
 
 | ratio cut | window (d) | 50–300 m: none / delayed / immediate / other | ≥ 300 m: immediate / n |
 |--:|--:|---|---|
@@ -733,14 +735,14 @@ Source for every table in this section: `fs7_review6_analysis.json`, produced by
 | 0.7 | 5 | 15 / 4 / 0 / 3 | 4 / 5 |
 | 0.7 | 7 | 11 / 4 / 0 / 7 | 4 / 5 |
 
-Covariates of no-response (clean 50–300 m): not_none: n = 5, median |ȧ| 22.1 m/d, median post-event TLEs within 3 d 7, median gap 0.73 d, median amplitude 178.1 m, negative-going 40%; none: n = 17, median |ȧ| 16.9 m/d, median post-event TLEs within 3 d 4, median gap 1.0 d, median amplitude 97.3 m, negative-going 65%. By campaign (none / delayed / other): 2024-07: 1 / 0 / 0; 2024-11/12: 1 / 0 / 1; 2025-05: 1 / 0 / 0; 2025-07/08: 12 / 3 / 1; 2026-01: 2 / 0 / 0. By satellite (none): L76 6, L77 2, L79 2, L80 4, L81 3. Largest |residual| within 3 d: median 10.2 m; 16 of 22 never exceed 45 m.
+Covariates of no-response (large-candidate-free 50–300 m): not_none: n = 5, median |ȧ| 22.1 m/d, median post-event TLEs within 3 d 7, median gap 0.73 d, median amplitude 178.1 m, negative-going 40%; none: n = 17, median |ȧ| 16.9 m/d, median post-event TLEs within 3 d 4, median gap 1.0 d, median amplitude 97.3 m, negative-going 65%. By campaign (none / delayed / other): 2024-07: 1 / 0 / 0; 2024-11/12: 1 / 0 / 1; 2025-05: 1 / 0 / 0; 2025-07/08: 12 / 3 / 1; 2026-01: 2 / 0 / 0. By satellite (none): L76 6, L77 2, L79 2, L80 4, L81 3. Largest |residual| within 3 d: median 10.2 m; 16 of 22 never exceed 45 m.
 
 **Table S38 — Pre-event trend contamination by source** (≥ 500 m SP3 candidates in [t_start − 3 d, t_start); 'rejected' means rejected by any check, in practice the common-mode check; key `M3`).
 
 | pre-event window | n | recall 45 m (S) | recall 45 m (U) | wrong sign | median \|residual\| (m) | median ratio | median \|ȧ\| (m/d) | median delay to first post-event TLE (h) | median amplitude (m) |
 |---|--:|--:|--:|--:|--:|--:|--:|--:|--:|
 | both | 3 | 1.00 | 1.00 | 0 | 1,266.3 | 1.82 | 1,095.4 | 21.8 | 1213.6 |
-| clean | 57 | 0.16 | 0.25 | 5 | 6.4 | -0.01 | 23.5 | 8.2 | 46.0 |
+| large-candidate-free | 57 | 0.16 | 0.25 | 5 | 6.4 | -0.01 | 23.5 | 8.2 | 46.0 |
 | rejected_only | 24 | 0.71 | 1.00 | 7 | 2,168.3 | 1.74 | 832.4 | 16.7 | 242.5 |
 | verified_only | 12 | 0.67 | 1.00 | 4 | 2,376.9 | 5.29 | 681.3 | 15.8 | 407.1 |
 
@@ -849,3 +851,46 @@ Ratio interpolated / model: linear [0.64, 1.85], √Δt [0.67, 1.28] (√Δt: ĉ
 | drag rate \|ȧ\| | 18–77 m/day in quiet windows; up to 182 m/day in the storm | within or near the calibrated range |
 | detector | D1 (MAD 3σ ∪ CUSUM κ = 0.5, h = 5) | the same detector family, or recalibration |
 | truth source | independent precise orbits (60 s SP3) | an independent truth source (SP3/SLR/DORIS/GNSS-POD) with ≥ ~50 verified events spanning 20 m–2 km, plus quiet windows for injections and a temporal hold-out | As supplementary context (Fig. S3), a domain map of the study satellites in altitude–inclination space with fitted noise-floor contours σ_th(h) = sqrt(σ₀² + (A·e^{−(h−400)/H})²) (σ₀ = 0.045 m, A = 24.5 m, H = 77 km, log-space R² = 0.89; derived in the companion study [11]) illustrates the altitude dominance of the nominal residual scale; it is contextual, not part of the calibrated model's claims, and the GRACE pair's departure from the contours (consistent with their low area-to-mass ratio) marks a limit of the single-parameter description.
+
+---
+
+## Section S19. Final-round checks: pre-event window covariates, SP3 overlap arcs, rule-S sign components, √Δt parameters (main §4.3, §5.4, §5.5)
+
+Source for every table in this section: `fs7_review7_analysis.json`, produced by `fs7_review7_analysis.py`.
+
+**Table S45 — Covariates of large-candidate-free and contaminated evaluable events** (key `M2_covariates`). 'Large-candidate-free' means that no SP3 candidate ≥ 500 m, of any verdict, lies in the pre-event window; smaller candidates may be present.
+
+| pre-event window | n | median post-event TLEs within 3 d | median TLE gap (d) | median distance to nearest SP3 candidate, any size (d) | median candidates within ±3 d | share with a candidate within 1 d |
+|---|--:|--:|--:|--:|--:|--:|
+| large-candidate-free | 57 | 5 | 0.93 | 0.02 | 12 | 0.91 |
+| contaminated | 39 | 4 | 1.26 | 0.02 | 13 | 0.97 |
+
+Recall at 45 m (rule S) of large-candidate-free events, with Wilson 95% CIs: 1–50 m 0/30 = 0.00 [0.00, 0.11]; 50–100 m 1/11 = 0.09 [0.02, 0.38]; 100–300 m 3/11 = 0.27 [0.10, 0.57]; 300 m–1 km 1/1 = 1.00 [0.21, 1.00]; 1–3 km 4/4 = 1.00 [0.51, 1.00].
+
+**Table S46 — SP3 overlap-arc consistency of the large-candidate-free 50–300 m events by TLE-response class** (key `M1_overlap_arcs`). This is an internal-consistency check within the same SP3 processing chain, not independent verification.
+
+| class | n | covered by ≥ 2 arcs | median arcs | median arc spread (m) | max arc spread (m) | median persistence ratio | median amplitude (m) |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| no response | 17 | 13 | 2 | 0.3 | 5.3 | 1.18 | 97.3 |
+| delayed / other | 5 | 4 | 3 | 0.3 | 0.9 | 1.33 | 178.1 |
+
+No-response events covered by two or more arcs: L76 2025-08-15 08:15 (-299 m, 4 arcs, spread 0.5 m); L76 2025-08-15 08:26 (-238 m, 5 arcs, spread 0.3 m); L76 2025-08-15 09:01 (-114 m, 4 arcs, spread 0.2 m); L79 2025-08-15 18:47 (64 m, 2 arcs, spread 0.0 m); L79 2025-08-18 19:54 (-54 m, 3 arcs, spread 0.3 m); L81 2025-08-20 23:39 (90 m, 2 arcs, spread 0.0 m); L81 2025-08-21 00:28 (82 m, 3 arcs, spread 0.3 m); L81 2025-08-21 01:16 (83 m, 3 arcs, spread 0.6 m); L80 2024-07-09 09:43 (212 m, 2 arcs, spread 5.3 m); L80 2024-12-07 03:49 (-61 m, 5 arcs, spread 0.6 m); L76 2025-05-18 01:27 (-77 m, 2 arcs, spread 0.2 m); L77 2026-01-18 10:50 (-131 m, 2 arcs, spread 0.4 m); L77 2026-01-18 11:03 (-97 m, 3 arcs, spread 0.3 m).
+
+**Table S47 — Wrong-sign events in large-candidate-free windows** (45 m, rule S; key `m4_uncontaminated_wrong_sign`).
+
+| satellite | campaign | t_start (UT) | SP3 step (m) | E1 residual (m) | gap (d) | \|ȧ\| (m/d) | verified events in pre-window | candidates within ±3 d | nearest candidate (d) | arcs |
+|---|---|---|--:|--:|--:|--:|--:|--:|--:|--:|
+| L78 | 2024-07 | 2024-07-14 13:28 | -24.6 | 921.8 | 0.26 | 57.3 | 0 | 5 | 0.49 | 1 |
+| L80 | 2024-07 | 2024-07-23 20:41 | -41.0 | 229.2 | 0.93 | 65.6 | 0 | 13 | 0.02 | 1 |
+| L80 | 2024-07 | 2024-07-23 21:16 | -39.1 | 229.2 | 0.93 | 65.6 | 1 | 13 | 0.02 | 1 |
+| L80 | 2024-11/12 | 2024-12-04 19:49 | 41.8 | -256.9 | 0.86 | 144.3 | 2 | 21 | 0.01 | 3 |
+| L80 | 2024-11/12 | 2024-12-04 20:36 | 46.0 | -256.9 | 0.86 | 144.3 | 3 | 21 | 0.03 | 3 |
+
+**Table S48 — Rule-S components by hypothesized sign** (n = 1,145 pseudo-events; p₊ = 0.521; key `M4_sign`). Expected FPR = p₊·FPR(+) + (1−p₊)·FPR(−). CI: percentile bootstrap (B = 2,000) resampling real events (for p₊) and pseudo-events within satellite; replaces the Wilson interval on the rounded expected count used in R1/R2.
+
+| threshold | FP / TN, positive hypothesis | FPR (+) [Wilson] | FP / TN, negative hypothesis | FPR (−) [Wilson] | expected FPR [bootstrap 95% CI] | recall, positive-going events | recall, negative-going events |
+|---|--:|--:|--:|--:|--:|--:|--:|
+| 45 m | 37 / 1108 | 0.032 [0.024, 0.044] | 22 / 1123 | 0.019 [0.013, 0.029] | 0.026 [0.020, 0.033] | 0.60 (n = 50) | 0.15 (n = 46) |
+| unified 3σ | 313 / 832 | 0.273 [0.248, 0.300] | 315 / 830 | 0.275 [0.250, 0.302] | 0.274 [0.260, 0.288] | 0.68 (n = 50) | 0.24 (n = 46) |
+
+**√Δt form, full-data coefficients** (key `M5_sqrt_params`): linear form c = 0.316, SNR₅₀ = 3.77, β = 5.25, SNR₉₀ = 9.87; √Δt form c = 0.355, SNR₅₀ = 3.55, β = 5.75, SNR₉₀ = 8.56. Full-data fits, unclipped SNR. Under the √Δt form the ambiguity term is c·|ȧ|·√Δt with Δt in days, so c carries units of m/day^0.5 per (m/day) and is not comparable with the linear-form c.

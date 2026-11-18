@@ -105,8 +105,8 @@ def draw():
     s_abs = np.abs(storm)
     ax.axvspan(s_abs.min(), s_abs.max(), color=st.RED, alpha=0.10, lw=0, zorder=0)
     ax.plot(s_abs, np.full_like(s_abs, 0.025), "|", ms=7, mew=0.7, color=st.RED, zorder=3,
-            label=t(f"磁暴區間假候選（n = {len(storm)}，−{-storm.min():.0f} 至 −{-storm.max():.0f} m）",
-                    f"Storm-interval spurious candidates (n = {len(storm)}, −{-storm.min():.0f} to −{-storm.max():.0f} m)"))
+            label=t(f"磁暴區間候選，歸因於阻力（n = {len(storm)}，−{-storm.min():.0f} 至 −{-storm.max():.0f} m）",
+                    f"Storm-interval candidates, drag-attributed (n = {len(storm)}, −{-storm.min():.0f} to −{-storm.max():.0f} m)"))
 
     # 振幅箱界線與 n
     for e_ in EDGES[1:-1]:
@@ -120,15 +120,16 @@ def draw():
     # 注入校準之預測曲線
     pm = np.array([p_model(v, sig_eff).mean() for v in x])
     q25, q75 = np.percentile(sig_eff, [25, 75])
-    ax.fill_between(x, p_model(x, q75), p_model(x, q25), color=st.BLUE, alpha=0.09, lw=0,
-                    label=t(f"預測（σ_eff 四分位距 {q25:.0f}–{q75:.0f} m）",
-                            f"Prediction, σ_eff IQR ({q25:.0f}–{q75:.0f} m)"))
-    ax.plot(x, pm, "-", color=st.BLUE, lw=1.1,
-            label=t("注入校準之預測召回（96 件平均）", "Injection-calibrated prediction (mean over 96 events)"))
+    # 終審 m7：D1 校準之描述性機率降為灰色虛線，避免被讀為 E1 擬合檢定
+    ax.fill_between(x, p_model(x, q75), p_model(x, q25), color=st.GRAY, alpha=0.08, lw=0,
+                    label=t(f"D1 描述性機率 σ_eff 四分位距（{q25:.0f}–{q75:.0f} m）",
+                            f"D1 descriptive, σ_eff IQR ({q25:.0f}–{q75:.0f} m)"))
+    ax.plot(x, pm, "--", color=st.GRAY, lw=0.9,
+            label=t("D1 校準之描述性機率（非 E1 機率）", "D1-calibrated descriptive probability (not E1)"))
 
     xm = bins["amp_med"].values
-    ax.plot(xm, bins["p_mean"], "D", ms=3.6, color=st.BLUE, mfc="white", mew=0.9, zorder=5,
-            label=t("模型平均預測機率（箱內）", "Mean predicted probability (per bin)"))
+    ax.plot(xm, bins["p_mean"], "D", ms=3.0, color=st.GRAY, mfc="white", mew=0.7, zorder=5,
+            label=t("D1 描述性機率（箱內平均）", "D1 descriptive probability (bin mean)"))
     for col, f, mk, mfc, lab in (
             ("new", 0.90, "o", st.INK, t("觀測召回：統一 3σ 門檻", "Observed recall, unified 3σ threshold")),
             ("old", 1.11, "s", "white", t("觀測召回：45 m 門檻", "Observed recall, 45 m threshold"))):

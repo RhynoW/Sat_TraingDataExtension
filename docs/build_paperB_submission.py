@@ -34,6 +34,7 @@ ITEMS = {
     "paper_fs7_cover_letter_EN": "letter",
     "paper_fs7_response_to_reviewers_R1": "response",
     "paper_fs7_response_to_reviewers_R2": "response",
+    "paper_fs7_response_to_reviewers_R3": "response",
 }
 LETTER_MARGIN_CM = 2.0
 ABSTRACT_MAX_WORDS = 250

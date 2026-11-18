@@ -36,16 +36,17 @@ NORADS = [44343, 44349, 44350, 44351, 44353, 44358]
 SCRIPTS = [
     "fs7_injection_sweep.py", "fs7_injection_sweep_v2.py", "fs7_injection_sweep_v3.py", "fs7_injection_sweep_v4.py",
     "fs7_review3_analysis.py", "fs7_review4_analysis.py", "fs7_review4b_analysis.py", "fs7_review5_analysis.py",
-    "fs7_review6_analysis.py", "fs7_final_supplement.py", "fs7_campaign_truth_build.py", "fs7_tle_recall_unified.py",
+    "fs7_review6_analysis.py", "fs7_review7_analysis.py", "fs7_final_supplement.py", "fs7_campaign_truth_build.py", "fs7_tle_recall_unified.py",
     "fs7_noise_floor_map.py", "fs7_noise_floor_map_v2.py", "fs7_make_checksums.py", "fs7_repro_minimal.py",
     "statistical_detectors.py",
     "formosat7_leoorb/__init__.py", "formosat7_leoorb/archive.py", "formosat7_leoorb/cli.py",
     "formosat7_leoorb/compare.py", "formosat7_leoorb/detect.py", "formosat7_leoorb/download.py",
     "formosat7_leoorb/merge.py", "formosat7_leoorb/satmap.py",
-    "docs/fs7_supplement_tables.py", "docs/gen_fs7_supplement_r1.py", "docs/gen_fs7_supplement_r2.py",
+    "docs/fs7_supplement_tables.py", "docs/gen_fs7_supplement_r1.py", "docs/gen_fs7_supplement_r2.py", "docs/gen_fs7_supplement_r3.py",
     "docs/gen_fig_fs7_event_selection.py", "docs/gen_fig_fs7_injection_case.py", "docs/gen_fig_fs7_method_flow.py",
     "docs/gen_fig_fs7_model_supplement.py", "docs/gen_fig_fs7_real_event_recall.py",
     "docs/fig_pub.py", "docs/fs7_fig_style.py", "docs/fs7_env_freeze.txt", "docs/paper_fs7_repro_README.md",
+    "docs/paper_fs7_supplement_EN.md",   # Supplementary Material (incl. Tables S1b, S44, S45–S48)
 ]
 DATA_GLOBS = ["data/benchmark/fs7_*.csv", "data/benchmark/fs7_*.json", "data/benchmark/fs7_checksums_sha256.txt",
               "data/benchmark/tle_noise_floor_map.csv", "data/space_weather/gfz_kp_3h_2024-04_05.csv"]
@@ -99,6 +100,7 @@ The supplementary Markdown sections can also be regenerated without a database:
 
     python docs/gen_fs7_supplement_r1.py     # Sections S11–S16
     python docs/gen_fs7_supplement_r2.py     # Section S17
+    python docs/gen_fs7_supplement_r3.py     # Section S19
 
 Figures can be regenerated from the cached CSVs with `--pub` (see `docs/paper_fs7_repro_README.md`).
 
@@ -128,6 +130,8 @@ See Table S1b of the Supplementary Material. In brief:
 | Table 4 | `fs7_tle_recall_unified_20260825.csv` |
 | Table 5 | `fs7_review5_analysis.json` (`symmetric_rules`); `fs7_review5_threshold_sweep.csv` |
 | Section S17 | `fs7_review6_analysis.json`; `fs7_review6_detector_sensitivity.csv` |
+| Section S19 (window covariates, overlap arcs, rule-S sign components) | `fs7_review7_analysis.json` |
+| Table S44 (transfer conditions) and all supplementary tables | `docs/paper_fs7_supplement_EN.md` |
 
 ## 4. Integrity
 

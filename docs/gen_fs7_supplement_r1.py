@@ -186,7 +186,7 @@ def s16():
     out += ["**Table S35 — TLE response class by amplitude bin and pre-event trend status** (evaluable events). "
             + md["tle_response_def"] + " Contaminated: an SP3 candidate of any verdict with |step| ≥ 500 m lies in the "
             "pre-event trend window.", "",
-            "| bin | clean: immediate / delayed / none / other | contaminated: immediate / delayed / none / other |",
+            "| bin | large-candidate-free: immediate / delayed / none / other | contaminated: immediate / delayed / none / other |",
             "|---|---|---|"]
     rk = ("immediate", "delayed", "none", "other")
     bins = list(BIN_EN)[:5]

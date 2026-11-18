@@ -37,6 +37,8 @@ FILES = [
     "docs/build_paperB_review_package.py",
     "data/benchmark/fs7_review6_analysis.json", "data/benchmark/fs7_review6_detector_sensitivity.csv",
     "data/benchmark/fs7_injection_trials_with_t0.csv", "data/benchmark/fs7_tle_epoch_list.csv",
+    # 終審新增
+    "fs7_review7_analysis.py", "docs/gen_fs7_supplement_r3.py", "data/benchmark/fs7_review7_analysis.json",
 ]
 
 out = Path("data/benchmark/fs7_checksums_sha256.txt")

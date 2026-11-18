@@ -31,8 +31,8 @@ def main():
     for k, v in m1["outcome_classes_131_45m"].items():
         L.append(f"| 131 verified, 45 m, rule S | {k} | {v['n']} | {v['prop']:.2f} {ci(v['ci95'])} |")
     for k, v in m1["clean_50_300m_response_default"].items():
-        L.append(f"| clean 50–300 m (n = {m1['clean_50_300m_n']}) | {k} | {v['n']} | {v['prop']:.2f} {ci(v['ci95'])} |")
-    L += ["", "**Table S37 — Sensitivity of the TLE-response classification** (clean-window events; ratio cut c means "
+        L.append(f"| large-candidate-free 50–300 m (n = {m1['clean_50_300m_n']}) | {k} | {v['n']} | {v['prop']:.2f} {ci(v['ci95'])} |")
+    L += ["", "**Table S37 — Sensitivity of the TLE-response classification** (large-candidate-free events, i.e. no SP3 candidate ≥ 500 m in the pre-event window; ratio cut c means "
           "a response requires a ratio in [c, 1/c], and 'none' requires |ratio| < c at every TLE in the window).", "",
           "| ratio cut | window (d) | 50–300 m: none / delayed / immediate / other | ≥ 300 m: immediate / n |",
           "|--:|--:|---|---|"]
@@ -40,7 +40,7 @@ def main():
         L.append(f"| {r['ratio_cut']} | {r['window_d']:g} | {r['clean_50_300_none']} / {r['clean_50_300_delayed']} / "
                  f"{r['clean_50_300_immediate']} / {r['clean_50_300_other']} | {r['clean_ge300_immediate']} / {r['clean_ge300_n']} |")
     cv = m1["none_vs_other_covariates"]
-    L += ["", "Covariates of no-response (clean 50–300 m): " + "; ".join(
+    L += ["", "Covariates of no-response (large-candidate-free 50–300 m): " + "; ".join(
         f"{k}: n = {v['n']}, median |ȧ| {v['median_abs_adot_m_day']} m/d, median post-event TLEs within 3 d "
         f"{v['median_n_post_tle_3d']:g}, median gap {v['median_gap_day']} d, median amplitude {v['median_amp_m']} m, "
         f"negative-going {v['frac_negative_step']:.0%}" for k, v in cv.items()) + ". By campaign (none / delayed / other): "
@@ -55,7 +55,7 @@ def main():
           "| pre-event window | n | recall 45 m (S) | recall 45 m (U) | wrong sign | median \\|residual\\| (m) | median ratio | median \\|ȧ\\| (m/d) | median delay to first post-event TLE (h) | median amplitude (m) |",
           "|---|--:|--:|--:|--:|--:|--:|--:|--:|--:|"]
     for r in m3["by_source"]:
-        L.append(f"| {r['source']} | {r['n']} | {r['recall_45_S']:.2f} | {r['recall_45_U']:.2f} | {r['wrong_sign']} | "
+        L.append(f"| {r['source'].replace('clean', 'large-candidate-free')} | {r['n']} | {r['recall_45_S']:.2f} | {r['recall_45_U']:.2f} | {r['wrong_sign']} | "
                  f"{r['median_abs_residual_m']:,} | {r['median_ratio']} | {r['median_abs_adot_m_day']:,} | "
                  f"{r['median_delay_first_post_tle_h']} | {r['median_amp_m']} |")
     cm = m3["common_mode_contaminated"]
