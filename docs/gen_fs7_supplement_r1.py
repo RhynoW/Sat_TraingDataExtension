@@ -61,7 +61,7 @@ def s12():
     for k, v in R["per_cadence_c"].items():
         out.append(f"| {k.split('_')[1]}× | {v['c_hat']} | [{v['profile_ci95'][0]}, {v['profile_ci95'][1]}] | "
                    f"{'yes' if v['ci_touches_grid_edge'] else 'no'} |")
-    out += ["", "| condition | σ_TLE (m) | c·\\|ȧ\\|·Δt, c = 0.32 (m) | c·\\|ȧ\\|·Δt, c = 0.28 (m) | σ_eff, c = 0.32 (m) | drag share of σ_eff² |",
+    out += ["", "*Drag-ambiguity term by injection condition:*", "", "| condition | σ_TLE (m) | c·\\|ȧ\\|·Δt, c = 0.32 (m) | c·\\|ȧ\\|·Δt, c = 0.28 (m) | σ_eff, c = 0.32 (m) | drag share of σ_eff² |",
             "|---|--:|--:|--:|--:|--:|"]
     dt = {(r["decim"], r["drag"]): r for r in R["drag_term_by_condition"]}
     for d, b in COND_ORDER:
@@ -78,14 +78,17 @@ def s13():
     out = ["## Section S13. Injection recall at every grid amplitude and the interpolated Δa₉₀ (main §4.1, Table 4a)", "",
            "**Table S30 — Injection recall by condition and grid amplitude**, with satellite × window cluster-bootstrap "
            "95% CIs (B = 2,000). Source: `fs7_review5_recall_grid.csv`.", ""]
-    amps = sorted(g["da_m"].unique())
-    out.append("| condition | " + " | ".join(f"{int(a)} m" for a in amps) + " |")
-    out.append("|---|" + "--:|" * len(amps))
-    for d, b in COND_ORDER:
-        sub = g[(g.decim == d) & (g.drag == b)].set_index("da_m")
-        out.append(f"| {d}×·{b} | " + " | ".join(
-            f"{sub.loc[a, 'recall']:.2f} [{sub.loc[a, 'ci_lo']:.2f}, {sub.loc[a, 'ci_hi']:.2f}]" for a in amps) + " |")
-    out += ["", "Interpolation: the recall curve is made monotone non-decreasing by pool-adjacent-violators, and the 0.90 "
+    amps_all = sorted(g["da_m"].unique())
+    for part, amps in (("(a) 20–200 m", amps_all[:5]), ("(b) 300–2,000 m", amps_all[5:])):
+        out += [f"*{part}*", ""]
+        out.append("| condition | " + " | ".join(f"{int(a):,} m" for a in amps) + " |")
+        out.append("|---|" + "--:|" * len(amps))
+        for d, b in COND_ORDER:
+            sub = g[(g.decim == d) & (g.drag == b)].set_index("da_m")
+            out.append(f"| {d}×·{b} | " + " | ".join(
+                f"{sub.loc[a, 'recall']:.2f} [{sub.loc[a, 'ci_lo']:.2f}, {sub.loc[a, 'ci_hi']:.2f}]" for a in amps) + " |")
+        out.append("")
+    out += ["Interpolation: the recall curve is made monotone non-decreasing by pool-adjacent-violators, and the 0.90 "
             "crossing is interpolated linearly in log₁₀Δa between the bracketing grid amplitudes; the bootstrap repeats "
             "both steps in every resample. Source of Table 4a: `fs7_review5_analysis.json` (`da90_interpolated`).", ""]
     out += ["**Table S31 — Within-cadence stratification by residual lag-1 autocorrelation r₁** (terciles of r₁ within each "
