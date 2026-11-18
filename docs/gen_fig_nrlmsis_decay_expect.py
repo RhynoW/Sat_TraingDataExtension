@@ -91,7 +91,7 @@ def draw(D, D0, D1):
         ax.plot(x, y, color=c, lw=1.0, alpha=0.45)
         ys = y.rolling(7, center=True, min_periods=1).mean()
         ax.plot(x, ys, color=c, lw=2.0)
-        last = ys.iloc[-1]
+        last = float(y.iloc[-7:].median())   # 最近 7 日中位數（與正文一致）
         ax.annotate((t(f"{h} km　{last:.3g} m/日", f"{h} km  {last:.3g} m/day") if last < 1000 else
                      t(f"{h} km　{last / 1000:.2f} km/日", f"{h} km  {last / 1000:.2f} km/day")),
                     xy=(x.iloc[-1], last), xytext=(8, 0), textcoords="offset points",

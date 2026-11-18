@@ -199,8 +199,8 @@ def draw(A, C):
     ax2.plot([0, m], [0, m], color="#444", ls="--", lw=1)
     ax2.set(xlim=(0, m), ylim=(0, m), xlabel=t("NRLMSIS 預期（m/日）", "NRLMSIS expected (m/day)"),
             ylabel=t("精密軌道實測（m/日）", "Precise-orbit observed (m/day)"),
-            title=t(f"(a) 精密 vs NRLMSIS　合併 r = {pearsonr(A.decay, A.nrl)[0]:.2f}",
-                    f"(a) Precise vs NRLMSIS (pooled r = {pearsonr(A.decay, A.nrl)[0]:.2f})"))
+            title=t(f"(a) 精密 vs NRLMSIS　合併 r = {pearsonr(A.decay, A.nrl)[0]:.3f}",
+                    f"(a) Precise vs NRLMSIS (pooled r = {pearsonr(A.decay, A.nrl)[0]:.3f})"))
     ax2.legend(fontsize=7.5, frameon=False, markerscale=1.8)
     pool = A.dropna(subset=["tle"])
     ax3 = fig.add_subplot(gs[2, 1])
@@ -208,8 +208,8 @@ def draw(A, C):
     ax3.plot([0, m], [0, m], color="#444", ls="--", lw=1)
     ax3.set(xlim=(0, m), ylim=(0, m), xlabel=t("精密軌道實測（m/日）", "Precise-orbit observed (m/day)"),
             ylabel=t("TLE 實測（m/日）", "TLE observed (m/day)"),
-            title=t(f"(b) TLE vs 精密　合併 r = {pearsonr(pool.decay, pool.tle)[0]:.2f}",
-                    f"(b) TLE vs precise (pooled r = {pearsonr(pool.decay, pool.tle)[0]:.2f})"))
+            title=t(f"(b) TLE vs 精密　合併 r = {pearsonr(pool.decay, pool.tle)[0]:.3f}",
+                    f"(b) TLE vs precise (pooled r = {pearsonr(pool.decay, pool.tle)[0]:.3f})"))
     ax4 = fig.add_subplot(gs[2, 2])
     x = np.arange(len(C))
     ax4.bar(x - 0.2, C.r_precise_nrl, 0.4, color="#1D4ED8", label=t("精密 vs NRLMSIS", "Precise vs NRLMSIS"))

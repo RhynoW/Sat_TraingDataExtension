@@ -148,7 +148,7 @@ def draw(S, k_star, f_rel):
     ax[1].bar(x - w, S.fp_A_per_ksd, 2 * w * 0.95, color="#B91C1C", label=t("A 現行 0.30 km", "A current 0.30 km"))
     ax[1].bar(x + w, S.fp_C_per_ksd, 2 * w * 0.95, color="#059669", label=t("C 高度公式", "C altitude formula"))
     ax[1].plot(x, S.fp_B_per_ksd, color="#1D4ED8", marker="o", lw=1.5, label=t("B 等誤報率查表", "B equal-false-alarm lookup"))
-    ax[1].axhline(float(os.environ.get("FP_TARGET", 0.43)), color="#6B7280", ls=":", lw=1, label=t("目標（L1 誤報率 0.43）", "Target (L1 false-alarm rate 0.43)"))
+    ax[1].axhline(float(os.environ.get("FP_TARGET", 0.43)), color="#6B7280", ls=":", lw=1, label=t("目標（每千星日 0.43 件）", "Target (0.43 per 1,000 satellite-days)"))
     ax[1].set(xlabel=t("近地點高度（km）", "Perigee altitude (km)"),
               ylabel=t("誤報事件／千星日（被動衛星）", "False alarms per 1,000 satellite-days (passive)"),
               title=t("(b) 各高度誤報率", "(b) False-alarm rate by altitude"))
@@ -166,10 +166,10 @@ def draw(S, k_star, f_rel):
         for s_ in ("top", "right"):
             a.spines[s_].set_visible(False)
     fig.text(0.01, -0.02, t(f"對象：全期被動衛星逐筆相鄰 TLE（間隔不超過 3 日），殘差＝實測 Δa 減 NRLMSIS 預期 Δa。誤報：超門檻點依星 48 小時內合併為一次。"
-                            f"方案 C：log10(門檻 km) = {k_star:.2f} {f_rel * 1000:+.2f} × 高度(km)/1000，下限 0.03 km。",
+                            f"方案 C：log10(門檻 km) = {k_star:.2f} {'−' if f_rel < 0 else '+'} {abs(f_rel) * 1000:.2f} × 高度(km)/1000，下限 0.03 km。",
                             f"Sample: adjacent-TLE pairs (≤ 3 days apart) of satellites passive throughout; residual = observed Δa "
                             f"− NRLMSIS-expected Δa. False alarms: exceedances merged per satellite within 48 h.\n"
-                            f"Scheme C: log10(threshold, km) = {k_star:.2f} {f_rel * 1000:+.2f} × altitude(km)/1000, floor 0.03 km."),
+                            f"Scheme C: log10(threshold, km) = {k_star:.2f} {'−' if f_rel < 0 else '+'} {abs(f_rel) * 1000:.2f} × altitude(km)/1000, floor 0.03 km."),
              fontsize=8.5, color="#6B7280")
     fig.tight_layout()
     return fig

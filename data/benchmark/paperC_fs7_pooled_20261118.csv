@@ -1,0 +1,4 @@
+﻿pair,n_win,n_week,r_pooled,fisher_lo,fisher_hi,boot_week_lo,boot_week_hi,rho_pooled
+precise vs NRLMSIS,616,137,0.962,0.9556,0.9674,0.9496,0.9735,0.9709
+TLE vs NRLMSIS,581,135,0.9581,0.9509,0.9643,0.9449,0.9701,0.9684
+TLE vs precise,581,135,0.9963,0.9956,0.9968,0.9947,0.9974,0.9961
