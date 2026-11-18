@@ -1,0 +1,62 @@
+{
+  "joint_likelihood": {
+    "ll_max_at": {
+      "c": 0.33,
+      "snr50": 3.7
+    }
+  },
+  "per_band_c": {
+    "low": {
+      "c_hat": 0.28,
+      "profile_ci95": [
+        0.2,
+        0.4
+      ]
+    },
+    "mid": {
+      "c_hat": 0.32,
+      "profile_ci95": [
+        0.25,
+        0.5
+      ]
+    },
+    "high": {
+      "c_hat": 0.32,
+      "profile_ci95": [
+        0.25,
+        0.5
+      ]
+    }
+  },
+  "blocked_cv5": {
+    "fold_unit": "satellite × contiguous 5-window block (adjacent overlapping windows never straddle folds)",
+    "eff": {
+      "oof_logloss": 0.1837,
+      "oof_brier": 0.0556,
+      "oof_auc": 0.9681
+    },
+    "amp": {
+      "oof_logloss": 0.2046,
+      "oof_brier": 0.0632,
+      "oof_auc": 0.9584
+    }
+  },
+  "held_out_metrics": {
+    "c_cal_fixed_for_test": 0.28183829312644526,
+    "raw": {
+      "logloss": 0.1237,
+      "brier": 0.0393,
+      "auc": 0.9773,
+      "calib_slope": 1.22,
+      "calib_intercept": -0.27
+    },
+    "recalibrated": {
+      "logloss": 0.1238,
+      "brier": 0.0393,
+      "auc": 0.9773,
+      "calib_slope": 1.22,
+      "calib_intercept": -0.27
+    },
+    "note": "recalibration (Platt) fitted on calibration-period OOF predictions only; applied unchanged to test"
+  }
+}

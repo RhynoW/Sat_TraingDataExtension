@@ -1,0 +1,92 @@
+{
+  "calibration_slope": {
+    "slope": 1.22,
+    "slope_ci95": [
+      1.12,
+      1.35
+    ],
+    "intercept": -0.63,
+    "intercept_ci95": [
+      -0.89,
+      -0.39
+    ],
+    "method": "cluster bootstrap (satellite×window) on the test split, B=2000, percentile; slope/intercept from logistic recalibration y ~ logit(p_raw)",
+    "n_test_clusters": 212,
+    "slope_ci_contains_1": false
+  },
+  "da90_two_parameterizations": [
+    {
+      "decim": 1,
+      "drag": "high",
+      "da90_calibration_m": 134,
+      "da90_descriptive_m": 139,
+      "observed_floor_m": 200,
+      "rel_diff_pct": -4.1
+    },
+    {
+      "decim": 1,
+      "drag": "low",
+      "da90_calibration_m": 22,
+      "da90_descriptive_m": 22,
+      "observed_floor_m": 50,
+      "rel_diff_pct": -2.9
+    },
+    {
+      "decim": 1,
+      "drag": "mid",
+      "da90_calibration_m": 62,
+      "da90_descriptive_m": 64,
+      "observed_floor_m": 100,
+      "rel_diff_pct": -4.0
+    },
+    {
+      "decim": 2,
+      "drag": "high",
+      "da90_calibration_m": 246,
+      "da90_descriptive_m": 256,
+      "observed_floor_m": 300,
+      "rel_diff_pct": -3.9
+    },
+    {
+      "decim": 2,
+      "drag": "low",
+      "da90_calibration_m": 53,
+      "da90_descriptive_m": 55,
+      "observed_floor_m": 50,
+      "rel_diff_pct": -4.1
+    },
+    {
+      "decim": 2,
+      "drag": "mid",
+      "da90_calibration_m": 148,
+      "da90_descriptive_m": 155,
+      "observed_floor_m": 100,
+      "rel_diff_pct": -4.6
+    },
+    {
+      "decim": 4,
+      "drag": "high",
+      "da90_calibration_m": 499,
+      "da90_descriptive_m": 520,
+      "observed_floor_m": 500,
+      "rel_diff_pct": -4.1
+    },
+    {
+      "decim": 4,
+      "drag": "low",
+      "da90_calibration_m": 102,
+      "da90_descriptive_m": 107,
+      "observed_floor_m": 100,
+      "rel_diff_pct": -4.7
+    },
+    {
+      "decim": 4,
+      "drag": "mid",
+      "da90_calibration_m": 264,
+      "da90_descriptive_m": 277,
+      "observed_floor_m": 200,
+      "rel_diff_pct": -4.9
+    }
+  ],
+  "max_rel_diff_pct": 4.9
+}

@@ -1,0 +1,84 @@
+{
+  "corr_convergence": {
+    "B200": -0.978,
+    "B500": -0.979,
+    "note": "Pearson on (log c, log SNR50) across full-data cluster-bootstrap replicates; grid c>0 (24 log-spaced points)"
+  },
+  "amp_calibration": {
+    "slope": 1.15,
+    "slope_ci95": [
+      1.06,
+      1.26
+    ],
+    "intercept": -0.26,
+    "intercept_ci95": [
+      -0.52,
+      -0.02
+    ]
+  },
+  "pseudo_event_stratified": {
+    "per_satellite": {
+      "L76": {
+        "n_evaluable": 191,
+        "fpr_45m": 0.052,
+        "fpr_3sig": 0.476
+      },
+      "L77": {
+        "n_evaluable": 191,
+        "fpr_45m": 0.058,
+        "fpr_3sig": 0.571
+      },
+      "L78": {
+        "n_evaluable": 196,
+        "fpr_45m": 0.041,
+        "fpr_3sig": 0.607
+      },
+      "L79": {
+        "n_evaluable": 187,
+        "fpr_45m": 0.048,
+        "fpr_3sig": 0.583
+      },
+      "L80": {
+        "n_evaluable": 187,
+        "fpr_45m": 0.048,
+        "fpr_3sig": 0.561
+      },
+      "L81": {
+        "n_evaluable": 190,
+        "fpr_45m": 0.063,
+        "fpr_3sig": 0.516
+      }
+    },
+    "pooled_fpr": {
+      "45m": 0.052,
+      "3sig": 0.553
+    },
+    "satellite_weighted_fpr": {
+      "45m": 0.052,
+      "3sig": 0.552
+    },
+    "storm_excluded_fpr": {
+      "45m": 0.048,
+      "3sig": 0.547,
+      "n": 1124
+    }
+  },
+  "wilson_ci": {
+    "recall_45m_37_96": [
+      0.294,
+      0.485
+    ],
+    "recall_3sig_45_96": [
+      0.372,
+      0.568
+    ],
+    "fpr_45m_64_1131": [
+      0.045,
+      0.072
+    ],
+    "fpr_3sig_617_1131": [
+      0.516,
+      0.574
+    ]
+  }
+}

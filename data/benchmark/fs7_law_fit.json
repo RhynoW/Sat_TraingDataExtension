@@ -1,0 +1,61 @@
+{
+  "law_fit": {
+    "snr_amp": {
+      "snr50": 9.01,
+      "beta": 4.55,
+      "mean_loglik": -0.2042,
+      "snr50_ci95": [
+        8.46,
+        9.62
+      ]
+    },
+    "snr_eff": {
+      "snr50": 1.32,
+      "beta": 5.21,
+      "mean_loglik": -0.1843,
+      "snr50_ci95": [
+        1.25,
+        1.38
+      ]
+    },
+    "delta_loglik_eff_minus_amp": 0.0199
+  },
+  "autocorr": {
+    "decim_1": {
+      "lag1_autocorr_median": 0.238,
+      "n_windows": 478
+    },
+    "decim_2": {
+      "lag1_autocorr_median": 0.463,
+      "n_windows": 478
+    },
+    "decim_4": {
+      "lag1_autocorr_median": 0.49,
+      "n_windows": 478
+    }
+  },
+  "smear_floor90_km": {
+    "0.0": 0.2,
+    "0.25": 0.2,
+    "0.5": 0.2,
+    "1.0": 0.2,
+    "2.0": 0.3
+  },
+  "smear_factor": {
+    "0.0": 1.0,
+    "0.25": 1.0,
+    "0.5": 1.0,
+    "1.0": 1.0,
+    "2.0": 1.5
+  },
+  "law_backcheck": {
+    "2025 campaign（Δt=21.6h, 靜時 ȧ=49 m/day）": {
+      "floor50_law_m": 61,
+      "floor50_with_smear_1d_m": 61
+    },
+    "Gannon 磁暴主相（ȧ=182 m/day）": {
+      "floor50_law_m": 217,
+      "floor50_with_smear_1d_m": 217
+    }
+  }
+}

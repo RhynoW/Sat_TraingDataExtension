@@ -49,7 +49,10 @@ SCRIPTS = [
 ]
 DATA_GLOBS = ["data/benchmark/fs7_*.csv", "data/benchmark/fs7_*.json", "data/benchmark/fs7_checksums_sha256.txt",
               "data/benchmark/tle_noise_floor_map.csv", "data/space_weather/gfz_kp_3h_2024-04_05.csv"]
-DATA_EXCLUDE = {"fs7_review3_analysis_rerun.json"}
+DATA_EXCLUDE = {"fs7_review3_analysis_rerun.json",
+                # 其他論文／研討會版之產物，非 Paper B 依賴
+                "fs7_l3_ood_2025.csv", "fs7_precise_decay_windows.csv", "fs7_precise_nrlmsis_corr.csv",
+                "fs7_tle_detection_2025.csv"}
 FORBIDDEN = [r"[A-Za-z]:[\\/]+Users[\\/]", r"[\w.+-]+@[\w-]+\.(com|org|edu|tw|net)", r"rhynowu"]
 
 
