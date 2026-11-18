@@ -42,6 +42,10 @@ dist\SatDashboard-arm64.exe      ← Snapdragon 等 ARM64
 | `/orbit` | 軌道要素歷史：Spiral Polar、SMA 圓形圖、**雙星軌道要素比較**（`/api/orbit/history`；只用本機資料庫，不向 Space-Track 補抓） |
 | `/track` | 單顆衛星 **2D 地面軌跡**與即時資料（Leaflet + 瀏覽器端 SGP4；資料 `/api/sat_tle`；Leaflet、satellite.js 與底圖圖磚需連網） |
 | `/mission` | **衛星任務規劃**：地面站下行接收過頂預報（預設中大太遙中心 × Vantor 星系，仰角 15°） |
+| `/starlink` | Starlink 分析（v0.1.6）：可見性／RTT／遮蔽、星系普查、殼層、離軌名單與離軌預測（NRLMSISE-00 完整移植） |
+| `/story`、`/story/{sid}` | StoryMap 故事頁（v0.1.6）：群組統計、ISR 解析度、雷達評估、重訪、軌跡 |
+| `/orbit-tuner` | Orbit Tuner 介紹頁（v0.1.6） |
+| `/lab` | **會合與機動實驗室**（v0.1.6，第二階段 Sprint 0–3）：批次會合分析、場景 JSON、避碰決策、RPO 控制模擬，見下方說明 |
 | 版本與聯絡 | 主控台啟動訊息、`/api/about`、地球儀右下角與任務規劃頁頂列顯示版本、版本日期（台灣時間，重新建置時由 `build.rs` 產生，可用環境變數 `SATDASH_BUILD_DATE` 指定）與聯絡資訊（[Rhyno Wu，LinkedIn](https://www.linkedin.com/in/rhyno-wu-6b766771/)） |
 | 底圖 | 所有 3D 頁面預設「地形+海底地形 5.4K」（NASA Blue Marble 地形＋海底地形，內嵌於 exe），地球儀左側的底圖選單已隱藏。同步自 Python 版的頁面用 Viewer 的 `imageryProvider` 選項指定底圖，CesiumJS 1.104 起已移除（內附 1.114，原本會顯示一片藍）；`web/ext/standalone_ext.js` 把 Cesium 的預設底圖換成這張 |
 | 啟動視角 | 地球儀與任務規劃頁啟動時（以及 Home 鍵）為台灣上空正上方俯視（`web/ext/standalone_ext.js`） |
@@ -69,8 +73,37 @@ dist\SatDashboard-arm64.exe      ← Snapdragon 等 ARM64
 | `/api/tiles/xyz/…`、`/api/tiles/wms/…`、`/api/tiles/info` | 網路圖磚代理（補 CORS、磁碟快取 30 天、僅放行圖資目錄內網域） |
 | `/api/himawari/latest` | Himawari 各波段最新時刻（NASA GIBS） |
 | `/api/himawari/jma_latest`、`/api/himawari/jma_img` | JMA 最新全圓盤影像（約落後 10~20 分鐘）與影像代理／下載 |
+| `/api/starlink/*`、`/api/v3_flight14_roster`、`/api/story/*` | Starlink 分析、StoryMap 資料（v0.1.6） |
+| `/api/lab/demo`、`/api/lab/scenario` | 示範場景、場景 JSON → 端到端會合報告（v0.1.6） |
+| `/api/lab/batch`、`/api/lab/batch.csv`、`/api/lab/csv/parse` | 主星對多顆次星批次會合分析、結果 CSV、次星 CSV 預覽（v0.1.6） |
+| `/api/lab/maneuver/demo`、`/api/lab/maneuver` | 避碰決策示範案例與計算（v0.1.6） |
+| `/api/lab/rpo/demo`、`/api/lab/rpo` | RPO 控制模擬示範案例與計算（v0.1.6） |
 
-**尚未移植**（點進去會顯示說明頁）：Starlink 分析、StoryMap、Orbit Tuner 介紹頁；RPO 的 PNG 靜態報告（`report.png`，原版以 matplotlib 繪製）；Space-Track（CDM / Decay / SATCAT 回傳「未配置」，跟 Python 版沒設帳密時一樣）；Flight 14 V3 合成編號的 MEME 補位。
+**尚未移植**（點進去會顯示說明頁）：RPO 的 PNG 靜態報告（`report.png`，原版以 matplotlib 繪製）；Space-Track（CDM / Decay / SATCAT 回傳「未配置」，跟 Python 版沒設帳密時一樣）；Flight 14 V3 合成編號的 MEME 補位。
+
+### 會合與機動實驗室（`/lab`，v0.1.6）
+
+第二階段計算引擎（`src/phase2/`）與 Python 線上版同一套演算法，以同一組測試資料逐項比對。四個分頁：
+
+| 分頁 | 內容 |
+|---|---|
+| 批次分析 | 主星對最多 200 顆次星（NORAD 清單或 CSV），SGP4（WGS-72）→ GCRF，自適應近接極小值搜尋，Foster／Chan 碰撞機率與三態適用性篩選；事件表、距離歷程、交會平面圖，結果下載 CSV／JSON |
+| 場景 JSON | `satdash.scenario/v1` 場景（含 schema 驗證與錯誤代碼）→ 端到端報告；協方差可用展示模式或傳播模式（6×6 協方差以變分方程沿數值軌跡傳播） |
+| 避碰決策 | 沿跡向單脈衝避碰：可行性預檢、自同一參考軌跡分岔的候選方案、線性 STM 預篩、非線性驗證（重新傳播、重新搜尋 TCA、重算 Pc）、二次篩選；結果分可行／網格內無解／限制衝突 |
+| RPO 控制 | V-bar／R-bar 接近、駐留、繞飛：HCW 設計與 GCRF 數值閉迴路重播（J2–J4＋差分阻力），安全區、接近速度、走廊監控，abort_to_hold 撤離脈衝預存與故障注入驗證 |
+
+座標框架：TEME →（GMST82）→ ITRF →（IAU-2006/2000A CIO，含 dX/dY）→ GCRF（`sofars`）。EOP 優先讀 `<資料目錄>\DB\EOP-All.csv`，沒有時使用內嵌快照。
+
+跨語言比對工具：`phase2_cli`（`cargo build --release --bin phase2_cli`），子命令 `e2e`、`schema-cases`、`adaptive-tle`、`covprop`、`csv-parse`、`batch`、`maneuver`、`rpo` 等，由 Python 版 `tools/phase2_xlang_report.py` 呼叫。最新比對（2026-11-18）：
+
+| 層 | Python 與 Rust 差異 |
+|---|---|
+| SGP4、框架轉換、數值積分 | 位置差 ≤ 0.3 mm（深空 SGP4）、框架 2.7e-9 m、1 天積分 ≤ 1e-6 m |
+| 近接搜尋、碰撞機率 | TCA 差 ≤ 1.5e-9 s（低相對速度的對接配對除外，距離差 1e-10 km）、Pc 相對差 ≤ 3e-8 |
+| 避碰決策（10 案） | 狀態、候選方案、檢查結果全部相同；機動後距離差 2e-6 m |
+| RPO 控制（8 案） | 狀態、脈衝序列、違規、撤離表全部相同；脈衝差 2.2e-10 m/s |
+
+效能（本機）：端到端場景約 0.02 s、避碰基準案例約 0.02 s、RPO 基準案例約 0.13 s（Python 版分別約 1 s、3 s、16 s）。
 
 ### 衛星任務規劃（`/mission`）
 
@@ -173,6 +206,12 @@ src/
   rpo.rs        RPO 相對接近場景
   mission.rs    任務規劃（地面站過頂、30 s 標記）
   tiles.rs      網路圖磚代理、Himawari 最新時刻
+  starlink.rs   Starlink 分析（含 NRLMSISE-00 離軌預測）
+  story.rs      StoryMap 故事頁
+  lab.rs        會合與機動實驗室頁面與 /api/lab/*
+  phase2/       第二階段引擎：時間尺度、EOP、框架、力模型、RK4、SGP4 星曆、近接搜尋、Pc、
+                適用性篩選、協方差傳播、場景 schema、批次、避碰（maneuver.rs）、RPO（rpo.rs）
+  bin/phase2_cli.rs  跨語言比對命令列工具
   state.rs      索引背景重建、歷史索引、快取
   api.rs        主頁 HTTP 路由；api_phase2.rs 台北／RPO／海纜路由
   assets.rs     內嵌前端資產
@@ -183,3 +222,22 @@ web/cesium/     CesiumJS 1.114
 vendor/astronomy/ astronomy-engine C 原始碼（MIT，Don Cross）
 config/         內建預設：classification_rules.yaml、ssn_stations.geojson、overpass_cats.yaml、rpo_presets.json
 ```
+
+## 版本紀錄
+
+### v0.1.6（2026-11-18）
+
+新增
+- **會合與機動實驗室 `/lab`**（第二階段 Sprint 0–3）：批次會合分析、場景 JSON、避碰決策、RPO 控制模擬四個分頁；繁中／英／日介面。
+- **第二階段計算引擎 `src/phase2/`**：IAU-2006/2000A 框架轉換與 EOP、GCRF 數值傳播（J2–J4、阻力）、自適應近接極小值搜尋、Foster／Chan 碰撞機率、三態適用性篩選、協方差傳播、場景 schema 驗證、避碰方案搜尋、RPO 控制與 abort_to_hold。
+- **`phase2_cli`**：與 Python 線上版逐層比對的命令列工具。
+- **`/starlink`、`/story`、`/orbit-tuner`** 由 Python 版移植（先前顯示「尚未移植」說明頁）。
+
+修改
+- RPO 相對接近（`/rpo`）：取樣最小值前後逐秒精算 TCA，舊版快取自動重算。
+- JSON 浮點數解析改為正確捨入（serde_json `float_roundtrip`），避免讀入的數值末位偏差。
+- `sync_web.py` 一併同步 `static/docs`（故事頁引用的 PDF、QR 圖）與 Lab 頁面資產。
+
+### v0.1.5（2026-11-17）
+
+- 可自訂右下角 Logo（exe 同資料夾的 `logo.png`／`logo.jpg`）；接近事件排除對接中的太空站艙段；軌道歷史提示本地資料保留天數。
