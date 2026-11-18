@@ -156,7 +156,9 @@ def _all_pars(doc):
 
 
 def fill_front_matter(doc) -> None:
-    rep = [("MID-RPT-01", META["docno"]), ("Issue 00 Revision 00", "Issue 00 Revision 01"),
+    new_issue = META.get("new_issue", False)           # 新文件：只列 0000 一列
+    nrev = 0 if new_issue else 1 + len(META.get("prev_revs", []))   # 本次改版序號（0000 為初版）
+    rep = [("MID-RPT-01", META["docno"]), ("Issue 00 Revision 00", f"Issue 00 Revision {nrev:02d}"),
            ("2026/07/28", META["date"]), ("期中進度報告", META["title"]), ("期中報告", META["short"])]
     for p in _all_pars(doc):
         for old, new in rep:
@@ -171,22 +173,28 @@ def fill_front_matter(doc) -> None:
                         if txt.startswith("MID-RPT") or txt in ("2026/07/28", "0000"):
                             if "w:fldChar" not in p._p.xml and p.runs:
                                 p.runs[0].text = (META["docno"] if txt.startswith("MID") else
-                                                  "0001" if txt == "0000" else META["date"])
+                                                  f"{nrev:04d}" if txt == "0000" else META["date"])
                                 for r in p.runs[1:]:
                                     r.text = ""
     # 變更紀錄表：第一張表
     t = doc.tables[0]
-    rows = [("0000", "2026/09/09", "New Issue（期末報告初版）", "All."),
-            ("0001", META["date"], META.get("rev_note", "增修"), META.get("rev_pages", "—"))]
+    # 環境變數 TASA_PREV_REVS（JSON：[[日期, 說明, 影響頁次], ...]）可列出本次以前之各次改版
+    rows = [("0000", "2026/09/09", "New Issue（期末報告初版）", "All.")]
+    rows += [(f"{i:04d}", d, n, pg) for i, (d, n, pg) in enumerate(META.get("prev_revs", []), 1)]
+    rows += [(f"{nrev:04d}", META["date"], META.get("rev_note", "增修"), META.get("rev_pages", "—"))]
+    if new_issue:
+        rows = [("0000", META["date"], META.get("rev_note", "New Issue"), META.get("rev_pages", "All."))]
     first = t.rows[1]
     for c in first.cells:                 # 範本儲存格內有多個空段落撐高列高：只留第一段
         for extra in c.paragraphs[1:]:
             extra._p.getparent().remove(extra._p)
+    last_tr = first._tr
     for k, vals in enumerate(rows):
         row = first if k == 0 else None
         if row is None:
             new_tr = copy.deepcopy(first._tr)
-            first._tr.addnext(new_tr)
+            last_tr.addnext(new_tr)
+            last_tr = new_tr
             row = t.rows[k + 1]
         cols = [0, 1, 3, 4]
         for ci, v in zip(cols, vals):
@@ -198,7 +206,7 @@ def fill_front_matter(doc) -> None:
                     r.text = ""
             else:
                 ps[0].add_run(v)
-        if k == 1:
+        if k >= 1:
             c2 = row.cells[2]
             for r in c2.paragraphs[0].runs:
                 r.text = ""
@@ -336,10 +344,15 @@ def add_table(doc, rows, lang):
                 p.paragraph_format.first_line_indent = None
                 p.paragraph_format.line_spacing_rule = None
                 p.paragraph_format.line_spacing = 1.0
+                if ri == 0:
+                    p.paragraph_format.keep_with_next = True   # 表頭不與表身分頁
                 for r in p.runs:
                     if ri == 0:
                         r.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
                         r.bold = True
+        if ri == 0:   # 跨頁時重複表頭
+            trPr = row._tr.get_or_add_trPr()
+            trPr.append(trPr.makeelement(qn("w:tblHeader"), {qn("w:val"): "true"}))
     # 表格後留一點間距
     sp = doc.add_paragraph(style="Normal")
     sp.paragraph_format.space_after = Pt(4)
@@ -391,8 +404,11 @@ def _template_document(*_a, **_k):
 def convert(md_path, out_path, docno, title, rev_note="增修", rev_pages="—", template=TEMPLATE, date=None):
     import datetime
     date = date or datetime.date.today().strftime("%Y/%m/%d")     # 封面、頁首、變更紀錄之日期，預設為轉檔當日
+    import json, os
     META.update(docno=docno, title=title, short="期末報告", date=date,
-                rev_note=rev_note, rev_pages=rev_pages, template=template)
+                rev_note=rev_note, rev_pages=rev_pages, template=template,
+                prev_revs=json.loads(os.environ.get("TASA_PREV_REVS", "[]")),
+                new_issue=os.environ.get("TASA_NEW_ISSUE") == "1")
     _seen_h3["v"] = False
     m.BODY_PT = 12
     m.IMG_W = Cm(16.0)

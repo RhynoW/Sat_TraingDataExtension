@@ -10,7 +10,8 @@
   ids ：IDS 精密定軌衛星，限 IDS_START 之後（太空天氣資料起日）；營運方認證安靜期（兩端各縮 24h）
         內之複核項計為誤報，以每千安靜星日表示；點火視窗 ±24h 內有複核項且 L1 未涵蓋者計為補列。
 
-用法：python docs/validate_lowconf_full.py meme [n_sats] | ids
+用法：python docs/validate_lowconf_full.py meme [n_sats] | meme_all | ids | ids_all
+      （ids_all：全部 IDS 衛星完整歷史，以 data/space_weather_full/SW-All.csv 補齊 2021 年以前之太空天氣）
 輸出：data/benchmark/lowconf_full_<mode>.csv、..._items.csv
 """
 import os
@@ -125,15 +126,49 @@ def ids():
     return pd.DataFrame(rows), pd.DataFrame(items_all)
 
 
+SW_FULL = ROOT / "data/space_weather_full/SW-All.csv"   # CelesTrak 1957 起之完整太空天氣（2026-11-18 下載）
+
+
+def use_full_space_weather():
+    """擴大樣本用（2026-11-18）：space_weather_ap.csv 與 f107_cache.csv 分別自 2021-01、2004-10 起，
+    更早之期間阻力模型只能用預設值。此處只在本程式內以 CelesTrak 完整檔補齊較早日期；
+    與既有檔重疊之日期一律沿用既有檔，使 2021 年以後之結果與原評估一致。不修改 App 使用之檔案。"""
+    import atmospheric_drag as ad
+    sw = ad.load_space_weather()                       # 既有檔（2021-01 起）
+    full = pd.read_csv(SW_FULL)
+    full["k"] = pd.to_datetime(full["DATE"]).dt.strftime("%Y-%m-%d")
+    f = pd.to_numeric(full["F10.7_OBS"], errors="coerce")
+    f81 = pd.to_numeric(full["F10.7_OBS_CENTER81"], errors="coerce")
+    ap = pd.to_numeric(full["AP_AVG"], errors="coerce")
+    add = {k: v for k, v in zip(full["k"], zip(f, f81, ap)) if k not in sw}
+    sw.update(add)
+    ad._sw_cache = sw
+    f107 = rb.load_f107()                              # 既有檔（2004-10 起）
+    f107_add = {k: v for k, v in zip(full["k"], f) if k not in f107 and np.isfinite(v)}
+    f107.update(f107_add)
+    rb.load_f107 = lambda: f107
+    print(f"太空天氣補齊：NRLMSIS 輸入 +{len(add)} 日，F10.7（P5）+{len(f107_add)} 日", flush=True)
+
+
 def main():
+    global IDS_START
     mode = sys.argv[1]
-    R, I = meme(int(sys.argv[2]) if len(sys.argv) > 2 else 40) if mode == "meme" else ids()
+    if mode == "ids_all":                              # 全部 IDS 衛星之完整歷史
+        use_full_space_weather()
+        IDS_START = pd.Timestamp("1990-01-01", tz="UTC")
+        R, I = ids()
+    elif mode == "meme_all":                           # 全部 MEME 衛星（283 顆）
+        R, I = meme(10_000)
+    elif mode == "meme":
+        R, I = meme(int(sys.argv[2]) if len(sys.argv) > 2 else 40)
+    else:
+        R, I = ids()
     out = ROOT / f"data/benchmark/lowconf_full_{mode}.csv"
     out.parent.mkdir(parents=True, exist_ok=True)
     R.to_csv(out, index=False, encoding="utf-8-sig")
     I.to_csv(out.with_name(out.stem + "_items.csv"), index=False, encoding="utf-8-sig")
     s = R.sum(numeric_only=True)
-    if mode == "meme":
+    if mode.startswith("meme"):
         miss = s["n_ep"] - s["ep_l1"]
         print(f"\n{len(R)} 顆、{s['days']:.0f} 星日；真值事件 {s['n_ep']:.0f}，L1 涵蓋 {s['ep_l1']:.0f}，未涵蓋 {miss:.0f}")
         for k in ("阻力", "融合", "L2"):

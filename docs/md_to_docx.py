@@ -408,6 +408,28 @@ def add_hr(doc, lang):
 # --------------------------------------------------------------------------
 # 主轉換
 # --------------------------------------------------------------------------
+def add_code_block(doc, code_lines, lang):
+    """程式碼區塊（``` 圍欄）：等寬字型、淺灰底、保留行首空白，整段一個段落以換行分隔。"""
+    from docx.oxml import OxmlElement
+    par = doc.add_paragraph()
+    pf = par.paragraph_format
+    pf.left_indent = Cm(0.4)
+    pf.space_before = Pt(3)
+    pf.space_after = Pt(6)
+    pf.line_spacing = 1.0
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:color"), "auto")
+    shd.set(qn("w:fill"), "F2F2F2")
+    par._p.get_or_add_pPr().append(shd)
+    for k, line in enumerate(code_lines):
+        run = par.add_run(line.replace("	", "    "))
+        style_run(run, lang, 8.5, code=True)
+        if k < len(code_lines) - 1:
+            run.add_break()
+    return par
+
+
 def convert(md_path, out_path, lang):
     md_path, out_path = Path(md_path), Path(out_path)
     text = md_path.read_text(encoding="utf-8")
@@ -431,6 +453,20 @@ def convert(md_path, out_path, lang):
         s = ln.strip()
 
         if not s:
+            i += 1
+            continue
+
+        # 程式碼區塊（``` 圍欄，可縮排於清單內）
+        if s.startswith("```"):
+            ind = len(ln) - len(ln.lstrip())
+            buf = []
+            i += 1
+            while i < n and not lines[i].strip().startswith("```"):
+                raw = lines[i]
+                buf.append(raw[ind:] if raw[:ind].strip() == "" else raw)
+                i += 1
+            add_code_block(doc, buf, lang)
+            stats["para"] += 1
             i += 1
             continue
 

@@ -4,7 +4,7 @@
   fig_sys_architecture.png  系統總架構（資料 → 管線 → 偵測方法 → 兩種輸出 → 分析人員複核）
   fig_sys_r7_flow.png       R7 單星報表判定流程（候選事件主線＋低置信複核項支線）
   fig_sys_routing.png       App 統一偵測摘要之路由（Starlink／非 Starlink／再入）
-  fig_sys_app_vs_r7.png     App 即時查詢與 R7 單星報表之對照
+  fig_sys_app_vs_r7.png     統一偵測摘要與 R7 單星報表之對照
 
 用法：python docs/gen_fig_system_flow.py          （預設：輸出上列 docs/fig_sys_*.png，供報告引用）
       python docs/gen_fig_system_flow.py --pub    （另輸出 docs/figures_pub/ 之中英 × 白底／黑底四版本，600 dpi PNG＋PDF）
@@ -137,11 +137,11 @@ def draw_architecture():
 
     # 第 4 列：兩種輸出
     y4, h4 = 0.155, 0.135
-    box(ax, 0.06, y4, 0.40, h4, t("③-A　App 即時查詢（統一偵測摘要）", "③-A  App query (unified detection summary)"),
+    box(ax, 0.06, y4, 0.40, h4, t("③-A　統一偵測摘要（App 附錄 D，參考檢視）", "③-A  Unified detection summary (App appendix D, reference)"),
         t("依衛星類型選主判方法：\nStarlink → Model 1＋融合評分器\n非 Starlink → NRLMSIS 阻力殘差（Model 2 佐證）",
           "Primary method chosen by satellite type:\nStarlink → Model 1 + fusion scorer\n"
           "Non-Starlink → NRLMSIS drag residual (Model 2 as support)"), C_OUT)
-    box(ax, 0.54, y4, 0.40, h4, t("③-B　R7 單星報表（F1／F2 PDF）", "③-B  R7 single-satellite report (F1/F2 PDF)"),
+    box(ax, 0.54, y4, 0.40, h4, t("③-B　R7 單星報表（App 主結果／PDF）", "③-B  R7 single-satellite report (App main result / PDF)"),
         t("所有衛星同一流程：\nL1 規則決定候選事件，其他方法只影響等級\n輸出候選事件、證據等級、低置信複核項",
           "Same workflow for every satellite:\nL1 rules define candidate events; other methods set the grade only\n"
           "Outputs candidate events, evidence grades, low-confidence review items"), C_OUT)
@@ -274,14 +274,14 @@ def draw_routing():
 # ── 圖 4：App 即時查詢與 R7 報表之對照（第九章問答用） ─────────────────────────
 def draw_app_vs_r7():
     fig, ax = canvas(12, 5.0)
-    ax.text(0.5, 0.965, t("兩種輸出之判定方式：App 即時查詢與 R7 單星報表",
-                          "Decision logic of the two outputs: App query vs R7 single-satellite report"),
+    ax.text(0.5, 0.965, t("兩種判定方式：統一偵測摘要與 R7 單星報表",
+                          "Two decision workflows: unified detection summary vs R7 single-satellite report"),
             ha="center", va="top", fontsize=14.5, fontweight="bold", color=INK)
     w, g, h = 0.165, 0.035, 0.2
     xs = [0.2 + i * (w + g) for i in range(4)]
     # App：再入守門 → 是否 Starlink → 分支（Starlink／非 Starlink）
     ya = 0.56
-    box(ax, 0.02, ya, 0.15, h, t("App 即時查詢\n（互動瀏覽）", "App query\n(interactive)"), col=C_OUT, title_size=11)
+    box(ax, 0.02, ya, 0.15, h, t("統一偵測摘要\n（App 附錄 D）", "Unified\nsummary\n(App appx. D)"), col=C_OUT, title_size=11)
     box(ax, xs[0], ya, w, h, t("再入守門", "Re-entry gate"), t("近地點過低\n→ 機動數 0", "Perigee too low\n→ 0 maneuvers"),
         C_RULE, 10.5, 9)
     box(ax, xs[1], ya, w, h, t("是否 Starlink", "Starlink?"), t("編目名稱規則\n（非 AI）", "Catalog-name rule\n(not AI)"),
@@ -296,7 +296,7 @@ def draw_app_vs_r7():
         col=C_RULE, title_size=9.8)
     for x0, x1 in ((0.17, xs[0]), (xs[0] + w, xs[1]), (xs[1] + w, bx)):
         arrow(ax, (x0 + 0.003, ya + h / 2), (x1 - 0.004, ya + h / 2), color=INK)
-    ax.text(0.02, ya + h + 0.03, t("Model 1、Model 2 只用於 App 即時查詢", "Model 1 and Model 2 are used only in the App query"),
+    ax.text(0.02, ya + h + 0.03, t("Model 1、Model 2 只用於統一偵測摘要（參考檢視）", "Model 1 and Model 2 are used only in the unified summary (reference view)"),
             fontsize=9.6, color=C_AI[1], fontweight="bold", va="bottom")
     # R7：四步
     yr = 0.2
@@ -304,7 +304,7 @@ def draw_app_vs_r7():
                                    "R6 / R7 are report-software revisions, not models; R7 has no routing and "
                                    "does not use Model 2"), fontsize=9.6,
             color=C_RULE[1], fontweight="bold", va="bottom")
-    box(ax, 0.02, yr, 0.15, h, t("R7 單星報表\n（正式交付）", "R7 report\n(formal\ndeliverable)"), col=C_OUT, title_size=11)
+    box(ax, 0.02, yr, 0.15, h, t("R7 單星報表\n（App 主結果\n／PDF）", "R7 report\n(App main\nresult / PDF)"), col=C_OUT, title_size=11)
     steps = [(t("L1 規則標點", "L1 rule flags"), t("P1–P6\n（非 AI）", "P1–P6\n(not AI)"), C_RULE),
              (t("合併候選事件", "Event merging"), t("48 小時連鎖\n（非 AI）", "48-h chaining\n(not AI)"), C_RULE),
              (t("比對輔助通道", "Aux. channels"), t("含 ML／融合（AI）\n非 Starlink 不決定 E3",
@@ -316,9 +316,10 @@ def draw_app_vs_r7():
         box(ax, x, yr, w, h, tt, bdy, c, 10.5, 9)
         arrow(ax, (prev + 0.003, yr + h / 2), (x - 0.004, yr + h / 2), color=INK)
         prev = x + w
-    ax.text(0.5, 0.09, t("App 依衛星類型選主判方法；R7 對所有衛星採同一流程，事件只由 L1 規則產生。"
+    ax.text(0.5, 0.09, t("統一偵測摘要依衛星類型選主判方法；App 頁面主結果與 PDF 報表皆為 R7，對所有衛星採同一流程，事件只由 L1 規則產生。"
                          "TASA 15 顆衛星之偵測結果皆以 R7 產生。",
-                         "The App selects the primary method by satellite type; R7 applies one workflow to all "
+                         "The unified summary selects the primary method by satellite type; the App main result and the PDF are "
+                         "both R7, which applies one workflow to all "
                          "satellites, with events generated only by L1 rules.\nAll results for the 15 TASA "
                          "satellites were produced with R7."), ha="center", fontsize=9.6, color=MUTED)
     return fig
