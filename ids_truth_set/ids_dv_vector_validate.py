@@ -45,6 +45,18 @@ OUT = Path(__file__).parent / "ids_dv_vector_validate.csv"
 
 MU = 398600.4418               # km^3/s^2
 TAI_UTC = 37.0
+
+
+# TAI−UTC 依 epoch 查閏秒表（2017 起 37 s；之前 32–36 s）
+_LEAPS = [("1999-01-01", 32), ("2006-01-01", 33), ("2009-01-01", 34), ("2012-07-01", 35), ("2015-07-01", 36), ("2017-01-01", 37)]
+
+
+def tai_utc(t):
+    s = 32
+    for d0, v in _LEAPS:
+        if t >= dt.datetime.fromisoformat(d0):
+            s = v
+    return float(s)
 BR_IN_D, BR_OUT_D = 0.3, 3.0
 MIN_SIDE = 3
 TARGETS = [(54754, "SWOT"), (36508, "CryoSat-2")]
@@ -65,7 +77,7 @@ def load_tle(nid):
 
 
 def _ep(tai_str):
-    return dt.datetime.fromisoformat(tai_str).timestamp() - TAI_UTC
+    return dt.datetime.fromisoformat(tai_str).timestamp() - tai_utc(dt.datetime.fromisoformat(tai_str))
 
 
 def step(t, y, s_ep, e_ep):

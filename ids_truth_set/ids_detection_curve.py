@@ -44,6 +44,18 @@ OUT = Path(__file__).parent / "ids_detection_curve_jason3.csv"
 
 NORAD_J3 = 41240
 TAI_UTC = 37.0                 # s
+
+
+# TAI−UTC 依 epoch 查閏秒表（2017 起 37 s；之前 32–36 s）
+_LEAPS = [("1999-01-01", 32), ("2006-01-01", 33), ("2009-01-01", 34), ("2012-07-01", 35), ("2015-07-01", 36), ("2017-01-01", 37)]
+
+
+def tai_utc(t):
+    s = 32
+    for d0, v in _LEAPS:
+        if t >= dt.datetime.fromisoformat(d0):
+            s = v
+    return float(s)
 PUB = fp.wants_pub()
 PLOT_ONLY = "--plot-only" in sys.argv or PUB
 K_SIGMA = 3.0                  # 偵測門檻（3σ）
@@ -68,7 +80,7 @@ def load_tle(nid):
 
 
 def _to_epoch(tai_str):
-    return dt.datetime.fromisoformat(tai_str).timestamp() - TAI_UTC
+    return dt.datetime.fromisoformat(tai_str).timestamp() - tai_utc(dt.datetime.fromisoformat(tai_str))
 
 
 def observed_step(t, a, s_ep, e_ep):

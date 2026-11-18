@@ -8,9 +8,10 @@ ids_sigma_calibrate.py — 用 ILRS/IDS 認證安靜期，實測各高度 TLE �
       安靜期由 operator 點火日誌認證，可實測真實 σ，把表 11 的高度帶真正校準。
 
 方法（trend-immune）：
-  在每個安靜區間內取 TLE 的 sma 序列，於區間內做「相鄰差分」——差分消去慢變趨勢
-  （大氣阻力衰減），殘差即雜訊。以 MAD 穩健估計：σ ≈ 1.4826·MAD(Δsma)/√2。
-  另以「區間內去線性趨勢後殘差 MAD」交叉驗證。兩法一致即可信。
+  主估計量：區間內多項式去趨勢後殘差之 1.4826·median|r|（弧尺度變異）。
+  交叉估計量：原始相鄰差 1.4826·median|Δa|/√2——注意此式未去趨勢、未置中，且隱含相鄰誤差
+  不相關；實測相鄰誤差強烈正相關（ρ1 ≈ 0.9），故它是「短間隔增量尺度」而非單筆誤差。
+  2026-11-18 審查修訂後，論文改用 docs/paperA_reviewV1_analysis.py 之置中、去趨勢版本。
 
 用法：python ids_sigma_calibrate.py
 輸出：ids_sigma_calibration.csv（每顆一列）＋ 主控台表。
@@ -31,6 +32,18 @@ DB = Path(__file__).resolve().parents[1] / "space_db.duckdb"
 QUIET = Path(__file__).parent / "ids_quiet.csv"
 RE = 6378.137
 TAI_UTC = 37.0  # s（2017 起）；對 σ 無感，仍轉以求一致
+
+
+# TAI−UTC 依 epoch 查閏秒表（2017 起 37 s；之前 32–36 s）
+_LEAPS = [("1999-01-01", 32), ("2006-01-01", 33), ("2009-01-01", 34), ("2012-07-01", 35), ("2015-07-01", 36), ("2017-01-01", 37)]
+
+
+def tai_utc(t):
+    s = 32
+    for d0, v in _LEAPS:
+        if t >= dt.datetime.fromisoformat(d0):
+            s = v
+    return float(s)
 
 # ids_id → (norad, 顯示名)。norad 已對 space_db 確認存在。
 TARGETS = [
@@ -76,8 +89,8 @@ def load_quiet(ids_id):
         if r["ids_id"] != ids_id:
             continue
         # TAI → UTC（epoch 秒）
-        s = dt.datetime.fromisoformat(r["quiet_start_tai"]).timestamp() - TAI_UTC
-        e = dt.datetime.fromisoformat(r["quiet_end_tai"]).timestamp() - TAI_UTC
+        s = dt.datetime.fromisoformat(r["quiet_start_tai"]).timestamp() - tai_utc(dt.datetime.fromisoformat(r["quiet_start_tai"]))
+        e = dt.datetime.fromisoformat(r["quiet_end_tai"]).timestamp() - tai_utc(dt.datetime.fromisoformat(r["quiet_end_tai"]))
         out.append((s, e))
     return out
 
