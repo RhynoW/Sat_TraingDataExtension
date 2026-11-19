@@ -4287,67 +4287,89 @@ def render_storymap_case10():
 
 def _pipeline_flowchart_fig() -> go.Figure:
     """畫出偵測管線流程圖（純 Plotly shapes/annotations，不依賴 graphviz 系統套件）。
-    高對比版：實心飽和底色＋白色粗體字，非 AI／AI 兩色系分色，加大字級。"""
+    2026-11-19 依期末報告 R7 單星報表流程重繪：L1 規則主線決定候選事件；
+    L2、阻力殘差、Model 1、融合評分器為平行輔助通道，只影響證據等級並供低置信複核項；
+    融合評分器輸入為 L2 四通道＋阻力殘差（不含 L1 與 Model 1）；最後由分析人員複核。"""
+    BLUE, GRAY, PURPLE, SLATE, GREEN = "#0D47A1", "#37474F", "#6A1B9A", "#546E7A", "#1B5E20"
     boxes = [
-        # (x, y, w, h, label, color)
-        (0.3, 5.5, 3.0, 1.0, T3(
+        (0.3, 5.9, 3.4, 0.9, T3(
             "①  TLE 逐日下載<br>（Space-Track／CelesTrak）",
             "①  TLE毎日ダウンロード<br>（Space-Track／CelesTrak）",
-            "①  Daily TLE download<br>(Space-Track / CelesTrak)"), "#0D47A1"),
-        (0.3, 4.1, 3.0, 1.0, T3(
+            "①  Daily TLE download<br>(Space-Track / CelesTrak)"), BLUE),
+        (0.3, 4.7, 3.4, 0.9, T3(
             "②  換算軌道根數<br>（SGP4 → a/e/i/RAAN/…）",
             "②  軌道要素へ変換<br>（SGP4 → a/e/i/RAAN/…）",
-            "②  Convert to orbital elements<br>(SGP4 → a/e/i/RAAN/…)"), "#0D47A1"),
-        (-0.2, 2.5, 1.9, 1.0, T3(
-            "③a  L1 規則式<br>P1–P6 門檻<br><b>非 AI</b>",
-            "③a  L1ルールベース<br>P1–P6閾値<br><b>非AI</b>",
-            "③a  L1 rule-based<br>P1–P6 thresholds<br><b>Non-AI</b>"), "#37474F"),
-        (1.85, 2.5, 1.9, 1.0, T3(
-            "③b  L2 統計通道<br>CUSUM/BOCPD/SSA/MAD3σ<br><b>非 AI</b>",
-            "③b  L2統計チャネル<br>CUSUM/BOCPD/SSA/MAD3σ<br><b>非AI</b>",
-            "③b  L2 statistical channels<br>CUSUM/BOCPD/SSA/MAD3σ<br><b>Non-AI</b>"), "#37474F"),
-        (3.9, 2.5, 1.9, 1.0, T3(
-            "③c  物理阻力殘差<br>NRLMSIS<br><b>非 AI</b>",
-            "③c  物理的抵抗残差<br>NRLMSIS<br><b>非AI</b>",
-            "③c  Physical drag residual<br>NRLMSIS<br><b>Non-AI</b>"), "#37474F"),
-        (5.95, 2.5, 1.9, 1.0, T3(
-            "③d  ML 分類器<br>LightGBM（MEME 訓練）<br><b>AI</b>",
-            "③d  MLクラシファイア<br>LightGBM（MEME訓練）<br><b>AI</b>",
-            "③d  ML classifier<br>LightGBM (trained on MEME)<br><b>AI</b>"), "#6A1B9A"),
-        (1.85, 1.1, 3.9, 1.0, T3(
-            "④  L3 融合評分器　HistGradientBoosting　<b>AI</b>",
-            "④  L3融合スコアリングモデル　HistGradientBoosting　<b>AI</b>",
-            "④  L3 fusion scoring model, HistGradientBoosting  <b>AI</b>"), "#6A1B9A"),
-        (1.85, -0.2, 3.9, 0.9, T3(
-            "⑤  最終機率＋判定<br>（對照 14+9 顆真值驗證）",
-            "⑤  最終確率＋判定<br>（14+9機の真値で検証）",
-            "⑤  Final probability + determination<br>(validated against 14+9 satellites of ground truth)"), "#1B5E20"),
+            "②  Convert to orbital elements<br>(SGP4 → a/e/i/RAAN/…)"), BLUE),
+        (-0.2, 3.1, 2.4, 1.1, T3(
+            "③  L1 規則（主判）<br>P2×P5×P6 有效門檻<br>P1 抑制、P4 補標<br>非 AI",
+            "③  L1ルール（主判定）<br>P2×P5×P6 実効閾値<br>P1 抑制・P4 補完<br>非AI",
+            "③  L1 rules (primary)<br>P2×P5×P6 effective threshold<br>P1 suppression, P4 extension<br>Non-AI"), GRAY),
+        (2.75, 3.1, 2.1, 1.0, T3(
+            "L2 統計變點<br>CUSUM/BOCPD/SSA/MAD3σ<br>非 AI",
+            "L2 統計的変化点<br>CUSUM/BOCPD/SSA/MAD3σ<br>非AI",
+            "L2 change points<br>CUSUM/BOCPD/SSA/MAD3σ<br>Non-AI"), GRAY),
+        (5.05, 3.1, 2.1, 1.0, T3(
+            "物理阻力殘差<br>NRLMSIS<br>非 AI",
+            "物理的抵抗残差<br>NRLMSIS<br>非AI",
+            "Physical drag residual<br>NRLMSIS<br>Non-AI"), GRAY),
+        (7.35, 3.1, 2.1, 1.0, T3(
+            "Model 1　ML 窗口<br>LightGBM（Starlink MEME）<br>AI",
+            "Model 1　ML窓口<br>LightGBM（Starlink MEME）<br>AI",
+            "Model 1 ML window<br>LightGBM (Starlink MEME)<br>AI"), PURPLE),
+        (2.75, 1.8, 4.4, 0.95, T3(
+            "融合評分器　HistGradientBoosting　AI<br>輸入：L2 四通道＋阻力殘差（±24 h 窗）",
+            "融合スコアリングモデル　HistGradientBoosting　AI<br>入力：L2 4チャネル＋抵抗残差（±24 h 窓）",
+            "Fusion scorer, HistGradientBoosting  AI<br>Inputs: 4 L2 channels + drag residual (±24 h window)"), PURPLE),
+        (-0.2, 1.8, 2.4, 0.95, T3(
+            "④  合併為候選事件<br>48 h 連鎖；連續機動段",
+            "④  候補イベントに統合<br>48 h 連鎖；連続機動区間",
+            "④  Merge into candidate events<br>48 h chaining; continuous segments"), GRAY),
+        (-0.2, 0.3, 2.4, 1.0, T3(
+            "⑤  證據等級<br>E3／E2／E1／D<br>固定規則",
+            "⑤  証拠レベル<br>E3／E2／E1／D<br>固定ルール",
+            "⑤  Evidence grade<br>E3 / E2 / E1 / D<br>fixed rules"), GRAY),
+        (4.0, 0.3, 3.2, 1.0, T3(
+            "支線　低置信複核項<br>L1 未標記之變化<br>不計入事件、不給等級",
+            "支線　低信頼度レビュー項目<br>L1 未検出の変化<br>イベントに計上せず、レベルなし",
+            "Branch: low-confidence review items<br>changes L1 did not flag<br>not counted as events, no grade"), SLATE),
+        (-0.2, -1.15, 7.4, 0.9, T3(
+            "⑥  分析人員依優先順序複核（系統只提示，不確認機動）",
+            "⑥  分析者が優先順位に従いレビュー（システムは提示のみ、機動を確定しない）",
+            "⑥  Analysts review in priority order (the system flags; it does not confirm maneuvers)"), GREEN),
     ]
     fig = go.Figure()
+    # 輔助通道群組框（虛線）
+    fig.add_shape(type="rect", x0=2.55, y0=1.62, x1=9.6, y1=4.45,
+                  line=dict(color="#90A4AE", width=2, dash="dash"), fillcolor="rgba(0,0,0,0)", layer="below")
+    fig.add_annotation(x=6.08, y=4.62, showarrow=False, font=dict(size=13, color="#607D8B"),
+                       text=T3("<b>輔助通道（與 L1 平行計算）</b>", "<b>補助チャネル（L1 と並行に計算）</b>",
+                               "<b>Auxiliary channels (computed in parallel with L1)</b>"))
     for x, y, w, h, label, color in boxes:
         fig.add_shape(type="rect", x0=x, y0=y, x1=x + w, y1=y + h,
-                      line=dict(color="#FFFFFF", width=2), fillcolor=color, opacity=1.0,
-                      layer="below")
-        fig.add_annotation(x=x + w / 2, y=y + h / 2, text=f"<b>{label}</b>",
-                           showarrow=False, font=dict(size=16, color="#FFFFFF", family="Arial Black, Arial"),
-                           align="center")
-    # ①→②
-    fig.add_annotation(x=1.8, y=4.1, ax=1.8, ay=5.5, xref="x", yref="y", axref="x", ayref="y",
-                       showarrow=True, arrowhead=2, arrowsize=1.5, arrowcolor="#FFD54F", arrowwidth=3)
-    # ②→③a/b/c/d
-    for bx in (0.75, 2.8, 4.85, 6.9):
-        fig.add_annotation(x=bx, y=3.5, ax=1.8, ay=4.1, xref="x", yref="y", axref="x", ayref="y",
-                           showarrow=True, arrowhead=2, arrowsize=1.3, arrowcolor="#FFD54F", arrowwidth=2.5)
-    # ③a/b/c/d→④
-    for bx in (0.75, 2.8, 4.85, 6.9):
-        fig.add_annotation(x=3.8, y=2.1, ax=bx, ay=2.5, xref="x", yref="y", axref="x", ayref="y",
-                           showarrow=True, arrowhead=2, arrowsize=1.3, arrowcolor="#FFD54F", arrowwidth=2.5)
-    # ④→⑤
-    fig.add_annotation(x=3.8, y=0.7, ax=3.8, ay=1.1, xref="x", yref="y", axref="x", ayref="y",
-                       showarrow=True, arrowhead=2, arrowsize=1.5, arrowcolor="#FFD54F", arrowwidth=3)
-    fig.update_xaxes(visible=False, range=[-0.5, 8.1])
-    fig.update_yaxes(visible=False, range=[-0.5, 6.7])
-    fig.update_layout(height=650, margin=dict(l=10, r=10, t=10, b=10), plot_bgcolor="rgba(0,0,0,0)",
+                      line=dict(color="#FFFFFF", width=2), fillcolor=color, opacity=1.0, layer="below")
+        fig.add_annotation(x=x + w / 2, y=y + h / 2, text=f"<b>{label}</b>", showarrow=False,
+                           font=dict(size=13, color="#FFFFFF", family="Arial"), align="center")
+
+    def arrow(x0, y0, x1, y1, w=2.5):
+        fig.add_annotation(x=x1, y=y1, ax=x0, ay=y0, xref="x", yref="y", axref="x", ayref="y",
+                           showarrow=True, arrowhead=2, arrowsize=1.3, arrowcolor="#FFD54F", arrowwidth=w)
+    arrow(2.0, 5.9, 2.0, 5.6, 3)          # ①→②
+    arrow(1.4, 4.7, 1.0, 4.2)             # ②→L1
+    arrow(2.6, 4.7, 4.6, 4.45)            # ②→輔助通道
+    arrow(1.0, 3.1, 1.0, 2.75)            # L1→④
+    arrow(3.8, 3.1, 4.2, 2.75)            # L2→融合
+    arrow(6.1, 3.1, 5.7, 2.75)            # 阻力殘差→融合
+    arrow(1.0, 1.8, 1.0, 1.3)             # ④→⑤
+    arrow(2.9, 1.62, 2.2, 1.05)           # 輔助通道→⑤
+    arrow(5.6, 1.62, 5.6, 1.3)            # 輔助通道→支線
+    arrow(1.0, 0.3, 1.0, -0.25)           # ⑤→⑥
+    arrow(5.6, 0.3, 5.6, -0.25)           # 支線→⑥
+    fig.add_annotation(x=3.45, y=1.12, showarrow=False, align="left", font=dict(size=11, color="#607D8B"),
+                       text=T3("±24 h 比對：只影響等級<br>不新增、不刪除事件", "±24 h 照合：レベルのみに影響<br>イベントを追加・削除しない",
+                               "±24 h check: affects grade only<br>never adds or removes events"))
+    fig.update_xaxes(visible=False, range=[-0.5, 9.8])
+    fig.update_yaxes(visible=False, range=[-1.4, 7.0])
+    fig.update_layout(height=700, margin=dict(l=10, r=10, t=10, b=10), plot_bgcolor="rgba(0,0,0,0)",
                       paper_bgcolor="rgba(0,0,0,0)")
     return fig
 
@@ -4403,12 +4425,15 @@ def render_storymap_case1():
     st.plotly_chart(_pipeline_flowchart_fig(), use_container_width=True, key="case1_flowchart")
     st.caption(T3(
         "下方文字說明中，每個步驟前面的顏色標記對應流程圖中的色塊：　"
-        "🔵 藍＝資料前處理　⬛ 灰＝非 AI（規則／統計／物理模型）　🟣 紫＝AI（機器學習）　🟢 綠＝最終驗證",
+        "🔵 藍＝資料前處理　⬛ 灰＝非 AI（規則／統計／物理模型）　🟣 紫＝AI（機器學習）　🟢 綠＝人工複核。"
+        "流程依期末報告（2026-11-15）之 R7 單星報表：L1 規則決定候選事件，其他通道只影響證據等級。",
         "以下の文章説明において、各ステップの前にある色のマークは、フロー図中の色ブロックに対応している：　"
-        "🔵 青＝データ前処理　⬛ グレー＝非AI（ルール／統計／物理モデル）　🟣 紫＝AI（機械学習）　🟢 緑＝最終検証",
+        "🔵 青＝データ前処理　⬛ グレー＝非AI（ルール／統計／物理モデル）　🟣 紫＝AI（機械学習）　🟢 緑＝人によるレビュー。"
+        "フローは期末報告（2026-11-15）の R7 単一衛星レポートに基づく：候補イベントは L1 ルールが決め、他のチャネルは証拠レベルにのみ影響する。",
         "In the text explanations below, the color marker before each step corresponds to a colored block "
         "in the flowchart: 🔵 Blue = data preprocessing, ⬛ Gray = non-AI (rules/statistics/physical model), "
-        "🟣 Purple = AI (machine learning), 🟢 Green = final validation",
+        "🟣 Purple = AI (machine learning), 🟢 Green = analyst review. The flow follows the R7 single-satellite "
+        "report in the final report (2026-11-15): L1 rules decide candidate events; the other channels only affect the evidence grade.",
     ))
 
     st.markdown(T3("**🔵 ①② 資料前處理**", "**🔵①②データ前処理**", "**🔵 ①② Data Preprocessing**"))
@@ -4427,22 +4452,28 @@ def render_storymap_case1():
     ))
 
     st.markdown(T3(
-        "**③ 四種平行偵測方法**（同一份軌道根數時序，同時送進四種原理完全不同的通道——詳細分類見案例二）",
-        "**③4種類の並行検知手法**（同一の軌道要素時系列を、原理がまったく異なる4つのチャネルに同時に"
+        "**③ L1 規則主判，其他通道平行輔助**（同一份軌道根數時序，同時送進原理不同的通道——詳細分類見案例二）",
+        "**③ L1 ルールが主判定、他のチャネルは並行して補助**（同一の軌道要素時系列を、原理の異なるチャネルに同時に"
         "入力する——詳細な分類は事例二を参照）",
-        "**③ Four Parallel Detection Methods** (the same orbital-element time series fed simultaneously "
-        "into four channels with completely different underlying principles — see Case 2 for detailed classification)",
+        "**③ L1 Rules Decide; Other Channels Assist in Parallel** (the same orbital-element time series is fed "
+        "simultaneously into channels with different underlying principles — see Case 2 for detailed classification)",
     ))
     st.markdown(T3(
-        "**⬛ L1 規則式 P1–P6**：人工訂定的硬門檻規則，例如「半長軸變化量 |Δa| 超過某個值」就標記為可能機動。"
-        "優點是最容易理解、最容易解釋；缺點是誤報與漏報都偏高，單獨使用不夠可靠。",
-        "**⬛ L1ルールベース P1–P6**：人手で設定されたハード閾値ルールであり、例えば「軌道長半径の変化量"
-        "|Δa|がある値を超えたら」機動の可能性ありとフラグを立てる。利点は最も理解しやすく、最も説明しやすい"
-        "こと；欠点は誤検知と見逃しの両方が高くなりがちで、単独使用では信頼性が不十分であること。",
-        "**⬛ L1 rule-based P1–P6**: manually set hard-threshold rules — for example, flagging a possible "
-        "maneuver whenever the semi-major-axis change |Δa| exceeds some value. The advantage is that it's "
-        "the easiest to understand and explain; the disadvantage is that both false positives and missed "
-        "detections tend to be high, making it unreliable when used alone.",
+        "**⬛ L1 規則 P1–P6（主判）**：逐筆檢查相鄰兩筆 TLE，半長軸變化超過有效門檻（P2 高度門檻 × P5 太陽活動倍率 × "
+        "P6 軌道族群倍率）、或傾角／離心率變化超過門檻，即標記；P1 抑制大氣阻力造成的單調小步衰減，P4 把超門檻轉換連同其後 "
+        "2 筆一起標記。P3 與 RAAN 殘差經驗證無效，R7 不使用。每個標記都能說明觸發原因；缺點是召回有限"
+        "（Starlink 真值召回約 0.32），對分散在多日的緩慢變化較不敏感。",
+        "**⬛ L1 ルール P1–P6（主判定）**：隣接する2つの TLE を1件ずつ検査し、軌道長半径の変化が実効閾値（P2 高度閾値 × "
+        "P5 太陽活動倍率 × P6 軌道群倍率）を超えるか、傾斜角／離心率の変化が閾値を超えるとフラグを立てる。P1 は大気抵抗による"
+        "単調な小さな減衰を抑制し、P4 は閾値超過の遷移とその後の2件をまとめてフラグ付けする。P3 と RAAN 残差は検証で効果が"
+        "なかったため R7 では使わない。各フラグは発火理由を説明できる；欠点は再現率が限られ（Starlink 真値再現率 約 0.32）、"
+        "数日にわたる緩やかな変化に鈍いこと。",
+        "**⬛ L1 rules P1–P6 (primary)**: each pair of adjacent TLEs is checked; a transition is flagged when the "
+        "semi-major-axis change exceeds the effective threshold (P2 altitude threshold × P5 solar-activity factor × "
+        "P6 orbit-family factor) or the inclination/eccentricity change exceeds its threshold. P1 suppresses small "
+        "monotonic drag decay; P4 flags a threshold-crossing transition together with the next 2. P3 and the RAAN "
+        "residual showed no benefit in validation and are not used in R7. Every flag can state its trigger; the "
+        "drawback is limited recall (about 0.32 against Starlink ground truth) and low sensitivity to slow multi-day changes.",
     ))
     st.markdown(T3(
         "**⬛ L2 統計變點偵測**：CUSUM（累積偏離量）、BOCPD（貝葉斯變點偵測）、SSA（奇異譜分析）、"
@@ -4467,56 +4498,72 @@ def render_storymap_case1():
         "that genuinely needs to be explained by a maneuver (see Case 5 for the detailed derivation).",
     ))
     st.markdown(T3(
-        "**🟣 ML 分類器**：用 14 顆擁有精密星曆真值的衛星資料，訓練一個 LightGBM（一種梯度提升樹模型）分類器，"
-        "直接學習「有機動 vs 無機動」在軌道根數時序上的特徵模式。",
-        "**🟣MLクラシファイア**：精密暦の真値を持つ14機の衛星データを用いて、LightGBM（勾配ブースティング"
-        "決定木モデルの一種）分類器を訓練し、「機動あり vs 機動なし」が軌道要素時系列上でどのような"
-        "特徴パターンを示すかを直接学習する。",
-        "**🟣 ML classifier**: using data from 14 satellites with precise-ephemeris ground truth, a "
-        "LightGBM (a gradient-boosted tree model) classifier is trained to directly learn the feature "
-        "patterns that distinguish \"maneuver\" from \"no maneuver\" in the orbital-element time series.",
+        "**🟣 Model 1（ML 窗口）**：LightGBM（一種梯度提升樹模型）以 40 項 TLE 軌道變化特徵學習「有機動 vs 無機動」；"
+        "現行版本以 Starlink MEME 精密星曆之機動真值訓練（契約驗收評估之原版本以規則判定之標籤訓練）。"
+        "在 R7 中為輔助通道（機率 ≥ 0.478 且軌道變化超過物理門檻），不新增、不刪除事件。",
+        "**🟣 Model 1（ML 窓口）**：LightGBM（勾配ブースティング決定木モデルの一種）が 40 項目の TLE 軌道変化特徴量から"
+        "「機動あり vs 機動なし」を学習する。現行版は Starlink MEME 精密暦の機動真値で訓練（契約検収で評価した元の版は"
+        "ルール判定のラベルで訓練）。R7 では補助チャネル（確率 ≥ 0.478 かつ軌道変化が物理閾値を超える）であり、"
+        "イベントを追加・削除しない。",
+        "**🟣 Model 1 (ML window)**: a LightGBM (gradient-boosted tree) model learns \"maneuver vs. no maneuver\" "
+        "from 40 TLE orbital-change features; the current version is trained on Starlink MEME precise-ephemeris "
+        "maneuver ground truth (the original version evaluated for contract acceptance was trained on rule-derived "
+        "labels). In R7 it is an auxiliary channel (probability ≥ 0.478 and orbital change above a physical "
+        "threshold) and never adds or removes events.",
     ))
 
-    st.markdown(T3("**🟣 ④ 融合**", "**🟣④融合**", "**🟣 ④ Fusion**"))
+    st.markdown(T3("**🟣 融合評分器**", "**🟣 融合スコアリングモデル**", "**🟣 Fusion Scorer**"))
     st.markdown(T3(
-        "L3 融合評分器把前面所有通道的分數（規則分數、統計變點分數、阻力殘差分數、ML 分類機率）當作特徵，"
-        "訓練一個 HistGradientBoosting（一種能穩健處理大量特徵與缺值的梯度提升模型）模型來統一裁決——"
-        "**不是隨便選一種方法的結果，而是讓模型學會在什麼情況下該相信哪一個通道**，綜合所有訊號做出最終判定。",
-        "L3融合スコアリングモデルは、前述のすべてのチャネルのスコア（ルールスコア、統計的変化点スコア、"
-        "抵抗残差スコア、ML分類確率）を特徴量として、HistGradientBoosting（大量の特徴量と欠損値を"
-        "ロバストに処理できる勾配ブースティングモデル）を訓練し、統一的な裁定を行う——"
-        "**いずれか一つの手法の結果を適当に選ぶのではなく、モデルにどの状況でどのチャネルを信頼すべきかを"
-        "学習させ**、すべての信号を総合して最終判定を下す。",
-        "The L3 fusion scoring model treats the scores from all the preceding channels (the rule-based "
-        "score, the statistical change-point score, the drag-residual score, and the ML classification "
-        "probability) as features, training a HistGradientBoosting model (a gradient-boosting model that "
-        "robustly handles large numbers of features and missing values) to make a unified determination — "
-        "**rather than simply picking the result of one method, it lets the model learn which channel to "
-        "trust under which circumstances**, reaching a final determination by synthesizing all signals.",
+        "融合評分器（HistGradientBoosting，一種能穩健處理大量特徵與缺值的梯度提升模型）以 284 顆 Starlink 之 MEME "
+        "真值訓練，輸入為 CUSUM、BOCPD、SSA、MAD 3σ 與阻力殘差五個通道在 ±24 小時窗內的統計量——**不含 L1 規則分數與 "
+        "Model 1 機率**。它能同時權衡多個單獨看來不明顯的訊號，在三層比較中召回最高；在 R7 中作為輔助通道與低置信複核項來源"
+        "（分數 ≥ 0.659，限 Starlink），不決定事件是否存在。",
+        "融合スコアリングモデル（HistGradientBoosting、大量の特徴量と欠損値をロバストに処理できる勾配ブースティングモデル）"
+        "は 284 機の Starlink の MEME 真値で訓練され、入力は CUSUM、BOCPD、SSA、MAD 3σ と抵抗残差の5チャネルの ±24 時間窓"
+        "内の統計量である——**L1 ルールスコアと Model 1 確率は含まない**。単独では目立たない複数の信号を同時に勘案でき、"
+        "三層比較で再現率が最も高い。R7 では補助チャネルおよび低信頼度レビュー項目の出所（スコア ≥ 0.659、Starlink のみ）"
+        "であり、イベントの有無は決めない。",
+        "The fusion scorer (HistGradientBoosting, a gradient-boosting model that robustly handles many features and "
+        "missing values) is trained on MEME ground truth for 284 Starlink satellites. Its inputs are statistics of "
+        "five channels — CUSUM, BOCPD, SSA, MAD 3σ, and the drag residual — within a ±24-hour window; **it does not "
+        "take the L1 rule score or the Model 1 probability**. It weighs several individually weak signals together "
+        "and has the highest recall in the three-layer comparison; in R7 it is an auxiliary channel and a source of "
+        "low-confidence review items (score ≥ 0.659, Starlink only), and does not decide whether an event exists.",
     ))
 
-    st.markdown(T3("**🟢 ⑤ 驗證**", "**🟢⑤検証**", "**🟢 ⑤ Validation**"))
+    st.markdown(T3("**⬛ ④⑤ 候選事件與證據等級　🟢 ⑥ 人工複核**", "**⬛④⑤ 候補イベントと証拠レベル　🟢⑥ 人によるレビュー**", "**⬛ ④⑤ Candidate Events and Evidence Grades  🟢 ⑥ Analyst Review**"))
     st.markdown(T3(
-        "最終判定結果會與兩組機動真值逐一核對：「原始 14 顆開發樣本」＋「9 顆完全沒參與開發的 hold-out 衛星」"
-        "（用來測試模型是否真的學到可泛化的機動特徵，而不是背答案）。"
-        "機動真值來源包括 IDS/DORIS（國際多普勒衛星定軌系統之精密軌道）、"
-        "NASA PO.DAAC、TACC 等機構提供的精密星曆（詳細來源與處理見案例四）。"
-        "**換句話說：本專案的績效不是自己說了算，而是用獨立、外部的高精度資料反覆驗證過。**",
-        "最終的な判定結果は、2組の機動真値と一件ずつ照合される：「元の14機の開発用サンプル」＋"
-        "「開発にまったく関与していない9機のhold-out衛星」（モデルが本当に汎化可能な機動の特徴を"
-        "学習したのか、それとも答えを暗記しただけなのかを検証するために用いる）。機動真値の出所には"
-        "IDS/DORIS（国際ドップラー衛星測位軌道決定システムの精密軌道）、NASA PO.DAAC、TACCなどの"
-        "機関が提供する精密暦が含まれる（詳細な出所と処理は事例四を参照）。**言い換えれば："
-        "本プロジェクトの性能は自称ではなく、独立した外部の高精度データによって繰り返し検証されたもの"
-        "である。**",
-        "The final determination is checked one by one against two sets of maneuver ground truth: the "
-        "\"original 14 development satellites\" plus \"9 hold-out satellites that never participated in "
-        "development at all\" (used to test whether the model has genuinely learned generalizable maneuver "
-        "features, rather than memorizing answers). Sources of maneuver ground truth include precise "
-        "ephemerides provided by IDS/DORIS (the International DORIS Service's precise orbits), NASA "
-        "PO.DAAC, and TACC (see Case 4 for detailed sources and processing). **In other words: this "
-        "project's performance is not self-declared, but repeatedly validated against independent, "
-        "external, high-precision data.**",
+        "L1 標記相隔 48 小時內者合併為一件候選事件（連續多日同向者再合併為連續機動段）；再檢查輔助通道在事件前後 24 小時內"
+        "是否也有反應，依固定規則給 E3／E2／E1／D 證據等級。**事件是否存在只由 L1 規則決定，輔助通道只影響等級。** "
+        "機器學習只以 Starlink 訓練，不能單獨使非 Starlink 衛星之事件達到 E3（只因 ML 輔助而符合者列「E2（ML 輔助）」）。"
+        "L1 未標記、但阻力殘差、融合評分器（限 Starlink）或 2 種以上 L2 方法有反應的變化，由支線列為低置信複核項。"
+        "最後由分析人員依等級順序複核：**系統只提示可能性與複核順序，不確認機動。**\n\n"
+        "效能評估另以獨立真值進行：SpaceX MEME 精密星曆（Starlink）與 ILRS／IDS 營運方點火紀錄（非 Starlink）。"
+        "「14 顆開發＋9 顆凍結保留」是 NASA/ILRS 外部標竿，用來比較本系統與曲線擬合法，不是機器學習的訓練集"
+        "（真值來源與處理見案例四）。",
+        "L1 のフラグのうち 48 時間以内のものは1件の候補イベントに統合される（数日連続で同方向のものはさらに連続機動区間に統合）。"
+        "次に補助チャネルがイベント前後 24 時間以内に反応したかを確認し、固定ルールで E3／E2／E1／D の証拠レベルを付ける。"
+        "**イベントの有無は L1 ルールだけが決め、補助チャネルはレベルにのみ影響する。** 機械学習は Starlink のみで訓練"
+        "されているため、非 Starlink 衛星のイベントを単独で E3 にはできない（ML 補助のみで条件を満たすものは「E2（ML 補助）」）。"
+        "L1 が検出せず、抵抗残差・融合スコアリングモデル（Starlink のみ）・2種類以上の L2 手法が反応した変化は、支線で"
+        "低信頼度レビュー項目として列挙される。最後に分析者がレベル順にレビューする：**システムは可能性とレビュー順を"
+        "示すだけで、機動を確定しない。**\n\n"
+        "性能評価は独立した真値で別途行う：SpaceX MEME 精密暦（Starlink）と ILRS／IDS の運用者による噴射記録（非 Starlink）。"
+        "「開発用 14 機＋凍結 hold-out 9 機」は NASA/ILRS 外部ベンチマークで、本システムと曲線フィッティング法を比較する"
+        "ためのものであり、機械学習の訓練集合ではない（真値の出所と処理は事例四を参照）。",
+        "L1 flags within 48 hours of each other are merged into one candidate event (multi-day same-direction changes "
+        "are further merged into a continuous maneuver segment). The auxiliary channels are then checked for a "
+        "response within 24 hours of the event, and fixed rules assign an E3/E2/E1/D evidence grade. **Whether an "
+        "event exists is decided by the L1 rules alone; the auxiliary channels only affect the grade.** Because the ML "
+        "models are trained only on Starlink, they cannot by themselves lift a non-Starlink event to E3 (such cases "
+        "are listed as \"E2 (ML-assisted)\"). Changes L1 did not flag, but that the drag residual, the fusion scorer "
+        "(Starlink only), or two or more L2 methods responded to, are listed on a branch as low-confidence review "
+        "items. Analysts then review in grade order: **the system flags possibilities and review order; it does not "
+        "confirm maneuvers.**\n\n"
+        "Performance is evaluated separately against independent ground truth: SpaceX MEME precise ephemerides "
+        "(Starlink) and ILRS/IDS operator burn records (non-Starlink). The \"14 development + 9 frozen hold-out\" "
+        "satellites form the NASA/ILRS external benchmark comparing this system with the curve-fitting method; they "
+        "are not the ML training set (see Case 4 for ground-truth sources and processing).",
     ))
 
     st.header(T3(
@@ -4534,27 +4581,24 @@ def render_storymap_case1():
                           yaxis_title=T3("整體召回率", "全体の再現率", "Overall recall"), xaxis=dict(tickangle=-45),
                           plot_bgcolor="rgba(0,0,0,0)", showlegend=False)
         st.plotly_chart(fig, use_container_width=True, key="case1_methods")
-        l3 = arena[arena["method"].str.contains("L3")].iloc[0]
-        recall_str = f"{l3['recall']:.1%}"
-        rec_large_str = f"{l3['rec_large']:.1%}"
         st.success(T3(
-            f"**答案是肯定的**：融合模型的整體召回率達 **{recall_str}**，"
-            f"對大型機動事件召回率更高達 **{rec_large_str}**，"
-            "而且在完全沒參與訓練的 hold-out 衛星上，AUC 仍達 0.98（見案例九的 unseen-satellite 測試）——"
-            "這代表模型不是「背下 14 顆衛星的答案」，而是真的學到可泛化的機動特徵，"
-            "即使換到新的衛星上，依然能維持高水準的偵測能力。",
-            f"**答えは肯定的である**：融合モデルの全体的な再現率は**{recall_str}**に達し、"
-            f"大規模な機動イベントに対する再現率はさらに**{rec_large_str}**にまで達する。"
-            "しかも訓練にまったく参加していないhold-out衛星においても、AUCは0.98を維持している"
-            "（事例九のunseen-satelliteテストを参照）——これはモデルが「14機の衛星の答えを暗記した」"
-            "のではなく、本当に汎化可能な機動の特徴を学習したことを示しており、新しい衛星に切り替えても"
-            "高水準の検知能力を維持できる。",
-            f"**The answer is yes**: the fusion model achieves an overall recall of **{recall_str}**, "
-            f"rising to **{rec_large_str}** for large maneuver events, and even on hold-out satellites that "
-            "never participated in training, AUC still reaches 0.98 (see Case 9's unseen-satellite test) — "
-            "meaning the model did not \"memorize the answers for 14 satellites,\" but genuinely learned "
-            "generalizable maneuver features, maintaining a high level of detection capability even on new "
-            "satellites.",
+            "**答案是肯定的，但數字要連同口徑一起讀**：期末報告以同一操作點（FPR ≤ 0.05）比較三層方法——"
+            "驗收口徑（284 顆 Starlink）下，融合評分器整體召回 **0.948**、大型事件 **0.970**、AUC 0.981；"
+            "以 56 顆從未參與訓練之 Starlink 測試，AUC 0.980。若負樣本只取真值涵蓋期間（較接近新資料上之表現），"
+            "融合評分器召回降為 **0.472**、AUC 0.814，但排序不變：融合評分器 > L2 最佳單一方法 > L1 規則 > 隨機基準。"
+            "上圖為案例九 2026-08-03 離線批次之比較，數值與期末報告略有差異。",
+            "**答えは肯定的だが、数値は評価口径とともに読む必要がある**：期末報告は同一の操作点（FPR ≤ 0.05）で三層を比較した——"
+            "検収口径（Starlink 284 機）では融合スコアリングモデルの全体再現率 **0.948**、大規模イベント **0.970**、AUC 0.981；"
+            "訓練に参加していない Starlink 56 機での AUC は 0.980。負例を真値のカバー期間に限ると（新しいデータでの性能に近い）、"
+            "再現率は **0.472**、AUC 0.814 に下がるが、順位は変わらない：融合 > L2 最良単一手法 > L1 ルール > ランダム基準。"
+            "上図は事例九の 2026-08-03 オフラインバッチの比較で、数値は期末報告とわずかに異なる。",
+            "**Yes — but read the numbers together with their evaluation basis**: the final report compares the three "
+            "layers at the same operating point (FPR ≤ 0.05). On the acceptance basis (284 Starlink), the fusion scorer "
+            "reaches overall recall **0.948**, large-event recall **0.970**, and AUC 0.981; on 56 Starlink satellites "
+            "never used in training, AUC is 0.980. When negatives are limited to periods covered by ground truth (closer "
+            "to performance on new data), recall drops to **0.472** and AUC to 0.814, but the ranking holds: fusion > "
+            "best single L2 method > L1 rules > random baseline. The chart above is Case 9's 2026-08-03 offline-batch "
+            "comparison, whose values differ slightly from the final report.",
         ))
     st.caption(T3(
         "方法逐一展開見：案例五（物理阻力殘差）、案例九（三層擂台公平比較）、案例四（真值資料從哪來）、"
