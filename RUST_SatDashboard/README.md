@@ -45,7 +45,7 @@ dist\SatDashboard-arm64.exe      ← Snapdragon 等 ARM64
 | `/starlink` | Starlink 分析（v0.1.6）：可見性／RTT／遮蔽、星系普查、殼層、離軌名單與離軌預測（NRLMSISE-00 完整移植） |
 | `/story`、`/story/{sid}` | StoryMap 故事頁（v0.1.6）：群組統計、ISR 解析度、雷達評估、重訪、軌跡 |
 | `/orbit-tuner` | Orbit Tuner 介紹頁（v0.1.6） |
-| `/manual` | 操作手冊（v0.1.7；原稿 `scenario-advanced01/docs/SatDashboard_操作手冊_v*.md`，`tools/build_manual.py` 產生頁面） |
+| `/manual` | 操作手冊（v0.1.9；原稿 `scenario-advanced01/docs/SatDashboard_操作手冊_v*.md`，`tools/build_manual.py` 產生頁面） |
 | `/lab` | **會合與機動實驗室**（v0.1.6，第二階段 Sprint 0–3）：批次會合分析、場景 JSON、避碰決策、RPO 控制模擬；v0.1.7 起主選單「🧪 機動實驗室」可直接進入，見下方說明 |
 | 版本與聯絡 | 主控台啟動訊息、`/api/about`、地球儀右下角與任務規劃頁頂列顯示版本、版本日期（台灣時間，重新建置時由 `build.rs` 產生，可用環境變數 `SATDASH_BUILD_DATE` 指定）與聯絡資訊（[Rhyno Wu，LinkedIn](https://www.linkedin.com/in/rhyno-wu-6b766771/)） |
 | 底圖 | 所有 3D 頁面預設「地形+海底地形 5.4K」（NASA Blue Marble 地形＋海底地形，內嵌於 exe），地球儀左側的底圖選單已隱藏。同步自 Python 版的頁面用 Viewer 的 `imageryProvider` 選項指定底圖，CesiumJS 1.104 起已移除（內附 1.114，原本會顯示一片藍）；`web/ext/standalone_ext.js` 把 Cesium 的預設底圖換成這張 |
@@ -114,7 +114,8 @@ dist\SatDashboard-arm64.exe      ← Snapdragon 等 ARM64
 - 3D 先畫出星系各衛星自時窗起點一圈的軌道；**用滑鼠點選軌道（或左側衛星）後才顯示該顆的過頂清單**。
 - 雲量預報（未來 3 天）：**被點選軌道正下方（星下點）**的預報雲量。過頂清單「雲量」欄為各次過頂 TCA 時刻的星下點；
   「衛星正下方雲量」色條為選定過頂沿地面軌跡每 60 秒的星下點（滑鼠移上去看低／中／高雲與降水）；
-  3D 地面上以半透明方格顯示**地面軌跡左右各 5° 內的 1° 網格**雲量（每格取衛星經過時刻的預報，點方格看細節），不畫在衛星軌道上；
+  3D 地面上以半透明方格顯示**地面軌跡左右各 4° 內的網格**雲量（網格密度 2°／1°／0.5° 可選，預設 2°；每格取衛星經過時刻的預報），不畫在衛星軌道上；
+  點方格看細節，含該衛星的**地面最佳解析度（GSD）與影像幅寬估算**（天底與該格；依 Vantor 公開規格與過頂高度幾何換算）；雲量預報預設關閉，勾選後才計算；
   後端 `/api/mission/cloud_track` 將星下點取 0.1° 格點、相同格點共用查詢，`grid=1` 時用 compact 端點、最多 400 格、8 個並行；
   資料為 [MET Norway Locationforecast 2.0](https://api.met.no/)（CC BY 4.0，免金鑰、可商用；約前 2.5 天每小時、之後每 6 小時），
   後端 `/api/mission/weather` 依回應 Expires 快取，離線時沿用上次的預報。Open-Meteo 在部分網路（本機實測）TLS 連不上，所以沒有採用。
@@ -225,6 +226,15 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 ```
 
 ## 版本紀錄
+
+### v0.1.9（2026-11-19）
+
+新增
+- 任務規劃 `/mission`：點選雲量網格方格時，顯示該衛星的**地面最佳解析度（GSD）與影像幅寬估算**：公開規格（Vantor，PGC 整理：WorldView-1／2／3、GeoEye-1、WorldView Legion）、本次過頂高度下的天底值，以及該格的離天底角、入射角、斜距、全色／多光譜 GSD（沿軌、跨軌與幾何平均）與單一條帶幅寬（由規格反求視場角、投影至球面地表）。公式以公開規格的 20° 離天底值驗算。
+- 雲量預報改為勾選後才計算（預設關閉），網格密度 2°／1°／0.5° 可選（預設 2°，地面軌跡左右各 4°），並顯示計算進度。
+
+改進
+- 總覽改畫各次過頂「通過可接收圈」的軌道段（以 TCA 為中心前後各 1/4 圈，裁切於時窗內），可直接點選該次過頂；天球圖以灰色虛線同時畫出其他過頂。
 
 ### v0.1.8（2026-11-18）
 

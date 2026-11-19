@@ -563,16 +563,30 @@ async fn passes(State(st): State<Arc<AppState>>, Query(q): Query<HashMap<String,
     .unwrap_or_else(|_| (StatusCode::INTERNAL_SERVER_ERROR, "內部錯誤").into_response())
 }
 
-/// 自時窗起點一圈（多取 5%）的星下點 [lon, lat, alt_km]，60 s 一點；頁面畫成可用滑鼠點選的軌道
-fn orbit_once(p: &Propagator, t0: &DateTime<Utc>, line2: &str) -> Vec<Value> {
+/// 單次過頂所在的軌道段：以 TCA 為中心前後各 1/4 圈（裁切於時窗內）的星下點 [lon, lat, alt_km]，60 s 一點（含 AOS、TCA、LOS 三點）；
+/// 頁面總覽只畫這些「通過地面站可接收圈」的軌道段，可用滑鼠點選
+fn pass_arc(p: &Propagator, prm: &Params, ps: &Pass, line2: &str) -> Vec<Value> {
+    let t0 = &prm.start;
     // TLE 第 2 行第 53–63 欄：平均運動（rev/day）；讀不到時當作約 100 分鐘一圈
     let rev_day = line2.get(52..63).and_then(|v| v.trim().parse::<f64>().ok()).filter(|v| *v > 0.5).unwrap_or(14.4);
-    let period_s = 86400.0 / rev_day;
-    let steps = ((period_s * 1.05) / 60.0).ceil() as usize;
-    (0..=steps)
-        .filter_map(|i| {
-            let r = p.position(&ms(t0, i as f64 * 60.0))?;
-            let llh = eci_to_llh(&r, gmst_rad(&ms(t0, i as f64 * 60.0)));
+    let quarter = 86400.0 / rev_day / 4.0;
+    // 限制在選定時窗內（不畫到前一天或後一天）
+    let (a, b) = ((ps.tca - quarter).max(0.0), (ps.tca + quarter).min(prm.hours * 3600.0));
+    let mut ts: Vec<f64> = Vec::new();
+    let mut s = a;
+    while s < b {
+        ts.push(s);
+        s += 60.0;
+    }
+    ts.push(b);
+    ts.extend([ps.aos, ps.tca, ps.los]);
+    ts.sort_by(|x, y| x.partial_cmp(y).unwrap());
+    ts.dedup_by(|x, y| (*x - *y).abs() < 1.0);
+    ts.iter()
+        .filter_map(|&s| {
+            let t = ms(t0, s);
+            let r = p.position(&t)?;
+            let llh = eci_to_llh(&r, gmst_rad(&t));
             Some(json!([round_to(llh[1], 3), round_to(llh[0], 3), round_to(llh[2], 1)]))
         })
         .collect()
@@ -595,9 +609,16 @@ async fn schedule(State(st): State<Arc<AppState>>, Query(q): Query<HashMap<Strin
                     return json!({"norad_id": n, "label": label, "in_index": false, "passes": []});
                 };
                 let ps = find_passes(p, &prm);
-                json!({"norad_id": n, "label": label, "in_index": true,
-                       "passes": ps.iter().map(|x| pass_json(p, &prm, x, false)).collect::<Vec<_>>(),
-                       "orbit": orbit_once(p, &prm.start, idx.sats.get(n).map(|s| s.line2.as_str()).unwrap_or(""))})
+                let line2 = idx.sats.get(n).map(|s| s.line2.as_str()).unwrap_or("");
+                let passes: Vec<Value> = ps
+                    .iter()
+                    .map(|x| {
+                        let mut v = pass_json(p, &prm, x, false);
+                        v["arc"] = json!(pass_arc(p, &prm, x, line2));
+                        v
+                    })
+                    .collect();
+                json!({"norad_id": n, "label": label, "in_index": true, "passes": passes})
             })
             .collect();
         Json(json!({

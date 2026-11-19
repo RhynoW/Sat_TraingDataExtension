@@ -71,15 +71,17 @@ td.empty{color:var(--mute);white-space:normal;padding:10px 4px;line-height:1.6}
     <div class="hint" id="con-note"></div>
 
     <h3>過頂清單 <span class="hint" id="sel-name"></span></h3>
-    <div class="hint">用滑鼠點選 3D 中的軌道（或上方衛星）後才顯示該顆的過頂清單。</div>
+    <div class="hint">用滑鼠點選地圖中的軌道（或上方衛星）後才顯示該顆的過頂清單。</div>
     <table><thead><tr><th>#</th><th>AOS（台灣時間）</th><th>LOS</th><th>時長</th><th>最大仰角</th><th>方位</th><th title="TCA 時衛星正下方（星下點）總雲量（MET Norway 預報，未來 3 天）">雲量</th></tr></thead>
       <tbody id="passes"></tbody></table>
-    <div class="hint">點選列可在 3D 中跳至該次過頂（AOS 前 1 分鐘）並顯示 30 秒時間點；時間以台灣時間（UTC+8）顯示。時窗為台灣時間的整日（今天為現在到午夜）；TLE 外推越遠誤差越大，3 天以後的預報僅供參考。</div>
+    <div class="hint">點選列可在地圖中跳至該次過頂（AOS 前 1 分鐘）並顯示 30 秒時間點；時間以台灣時間（UTC+8）顯示。時窗為台灣時間的整日（今天為現在到午夜）；TLE 外推越遠誤差越大，3 天以後的預報僅供參考。</div>
 
     <h3>衛星正下方雲量（選定過頂）</h3>
+    <label class="chk"><input type="checkbox" id="wx-on">計算並顯示雲量預報（MET Norway，未來 3 天；預設關閉）</label>
+    <label class="chk">雲量網格密度 <select id="wx-grid"><option value="2" selected>2°</option><option value="1">1°</option><option value="0.5">0.5°</option></select></label>
     <div id="wx" class="wx"></div>
 
-    <h3>天球圖（選定過頂，每 30 秒標點）</h3>
+    <h3>天球圖（綠色為選定過頂、每 30 秒標點；灰色虛線為其他過頂）</h3>
     <svg id="sky" viewBox="-120 -120 240 240"></svg>
     <div id="status"></div>
   </div>
