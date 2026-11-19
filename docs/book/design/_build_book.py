@@ -92,10 +92,10 @@ def visual(n):
             f'<div class="vcredit">{html.escape(credit)}</div>')
 
 BOOKDIR = D.parent / "v1.0_送審版"
-SRC = BOOKDIR / "全書_送審版_v1.2.md"
-OUT_HTML = BOOKDIR / "全書_排版版_v1.2.html"
-OUT_PDF = BOOKDIR / "全書_排版版_v1.2.pdf"
-VERSION, DATE, COPY = "v1.2", "2026.11.15", "©Sat_Dashboard"
+SRC = BOOKDIR / "全書_送審版_v1.3.md"
+OUT_HTML = BOOKDIR / "全書_排版版_v1.3.html"
+OUT_PDF = BOOKDIR / "全書_排版版_v1.3.pdf"
+VERSION, DATE, COPY = "v1.3", "2026.11.19", "©Sat_Dashboard"
 TMP = Path(sys.argv[1]) if len(sys.argv) > 1 else BOOKDIR / "_build_tmp"
 TMP.mkdir(exist_ok=True)
 

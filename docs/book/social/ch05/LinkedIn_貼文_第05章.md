@@ -1,7 +1,7 @@
 # 第 5 章 LinkedIn 貼文（中文／英文）：負的大氣阻力？
 
 使用方式：LinkedIn 不支援 Markdown，請複製「貼文內容」區塊內的純文字。
-附件：單章 PDF（第05章_大氣阻力太空天氣與假機動_單章.pdf，18 頁）可用「文件」上傳，文件標題填「第 5 章　大氣阻力、太空天氣與假機動」／"Chapter 5: Atmospheric Drag, Space Weather, and False Maneuvers"。檔案 24.6 MB，在 LinkedIn 文件 100 MB 上限內。
+附件：單章 PDF（第05章_大氣阻力太空天氣與假機動_單章.pdf，19 頁）可用「文件」上傳，文件標題填「第 5 章　大氣阻力、太空天氣與假機動」／"Chapter 5: Atmospheric Drag, Space Weather, and False Maneuvers"。檔案 24.8 MB，在 LinkedIn 文件 100 MB 上限內。
 
 注意：本章 PDF 含中央氣象署的電離層圖（圖 5-1 至 5-3）。網站規定非經授權禁止轉載，本書已註明「送印前須取得中央氣象署授權」。公開發布單章 PDF 也屬轉載，建議取得授權後再上傳 PDF；貼文本身未使用這些圖。
 

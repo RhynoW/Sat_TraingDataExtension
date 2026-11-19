@@ -1,7 +1,7 @@
 # 第 3 章 LinkedIn 貼文（中文／英文）
 
 使用方式：LinkedIn 不支援 Markdown，請複製「貼文內容」區塊內的純文字。
-附件：單章 PDF（第03章_低軌巨型星座的世界_單章.pdf，16 頁）可用「文件」上傳，文件標題填「第 3 章　低軌巨型星座的世界」／"Chapter 3: The World of LEO Mega-Constellations"。檔案 23.2 MB，在 LinkedIn 文件 100 MB 上限內。
+附件：單章 PDF（第03章_低軌巨型星座的世界_單章.pdf，17 頁）可用「文件」上傳，文件標題填「第 3 章　低軌巨型星座的世界」／"Chapter 3: The World of LEO Mega-Constellations"。檔案 23.4 MB，在 LinkedIn 文件 100 MB 上限內。
 
 連結：
 - 中文：https://huggingface.co/spaces/RhynoWu/maneuver-detection-i18n?mode=book&ch=03

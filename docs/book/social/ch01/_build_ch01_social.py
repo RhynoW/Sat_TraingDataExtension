@@ -1,7 +1,7 @@
 """第 1 章 LinkedIn 素材：中英文貼圖（1080×1350，各 5 張）、輪播 PDF，以及單獨第 1 章 PDF。
 
-用法：python docs/book/social/ch01/_build_ch01_social.py
-來源：docs/book/v1.0_送審版/全書_排版版_v1.2.pdf（單章 PDF 直接取頁，不重新排版）；
+用法：python docs/book/social/ch01/_build_ch01_social.py [--pdf-only]
+來源：docs/book/v1.0_送審版/全書_排版版_v1.3.pdf（單章 PDF 直接取頁，不重新排版；頁界依章首標記判定）；
       照片 data/book/img/nasa/iss073e0688699.jpg（NASA，公有領域）。
 卡片內容全部取自第 1 章修訂版正文，不新增事實。
 """
@@ -18,25 +18,17 @@ from playwright.sync_api import sync_playwright
 sys.stdout.reconfigure(encoding="utf-8")
 ROOT = Path(__file__).resolve().parents[4]
 OUT = Path(__file__).resolve().parent
-BOOK_PDF = ROOT / "docs/book/v1.0_送審版/全書_排版版_v1.2.pdf"
 PHOTO = ROOT / "data/book/img/nasa/iss073e0688699.jpg"
 HF = "https://huggingface.co/spaces/RhynoWu/maneuver-detection-i18n"
 LINK = {"zh": f"{HF}?mode=book&ch=01", "en": f"{HF}?mode=book&lang=en&ch=01"}
 
 # ---------- 單獨第 1 章 PDF ----------
-# 全書頁碼（1 起算）：1 封面、2 扉頁（四個 QR 碼）、3 版權頁、7–17 第 1 章（18 為空白頁）、最後一頁封底
-src = pymupdf.open(BOOK_PDF)
-assert src.page_count == 250 and not src[17].get_text().strip(), "全書頁數或第 1 章頁界已變，請重新確認"
-assert "01" in src[6].get_text() and "02" in src[18].get_text()
-pdf = pymupdf.open()
-for a, b in [(0, 2), (6, 16), (src.page_count - 1, src.page_count - 1)]:
-    pdf.insert_pdf(src, from_page=a, to_page=b)
-pdf.set_metadata({"title": "從衛星軌道論國家安全｜第 1 章　太空已成為國家安全疆域（單章試閱）",
-                  "author": "Sat_Dashboard", "subject": "太空態勢感知"})
-pdf.set_toc([[1, "封面", 1], [1, "扉頁", 2], [1, "版權頁", 3], [1, "第 1 章　太空已成為國家安全疆域", 4], [1, "封底", pdf.page_count]])
-ch_pdf = OUT / "第01章_太空已成為國家安全疆域_單章.pdf"
-pdf.save(ch_pdf, garbage=3, deflate=True)
-print(f"單章 PDF：{ch_pdf.name}，{pdf.page_count} 頁")
+sys.path.insert(0, str(OUT.parent))
+from _book_pages import build_single  # noqa: E402
+
+build_single(1, "第 1 章　太空已成為國家安全疆域", OUT / "第01章_太空已成為國家安全疆域_單章.pdf")
+if "--pdf-only" in sys.argv:
+    raise SystemExit(0)
 
 # ---------- 貼圖 ----------
 photo = "data:image/jpeg;base64," + base64.b64encode(PHOTO.read_bytes()).decode()

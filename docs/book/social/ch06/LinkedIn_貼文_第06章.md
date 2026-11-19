@@ -1,7 +1,7 @@
 # 第 6 章 LinkedIn 貼文（中文／英文）
 
 使用方式：LinkedIn 不支援 Markdown，請複製「貼文內容」區塊內的純文字。
-附件：單章 PDF（第06章_追蹤缺口資料品質與假警報_單章.pdf，12 頁）可用「文件」上傳，文件標題填「第 6 章　追蹤缺口、資料品質與假警報」／"Chapter 6: Tracking Gaps, Data Quality, and False Alarms"。檔案 21.2 MB，在 LinkedIn 文件 100 MB 上限內。本章沒有中央氣象署圖片。
+附件：單章 PDF（第06章_追蹤缺口資料品質與假警報_單章.pdf，12 頁）可用「文件」上傳，文件標題填「第 6 章　追蹤缺口、資料品質與假警報」／"Chapter 6: Tracking Gaps, Data Quality, and False Alarms"。檔案 21.4 MB，在 LinkedIn 文件 100 MB 上限內。本章沒有中央氣象署圖片。
 
 連結：
 - 中文：https://huggingface.co/spaces/RhynoWu/maneuver-detection-i18n?mode=book&ch=06
