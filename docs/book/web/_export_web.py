@@ -1,7 +1,7 @@
 """把 v1.0 送審版全書匯出為線上閱讀用內容（data/book/），供 book_reader.py 讀取。
 
 用法：python docs/book/web/_export_web.py
-- 來源：docs/book/v1.0_送審版/全書_送審版_v1.2.md（已合併、已驗收的全書）
+- 來源：docs/book/v1.0_送審版/全書_送審版_v1.3.md（已合併、已驗收的全書）
 - 輸出：data/book/book.json、data/book/chapters/NN.md、data/book/img/…（圖片縮至寬 1,600 像素以內）
 - 中央氣象署圖檔（img/cwa/）網站載明「非經授權禁止轉載」，線上版不轉載，改為連到原產品頁的說明。
 """
@@ -15,7 +15,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[3]
 BOOK = ROOT / "docs" / "book" / "v1.0_送審版"
-SRC = BOOK / "全書_送審版_v1.2.md"
+SRC = BOOK / "全書_送審版_v1.3.md"
 OUT = ROOT / "data" / "book"
 MAXW = 1600
 
@@ -29,7 +29,7 @@ I18N_META = {
            "宇宙状況把握の基礎：低軌道通信衛星の軌道異常と宇宙事象のインテリジェント検出",
            "表紙写真：NASA（iss036e024096）、国際宇宙ステーション第36次長期滞在クルー Karen Nyberg 撮影、2013-07-22 16:44:23 UTC、夜の台湾"),
 }
-META = {"author": "Sat_Dashboard", "version": "v1.2", "date": "2026.11.15", "copyright": "©Sat_Dashboard", "license": "請來信洽詢"}
+META = {"author": "Sat_Dashboard", "version": "v1.3", "date": "2026.11.19", "copyright": "©Sat_Dashboard", "license": "請來信洽詢"}
 
 
 def web_image(rel: str) -> str:
