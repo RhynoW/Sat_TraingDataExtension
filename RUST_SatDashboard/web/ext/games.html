@@ -40,10 +40,12 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
 #res .ok{color:var(--ok);font-weight:700}#res .bad{color:var(--bad);font-weight:700}
 .views{display:flex;flex-wrap:wrap;gap:4px}
 #status{color:var(--mute);font-size:11px;margin-top:6px}
+#side a{color:#79c0ff}
 </style>
 <script>window.CESIUM_BASE_URL="/cesium/";</script>
 <script src="/cesium/Cesium.js"></script>
 <script src="/static/vendor/astronomy/astronomy.browser.min.js"></script>
+<script src="/static/vendor/satellite/satellite.min.js"></script>
 <script src="/ext/standalone_ext.js?v=__BUILD__"></script>
 </head>
 <body>
@@ -52,9 +54,11 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
   <div id="tabs">
     <button class="on" data-tab="moon">🌙 月球模擬</button>
     <button data-tab="crowd">🛰 星座壅擠</button>
-    <button disabled title="規劃中">💥 碎片連鎖</button>
-    <button disabled title="規劃中">🔭 天文夢魘</button>
+    <button data-tab="debris">💥 碎片連鎖</button>
+    <button data-tab="astro">🔭 天文夢魘</button>
     <button data-tab="balloon">🎈 氣球日食</button>
+    <button data-tab="asat">🎯 強弓延伸</button>
+    <button data-tab="war">♟ 太空兵棋</button>
   </div>
   <span id="about-slot" style="margin-left:auto"></span>
   <a href="/" style="margin-left:12px">← 回 3D 地球儀</a>
@@ -142,6 +146,86 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
     <div class="hint" id="b-now"></div>
     <div class="hint" style="margin-top:8px">幾何：太陽視直徑 α（0.524°–0.542°，依日地距離）；本影長度 L = D ÷ (2·tan(α/2)) ≈ 107×D。距離 s 處本影半徑 r = D/2 − s·tan(α/2)，半影半徑 D/2 + s·tan(α/2)；地面上的影子再依太陽仰角拉長。持續時間＝影子直徑 ÷ 氣球相對台北、垂直於太陽方向的速度。質量以 Echo 1 號面密度（約 22.6 g/m²）估計；鍍鋁氣球的面積質量比約 11 m²/kg，與大小無關，大氣阻力壽命以 Vallado 指數大氣模型粗估（太陽活動中等）。亮度以鏡面反射球（反射率 0.9）估計。</div>
     </div>
+    <div id="tab-debris" hidden>
+    <h3>💥 衛星解體與碎片連鎖</h3>
+    <div class="hint">選一顆衛星讓它爆炸（或被撞），碎片依 NASA 標準解體模型產生，再看這些碎片會不會撞上其他物件、引發下一代碎片（凱斯勒效應）。</div>
+    <div class="row"><label>衛星</label><input id="d-q" type="text" placeholder="NORAD 或名稱" style="flex:1;background:var(--bg);color:var(--hi);border:1px solid var(--line);border-radius:6px;padding:3px 6px"><button id="d-find">搜尋</button></div>
+    <div class="row"><select id="d-pick"><option value="27386|8211|ENVISAT">ENVISAT（約 770 km、8,211 kg）</option>
+      <option value="20580|11110|HST">哈伯太空望遠鏡（約 520 km、11,110 kg）</option>
+      <option value="39634|2300|SENTINEL-1A">Sentinel-1A（約 690 km、2,300 kg）</option></select></div>
+    <div class="row"><label>質量</label><input id="d-m" type="number" value="8211" min="1" step="10"><span class="hint">kg</span></div>
+    <div class="row"><label>碎片數</label><input id="d-n" type="range" min="2" max="1000" step="1" value="1000"><span id="d-nv" class="hint" style="min-width:44px">1000</span></div>
+    <div class="row"><label>解體方式</label><select id="d-kind"><option value="0">爆炸（電池、殘餘推進劑）</option><option value="1">被撞擊（碰撞模型，Δv 較大）</option></select></div>
+    <div class="row"><label>模擬年數</label><select id="d-y"><option>1</option><option selected>10</option><option>20</option><option>50</option></select>
+      <label>加速倍率</label><select id="d-acc"><option value="1">×1 寫實</option><option value="100">×100</option><option value="1000" selected>×1,000</option><option value="10000">×10,000</option><option value="100000">×100,000</option></select></div>
+    <div class="row"><label>亂數種子</label><input id="d-seed" type="number" value="7" min="1" step="1"><button class="go" id="d-run">引爆</button></div>
+    <div id="d-res" class="hint"></div>
+    <div class="views" style="margin-top:6px"><button data-dplay="3h">看前 3 小時（碎片雲拉成環）</button><button data-dplay="90d">看前 90 天（散成殼層）</button><button data-dplay="all">看全程</button></div>
+    <h3>碎片數與碰撞次數（對數）</h3>
+    <canvas id="d-chart" width="760" height="300" style="width:100%;background:#0b1622;border:1px solid var(--line);border-radius:6px"></canvas>
+    <div class="hint" id="d-legend"></div>
+    <h3>碰撞事件</h3>
+    <div id="d-ev" class="hint"></div>
+    <label class="chk"><input type="checkbox" id="d-bg">顯示目錄背景（灰點，瀏覽器端 SGP4）</label>
+    <div class="hint" style="margin-top:8px">模型：NASA 標準解體模型（碎片數由尺寸冪律反推最小尺寸；面積質量比、Δv 依模型分布抽樣；質量與動量守恆）。傳播用克卜勒根數＋J2 長期項，碎片依面積質量比與 Vallado 指數大氣衰減，近地點低於 120 km 視為再入。碰撞以 KD-tree 快照估計：配對碰撞率＝相對速度÷(4d/3)×(R₁+R₂)²/d²；能量質量比 > 40 J/g 為完全解體。目錄物件的尺寸與質量依類別取代表值。<b>加速倍率</b>把碰撞截面放大，讓連鎖在幾年內就看得到；真實的凱斯勒效應要以數十年到百年計，請以「寫實等效期望值」為準。</div>
+    </div>
+    <div id="tab-asat" hidden>
+    <h3>🎯 更強的火箭打得到衛星嗎？</h3>
+    <div class="hint">強弓（公開報導）：雙節固態火箭、極速 7–10 馬赫、攔截高度約 70 km，任務是在大氣層中上層攔截戰術彈道飛彈。這裡假想一枚燃燒結束速度更高的火箭，從台灣射向真實衛星，看要多快、瞄準的關鍵是什麼，以及沒打到時彈頭會掉到哪裡。僅為教育性物理模擬（二體重力、不計大氣與導引）。</div>
+    <div class="row"><label>目標衛星</label><input id="a-q" type="text" value="25544" style="flex:1;background:var(--bg);color:var(--hi);border:1px solid var(--line);border-radius:6px;padding:3px 6px"><button id="a-find">搜尋</button></div>
+    <div class="row"><select id="a-pick"><option value="25544">ISS（約 420 km）</option></select></div>
+    <div class="row"><label>發射點</label><select id="a-site"><option value="22.2,120.8">台灣南部海岸（示意）</option><option value="25.03,121.56">台北（示意）</option></select></div>
+    <div class="row"><label>燃燒結束速度</label><input id="a-v" type="range" min="1.5" max="8" step="0.05" value="3.0"><span id="a-vv" class="hint" style="min-width:150px"></span></div>
+    <div class="row"><button class="go" id="a-solve">找出交會機會（未來 12 小時）</button></div>
+    <div id="a-res" class="hint"></div>
+    <div class="row" style="margin-top:6px"><label>發射時間誤差</label><input id="a-dt" type="range" min="0" max="5" step="0.05" value="0"><span id="a-dtv" class="hint" style="min-width:60px">0 秒</span></div>
+    <div class="row"><button id="a-fly">播放飛行</button><span class="hint">誤差 &gt; 0 時看沒打到的彈頭落點</span></div>
+    <div id="a-miss" class="hint"></div>
+    <div class="hint" style="margin-top:8px">方法：沿目標的真實 TLE（satellite.js SGP4）找出經過發射點附近的時段，對每個交會時刻與飛行時間（1–15 分鐘）解 Lambert 二體問題，得到燃燒結束（假設在發射點上空 40 km）所需速度，取最小值。脫靶量估計：時間誤差 × 相對速度、燃燒結束速度誤差 × 飛行時間；TLE 位置誤差為公里級，實際攔截必須靠精密追蹤與末段尋標修正。燃燒結束後推力向量控制不再有作用。</div>
+    </div>
+    <div id="tab-astro" hidden>
+    <h3>🔭 衛星太多太亮，望遠鏡會拍到什麼？</h3>
+    <div class="hint">以真實星表為背景，模擬望遠鏡一次曝光的 CCD 影像：衛星被太陽照到時，會在影像上留下亮線（光跡）。可比較現況與「10 萬顆 Starlink」情境。</div>
+    <div class="row"><label>觀測地點</label><select id="s-site"><option value="23.4686,120.8736,2.862,21.5">鹿林天文台（2,862 m）</option>
+      <option value="24.1444,121.2722,3.0,21.6">合歡山暗空公園（3,000 m）</option><option value="25.03,121.56,0.01,18.5">台北（光害）</option></select></div>
+    <div class="row"><label>指向</label><select id="s-target"><option value="altaz">方位／仰角（下方輸入）</option>
+      <option value="56.75,24.12">昴宿星團 M45</option><option value="83.82,-5.39">獵戶座大星雲 M42</option><option value="10.68,41.27">仙女座星系 M31</option></select></div>
+    <div class="row"><label>方位</label><input id="s-az" type="number" value="250" step="5"><label>仰角</label><input id="s-alt" type="number" value="35" step="5"></div>
+    <div class="row"><label>望遠鏡</label><select id="s-tel">
+      <option value="0.2,1.0">鹿林 1 m（視野 0.2°）</option><option value="1.0,0.2">業餘 20 cm（視野 1°）</option>
+      <option value="3.5,6.4" selected>Rubin 級巡天 8.4 m（視野 3.5°）</option><option value="10,0.1">廣角相機 10 cm（視野 10°）</option></select></div>
+    <div class="row"><label>曝光</label><select id="s-exp"><option>15</option><option selected>30</option><option>60</option><option>300</option></select><span class="hint">秒</span>
+      <label>情境</label><select id="s-scen"><option value="now">現況目錄</option><option value="mega">10 萬 Starlink 情境</option></select></div>
+    <div class="row"><button id="s-dusk">跳到今晚天文昏影（太陽 −13°）</button><button class="go" id="s-run">拍一張</button></div>
+    <canvas id="s-img" width="720" height="720" style="width:100%;background:#000;border:1px solid var(--line);border-radius:6px;margin-top:6px"></canvas>
+    <div id="s-res" class="hint"></div>
+    <h3>整夜每次曝光被劃幾條（同指向、每 10 分鐘）</h3>
+    <canvas id="s-night" width="760" height="220" style="width:100%;background:#0b1622;border:1px solid var(--line);border-radius:6px"></canvas>
+    <div class="hint">灰色區為太陽仰角高於 −12°（不算）或指向仰角低於 20°。</div>
+    <div class="hint" style="margin-top:8px">方法：衛星位置用真實 TLE（SGP4）與假想 Walker 星座；被太陽照到（圓柱形地影）才會發光；亮度 m = m₁₀₀₀ + 5·log10(距離/1000 km) 再加朗伯球相位修正（Starlink 取 m₁₀₀₀ ≈ 5.8）。影像以光子數合成：天空背景依地點與昏影亮度、泊松雜訊、視寧度 1.5″、滿井每 0.5″ 像素 10 萬電子；8 等以下背景星依星數統計隨機產生（示意）。望遠鏡追蹤恆星，所以同步軌道衛星也會拉成短線。星表：d3-celestial（Hipparcos／Tycho，BSD-3）。</div>
+    </div>
+    <div id="tab-war" hidden>
+    <h3>♟ 太空兵棋：海纜中斷下的通訊韌性</h3>
+    <div class="hint">紅藍對抗＋白方 GM，雙方同時下令（WEGO）、伺服器裁決。藍方要在海纜被切斷時維持國際通訊並執行偵察；紅方以灰色地帶手段施壓，但升級指數過高會付出代價。每回合 6 小時、共 8 回合、每方每回合 5 行動點。可與 AI 對戰，或在另一個瀏覽器分頁（區網：以 --host 0.0.0.0 啟動）用連結加入。</div>
+    <div class="row"><label>藍方</label><select id="w-ai-blue"><option value="">真人</option><option value="balanced">AI：均衡</option><option value="geo">AI：重 GEO</option><option value="leo">AI：重低軌</option><option value="repair">AI：重修纜</option></select>
+      <label>紅方</label><select id="w-ai-red"><option value="balanced">AI：灰色地帶</option><option value="escalate">AI：升級（含反衛星）</option><option value="">真人</option></select></div>
+    <div class="row"><label>我扮演</label><select id="w-role"><option value="blue">藍方</option><option value="red">紅方</option><option value="white">白方（GM／觀察）</option></select>
+      <button class="go" id="w-new">開新推演</button></div>
+    <div id="w-links" class="hint"></div>
+    <div id="w-board"></div>
+    <div id="w-act"></div>
+    <h3>頻寬（單位）與可用率</h3>
+    <canvas id="w-chart" width="760" height="260" style="width:100%;background:#0b1622;border:1px solid var(--line);border-radius:6px"></canvas>
+    <div class="hint" id="w-legend"></div>
+    <h3>推演紀錄</h3>
+    <div id="w-log" class="hint" style="max-height:260px;overflow:auto"></div>
+    <h3>蒙地卡羅分析（雙方 AI）</h3>
+    <div class="row"><label>局數</label><select id="w-runs"><option>200</option><option selected>500</option><option>2000</option></select>
+      <label>紅方策略</label><select id="w-mc-red"><option value="balanced">灰色地帶</option><option value="escalate">升級</option></select>
+      <button id="w-mc">比較藍方策略</button></div>
+    <div id="w-mc-res" class="hint"></div>
+    <div class="hint" style="margin-top:8px">參考：謝沛學〈從遊戲到實戰：商用兵棋軟體如何協助軍事分析與訓練〉（國防安全雙週報，2020）。本推演為教育用抽象模型：國際海纜每條 10 單位、離島海纜 1 單位、需求 150 單位起每回合 +5；GEO 租用每次 +15（上限 60）、低軌終端每 500 套 +10（上限 4,000 套），均下回合生效；海纜取自內嵌的 TeleGeography 圖資。數值為示意，不代表實際容量。</div>
+    </div>
     <div id="status"></div>
   </div>
   <div id="map"><div id="cesium"></div></div>
@@ -149,5 +233,9 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
 <script src="/ext/games.js?v=__BUILD__"></script>
 <script src="/ext/games_crowd.js?v=__BUILD__"></script>
 <script src="/ext/games_balloon.js?v=__BUILD__"></script>
+<script src="/ext/games_debris.js?v=__BUILD__"></script>
+<script src="/ext/games_asat.js?v=__BUILD__"></script>
+<script src="/ext/games_astro.js?v=__BUILD__"></script>
+<script src="/ext/games_war.js?v=__BUILD__"></script>
 </body>
 </html>

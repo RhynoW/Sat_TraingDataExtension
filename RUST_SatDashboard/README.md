@@ -42,6 +42,7 @@ dist\SatDashboard-arm64.exe      ← Snapdragon 等 ARM64
 | `/orbit` | 軌道要素歷史：Spiral Polar、SMA 圓形圖、**雙星軌道要素比較**（`/api/orbit/history`；只用本機資料庫，不向 Space-Track 補抓） |
 | `/track` | 單顆衛星 **2D 地面軌跡**與即時資料（Leaflet + 瀏覽器端 SGP4；資料 `/api/sat_tle`；Leaflet、satellite.js 與底圖圖磚需連網） |
 | `/mission` | **衛星任務規劃**：地面站下行接收過頂預報（預設中大太遙中心 × Vantor 星系，仰角 15°） |
+| `/games` | **太空小遊戲**（v0.1.10）：月球模擬、星座壅擠、碎片連鎖、天文夢魘、氣球日食、強弓延伸、太空兵棋 |
 | `/starlink` | Starlink 分析（v0.1.6）：可見性／RTT／遮蔽、星系普查、殼層、離軌名單與離軌預測（NRLMSISE-00 完整移植） |
 | `/story`、`/story/{sid}` | StoryMap 故事頁（v0.1.6）：群組統計、ISR 解析度、雷達評估、重訪、軌跡 |
 | `/orbit-tuner` | Orbit Tuner 介紹頁（v0.1.6） |
@@ -226,6 +227,22 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 ```
 
 ## 版本紀錄
+
+### v0.1.10（2026-11-20）
+
+新增
+- **太空小遊戲 `/games`**（地球儀工具列「🎮 太空小遊戲」，僅單機版）：
+  - 🌙 月球模擬：月相、台北月出月沒、天平動、月食；月面圖（NASA LRO 影像）與 17 個登月點；3D 地月視圖；
+    射月球（地—月—日三體積分）：撞月、繞月飛掠、自由返回、LOI 入軌，附自動瞄準
+  - 🛰 星座壅擠：依公開申請殼層產生假想 Walker 星座（如 Starlink 10 萬顆），KD-tree 快照估計接近頻率、碰撞期望值、台北可見數與高度密度
+  - 💥 碎片連鎖：NASA 標準解體模型（質量與動量守恆）＋J2 與大氣衰減＋KD-tree 碰撞擲骰，可加速看凱斯勒連鎖
+  - 🔭 天文夢魘：真實星表（d3-celestial，Hipparcos／Tycho）為背景，以光子數合成望遠鏡 CCD 影像與衛星光跡，含整夜統計
+  - 🎈 氣球日食：鍍鋁氣球多大才能讓台北看到日全食（本影幾何、持續時間、質量、阻力壽命、亮度）
+  - 🎯 強弓延伸：更強的火箭要多快才到得了衛星交會點（Lambert）、瞄準關鍵與沒打到時的彈頭落點（教育性物理模擬）
+  - ♟ 太空兵棋：海纜中斷下的通訊韌性，紅藍對抗＋白方 GM、WEGO、可與 AI 對戰或以連結多人加入，含蒙地卡羅策略比較
+
+改進
+- 地球儀分類篩選改為瀏覽器端傳播（`/api/tles`＋Web Worker＋PointPrimitiveCollection）：1.7 萬顆時每幀 25 ms → 8.3 ms，衛星連續移動
 
 ### v0.1.9（2026-11-19）
 

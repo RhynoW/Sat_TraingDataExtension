@@ -31,6 +31,13 @@ pub fn extend(r: Router<Arc<AppState>>) -> Router<Arc<AppState>> {
         .route("/api/games/crowd/shells", get(crowd_shells))
         .route("/api/games/crowd/catalog", get(crowd_catalog))
         .route("/api/games/crowd", post(crowd))
+        .route("/api/games/breakup", post(crate::games_debris::breakup_api))
+        .route("/api/games/astro", post(crate::games_astro::astro_api))
+        .route("/api/games/war/new", post(crate::games_war::war_new))
+        .route("/api/games/war/state", get(crate::games_war::war_state))
+        .route("/api/games/war/cables", get(crate::games_war::war_cables))
+        .route("/api/games/war/orders", post(crate::games_war::war_orders))
+        .route("/api/games/war/mc", post(crate::games_war::war_mc))
 }
 
 async fn page() -> Html<String> {
@@ -122,13 +129,13 @@ fn scaled(g: &Group, total: u32) -> Vec<Shell> {
 }
 
 #[derive(Deserialize, Clone)]
-struct GroupReq {
-    key: String,
+pub(crate) struct GroupReq {
+    pub(crate) key: String,
     /// None 或 false：沿用真實目錄；true：以 total 顆假想星座取代真實衛星
     #[serde(default)]
-    synthetic: bool,
+    pub(crate) synthetic: bool,
     #[serde(default)]
-    total: u32,
+    pub(crate) total: u32,
 }
 
 fn group_counts(st: &Arc<AppState>) -> Vec<usize> {
@@ -177,7 +184,7 @@ fn catalog_group(s: &SatInfo) -> u8 {
 }
 
 // ── 物件與傳播 ────────────────────────────────────────────────────────────
-struct Walker {
+pub(crate) struct Walker {
     a: f64,
     inc: f64,
     raan0: f64,
@@ -197,7 +204,7 @@ impl Walker {
         Self { a, inc, raan0, u0, raan_dot: -k * n * ci, u_dot: n * (1.0 + k * (4.0 * ci * ci - 1.0)) }
     }
     /// 慣性座標（與 TEME 同一組軸）位置、速度
-    fn state(&self, dt: f64) -> ([f64; 3], [f64; 3]) {
+    pub(crate) fn state(&self, dt: f64) -> ([f64; 3], [f64; 3]) {
         let om = self.raan0 + self.raan_dot * dt;
         let u = self.u0 + self.u_dot * dt;
         let (so, co) = om.sin_cos();
@@ -210,19 +217,19 @@ impl Walker {
     }
 }
 
-enum Obj<'a> {
+pub(crate) enum Obj<'a> {
     Cat(&'a SatInfo),
     Syn(Walker),
 }
 
-struct Item<'a> {
-    obj: Obj<'a>,
-    group: u8,
+pub(crate) struct Item<'a> {
+    pub(crate) obj: Obj<'a>,
+    pub(crate) group: u8,
     /// 假想星座的殼層編號（同殼層由營運者協調，可選擇不計）；目錄物件為 u32::MAX
-    shell: u32,
+    pub(crate) shell: u32,
 }
 
-fn sgp4_state(s: &SatInfo, t: &DateTime<Utc>) -> Option<([f64; 3], [f64; 3])> {
+pub(crate) fn sgp4_state(s: &SatInfo, t: &DateTime<Utc>) -> Option<([f64; 3], [f64; 3])> {
     let p = s.prop.as_ref()?;
     let ns = (t.naive_utc() - p.epoch).num_nanoseconds()?;
     let pr = p.constants.propagate(sgp4::MinutesSinceEpoch(ns as f64 / 60e9)).ok()?;
@@ -231,7 +238,7 @@ fn sgp4_state(s: &SatInfo, t: &DateTime<Utc>) -> Option<([f64; 3], [f64; 3])> {
     (r.iter().all(|v| v.is_finite()) && m2 > 6478.0 * 6478.0 && m2 < 50000.0 * 50000.0).then_some((r, pr.velocity))
 }
 
-fn build_items<'a>(sats: &'a [&'a SatInfo], reqs: &[GroupReq]) -> (Vec<Item<'a>>, Vec<Value>) {
+pub(crate) fn build_items<'a>(sats: &'a [&'a SatInfo], reqs: &[GroupReq]) -> (Vec<Item<'a>>, Vec<Value>) {
     let mut replaced = vec![false; GROUPS.len()];
     let mut items: Vec<Item> = Vec::new();
     let mut shells_out = Vec::new();
