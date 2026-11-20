@@ -190,8 +190,9 @@
   });
 
   // ── 慣性座標視角與預設視角 ────────────────────────────────────────────────
+  var TAB = "moon";
   scene.postUpdate.addEventListener(function (sc, time) {
-    if (!$("o-inertial").checked || viewer.trackedEntity || sc.mode !== Cesium.SceneMode.SCENE3D) return;
+    if (TAB !== "moon" || !$("o-inertial").checked || viewer.trackedEntity || sc.mode !== Cesium.SceneMode.SCENE3D) return;
     var off = C3.clone(sc.camera.position);
     sc.camera.lookAtTransform(Cesium.Matrix4.fromRotationTranslation(icrf(time, new M3())), off);
   });
@@ -369,7 +370,7 @@
     drawPhase(lib, ss);
     drawMap(lib, ss);
   }
-  setInterval(function () { refresh(false); }, 400);
+  setInterval(function () { if (TAB === "moon") refresh(false); }, 400);
 
   // ── 射月球 ──────────────────────────────────────────────────────────────
   // 每小時一筆的月球、太陽地心位置表（EQJ，km），4 點 Lagrange 內插（月球內插誤差約數公尺）
@@ -653,6 +654,30 @@
       status("自動瞄準完成：點火位置 " + pick[0].toFixed(3) + "°，" + unitTxt + " " + fmt(pick[1]) + " km；按「發射」看結果");
     })();
   };
+
+  // ── 分頁切換（其他遊戲在各自的檔案，透過 window.SDG 與 sdg-tab 事件取得 viewer 與切換通知）──
+  function setTab(t) {
+    TAB = t;
+    document.querySelectorAll("#tabs button[data-tab]").forEach(function (b) { b.classList.toggle("on", b.dataset.tab === t); });
+    document.querySelectorAll("[id^=tab-]").forEach(function (el) { el.hidden = el.id !== "tab-" + t; });
+    var on = t === "moon";
+    moonPrim.show = on; moonEnt.show = on;
+    orbitEnt.show = on && $("o-orbit").checked;
+    siteEnts.forEach(function (e) { e.show = on && $("o-sites").checked; });
+    [ship.ent, ship.line].concat(ship.marks).forEach(function (e) { if (e) e.show = on; });
+    viewer.trackedEntity = undefined;
+    scene.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    // 各遊戲會改時鐘範圍（射月球、氣球慢動作）；切換分頁時恢復成不受限的一般播放
+    if (clock.clockRange !== Cesium.ClockRange.UNBOUNDED) {
+      clock.clockRange = Cesium.ClockRange.UNBOUNDED;
+      if (t !== "moon" || !ship.ent) { clock.multiplier = 3600; $("t-speed").value = "3600"; }
+    }
+    if (on && ship.ent) clock.clockRange = Cesium.ClockRange.CLAMPED;
+    if (on) { setView("cislunar"); refresh(true); }
+    document.dispatchEvent(new CustomEvent("sdg-tab", { detail: t }));
+  }
+  document.querySelectorAll("#tabs button[data-tab]").forEach(function (b) { b.onclick = function () { if (!b.disabled) setTab(b.dataset.tab); }; });
+  window.SDG = { viewer: viewer, status: status, tw: tw, fmt: fmt, icrf: icrf, tab: function () { return TAB; } };
 
   setView("cislunar");
   refresh(true);

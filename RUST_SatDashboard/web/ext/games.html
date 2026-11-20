@@ -51,9 +51,10 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
   <h1>🎮 太空小遊戲</h1>
   <div id="tabs">
     <button class="on" data-tab="moon">🌙 月球模擬</button>
-    <button disabled title="規劃中">🛰 星座壅擠</button>
+    <button data-tab="crowd">🛰 星座壅擠</button>
     <button disabled title="規劃中">💥 碎片連鎖</button>
     <button disabled title="規劃中">🔭 天文夢魘</button>
+    <button data-tab="balloon">🎈 氣球日食</button>
   </div>
   <span id="about-slot" style="margin-left:auto"></span>
   <a href="/" style="margin-left:12px">← 回 3D 地球儀</a>
@@ -68,6 +69,7 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
       <button id="t-play">⏸</button></div>
     <div class="hint">時間以台灣時間（UTC+8）顯示；月球位置與月相由 astronomy-engine（Don Cross，MIT）計算。</div>
 
+    <div id="tab-moon">
     <h3>月相與台北看月亮</h3>
     <div id="phase-wrap"><canvas id="phase" width="192" height="192"></canvas><table class="kv" id="moon-kv"></table></div>
     <table class="kv" id="moon-ev" style="margin-top:6px"></table>
@@ -100,10 +102,52 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
     <div class="row"><button class="go" id="g-run">發射</button><button id="g-clear">清除軌跡</button><span class="hint">最長模擬 <input id="g-days" type="number" value="12" min="2" max="30" style="width:52px"> 天</span></div>
     <div id="res" class="hint">從低地球停泊軌道點火，飛向月球。「點火位置」是點火點在停泊軌道上的角度（180° 約在月球抵達位置的正對面）；調整 Δv 和點火位置，或按「自動瞄準」找出近月點等於目標高度的點火位置。</div>
     <div class="hint" style="margin-top:6px">模型：地球、月球、太陽點質量重力（不含 J2、大氣與輻射壓），RK4 變步長積分；停泊軌道簡化為與月球軌道共面。參考：Apollo 11 TLI 約 3.18 km/s、飛行約 73 小時；LOI 約 0.9 km/s。</div>
+    </div>
+
+    <div id="tab-crowd" hidden>
+    <h3>🛰 巨型星座情境</h3>
+    <div class="hint">勾選「假想」後，該星座的真實衛星會被依公開申請殼層產生的假想 Walker 星座取代（顆數可自訂）；不勾選則用目錄中的真實衛星。</div>
+    <table class="kv" id="cr-groups"></table>
+    <div class="views" style="margin-top:6px">
+      <button data-preset="now">現況</button><button data-preset="plan">各家計畫全數</button><button data-preset="mega">10 萬 Starlink 情境</button>
+    </div>
+    <div class="row" style="margin-top:8px"><label>配對計算</label><select id="cr-skip">
+      <option value="0">全部配對都計</option><option value="1" selected>同殼層不計（營運者協調）</option><option value="2">同星座不計（營運者完全協調）</option></select></div>
+    <div class="row"><label>取樣</label><select id="cr-hours"><option value="1">1 小時</option><option value="2" selected>2 小時</option><option value="6">6 小時</option></select>
+      <button class="go" id="cr-run">計算壅擠指標</button></div>
+    <div id="cr-res" class="hint">按「計算壅擠指標」比較現況與情境。</div>
+    <h3>高度密度剖面（個／km³）</h3>
+    <canvas id="cr-chart" width="760" height="320" style="width:100%;background:#0b1622;border:1px solid var(--line);border-radius:6px"></canvas>
+    <div class="hint">灰線為現況目錄，紫線為情境；縱軸為對數。</div>
+    <h3>畫面</h3>
+    <label class="chk"><input type="checkbox" id="cr-show" checked>3D 顯示所有物件（每秒更新 4 次）</label>
+    <div class="hint" id="cr-legend"></div>
+    <div class="hint" style="margin-top:8px">方法：取多個時刻快照，用 KD-tree 找出相距 20 km 內的配對，依「進入半徑 d 球的頻率＝球內配對數×相對速度÷(4d/3)」估計接近頻率，再依通量與 d² 成正比換算到 1 km（避碰機動的代理門檻）與 10 m（兩顆大型衛星的合併硬體半徑，視為碰撞）。這是一階估計：真實星座有相位安排與避碰機動，實際碰撞遠少於「若都不避碰」的期望值。假想星座以圓軌道加 J2 長期項傳播。<br>校正參考：選「同星座不計」時，現況 Starlink 每顆每年約 20 次 < 1 km 接近，和營運者公開的避碰機動量級（每顆每年十幾到數十次）相近；選「同殼層不計」會把同一家不同殼層、以及真實星座內部的交會也算進去，數字偏高，可視為「協調失效」的上限。</div>
+    </div>
+    <div id="tab-balloon" hidden>
+    <h3>🎈 多大的鋁箔氣球能在台北造成日食？</h3>
+    <div class="hint">把一顆像 Echo 衛星那樣的鍍鋁氣球放在「太陽—台北」連線上，看它的影子（本影＝全食、偽本影＝環食、半影＝偏食）能不能落到地面。時間用上方的時間設定，必須是台北白天。</div>
+    <div class="row"><label>直徑</label><input id="b-d" type="number" value="5000" min="1" step="1"><span class="hint">m</span>
+      <select id="b-dp" style="width:150px"><option value="">預設…</option><option value="30.5">Echo 1（1960）30.5 m</option><option value="41">Echo 2（1964）41 m</option>
+      <option value="1000">1 km</option><option value="5000">5 km</option><option value="50000">50 km</option><option value="340000">340 km</option></select></div>
+    <div class="row"><label>高度</label><input id="b-h" type="number" value="550" min="160" step="10"><span class="hint">km</span>
+      <select id="b-hp" style="width:150px"><option value="">預設…</option><option value="400">400 km（ISS）</option><option value="550">550 km（Starlink）</option>
+      <option value="1600">1,600 km（Echo 1）</option><option value="20200">20,200 km（GPS）</option><option value="35786">35,786 km（GEO）</option></select></div>
+    <div class="row"><label>軌道傾角</label><input id="b-i" type="number" value="53" min="0" max="180" step="1"><span class="hint">°</span>
+      <select id="b-dir" style="width:120px"><option value="asc">北上段</option><option value="desc">南下段</option></select></div>
+    <div class="row"><button class="go" id="b-run">計算並播放</button><span class="hint">播放為慢動作，影子掃過台北的過程約 15 秒</span></div>
+    <div id="b-res" class="hint"></div>
+    <h3>從台北看太陽（慢動作）</h3>
+    <canvas id="b-sky" width="360" height="240" style="width:100%;max-width:360px;display:block;margin:auto;background:#5b8fd6;border-radius:6px"></canvas>
+    <div class="hint" id="b-now"></div>
+    <div class="hint" style="margin-top:8px">幾何：太陽視直徑 α（0.524°–0.542°，依日地距離）；本影長度 L = D ÷ (2·tan(α/2)) ≈ 107×D。距離 s 處本影半徑 r = D/2 − s·tan(α/2)，半影半徑 D/2 + s·tan(α/2)；地面上的影子再依太陽仰角拉長。持續時間＝影子直徑 ÷ 氣球相對台北、垂直於太陽方向的速度。質量以 Echo 1 號面密度（約 22.6 g/m²）估計；鍍鋁氣球的面積質量比約 11 m²/kg，與大小無關，大氣阻力壽命以 Vallado 指數大氣模型粗估（太陽活動中等）。亮度以鏡面反射球（反射率 0.9）估計。</div>
+    </div>
     <div id="status"></div>
   </div>
   <div id="map"><div id="cesium"></div></div>
 </div>
 <script src="/ext/games.js?v=__BUILD__"></script>
+<script src="/ext/games_crowd.js?v=__BUILD__"></script>
+<script src="/ext/games_balloon.js?v=__BUILD__"></script>
 </body>
 </html>
