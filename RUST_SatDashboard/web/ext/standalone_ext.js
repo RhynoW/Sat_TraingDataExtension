@@ -62,7 +62,9 @@
     ".sd-upd button{font:inherit;background:#238636;color:#fff;border:0;border-radius:4px;padding:0 6px;margin-left:4px;cursor:pointer}" +
     ".sd-upd button.sec{background:#30363d}" +
     "#mission-link{color:#111!important;background:#ffe600!important;border:1px solid #fff59d!important;" +
-    "font-weight:700;box-shadow:0 0 6px rgba(255,230,0,.45)}#mission-link:hover{background:#fff176!important}";
+    "font-weight:700;box-shadow:0 0 6px rgba(255,230,0,.45)}#mission-link:hover{background:#fff176!important}" +
+    "#games-link{color:#fff!important;background:#8957e5!important;border:1px solid #d2a8ff!important;font-weight:700}" +
+    "#games-link:hover{background:#a371f7!important}";
   var st = document.createElement("style");
   st.textContent = css;
   document.head.appendChild(st);

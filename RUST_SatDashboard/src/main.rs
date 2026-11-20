@@ -10,6 +10,7 @@ mod assets;
 mod classify;
 mod config;
 mod coverage;
+mod games;
 mod index;
 mod lab;
 mod lunar;

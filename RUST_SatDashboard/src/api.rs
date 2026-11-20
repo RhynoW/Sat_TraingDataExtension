@@ -68,6 +68,7 @@ pub fn router(state: Arc<AppState>) -> Router {
     let r = crate::api_phase2::extend(r);
     let r = crate::tiles::extend(r);
     let r = crate::mission::extend(r);
+    let r = crate::games::extend(r);
     let r = crate::orbit_history::extend(r);
     let r = crate::lab::extend(r);
     let r = crate::story::extend(r);

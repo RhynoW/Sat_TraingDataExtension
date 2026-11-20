@@ -74,6 +74,8 @@ def render_templates() -> None:
                 '<div id="lang-switcher">',
                 '<button type="button" id="mission-link" class="tbtn" onclick="window.open(\'/mission\',\'_blank\')" '
                 'title="地面站下行接收過頂預報（中大太遙中心 × Vantor，仰角 15°）">&#128752; 任務規劃</button>\n'
+                '  <button type="button" id="games-link" class="tbtn" onclick="window.open(\'/games\',\'_blank\')" '
+                'title="太空小遊戲：月球模擬（射月球）等，僅單機版">&#127918; 太空小遊戲</button>\n'
                 '  <div id="lang-switcher">', 1)
         (out / name).write_text(html, encoding="utf-8", newline="\n")
         print("render", name)
