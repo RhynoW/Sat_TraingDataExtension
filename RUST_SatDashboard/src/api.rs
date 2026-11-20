@@ -41,6 +41,7 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/api/db_info", get(api_db_info))
         .route("/api/positions", get(api_positions))
         .route("/api/positions/coords", get(api_positions_coords))
+        .route("/api/tles", get(api_tles))
         .route("/api/positions/active", post(api_positions_active))
         .route("/api/position/{id}", get(api_position_single))
         .route("/api/sat_orbit", get(api_sat_orbit))
@@ -308,6 +309,40 @@ async fn api_positions(State(st): St, Query(q): Q) -> Resp {
             "sampled": false,
             "elapsed_sec": round_to(elapsed, 3),
             "vectorized": true,
+            "satellites": sats,
+            "timestamp": now_iso(),
+        }))
+        .into_response()
+    })
+    .await
+}
+
+/// 分類篩選的 TLE 批次：地球儀前端以 Web Worker 自行傳播（下載一次，之後不再輪詢位置）。
+async fn api_tles(State(st): St, Query(q): Q) -> Resp {
+    let (ftype, fval, payload_only) = match filter_params(&q) {
+        Ok(v) => v,
+        Err(r) => return r,
+    };
+    blocking(move || {
+        let idx = st.index();
+        let sats: Vec<Value> = matched_ids(&idx, &ftype, &fval, payload_only)
+            .iter()
+            .filter_map(|n| {
+                let s = &idx.sats[n];
+                if s.line1.is_empty() || s.line2.is_empty() {
+                    return None;
+                }
+                let mut m = basic_info(s);
+                m.insert("line1".into(), json!(s.line1));
+                m.insert("line2".into(), json!(s.line2));
+                Some(Value::Object(m))
+            })
+            .collect();
+        Json(json!({
+            "ftype": ftype,
+            "fval": fval,
+            "color": get_color(&ftype, &fval),
+            "count": sats.len(),
             "satellites": sats,
             "timestamp": now_iso(),
         }))
