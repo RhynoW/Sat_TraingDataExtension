@@ -1,0 +1,16 @@
+﻿norad,name,domain,alt_km,period,A_primary,A_card_verdict,A_card_ntle,A_card_model2,A_card_fusion,A_card_l2,A_primary_flags,A_primary_episodes,A_episodes_outside_R7,A_nrlmsis_flags,A_model2_flags,A_reentry,R7_events,R7_E3,R7_E2,R7_E1,R7_D,R7_events_covered_by_A,R7_E3_covered_by_A,R7_E3_list,R7_lowconf
+64199,SJ-26,非 Starlink,496,2025-05-29～2026-11-14,NRLMSIS 阻力殘差,Model 2 異常 7 次,1332,7,5,"{'cusum': 91, 'bocpd': 5, 'ssa': 201, 'mad3sig': 91}",7,4,0,7,7,False,4,1,3,0,0,4,1,2025-05-29 -38.7 km✓,0
+62190,HAISHAO 1,非 Starlink,379,2024-12-04～2026-11-13,NRLMSIS 阻力殘差,Model 2 異常 100 次,1847,100,63,"{'cusum': 295, 'bocpd': 1, 'ssa': 210, 'mad3sig': 361}",224,96,89,224,99,False,8,1,4,3,0,7,1,2025-04-19 +14.5 km✓,92
+58651,SHIYAN 24C 02,非 Starlink,575,2024-01-01～2026-10-15,NRLMSIS 阻力殘差,Model 2 異常 17 次,1935,17,1,"{'cusum': 170, 'bocpd': 2, 'ssa': 374, 'mad3sig': 185}",24,11,7,24,18,False,4,1,2,1,0,3,1,2024-03-15 +39.8 km✓,8
+53056,STARLINK-4314,Starlink,521,2026-03-31～2026-11-14,Model 1（ML）,融合旗標 103 次,683,116,103,"{'cusum': 170, 'bocpd': 0, 'ssa': 167, 'mad3sig': 212}",101,8,5,103,106,False,3,2,0,0,1,3,2,2026-08-15 -14.9 km✓; 2026-08-25 -65.3 km✓,19
+59711,STARLINK-11082,Starlink,360,2026-04-01～2026-11-14,Model 1（ML）,融合旗標 11 次,470,3,11,"{'cusum': 29, 'bocpd': 7, 'ssa': 22, 'mad3sig': 64}",0,0,0,0,2,False,0,0,0,0,0,0,0,,3
+69018,PELICAN-8 300F,非 Starlink,490,2026-05-08～2026-11-14,NRLMSIS 阻力殘差,Model 2 異常 47 次,507,47,64,"{'cusum': 114, 'bocpd': 0, 'ssa': 51, 'mad3sig': 155}",27,14,12,27,44,False,2,0,2,0,0,2,0,,13
+60548,ICEYE-X33,非 Starlink,564,2026-03-31～2026-11-14,NRLMSIS 阻力殘差,Model 2 異常 14 次,590,14,12,"{'cusum': 36, 'bocpd': 2, 'ssa': 78, 'mad3sig': 48}",2,2,1,2,14,False,1,0,1,0,0,1,0,,1
+41634,SJ 16-02,非 Starlink,593,2024-01-01～2026-11-14,NRLMSIS 阻力殘差,Model 2 異常 1 次,4395,1,6,"{'cusum': 282, 'bocpd': 1, 'ssa': 356, 'mad3sig': 270}",3,2,2,3,1,False,0,0,0,0,0,0,0,,2
+68831,HJS-9A,非 Starlink,508,2026-04-24～2026-11-14,NRLMSIS 阻力殘差,Model 2 異常 9 次,446,9,55,"{'cusum': 85, 'bocpd': 8, 'ssa': 71, 'mad3sig': 111}",12,9,8,12,8,False,1,0,0,0,1,1,0,,8
+61871,OBJECT C,非 Starlink,503,2024-11-09～2026-11-14,NRLMSIS 阻力殘差,Model 2 異常 3 次,2671,3,110,"{'cusum': 177, 'bocpd': 1, 'ssa': 314, 'mad3sig': 187}",9,6,6,9,3,False,0,0,0,0,0,0,0,,6
+43081,YAOGAN-30 G,非 Starlink,570,2024-01-01～2026-11-14,NRLMSIS 阻力殘差,Model 2 異常 1 次,3498,1,8,"{'cusum': 196, 'bocpd': 5, 'ssa': 314, 'mad3sig': 235}",6,6,6,6,1,False,0,0,0,0,0,0,0,,6
+43797,SKYSAT C12,非 Starlink,417,2026-03-31～2026-11-14,NRLMSIS 阻力殘差,Model 2 異常 1 次,711,1,17,"{'cusum': 14, 'bocpd': 3, 'ssa': 18, 'mad3sig': 20}",0,0,0,0,0,False,0,0,0,0,0,0,0,,0
+56193,HAWK-7B,非 Starlink,483,2026-04-01～2026-11-14,NRLMSIS 阻力殘差,Model 2 異常 0 次,730,0,10,"{'cusum': 19, 'bocpd': 1, 'ssa': 27, 'mad3sig': 23}",0,0,0,0,0,False,0,0,0,0,0,0,0,,0
+60507,TANAGER-1 4001,非 Starlink,433,2026-04-01～2026-11-13,NRLMSIS 阻力殘差,Model 2 異常 29 次,513,29,18,"{'cusum': 57, 'bocpd': 2, 'ssa': 38, 'mad3sig': 69}",6,4,4,6,24,False,0,0,0,0,0,0,0,,4
+65316,PELICAN-4 300B,非 Starlink,444,2026-03-31～2026-11-10,NRLMSIS 阻力殘差,Model 2 異常 36 次,472,36,11,"{'cusum': 67, 'bocpd': 5, 'ssa': 19, 'mad3sig': 94}",5,5,5,5,37,False,0,0,0,0,0,0,0,,5
