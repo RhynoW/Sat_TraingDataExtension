@@ -12,6 +12,7 @@ mod config;
 mod coverage;
 mod games;
 mod games_astro;
+mod debris_engine;
 mod games_debris;
 mod games_war;
 mod index;

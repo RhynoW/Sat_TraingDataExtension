@@ -1,10 +1,11 @@
 /* 太空小遊戲：碎片連鎖的遊戲層（/games 💥 分頁）
  * 情境模板（含已不在目錄中的歷史案例，以自訂軌道示意）、任務模式、緩解決策卡與對照組比較、風險儀表板、成就。
- * 透過 window.SDG_DEBRIS（games_debris.js 提供 baseReq、post）掛上 extend(req) 與 onResult(d, req)。 */
+ * 透過 window.SDG_DEBRIS（games_debris.js 提供 baseReq、post）掛上 extend(req) 與 onResult(d, req)。
+ * 資料表（情境、決策卡、任務、成就）保留中文，顯示時才經 T() 翻譯；線上版切換語言時呼叫 HOOK.relangGame() 重畫。 */
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
-  var SDG = window.SDG, fmt = SDG.fmt, HOOK = window.SDG_DEBRIS;
+  var SDG = window.SDG, fmt = SDG.fmt, HOOK = window.SDG_DEBRIS, T = HOOK.T, TS = HOOK.TS;
   var YEAR = 365.25 * 86400;
 
   // ── 情境模板（歷史案例為近似教學設定，不是事件重演）────────────────────
@@ -28,9 +29,9 @@
   // Cosmos 1408（動能反衛星撞擊）衰減驗證：docs/book/sim_validation/cosmos1408/
   var VALID = "📏 驗證（Cosmos 1408 試射碎片，寫實 ×1）：碰撞模型第 1 年存活 25.3%、第 3 年 1.6%（觀測 25.3%、0.9%；v0.1.19，30 個種子中位數）；爆炸模型 43.9%，第 5 年仍剩 13.8%（觀測 0.2%；v0.1.15 驗證報告）。動能撞擊應選碰撞模型。";
   function kindNote() {
-    var k = $("d-kind").value, h = KIND[k] + "<br>" + VALID;
+    var k = $("d-kind").value, h = T(KIND[k]) + "<br>" + T(VALID);
     if (cur && String(cur.coll ? 1 : 0) !== k)
-      h = "<span style='color:#ff7b72'>⚠ 這個情境實際是" + (cur.coll ? "外部撞擊，應選「碰撞模型」" : "內部爆炸，應選「爆炸模型」") + "；目前的選擇會讓碎片的散布與衰減和實際不同。</span><br>" + h;
+      h = "<span style='color:#ff7b72'>" + (cur.coll ? T("⚠ 這個情境實際是外部撞擊，應選「碰撞模型」；目前的選擇會讓碎片的散布與衰減和實際不同。") : T("⚠ 這個情境實際是內部爆炸，應選「爆炸模型」；目前的選擇會讓碎片的散布與衰減和實際不同。")) + "</span><br>" + h;
     $("d-kind-note").innerHTML = h;
   }
   $("d-kind").addEventListener("change", kindNote);
@@ -39,7 +40,7 @@
   function applyTpl(k) {
     cur = TPL[k] || null;
     $("d-tpl").value = k || "";
-    $("d-tpl-note").textContent = cur ? cur.note + (cur ? "（" + (cur.coll ? "碰撞模型：外部撞擊" : "爆炸模型：內部能量") + "）" : "") : "";
+    $("d-tpl-note").textContent = cur ? T(cur.note) + (cur.coll ? T("（碰撞模型：外部撞擊）") : T("（爆炸模型：內部能量）")) : "";
     if (!cur) { kindNote(); return; }
     if (cur.norad) { $("d-q").value = cur.norad; }
     else { $("d-q").value = ""; }
@@ -68,12 +69,27 @@
       desc: "簡化避碰假設：運作中的衛星（有效載荷）對可追蹤（≥ 10 cm）的物件避碰。能力分三級：基礎（預警與燃料有限）碰撞機率降至 50%、標準 10%、進階（精密定軌、自動化協調，2 點）2%。實際效果取決於預警能力、燃料、協調與虛警率；小於 10 cm 的碎片追蹤不到、躲不了；已失效的衛星不能避碰。" },
   ];
   var BUDGET = 3;
-  $("d-cards").innerHTML = CARDS.map(function (c) {
-    return "<label class='chk' title='" + c.desc + "'><input type='checkbox' data-card='" + c.k + "'>" + c.icon + " <b>" + c.name + "</b>（" + (c.levels ? "1–2" : c.cost) + " 點）" +
-      (c.levels ? "<select data-cardl='" + c.k + "' style='width:auto;margin-left:auto'>" + c.levels.map(function (l) { return "<option value='" + l[0] + "'" + (l[0] === "std" ? " selected" : "") + ">" + l[1] + "</option>"; }).join("") + "</select>" : "") +
-      "<select data-cardt='" + c.k + "' style='width:auto;margin-left:" + (c.levels ? "4px" : "auto") + "'>" + c.times.map(function (t) { return "<option value='" + t[0] + "'>" + t[1] + "</option>"; }).join("") + "</select></label>" +
-      "<div class='hint' style='margin:-2px 0 4px 22px'>" + c.desc + "</div>";
-  }).join("") + "<div class='hint' id='d-budget'></div>";
+  function drawCards() {
+    // 重畫時保留勾選、能力等級與時間
+    var keep = {};
+    CARDS.forEach(function (c) {
+      var cb = document.querySelector("[data-card=" + c.k + "]");
+      if (cb) keep[c.k] = [cb.checked, lvlSel(c) && lvlSel(c).value, document.querySelector("[data-cardt=" + c.k + "]").value];
+    });
+    $("d-cards").innerHTML = CARDS.map(function (c) {
+      return "<label class='chk' title='" + T(c.desc) + "'><input type='checkbox' data-card='" + c.k + "'>" + c.icon + " <b>" + T(c.name) + "</b>" + T("（{0} 點）", c.levels ? "1–2" : c.cost) +
+        (c.levels ? "<select data-cardl='" + c.k + "' style='width:auto;margin-left:auto'>" + c.levels.map(function (l) { return "<option value='" + l[0] + "'" + (l[0] === "std" ? " selected" : "") + ">" + T(l[1]) + "</option>"; }).join("") + "</select>" : "") +
+        "<select data-cardt='" + c.k + "' style='width:auto;margin-left:" + (c.levels ? "4px" : "auto") + "'>" + c.times.map(function (t) { return "<option value='" + t[0] + "'>" + T(t[1]) + "</option>"; }).join("") + "</select></label>" +
+        "<div class='hint' style='margin:-2px 0 4px 22px'>" + T(c.desc) + "</div>";
+    }).join("") + "<div class='hint' id='d-budget'></div>";
+    CARDS.forEach(function (c) {
+      var k = keep[c.k]; if (!k) return;
+      document.querySelector("[data-card=" + c.k + "]").checked = k[0];
+      if (k[1]) lvlSel(c).value = k[1];
+      document.querySelector("[data-cardt=" + c.k + "]").value = k[2];
+    });
+  }
+  drawCards();
   function picked() {
     return CARDS.filter(function (c) { return document.querySelector("[data-card=" + c.k + "]").checked; });
   }
@@ -93,7 +109,7 @@
       }
       cb.disabled = !cb.checked && used + costOf(c) > BUDGET;
     });
-    $("d-budget").innerHTML = "已用 <b>" + used + " / " + BUDGET + "</b> 點。" + (used ? "引爆後會自動再跑一次「不採取決策」的對照組（同亂數種子）比較。" : "不選就是「什麼都不做」。");
+    $("d-budget").innerHTML = T("已用 <b>{0} / {1}</b> 點。", used, BUDGET) + (used ? T("引爆後會自動再跑一次「不採取決策」的對照組（同亂數種子）比較。") : T("不選就是「什麼都不做」。"));
   }
   $("d-cards").addEventListener("change", budget); budget();
 
@@ -102,27 +118,27 @@
     m1: { name: "任務 1：自然清除", goal: "選一個情境或衛星，在<b>寫實 ×1</b> 下讓第一代碎片 <b>5 年內至少一半再入</b>。提示：軌道越低、大氣越濃，碎片清得越快。",
       setup: function () { $("d-y").value = "5"; $("d-acc").value = "1"; },
       judge: function (d, req) {
-        if (req.accel !== 1 || d.years < 4.99) return { ok: false, msg: "需要寫實 ×1、模擬 5 年以上。" };
+        if (req.accel !== 1 || d.years < 4.99) return { ok: false, msg: T("需要寫實 ×1、模擬 5 年以上。") };
         var n0 = d.frags.filter(function (f) { return f[2] === 1; }).length;
         var s5 = d.series.filter(function (s) { return s.t >= 5 * YEAR - 1; })[0] || d.series[d.series.length - 1];
         var left = s5.alive[1] / Math.max(1, n0);
-        var why = left > 0.5 ? "<br>原因：母體高度 " + fmt(d.parent.alt_km) + " km，這個高度的大氣太稀薄，5 年內拖不下來。試試 500 km 以下的軌道（例如 Cosmos 1408 情境）。" : "";
-        return { ok: left <= 0.5, stars: left <= 0.1 ? 3 : left <= 0.25 ? 2 : 1, msg: "5 年後第一代碎片還剩 <b>" + Math.round(left * 100) + "%</b>（" + fmt(s5.alive[1]) + " / " + fmt(n0) + "）" + why };
+        var why = left > 0.5 ? "<br>" + T("原因：母體高度 {0} km，這個高度的大氣太稀薄，5 年內拖不下來。試試 500 km 以下的軌道（例如 Cosmos 1408 情境）。", fmt(d.parent.alt_km)) : "";
+        return { ok: left <= 0.5, stars: left <= 0.1 ? 3 : left <= 0.25 ? 2 : 1, msg: T("5 年後第一代碎片還剩 <b>{0}%</b>（{1} / {2}）", Math.round(left * 100), fmt(s5.alive[1]), fmt(n0)) + why };
       } },
     m2: { name: "任務 2：連鎖觸發者", goal: "在 <b>×1,000 誇張模式</b>、10 年內觸發<b>第 3 代碎片</b>（碎片撞出的碎片再撞出碎片）。用的初始碎片越少，星數越高。",
       setup: function () { $("d-y").value = "10"; $("d-acc").value = "1000"; },
       judge: function (d, req) {
-        if (req.accel < 1000) return { ok: false, msg: "需要 ×1,000 以上的碰撞誇張倍率。" };
+        if (req.accel < 1000) return { ok: false, msg: T("需要 ×1,000 以上的碰撞誇張倍率。") };
         var gens = 0; d.frags.forEach(function (f) { gens = Math.max(gens, f[2]); });
-        var why = gens < 3 ? "<br>原因：初始碎片太少或模擬年數太短，碰撞還來不及一代接一代發生。增加碎片數、年數，或改用 ×10,000。" : "";
-        return { ok: gens >= 3, stars: req.n_frag <= 100 ? 3 : req.n_frag <= 300 ? 2 : 1, msg: "最多到第 <b>" + gens + "</b> 代；初始碎片 " + req.n_frag + " 個" + why };
+        var why = gens < 3 ? "<br>" + T("原因：初始碎片太少或模擬年數太短，碰撞還來不及一代接一代發生。增加碎片數、年數，或改用 ×10,000。") : "";
+        return { ok: gens >= 3, stars: req.n_frag <= 100 ? 3 : req.n_frag <= 300 ? 2 : 1, msg: T("最多到第 <b>{0}</b> 代；初始碎片 {1} 個", gens, req.n_frag) + why };
       } },
     m3: { name: "任務 3：守護者", goal: "Envisat 在<b>寫實 ×1</b> 下爆炸。用緩解決策卡（預算 3 點），讓 10 年的<b>第一代碎片近似風險降到不採取決策的對照組 81% 以下</b>（79% 兩星、77% 三星）。寫實模式下幾乎沒有連鎖，決策效果才量得準。以 5 個連續種子的中位數判定（每個種子都跑決策組與對照組，約需 1 分鐘）。",
       setup: function () { applyTpl("envisat"); $("d-acc").value = "1"; $("d-y").value = "10"; },
       judge: function (d, req, base) {
-        if (!req.actions || !req.actions.length) return { ok: false, msg: "至少要選一張決策卡。" };
-        if (req.norad !== 27386 || req.orbit || req.n_frag < 1000) return { ok: false, msg: "任務條件固定為 Envisat、1,000 個碎片（碎片越少，清理的 50 個佔比越大，比較就不公平）。重新選一次任務 3 會自動帶入。" };
-        if (req.accel !== 1) return { ok: false, msg: "需要寫實 ×1：誇張模式下連鎖是混沌的，一次擲骰不同就會讓整條連鎖改變，單次比較不可靠。" };
+        if (!req.actions || !req.actions.length) return { ok: false, msg: T("至少要選一張決策卡。") };
+        if (req.norad !== 27386 || req.orbit || req.n_frag < 1000) return { ok: false, msg: T("任務條件固定為 Envisat、1,000 個碎片（碎片越少，清理的 50 個佔比越大，比較就不公平）。重新選一次任務 3 會自動帶入。") };
+        if (req.accel !== 1) return { ok: false, msg: T("需要寫實 ×1：誇張模式下連鎖是混沌的，一次擲骰不同就會讓整條連鎖改變，單次比較不可靠。") };
         if (!base || !base.ratios) return { pending: true };
         // 判定：M3_SEEDS 個連續種子的共同隨機數比較（決策組與對照組同種子、同解體時刻、同取樣時刻），取第一代碎片近似風險比值的中位數
         var rs = base.ratios.slice().sort(function (x, y) { return x - y; }), r = rs[Math.floor(rs.length / 2)];
@@ -131,31 +147,35 @@
           var late = req.actions.every(function (a) { return a.t_days >= 365; });
           var kinds = req.actions.map(function (a) { return a.kind; });
           var av = req.actions.filter(function (a) { return a.kind === "avoid"; })[0];
-          why = "<br>原因：" + (late ? "決策都在第 1 年以後才生效，碎片已經散開；越早緩解越有效。" :
+          why = "<br>" + T("原因：") + T(late ? "決策都在第 1 年以後才生效，碎片已經散開；越早緩解越有效。" :
             !av ? "沒有避碰。清理 50 個碎片只佔 1,000 個中的一小部分，移除火箭體在短期內效果也有限（符合軌道面條件、又剛好在碎片帶裡的目標不多）；保護在軌衛星的避碰效果最大。" :
             av.level === "low" ? "避碰能力只有基礎級（碰撞機率只降到 50%）。改用標準級，或把點數留給進階級。" :
             kinds.indexOf("cleanup") < 0 ? "只有避碰。搭配第 30 天的清理任務，先移除風險最高的碎片，效果會更好。" :
             "只靠一種措施效果有限，可以換個搭配試試。");
         }
         return { ok: r <= 0.81, stars: r <= 0.77 ? 3 : r <= 0.79 ? 2 : 1,
-          msg: "第一代碎片近似風險為對照組的 <b>" + Math.round(r * 100) + "%</b>（" + rs.length + " 個種子 " + req.seed + "–" + (req.seed + rs.length - 1) + " 的中位數，範圍 " +
-            Math.round(rs[0] * 100) + "–" + Math.round(rs[rs.length - 1] * 100) + "%）。<span class='hint'>教學判定：種子數仍少，屬初步結果，不是統計結論。</span>" + why + bestTip(req) +
-            "<br>💡 即使三張卡都用上，通常也只能減少兩到三成：碎片一旦產生就很難收回，<b>預防解體（任務後處置、鈍化電池與殘餘推進劑）比事後清除有效得多</b>。" };
+          msg: T("第一代碎片近似風險為對照組的 <b>{0}%</b>（{1} 個種子 {2}–{3} 的中位數，範圍 {4}–{5}%）。", Math.round(r * 100), rs.length, req.seed, req.seed + rs.length - 1,
+            Math.round(rs[0] * 100), Math.round(rs[rs.length - 1] * 100)) + "<span class='hint'>" + T("教學判定：種子數仍少，屬初步結果，不是統計結論。") + "</span>" + why + bestTip(req) +
+            "<br>" + T("💡 即使三張卡都用上，通常也只能減少兩到三成：碎片一旦產生就很難收回，<b>預防解體（任務後處置、鈍化電池與殘餘推進劑）比事後清除有效得多</b>。") };
       } },  };
   var M3_SEEDS = 5;
   // 機會成本提示：多種子測試中各組合的參考值（scripts/validate_debris.py 同方法；見架構說明 6）
   var M3_REF = { seeds: "7–11", rows: [["清理＋標準避碰", 76], ["進階避碰＋移除火箭體", 80], ["只用進階避碰", 81], ["只用標準避碰", 82], ["清理＋基礎避碰", 83], ["只清理", 91], ["只移除火箭體", 100]] };
   function bestTip(req) {
     if (!M3_REF) return "";
-    return "<br>📊 參考（種子 " + M3_REF.seeds + " 的中位數）：" + M3_REF.rows.map(function (r) { return r[0] + " " + r[1] + "%"; }).join("、") + "。花同樣的點數，搭配不同，減少的風險可以差好幾倍（例如 3 點的清理＋標準避碰減少約 24%，清理＋移除火箭體只減少約 9%）。";
+    return "<br>" + T("📊 參考（種子 {0} 的中位數）：", M3_REF.seeds) + M3_REF.rows.map(function (r) { return T(r[0]) + " " + r[1] + "%"; }).join(T("、")) + T("。花同樣的點數，搭配不同，減少的風險可以差好幾倍（例如 3 點的清理＋標準避碰減少約 24%，清理＋移除火箭體只減少約 9%）。");
   }
   $("d-mission").onchange = function () {
     var m = MIS[this.value];
     $("d-mission-card").hidden = !m; $("d-mission-res").innerHTML = "";
     if (!m) return;
     m.setup();
-    $("d-mission-card").innerHTML = "🎯 <b>" + m.name + "</b><br>" + m.goal;
+    missionCard();
   };
+  function missionCard() {
+    var m = MIS[$("d-mission").value];
+    if (m) $("d-mission-card").innerHTML = "🎯 <b>" + T(m.name) + "</b><br>" + T(m.goal);
+  }
 
   // ── 成就（存在瀏覽器；無法存取時只在本頁有效）──────────────────────────
   var ACH = [
@@ -167,12 +187,14 @@
   try { got = JSON.parse(localStorage.getItem("sdg-debris-ach") || "{}") || {}; } catch (e) { got = {}; }
   function save() { try { localStorage.setItem("sdg-debris-ach", JSON.stringify(got)); } catch (e) { /* 私密模式等 */ } }
   function unlock(k) { if (got[k]) return false; got[k] = Date.now(); save(); return true; }
+  var lastFresh = [];
   function drawAch(fresh) {
     var n = ACH.filter(function (a) { return got[a[0]]; }).length;
-    $("d-ach").innerHTML = "<div style='margin-bottom:3px'>已解鎖 <b>" + n + " / " + ACH.length + "</b>" + (fresh.length ? "　<span style='color:#f2cc60'>🎉 新成就：" + fresh.join("、") + "</span>" : "") + "</div>" +
+    lastFresh = fresh;
+    $("d-ach").innerHTML = "<div style='margin-bottom:3px'>" + T("已解鎖 <b>{0} / {1}</b>", n, ACH.length) + (fresh.length ? "　<span style='color:#f2cc60'>" + T("🎉 新成就：") + fresh.map(function (x) { return T(x); }).join(T("、")) + "</span>" : "") + "</div>" +
       ACH.map(function (a) {
-        return "<span title='" + a[2] + "' style='display:inline-block;margin:2px 4px 2px 0;padding:1px 7px;border-radius:10px;border:1px solid " +
-          (got[a[0]] ? "#f2cc60;color:#f2cc60" : "#30363d;color:#6e7681") + "'>" + (got[a[0]] ? "🏅 " : "🔒 ") + a[1] + "</span>";
+        return "<span title='" + T(a[2]) + "' style='display:inline-block;margin:2px 4px 2px 0;padding:1px 7px;border-radius:10px;border:1px solid " +
+          (got[a[0]] ? "#f2cc60;color:#f2cc60" : "#30363d;color:#6e7681") + "'>" + (got[a[0]] ? "🏅 " : "🔒 ") + T(a[1]) + "</span>";
       }).join("");
   }
   drawAch([]);
@@ -183,8 +205,8 @@
     var R = 6378.137, s = d.summary, h = "";
     // 1. 風險最高的目錄物件
     if (d.risk_top && d.risk_top.length) {
-      h += "<div style='margin-top:2px'><b>風險最高的目錄物件</b>（被所有碎片撞上的累計期望次數，已除回誇張倍率）</div><table class='kv'>" +
-        d.risk_top.map(function (r) { return "<tr><td>" + (r.name || "—") + "</td><td>" + r.kind + "，" + fmt(r.alt_km) + " km，" + (r.expected_real < 0.001 ? r.expected_real.toExponential(1) : r.expected_real.toFixed(3)) + " 次</td></tr>"; }).join("") + "</table>";
+      h += "<div style='margin-top:2px'>" + T("<b>風險最高的目錄物件</b>（被所有碎片撞上的累計期望次數，已除回誇張倍率）") + "</div><table class='kv'>" +
+        d.risk_top.map(function (r) { return "<tr><td>" + (r.name || "—") + "</td><td>" + T("{0}，{1} km，{2} 次", T(r.kind), fmt(r.alt_km), r.expected_real < 0.001 ? r.expected_real.toExponential(1) : r.expected_real.toFixed(3)) + "</td></tr>"; }).join("") + "</table>";
     }
     // 2. 碰撞熱區高度帶（50 km 一帶）
     var bands = {};
@@ -194,18 +216,18 @@
       bands[b] = (bands[b] || 0) + 1;
     });
     var bk = Object.keys(bands).map(Number).sort(function (a, b) { return bands[b] - bands[a]; }).slice(0, 5), bmax = bk.length ? bands[bk[0]] : 1;
-    h += "<div style='margin-top:6px'><b>碰撞熱區高度帶</b></div>" + (bk.length ? bk.map(function (b) {
+    h += "<div style='margin-top:6px'><b>" + T("碰撞熱區高度帶") + "</b></div>" + (bk.length ? bk.map(function (b) {
       return "<div style='display:flex;gap:6px;align-items:center'><span style='min-width:92px'>" + b + "–" + (b + 50) + " km</span><div style='flex:1;background:#21262d;height:9px;border-radius:3px'><div style='width:" +
-        Math.round(bands[b] / bmax * 100) + "%;height:100%;background:#ff7b72;border-radius:3px'></div></div><span style='min-width:40px;text-align:right'>" + bands[b] + " 次</span></div>";
-    }).join("") : "<div>沒有碰撞。</div>");
+        Math.round(bands[b] / bmax * 100) + "%;height:100%;background:#ff7b72;border-radius:3px'></div></div><span style='min-width:40px;text-align:right'>" + T("{0} 次", bands[b]) + "</span></div>";
+    }).join("") : "<div>" + T("沒有碰撞。") + "</div>");
     // 3. 期末各代碎片比例
     var last = d.series[d.series.length - 1].alive, tot = last.reduce(function (a, b) { return a + b; }, 0);
-    h += "<div style='margin-top:6px'><b>期末各代碎片比例</b>（在軌 " + fmt(tot) + " 個）</div>";
+    h += "<div style='margin-top:6px'>" + T("<b>期末各代碎片比例</b>（在軌 {0} 個）", fmt(tot)) + "</div>";
     if (tot) {
       h += "<div style='display:flex;height:12px;border-radius:3px;overflow:hidden'>" + last.map(function (v, k) {
-        return v ? "<div title='第 " + k + " 代：" + fmt(v) + " 個' style='width:" + (v / tot * 100) + "%;background:" + GEN_C[k] + "'></div>" : "";
-      }).join("") + "</div><div>" + last.map(function (v, k) { return v ? "<span style='color:" + GEN_C[k] + ";margin-right:8px'>第 " + k + " 代 " + Math.round(v / tot * 100) + "%</span>" : ""; }).join("") + "</div>";
-    } else h += "<div>碎片已全數再入或被撞毀。</div>";
+        return v ? "<div title='" + T("第 {0} 代：{1} 個", k, fmt(v)) + "' style='width:" + (v / tot * 100) + "%;background:" + GEN_C[k] + "'></div>" : "";
+      }).join("") + "</div><div>" + last.map(function (v, k) { return v ? "<span style='color:" + GEN_C[k] + ";margin-right:8px'>" + T("第 {0} 代 {1}%", k, Math.round(v / tot * 100)) + "</span>" : ""; }).join("") + "</div>";
+    } else h += "<div>" + T("碎片已全數再入或被撞毀。") + "</div>";
     // 4. 太陽活動走勢（F10.7，隨太陽活動模式才有）
     var fv = d.series.filter(function (x) { return x.f107 != null; });
     if (fv.length > 2 && d.solar && d.solar.mode === "series") {
@@ -216,14 +238,14 @@
       if (d.solar.beyond_data) {
         var du = d.solar.data_until.split("-"), tb = (Date.UTC(+du[0], +du[1], 1) - Date.parse(d.solar.epoch + "T00:00:00Z")) / 1000, xb = Math.max(0, Math.min(W, tb / t1 * W));
         ext = "<rect x='" + xb.toFixed(1) + "' y='0' width='" + (W - xb).toFixed(1) + "' height='" + H + "' fill='#30363d' opacity='0.6'/>" +
-          "<text x='" + (xb + 4).toFixed(1) + "' y='12' fill='#c9d1d9' font-size='10'>" + d.solar.data_until.slice(0, 4) + " 後：週期外推（情境假設，非預報）</text>";
+          "<text x='" + (xb + 4).toFixed(1) + "' y='12' fill='#c9d1d9' font-size='10'>" + T("{0} 後：週期外推（情境假設，非預報）", d.solar.data_until.slice(0, 4)) + "</text>";
       }
-      h += "<div style='margin-top:6px'><b>太陽活動 F10.7</b>（" + d.solar.epoch + " 起；越高大氣越密、碎片衰減越快）</div>" +
+      h += "<div style='margin-top:6px'>" + T("<b>太陽活動 F10.7</b>（{0} 起；越高大氣越密、碎片衰減越快）", d.solar.epoch) + "</div>" +
         "<svg viewBox='0 0 " + W + " " + H + "' style='width:100%;height:46px;background:#0b1622;border-radius:4px'>" + ext + "<polyline points='" + pts +
         "' fill='none' stroke='#f2a73b' stroke-width='1.5'/><text x='4' y='12' fill='#8b949e' font-size='10'>" + Math.round(fmax) + "</text><text x='4' y='" + (H - 3) + "' fill='#8b949e' font-size='10'>" + fmin + "</text></svg>";
     }
     // 5. 累計再入
-    h += "<div style='margin-top:6px'><b>累計再入</b>：碎片 " + fmt(s.reentered || 0) + " 個（含被撞毀與清理移除）；目錄物件 " + fmt(s.cat_reentered || 0) + " 個</div>";
+    h += "<div style='margin-top:6px'>" + T("<b>累計再入</b>：碎片 {0} 個（含被撞毀與清理移除）；目錄物件 {1} 個", fmt(s.reentered || 0), fmt(s.cat_reentered || 0)) + "</div>";
     $("d-dash").innerHTML = h;
   }
 
@@ -241,7 +263,9 @@
   };
   var tried = {};
   try { tried = JSON.parse(localStorage.getItem("sdg-debris-tpl") || "{}") || {}; } catch (e) { tried = {}; }
+  var lastD = null;
   HOOK.onResult = function (d, req) {
+    lastD = d;
     dash(d);
     $("d-compare").innerHTML = "";
     var fresh = [], gens = 0; d.frags.forEach(function (f) { gens = Math.max(gens, f[2]); });
@@ -260,10 +284,10 @@
     var finish = function (base) {
       if (m) {
         var r = m.judge(d, req, base);
-        if (r.pending) { $("d-mission-res").innerHTML = "<div class='coach'>🎯 對照組計算中，完成後判定…</div>"; return; }
+        if (r.pending) { $("d-mission-res").innerHTML = "<div class='coach'>" + T("🎯 對照組計算中，完成後判定…") + "</div>"; return; }
         if (r.ok && unlock(mk)) fresh.push(m.name.slice(0, 4));
-        $("d-mission-res").innerHTML = "<div class='coach' style='border-left-color:" + (r.ok ? "#3fb950" : "#ff7b72") + "'>🎯 <b>" + m.name + "：" +
-          (r.ok ? "<span style='color:#3fb950'>成功</span> <span style='color:#f2cc60;font-size:15px'>" + "★★★".slice(0, r.stars) + "☆☆☆".slice(0, 3 - r.stars) + "</span>" : "<span style='color:#ff7b72'>未達成</span>") +
+        $("d-mission-res").innerHTML = "<div class='coach' style='border-left-color:" + (r.ok ? "#3fb950" : "#ff7b72") + "'>🎯 <b>" + T(m.name) + T("：") +
+          (r.ok ? "<span style='color:#3fb950'>" + T("成功") + "</span> <span style='color:#f2cc60;font-size:15px'>" + "★★★".slice(0, r.stars) + "☆☆☆".slice(0, 3 - r.stars) + "</span>" : "<span style='color:#ff7b72'>" + T("未達成") + "</span>") +
           "</b><br>" + r.msg + "</div>";
       }
       drawAch(fresh);
@@ -271,30 +295,30 @@
     if (!req.actions) { finish(null); return; }
     // 有決策卡：自動跑對照組（同參數、同亂數種子、不採取決策）
     if (m && m.judge(d, req, null).pending) finish(null);
-    $("d-compare").innerHTML = "對照組（不採取決策）計算中…";
+    $("d-compare").innerHTML = T("對照組（不採取決策）計算中…");
     // 對照組沿用主結果的解體時刻 t0：母體位置與目錄相同，才是共同隨機數比較
     var base = JSON.parse(JSON.stringify(req)); delete base.actions; base.t0 = req.t0 = d.t0;
     (function tryPost(n) {
-      HOOK.postRetry(base, function (left) { $("d-compare").textContent = "對照組排隊中，" + left + " 秒後重試…"; }).then(function (b) {
-        if (b.error) { $("d-compare").textContent = "對照組計算失敗：" + b.error; return; }
+      HOOK.postRetry(base, function (left) { $("d-compare").textContent = T("對照組排隊中，{0} 秒後重試…", left); }).then(function (b) {
+        if (b.error) { $("d-compare").textContent = T("對照組計算失敗：") + TS(b.error); return; }
         var row = function (name, x) {
           var g1 = x.summary.expected_gen1_real;
           var ex = x.summary.expected_collisions;
-          return "<tr><td>" + name + "</td><td>" + (ex < 10 ? ex.toFixed(2) : fmt(ex)) + "</td><td>" + x.summary.collisions + " 次</td><td>" + fmt(x.summary.fragments_total) + "</td><td>" + fmt(x.summary.alive_end) + "</td><td>" + (g1 < 0.01 ? g1.toExponential(1) : g1.toFixed(2)) + "</td></tr>";
+          return "<tr><td>" + name + "</td><td>" + (ex < 10 ? ex.toFixed(2) : fmt(ex)) + "</td><td>" + T("{0} 次", x.summary.collisions) + "</td><td>" + fmt(x.summary.fragments_total) + "</td><td>" + fmt(x.summary.alive_end) + "</td><td>" + (g1 < 0.01 ? g1.toExponential(1) : g1.toFixed(2)) + "</td></tr>";
         };
         // 比較指標：第一代碎片近似風險（只計第一代碎片與目錄物件），排除寫實模式偶發擲中產生的後代碎片雜訊
         var r = d.summary.expected_gen1_real / Math.max(1e-12, b.summary.expected_gen1_real);
         var rt = d.summary.expected_collisions / Math.max(1e-12, b.summary.expected_collisions);
-        $("d-compare").innerHTML = "<div style='margin-top:6px'><b>🃏 決策效果（與對照組比較）</b></div><table class='kv'><tr><td></td><td>累計期望碰撞</td><td>擲中</td><td>碎片總數</td><td>期末在軌</td><td>第一代近似風險</td></tr>" +
-          row("採取決策", d) + row("對照組", b) + "</table><div>第一代碎片近似風險為對照組的 <b>" + Math.round(r * 100) + "%</b>（累計期望碰撞為對照組的 " + Math.round(rt * 100) + "%）。" +
-          "判斷效果用第一代近似風險：它是期望值、對亂數較不敏感，也不受偶發碰撞產生的後代碎片影響；擲中次數受運氣影響，換幾個種子再比較更可靠。</div>";
+        $("d-compare").innerHTML = "<div style='margin-top:6px'><b>" + T("🃏 決策效果（與對照組比較）") + "</b></div><table class='kv'><tr><td></td><td>" + T("累計期望碰撞") + "</td><td>" + T("擲中") + "</td><td>" + T("碎片總數") + "</td><td>" + T("期末在軌") + "</td><td>" + T("第一代近似風險") + "</td></tr>" +
+          row(T("採取決策"), d) + row(T("對照組"), b) + "</table><div>" + T("第一代碎片近似風險為對照組的 <b>{0}%</b>（累計期望碰撞為對照組的 {1}%）。", Math.round(r * 100), Math.round(rt * 100)) +
+          T("判斷效果用第一代近似風險：它是期望值、對亂數較不敏感，也不受偶發碰撞產生的後代碎片影響；擲中次數受運氣影響，換幾個種子再比較更可靠。") + "</div>";
         if (req.accel === 1 && r <= 0.85 && b.summary.expected_collisions > 0) { if (unlock("guard")) fresh.push("守護者"); }
         if (mk !== "m3") { finish(b); return; }
         // 任務 3：再跑其餘種子（決策組＋對照組），以比值中位數判定
         var ratios = [r];
         (function nextSeed(i) {
           if (i >= M3_SEEDS) { b.ratios = ratios; finish(b); return; }
-          $("d-mission-res").innerHTML = "<div class='coach'>🎯 多種子判定：第 " + (i + 1) + " / " + M3_SEEDS + " 個種子計算中（每個種子要跑決策組與對照組，約 10–15 秒）…</div>";
+          $("d-mission-res").innerHTML = "<div class='coach'>" + T("🎯 多種子判定：第 {0} / {1} 個種子計算中（每個種子要跑決策組與對照組，約 10–15 秒）…", i + 1, M3_SEEDS) + "</div>";
           var dq = JSON.parse(JSON.stringify(req)), bq = JSON.parse(JSON.stringify(base));
           dq.seed = bq.seed = req.seed + i;
           HOOK.postRetry(dq).then(function (x) {
@@ -303,9 +327,16 @@
               ratios.push(x.summary.expected_gen1_real / Math.max(1e-12, y.summary.expected_gen1_real));
               nextSeed(i + 1);
             });
-          }).catch(function (e) { $("d-mission-res").innerHTML = "<div class='coach'>🎯 多種子判定失敗：" + e + "</div>"; });
+          }).catch(function (e) { $("d-mission-res").innerHTML = "<div class='coach'>" + T("🎯 多種子判定失敗：") + TS(String(e.message || e)) + "</div>"; });
         })(1);
-      }).catch(function (e) { $("d-compare").textContent = "對照組計算失敗：" + e; });
+      }).catch(function (e) { $("d-compare").textContent = T("對照組計算失敗：") + e; });
     })(0);
+  };
+
+  // 切換語言（線上版）：重畫決策卡、說明、任務卡、成就與儀表板（任務判定與對照組文字在下次引爆時更新）
+  HOOK.relangGame = function () {
+    drawCards(); budget(); kindNote(); missionCard(); drawAch(lastFresh);
+    if (cur) $("d-tpl-note").textContent = T(cur.note) + (cur.coll ? T("（碰撞模型：外部撞擊）") : T("（爆炸模型：內部能量）"));
+    if (lastD) dash(lastD);
   };
 })();

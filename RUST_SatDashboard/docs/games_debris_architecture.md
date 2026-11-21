@@ -1,6 +1,6 @@
 # 太空小遊戲「碎片連鎖」架構說明
 
-> 適用版本：Rust 單機版 v0.1.19（`/games` 的 💥 碎片連鎖分頁）
+> 適用版本：Rust 單機版 v0.1.19（`/games` 的 💥 碎片連鎖分頁）；線上版 `/game`（ATRDC-SatDashboard Space，與單機版共用計算核心與前端，見 4.9、5.3）
 > 讀者：要維護或擴充這個遊戲的開發者
 
 ## 1. 概要
@@ -16,7 +16,9 @@
 
 | 項目 | 位置 |
 |---|---|
-| 後端（模擬、快取、忙碌控制） | [src/games_debris.rs](../src/games_debris.rs) |
+| 計算核心（解體、傳播、碰撞、決策；與伺服器無關） | [src/debris_engine.rs](../src/debris_engine.rs) |
+| 後端 HTTP（快取、忙碌控制、目錄 SGP4） | [src/games_debris.rs](../src/games_debris.rs) |
+| 線上版命令列核心 | [debris_cli/](../debris_cli/)：stdin 讀請求、stdout 輸出結果，共用 `debris_engine.rs` |
 | 路由註冊 | [src/games.rs](../src/games.rs) 的 `extend()`：`POST /api/games/breakup` |
 | 前端：送出、播放、圖表、摘要 | [web/ext/games_debris.js](../web/ext/games_debris.js) |
 | 前端：遊戲層（情境、任務、決策卡、對照組、儀表板、成就） | [web/ext/games_debris_game.js](../web/ext/games_debris_game.js) |
@@ -246,7 +248,19 @@ sequenceDiagram
 | EMR 門檻 | 40 J/g | 完全解體判定 |
 | `CACHE_SECS`、`CACHE_MAX` | 300 秒、6 筆 | 快取分桶與容量 |
 | 逾時 | 90 秒 | 提早結束模擬 |
-| 亂數 | SplitMix64 | 同種子可重現 |
+| 亂數 | SplitMix64 | 同種子可重現（目錄載入時，同一曆元有多筆 TLE 的衛星以 TLE 內容排序挑選，跨次啟動結果也相同） |
+
+### 4.9 計算核心與線上版
+
+`debris_engine.rs` 只含模擬本身（`check()`、`resolve_t0()`、`custom_parent()`、`run()`），輸入是請求、解體時刻、母體狀態與目錄物件在 t0 的狀態（`CatIn`）；SGP4、快取與忙碌控制留在呼叫端。
+
+| 呼叫端 | 目錄來源 | 資源保護 |
+|---|---|---|
+| 單機版 `games_debris.rs` | 本程式的衛星索引（`SatInfo.prop`） | `BUSY`＋`CACHE`（4.7） |
+| 線上版 `debris_cli` | Space 的 Python 衛星索引，依 NORAD 排序寫成 JSONL（`[norad, name, purpose, line1, line2]`）；SGP4 初始化方式與單機版相同 | Flask `scenario04/api/games.py`：同時只算一個（429＋`Retry-After`）、5 分鐘快取 |
+
+- 線上版的副本由 `scenario-advanced01/tools/sync_debris.py` 從本專案複製（引擎、CLI、設定 CSV、三個前端 JS、`#tab-debris` 面板），`--check` 可檢查是否一致；Docker 建置階段（`rust:1-slim-bookworm`）編譯 CLI。**只改本專案的檔案，再執行同步。**
+- 一致性驗證：同一份目錄、同一組參數與 t0 時，`debris_cli` 與單機版 API 的輸出完全相同（3 組：Envisat 爆炸 ×1,000、Cosmos 1408 編目等效、含三張決策卡與衛星失效）；拆分前後的單機版輸出也完全相同。
 
 ## 5. 前端
 
@@ -276,6 +290,13 @@ sequenceDiagram
 | 任務 | 任務 1「自然清除」：寫實 ×1，5 年後第一代碎片剩 ≤ 50%（≤ 25% 兩星、≤ 10% 三星）。任務 2「連鎖觸發者」：×1,000 下觸發第 3 代，初始碎片 ≤ 100 三星、≤ 300 兩星。任務 3「守護者」：**Envisat、1,000 個碎片、寫實 ×1**，用決策卡讓累計期望碰撞 ≤ 對照組的 85%（≤ 80% 兩星、≤ 75% 三星）。失敗時依情況說明原因（軌道太高、碎片太少、決策太晚、只靠單一措施等） |
 | 風險儀表板 | 風險最高的 5 個目錄物件、碰撞熱區高度帶（事件位置每 50 km 一帶，前 5 名）、期末各代碎片比例、累計再入 |
 | 成就 | 9 項（二次碰撞、連鎖反應、失控增長、大氣清道夫、守護者、歷史學家、任務 1–3），存在瀏覽器 `localStorage`（`sdg-debris-ach`），無法存取時只在本頁有效。「失控增長」的判定可解釋：模擬後 1/3 期間在軌碎片仍淨增加且期間有碰撞，即碰撞產生的碎片多於大氣清除（未達 3 萬上限時才算） |
+
+### 5.3 多語介面（線上版）
+
+- 兩個 JS 的介面文字都以 `T("中文模板 {0}", 參數)` 輸出；伺服器產生的文字（決策事件說明、`第 N 代碎片`、錯誤訊息）以 `TS()` 先查字典、再套規則式。
+- 字典 [web/ext/games_debris_i18n.js](../web/ext/games_debris_i18n.js)：`window.SDG_I18N[en|ja][中文原文]` 與 `window.SDG_I18N_RX`。單機版不載入，`T()` 直接回傳中文，畫面不變。
+- 線上版 `/game` 設定 `window.SDG_LANG`，靜態面板以字典替換文字節點（保留中文原文以便切回），切換語言時呼叫 `SDG_DEBRIS.relang()`（摘要、圖表、事件表、提示）與 `relangGame()`（決策卡、說明、任務卡、成就、儀表板）。
+- 新增或修改介面文字後，執行 `py -3.13 scripts/check_debris_i18n.py` 列出字典缺少的字串，補上英文與日文。
 
 ## 6. 結果判讀
 

@@ -136,11 +136,12 @@ fn query_latest_tles(db: &Path, extra_where: Option<&str>) -> anyhow::Result<Vec
     };
 
     let extra = extra_where.map(|w| format!(" AND {w}")).unwrap_or_default();
+    // 同一曆元有多筆不同 TLE 時（資料庫約 90 顆），加上 TLE 內容當平手判定：每次啟動挑同一筆，模擬結果才能跨次重現
     let sql = format!(
         "SELECT r.norad_id, {obj_expr} AS object_name, r.line1, r.line2, {meta_sel}
          FROM {RAW_TABLE} r {join}
          WHERE r.line1 IS NOT NULL AND r.line2 IS NOT NULL{extra}
-         QUALIFY ROW_NUMBER() OVER (PARTITION BY r.norad_id ORDER BY r.epoch_utc DESC) = 1"
+         QUALIFY ROW_NUMBER() OVER (PARTITION BY r.norad_id ORDER BY r.epoch_utc DESC, r.line1, r.line2) = 1"
     );
     let mut st = con.prepare(&sql)?;
     let rows = st

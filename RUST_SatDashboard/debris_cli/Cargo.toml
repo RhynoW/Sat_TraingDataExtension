@@ -1,0 +1,23 @@
+# 碎片連鎖命令列版：線上版（scenario-advanced01 的 Docker Space）用。計算核心與單機版共用 ../src/debris_engine.rs。
+# 自成一個套件（不屬於單機版的相依），只需要純 Rust 的相依，Linux 上幾分鐘可編好。
+[package]
+name = "debris_cli"
+version = "0.1.19"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+kiddo = "5"
+rayon = "1.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "float_roundtrip"] }
+sgp4 = "2.3"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 4
+strip = true
