@@ -121,9 +121,11 @@ sequenceDiagram
 | 碎片 | 0.2 m | 5 kg | 依 B* |
 | 其他 | 0.5 m | 50 kg | 依 B* |
 
-4. **B* 換算面積質量比**（`parse_bstar`、`bstar_am`）：讀 TLE 第 1 行第 54–61 欄。B* = ρ₀·(Cd·A/m)/2，ρ₀ = 2.461×10⁻⁸ kg/m³（SGP4 參考密度），Cd = 2.2。負值視為 0（不衰減），上限 0.2 m²/kg。
+4. **B* 換算面積質量比**（`parse_bstar`、`bstar_am`）：讀 TLE 第 1 行第 54–61 欄。B* = ρ₀·(Cd·A/m)/2，ρ₀ = 2.461×10⁻⁸ kg/m³（SGP4 參考密度）[8]，Cd = 2.2。負值視為 0（不衰減），上限 0.2 m²/kg。
 
 ### 4.2 NASA 標準解體模型（`breakup()`）
+
+依 Johnson et al.（2001）的 EVOLVE 4.0 標準解體模型 [2]；ESA DELTA 的解體模組也以同一模型為基礎 [4]。
 
 | 步驟 | 公式與作法 |
 |---|---|
@@ -141,8 +143,8 @@ sequenceDiagram
 
 - `El`：克卜勒根數加 J2 長期項（Ω̇、ω̇、Ṁ）。`rv(t)` 以 8 次牛頓迭代解克卜勒方程。
 - **阻力衰減**（`decay()`，套用在所有 `am > 0` 的物件，即碎片與非有效載荷的目錄物件）：
-  - 大氣密度用 Vallado 指數大氣模型（100–1000 km，19 層），取近地點高度的密度。
-  - King-Hele 近似：da/dt = −2.2·(A/M)·ρ·√(μa)。偏心軌道（a·e > 尺度高度）乘上 √(H / 2πae)，並保持近地點不動、只降遠地點。
+  - 大氣密度用 Vallado 指數大氣模型（100–1000 km，19 層）[6]，取近地點高度的密度。
+  - King-Hele 近似 [7]：da/dt = −2.2·(A/M)·ρ·√(μa)。偏心軌道（a·e > 尺度高度）乘上 √(H / 2πae)，並保持近地點不動、只降遠地點。
   - 每步先 `rebase()` 重設參考時刻，再改 a、e，確保位置連續。近地點低於 120 km 視為再入。
 
 ### 4.4 時間步
@@ -164,7 +166,7 @@ sequenceDiagram
 
    λ = v_rel ÷ (4d/3) × (R₁+R₂)² ÷ d² × (dt ÷ ks) × accel（避碰生效時再 ×0.1，見 4.6）
 
-   意義：v_rel ÷ (4d/3) 是穿過半徑 d 球的頻率（平均弦長 4d/3）；(R₁+R₂)²/d² 把半徑 d 的通量換算成合併硬體半徑的截面。
+   意義：v_rel ÷ (4d/3) 是穿過半徑 d 球的頻率（平均弦長 4d/3）；(R₁+R₂)²/d² 把半徑 d 的通量換算成合併硬體半徑的截面。這是 Kessler 與 Cour-Palais（1978）以氣體動力論（粒子箱）估計碰撞頻率的概念 [1]，差別在於這裡用實際軌道位置的快照取代均勻空間密度。
 4. 所有快照的候選依 (a, b) 排序後依序處理：累加 `expected`；兩者都是第 0、1 代時另累加 `expected_g1`；b 為目錄物件時累加到該物件的風險分數。以機率 1 − e^−λ 擲骰。
 5. **擲中時**：
    - 較重者為目標。能量質量比 EMR = ½·m_s·v_rel² ÷ m_b，超過 **40 J/g** 為完全解體。
@@ -274,3 +276,46 @@ sequenceDiagram
 | 提高統計精度 | `ks`（快照數）或時間步長；計算時間會等比增加 |
 | 調整上限 | `MAX_FRAGS`、`PER_EVENT_MAX`；前端點數與播放負擔也會增加 |
 | 回傳更多欄位 | `frags` 的列格式需前後端同步修改（前端以索引存取） |
+
+## 10. 學術定位
+
+這個遊戲和 LEGEND（NASA）、DELTA（ESA）這類長期演化模型 [3][4] 用的是同一類元件：標準解體模型、軌道傳播、大氣衰減、碰撞率估計。差別在於：
+
+| 面向 | LEGEND／DELTA 類模型 | 本遊戲 |
+|---|---|---|
+| 目的 | 研究與政策分析（50–200 年投影、緩解與主動移除情境） | 科普與教學：讓非專家操作與理解 |
+| 統計 | 數百次蒙地卡羅取平均 | 單次擲骰；以同種子對照組比較決策 |
+| 時間尺度 | 數十到數百年 | 1–50 年，可用碰撞誇張倍率提早看到連鎖 |
+| 物件 | 完整碎片族群與發射、任務後處置的交通模型 | 現行目錄＋單一解體事件，無新發射 |
+
+最有潛力的發展方向，是把它推進成**可重現、可量化、可教學的碎片連鎖決策實驗平台**：
+
+1. **可重現**：已有亂數種子與快取；可再加入匯出完整參數與結果的功能。
+2. **可量化**：決策比較目前只用單一種子。改成同參數跑多個種子、報告平均與信賴區間（太空兵棋已有這類蒙地卡羅框架可沿用），才能把「決策有效」說得有統計意義。
+3. **可驗證**：用相同初始條件與 DELTA／LEGEND 的已發表結果比對趨勢，例如 Cosmos 1408、風雲一號 C 碎片的衰減曲線。
+4. **風險指標**：參考以「失控增長機率」量化凱斯勒風險的統計框架 [5]，把結果轉成玩家看得懂的單一風險分數。
+
+## 11. 參考文獻
+
+**主要文獻**
+
+1. Kessler, D. J., & Cour-Palais, B. G. (1978). Collision frequency of artificial satellites: The creation of a debris belt. *Journal of Geophysical Research*, 83(A6), 2637–2646.
+   - 對應：4.5 碰撞率（氣體動力論估計），以及「凱斯勒連鎖」概念本身。
+2. Johnson, N. L., Krisko, P. H., Liou, J.-C., & Anz-Meador, P. D. (2001). NASA's new breakup model of EVOLVE 4.0. *Advances in Space Research*, 28(9), 1377–1384.
+   - 對應：4.2 解體模型（碎片數冪律、A/M 分布、Δv 分布）。
+3. Liou, J.-C., & Johnson, N. L. (2006). Risks in space from orbiting debris. *Science*, 311(5759), 340–341.
+   - 對應：低軌碎片環境即使停止發射仍會因碰撞而增長的結論（LEGEND 投影）；遊戲中「寫實倍率下連鎖很慢，但長期累積」的說明背景。
+4. ESA DELTA（Debris Environment Long-Term Analysis）：
+   - Bastida Virgili, B. (2016). DELTA (Debris Environment Long-Term Analysis). *6th International Conference on Astrodynamics Tools and Techniques (ICATT)*, Darmstadt. [PDF](https://indico.esa.int/event/111/contributions/234/attachments/486/531/DELTA_paper.pdf)
+   - Klinkrad, H., Martin, C., & Walker, R. (2006). Modeling of the future space debris environment. In H. Klinkrad, *Space Debris: Models and Risk Analysis*. Springer. [連結](https://link.springer.com/chapter/10.1007/3-540-37674-7_5)
+   - 對應：半決定論長期演化、緩解與主動移除（ADR）情境分析；本遊戲的決策卡是這類情境的簡化版。
+5. **待查證**：「On the Risk of Kessler Syndrome（2024，Springer）」。以標題與主題搜尋都找不到這篇，作者、期刊與年份需要原作者確認後再引用。主題最接近、可查證的是：
+   - Institute for Defense Analyses (2023). *On the Increased Risk of Kessler Syndrome by Anti-Satellite Tests*. [連結](https://www.ida.org/research-and-publications/publications/all/o/on/on-the-increased-risk-of-kessler-syndrome-by-anti-satellite-tests)（以失控增長機率 P_Exp 作為風險參數）
+
+**模型與資料**
+
+6. Vallado, D. A. *Fundamentals of Astrodynamics and Applications*. Microcosm Press／Springer（指數大氣模型表）。
+7. King-Hele, D. (1987). *Satellite Orbits in an Atmosphere: Theory and Applications*. Blackie（阻力衰減近似）。
+8. Vallado, D. A., Crawford, P., Hujsak, R., & Kelso, T. S. (2006). Revisiting Spacetrack Report #3. *AIAA/AAS Astrodynamics Specialist Conference*, AIAA 2006-6753（SGP4 與 B* 定義）。
+
+> 歷史案例（風雲一號 C、Iridium 33 × Cosmos 2251、Cosmos 1408）的軌道高度、傾角與質量為公開資料的近似值，僅作教學設定。
