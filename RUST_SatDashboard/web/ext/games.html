@@ -306,9 +306,9 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div id="tab-war" hidden>
     <h3>♟ 太空兵棋：海纜中斷下的通訊韌性</h3>
     <div class="hint">紅藍對抗＋白方 GM，雙方同時下令（WEGO）、伺服器裁決。藍方要在海纜被切斷時維持國際通訊並執行偵察；紅方以灰色地帶手段施壓，但升級指數過高會付出代價。每回合 6 小時、共 8 回合、每方每回合 5 行動點。可與 AI 對戰，或在另一個瀏覽器分頁（區網：以 --host 0.0.0.0 啟動）用連結加入。</div>
-    <div class="row"><label>想定</label><select id="w-scen"><option value="base">原始想定：海纜中斷</option><option value="a">想定 A：灰色地帶（商用低軌也被干擾，依 DIA 2026）</option><option value="b">想定 B：致盲致聾（偵察、通信、導航都被干擾，依 DIA 2026）</option><option value="b_typhoon">想定 B＋開場颱風</option></select></div>
+    <div class="row"><label>想定</label><select id="w-scen"><option value="base">原始想定：海纜中斷</option><option value="a">想定 A：灰色地帶（商用低軌也被干擾，依 DIA 2026）</option></select></div>
     <div class="hint" id="w-scen-hint"></div>
-    <div class="row"><label>藍方</label><select id="w-ai-blue"><option value="">真人</option><option value="balanced">AI：均衡</option><option value="geo">AI：重 GEO</option><option value="leo">AI：重低軌</option><option value="repair">AI：重修纜</option><option value="sensor">AI：重感測（僅想定 B）</option><option value="hybrid">AI：均衡＋備援（僅想定 B）</option></select>
+    <div class="row"><label>藍方</label><select id="w-ai-blue"><option value="">真人</option><option value="balanced">AI：均衡</option><option value="geo">AI：重 GEO</option><option value="leo">AI：重低軌</option><option value="repair">AI：重修纜</option></select>
       <label>紅方</label><select id="w-ai-red"><option value="balanced">AI：灰色地帶</option><option value="escalate">AI：升級（含反衛星）</option><option value="">真人</option></select></div>
     <div class="row act"><label>我扮演</label><select id="w-role"><option value="blue">藍方</option><option value="red">紅方</option><option value="white">白方（GM／觀察）</option></select>
       <button class="go" id="w-new">開新推演</button></div>
@@ -322,11 +322,11 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div id="w-log" class="hint" style="max-height:260px;overflow:auto"></div>
     <h3>蒙地卡羅分析（雙方 AI）</h3>
     <div class="row"><label>局數</label><select id="w-runs"><option>200</option><option selected>500</option><option>2000</option></select>
-      <label>想定</label><select id="w-mc-scen"><option value="base">原始</option><option value="a">A 灰色地帶</option><option value="b">B 致盲致聾</option><option value="b_typhoon">B＋颱風</option></select>
+      <label>想定</label><select id="w-mc-scen"><option value="base">原始</option><option value="a">A 灰色地帶</option></select>
       <label>紅方策略</label><select id="w-mc-red"><option value="balanced">灰色地帶</option><option value="escalate">升級</option></select>
       <button id="w-mc">比較藍方策略</button></div>
     <div id="w-mc-res" class="hint"></div>
-    <div class="hint" style="margin-top:8px">參考：謝沛學〈從遊戲到實戰：商用兵棋軟體如何協助軍事分析與訓練〉（國防安全雙週報，2020）。本推演為教育用抽象模型：國際海纜每條 10 單位、離島海纜 1 單位、需求 150 單位起每回合 +5；GEO 租用每次 +15（上限 60）、低軌終端每 500 套 +10（上限 4,000 套），均下回合生效；海纜取自內嵌的 TeleGeography 圖資。數值為示意，不代表實際容量。想定 A 的情境依據美國國防情報局（DIA）《Challenges to Security in Space 2026》繁中譯本（本站「文件」可下載）：商用衛星終端被列為合法目標（p.4、37）、Viasat 惡意軟體攻擊（p.43）、Starlink 干擾（p.43）；想定 B 依據「致盲並致聾敵人」（p.18）、PLA 演習的上下行鏈路與 GPS 干擾及 SAR 干擾器（p.31–32）、GPS 干擾波及民用（p.15）。效果數值仍是本遊戲的示意假設。</div>
+    <div class="hint" style="margin-top:8px">參考：謝沛學〈從遊戲到實戰：商用兵棋軟體如何協助軍事分析與訓練〉（國防安全雙週報，2020）。本推演為教育用抽象模型：國際海纜每條 10 單位、離島海纜 1 單位、需求 150 單位起每回合 +5；GEO 租用每次 +15（上限 60）、低軌終端每 500 套 +10（上限 4,000 套），均下回合生效；海纜取自內嵌的 TeleGeography 圖資。數值為示意，不代表實際容量。想定 A 的情境依據美國國防情報局（DIA）《Challenges to Security in Space 2026》繁中譯本（本站「文件」可下載）：商用衛星終端被列為合法目標（p.4、37）、Viasat 惡意軟體攻擊（p.43）、Starlink 干擾（p.43）；效果數值仍是本遊戲的示意假設。</div>
     </div>
     <div id="status"></div>
   </div>
