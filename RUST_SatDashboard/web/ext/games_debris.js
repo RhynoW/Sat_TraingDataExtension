@@ -1,6 +1,6 @@
 /* 太空小遊戲：碎片連鎖（/games 分頁）
  * 後端 /api/games/breakup 回傳每個碎片的出生時刻與根數（含 J2 漂移率）、再入時刻、碰撞事件與時間序列；
- * 前端每秒 4 次以克卜勒方程解出位置（不含阻力衰減，僅以再入時刻移除）、閃光標出解體與碰撞。 */
+ * 前端每秒 4 次以克卜勒方程解出位置；阻力衰減以後端的衰減節點（半長軸每降 5 km 一筆）內插 a、e，再入時刻移除；閃光標出解體與碰撞。 */
 (function () {
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
@@ -19,8 +19,15 @@
     return out;
   }
   // 根數 → 慣性位置（km）；f = [id, birth, gen, L, A/M, a, e, i, Ω, ω, M0, Ωdot, ωdot, Mdot]
-  function pos(f, t) {
+  function pos(f, t, kn) {
     var dt = t - f[1], a = f[5], e = f[6], inc = f[7];
+    if (kn) {   // 衰減節點 [[t, a, e], ...]：在出生根數與節點之間線性內插
+      var pt = f[1], pa = a, pe = e;
+      for (var j = 0; j < kn.length; j++) {
+        if (t < kn[j][0]) { var w = (t - pt) / Math.max(1, kn[j][0] - pt); a = pa + (kn[j][1] - pa) * w; e = pe + (kn[j][2] - pe) * w; break; }
+        pt = kn[j][0]; pa = a = kn[j][1]; pe = e = kn[j][2];
+      }
+    }
     var M = ((f[10] + f[13] * dt) % TAU + TAU) % TAU, om = f[8] + f[11] * dt, w = f[9] + f[12] * dt;
     var E = e < 0.8 ? M : Math.PI;
     for (var k = 0; k < 8; k++) E -= (E - e * Math.sin(E) - M) / (1 - e * Math.cos(E));
@@ -54,7 +61,7 @@
     var p = $("d-pick").value.split("|");
     return { norad: +($("d-q").value.trim() || p[0]) || 0, mass_kg: +$("d-m").value, n_frag: +$("d-n").value, collision: $("d-kind").value === "1",
       years: +$("d-y").value, accel: +$("d-acc").value, seed: +$("d-seed").value || 1,
-      solar: $("d-solar").value, epoch: $("d-epoch").value || undefined };
+      solar: $("d-solar").value, epoch: $("d-epoch").value || undefined, payload_life: +$("d-plife").value || undefined };
   }
   HOOK.baseReq = baseReq;
   HOOK.post = function (req) {
@@ -90,6 +97,7 @@
         btn.disabled = false;
         if (d.error) { $("d-res").textContent = d.error; return; }
         res = d; t0 = JD.fromDate(new Date(d.t0));
+        res.kn = {}; (d.knots || []).forEach(function (k) { (res.kn[k[0]] = res.kn[k[0]] || []).push([k[1], k[2], k[3]]); });
         summary(d); chart(d); evTable(d); build(d); play("3h"); setBadge();
         if (HOOK.onResult) HOOK.onResult(d, req);
       })
@@ -117,16 +125,17 @@
       rows.push(["大氣", MODE[so.mode] + (so.f107_mean != null ? "；F10.7 平均 " + Math.round(so.f107_mean) + (so.mode === "series" ? "（" + Math.round(so.f107_min) + "–" + Math.round(so.f107_max) + "）" : "") : "") +
         (so.mode === "series" ? "；太陽活動從 " + so.epoch + " 起算（軌道目錄仍為現況），實測到 " + so.obs_until + "、預報到 " + so.data_until + (so.beyond_data ? "，之後以 11 年週期外推" : "") : "")]);
     }
+    if (s.payload_life) rows.push(["在軌衛星", "平均 " + s.payload_life + " 年後陸續失效：期間共 " + fmt(s.payload_failed || 0) + " 顆失效，之後依 TLE 阻力項衰減、不再避碰"]);
     if (s.cat_reentered != null) rows.push(["目錄物件再入", fmt(s.cat_reentered) + " 個（火箭體、碎片依 TLE 阻力項衰減；含被撞毀與決策移除）"]);
     rows.push(["計算", d.elapsed_s.toFixed(1) + " 秒（目錄 " + fmt(d.n_catalog) + " 個物件）" + (d.cached ? "，<b>快取結果</b>（5 分鐘內相同參數）" : "")]);
-    var valid = d.years > 1 ? "<div style='color:#d29922;margin:2px 0'>📏 已驗證（Cosmos 1408 試射碎片）：第 1 年的碎片存活比例與觀測吻合；<b>一年以後衰減仍偏慢</b>（第 3 年：隨太陽活動大氣 4.9%、舊版靜態大氣 8.2%、觀測 0.9%），所以一年以上的在軌數與期望碰撞<b>偏高</b>，主因是遠地點很高的碎片活太久。碰撞率尚未驗證。</div>" : "";
-    if (d.years >= 5) valid += "<div style='color:#d29922;margin:2px 0'>🛰 保守假設：在軌衛星（有效載荷）一律不衰減（假設會維持軌道或由同類補充）。實際上衛星會在任務結束後失效，所以 " + fmt(d.years, 0) + " 年的長期風險可能偏高。</div>";
+    var valid = d.years > 1 ? "<div style='color:#d29922;margin:2px 0'>📏 已驗證（Cosmos 1408 試射碎片，30 個種子中位數）：第 1 年的碎片存活比例與觀測一致（25.3%）；一年以後仍<b>略偏慢</b>（第 3 年 1.6%、觀測 0.9%；第 5 年 0.4%、觀測 0.2%），所以一年以上的在軌數與期望碰撞可能略偏高。碰撞模型的 Δv 長尾截斷是以這個事件校準的經驗修正；碰撞率尚未驗證。</div>" : "";
+    if (d.years >= 5 && !s.payload_life) valid += "<div style='color:#d29922;margin:2px 0'>🛰 保守假設：在軌衛星（有效載荷）一律不衰減（假設會維持軌道或由同類補充）。實際上衛星會在任務結束後失效，所以 " + fmt(d.years, 0) + " 年的長期風險可能偏高；可在「在軌衛星」改選陸續失效的情境比較。</div>";
     $("d-res").innerHTML = "<div style='color:#f2a73b;margin:2px 0'>⚠ 統計模擬，不是碰撞預報：同樣參數換一個亂數種子，碰撞次數就可能不同。</div>" + valid +
       "<table class='kv'>" + rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("") + "</table>" +
       "<details style='margin-top:4px'><summary style='cursor:pointer;color:var(--hi)'>怎麼看這個結果？（看到的、真實的、誇張的）</summary>" +
       "<div style='line-height:1.7;margin-top:4px'><b>你看到的是什麼</b>：碎片雲沿軌道拉成環、幾個月內散成殼層；點的顏色代表第幾代碎片，閃光是碰撞。<br>" +
       "<b>什麼接近真實</b>：初始碎片的數量與尺寸分布（NASA 標準解體模型）、軌道擴散、第一年的碎片衰減（Cosmos 1408 驗證吻合）。<br>" +
-      "<b>什麼是誇張或簡化</b>：碰撞誇張倍率（只放大碰撞截面）、每步 3 個快照的統計估計、目錄物件依類別取代表質量、靜態大氣（不含太陽活動）、一年以後衰減偏慢（遠地點很高的碎片活太久）、畫面上的碎片軌道不含阻力。</div></details>";
+      "<b>什麼是誇張或簡化</b>：碰撞誇張倍率（只放大碰撞截面）、每步 3 個快照的統計估計、目錄物件依類別取代表質量、全球平均大氣（不分緯度與地方時）、一年以後衰減仍偏慢、畫面上的阻力衰減是節點內插的近似。</div></details>";
   }
 
   // 圖例可點擊開關；圖表畫好後存底圖，播放時只疊上目前時間的游標
@@ -223,7 +232,7 @@
   // 長期播放提示：畫面上的碎片軌道不含阻力，播放超過 1 年時提醒以統計為準
   var note = document.createElement("div");
   note.style.cssText = "position:absolute;left:10px;bottom:46px;z-index:3;background:#0d1117d9;color:#8b949e;border:1px solid #30363d;border-radius:6px;padding:3px 9px;font-size:12px;pointer-events:none;display:none";
-  note.textContent = "畫面軌道為簡化版（未計阻力，低軌碎片看起來偏高）；碎片數與碰撞統計以後端模擬為準";
+  note.textContent = "畫面軌道為近似：阻力衰減以後端節點內插（半長軸每降 5 km 一筆）；碎片數與碰撞統計以後端模擬為準";
   $("map").appendChild(note);
   function update() {
     if (!res || SDG.tab() !== "debris") { note.style.display = "none"; return; }
@@ -233,7 +242,7 @@
     for (var i = 0; i < pts.length; i++) {
       var f = res.frags[i];
       if (t < f[1] || (D[i] >= 0 && t >= D[i]) || f[5] > 60000) { pts[i].show = false; continue; }
-      pts[i].position = toFixed(pos(f, t), g, c); pts[i].show = true;
+      pts[i].position = toFixed(pos(f, t, res.kn[i]), g, c); pts[i].show = true;
     }
     var dur = 1.5 * Math.abs(viewer.clock.multiplier);
     flashes.forEach(function (fl) {

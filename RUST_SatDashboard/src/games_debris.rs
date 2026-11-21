@@ -38,7 +38,14 @@ const TAU: f64 = std::f64::consts::TAU;
 const MAX_FRAGS: usize = 30_000;
 const PER_EVENT_MAX: f64 = 600.0;
 const SCREEN_D: f64 = 50.0;
-const REENTRY_KM: f64 = 120.0;      // 近地點低於此高度即移除（出生時與演化中一致）
+const REENTRY_KM: f64 = 120.0;
+const YEAR_S: f64 = 365.25 * 86400.0;
+const KNOT_DA_KM: f64 = 5.0;        // 衰減節點：半長軸每下降這麼多記一筆（前端畫阻力衰減用）
+const KNOT_PER_FRAG: usize = 12;
+const KNOT_MAX: usize = 60_000;
+/// Δv 長尾截斷（v0.1.19，只用於碰撞模型）：log₁₀Δv 超過 μ + kσ 重抽。依 Cosmos 1408 驗證選定（單一事件的經驗校準），見架構說明 6.1；
+/// 爆炸模型沒有驗證資料，維持原始 SBM
+const DV_SIGMA_MAX: f64 = 1.0;      // 近地點低於此高度即移除（出生時與演化中一致）
 const CACHE_SECS: i64 = 300;
 const CACHE_MAX: usize = 6;
 
@@ -200,71 +207,88 @@ fn atm(h: f64) -> (f64, f64) {
 // 每月 F10.7（81 天中心平均；實測＋CelesTrak 預報，scripts/gen_solar_tables.py 產生）與 NRLMSISE-00 全球平均密度表
 static F107_CSV: &str = include_str!("../config/f107_monthly.csv");
 static MSIS_CSV: &str = include_str!("../config/msis_density.csv");
+/// 沒有每日 Ap 時的等效 Ap（與 f107_monthly.csv 檔頭的實測中位數一致；固定 F10.7 情境也用這個值）
+const AP_DEFAULT: f64 = 10.2;
 
 struct Solar {
     m0: i32,               // 第一個月（年×12＋月−1）
     f107: Vec<f64>,        // 逐月
     obs_until: String,     // 最後一個實測月
+    ap: Vec<f64>,          // 逐月等效 Ap（v0.1.19；無每日 Ap 的預報月份為實測中位數）
     alts: Vec<f64>,
+    aps: Vec<f64>,
     fs: Vec<f64>,
-    ln_rho: Vec<Vec<f64>>, // [高度][F10.7]
+    ln_rho: Vec<Vec<Vec<f64>>>, // [高度][Ap][F10.7]
 }
 static SOLAR: std::sync::OnceLock<Solar> = std::sync::OnceLock::new();
 
 fn solar() -> &'static Solar {
     SOLAR.get_or_init(|| {
         let mut m0 = 0;
-        let mut f107 = Vec::new();
+        let (mut f107, mut ap) = (Vec::new(), Vec::new());
         let mut obs_until = String::new();
         for l in F107_CSV.lines().filter(|l| !l.starts_with('#') && !l.starts_with("month")) {
             let c: Vec<&str> = l.split(',').collect();
-            if c.len() < 3 { continue; }
+            if c.len() < 4 { continue; }
             let (y, m): (i32, i32) = (c[0][..4].parse().unwrap_or(2000), c[0][5..7].parse().unwrap_or(1));
             if f107.is_empty() { m0 = y * 12 + m - 1; }
             f107.push(c[1].parse().unwrap_or(120.0));
+            ap.push(c[3].parse().unwrap_or(AP_DEFAULT));
             if c[2] == "OBS" { obs_until = c[0].to_string(); }
         }
+        // 密度表：每列「高度,Ap,各 F10.7 的密度」，同一高度的各 Ap 連續排列
         let mut lines = MSIS_CSV.lines().filter(|l| !l.starts_with('#'));
-        let fs: Vec<f64> = lines.next().unwrap_or("").split(',').skip(1).filter_map(|x| x.parse().ok()).collect();
-        let (mut alts, mut ln_rho) = (Vec::new(), Vec::new());
+        let fs: Vec<f64> = lines.next().unwrap_or("").split(',').skip(2).filter_map(|x| x.parse().ok()).collect();
+        let (mut alts, mut aps, mut ln_rho): (Vec<f64>, Vec<f64>, Vec<Vec<Vec<f64>>>) = (Vec::new(), Vec::new(), Vec::new());
         for l in lines {
             let v: Vec<f64> = l.split(',').filter_map(|x| x.parse().ok()).collect();
-            if v.len() != fs.len() + 1 { continue; }
-            alts.push(v[0]);
-            ln_rho.push(v[1..].iter().map(|r| r.ln()).collect());
+            if v.len() != fs.len() + 2 { continue; }
+            if alts.last() != Some(&v[0]) {
+                alts.push(v[0]);
+                ln_rho.push(Vec::new());
+            }
+            if alts.len() == 1 { aps.push(v[1]); }
+            ln_rho.last_mut().unwrap().push(v[2..].iter().map(|r| r.ln()).collect());
         }
-        Solar { m0, f107, obs_until, alts, fs, ln_rho }
+        Solar { m0, f107, ap, obs_until, alts, aps, fs, ln_rho }
     })
 }
 
 impl Solar {
-    /// 時刻的 F10.7（逐月線性內插）；早於資料取第一個月，晚於資料（2041 年後）以 11 年週期外推（平均 120、振幅 52，接在最後一個月的極小期）
-    fn f107_at(&self, t: &DateTime<Utc>) -> f64 {
+    /// 時刻的 F10.7 與等效 Ap（逐月線性內插）；早於資料取第一個月，晚於資料（2041 年後）F10.7 以 11 年週期外推
+    /// （平均 120、振幅 52，接在最後一個月的極小期），Ap 取實測中位數
+    fn at(&self, t: &DateTime<Utc>) -> (f64, f64) {
         use chrono::Datelike;
         let mi = (t.year() * 12 + t.month() as i32 - 1 - self.m0) as f64 + (t.day() as f64 - 1.0) / 30.4;
         let n = self.f107.len();
-        if mi <= 0.0 { return self.f107[0]; }
+        if mi <= 0.0 { return (self.f107[0], self.ap[0]); }
         if mi >= (n - 1) as f64 {
             let k = mi - (n - 1) as f64;
-            return 120.0 - 52.0 * (TAU * k / 132.0).cos();
+            return (120.0 - 52.0 * (TAU * k / 132.0).cos(), AP_DEFAULT);
         }
         let i = mi.floor() as usize;
         let w = mi - i as f64;
-        self.f107[i] * (1.0 - w) + self.f107[i + 1] * w
+        (self.f107[i] * (1.0 - w) + self.f107[i + 1] * w, self.ap[i] * (1.0 - w) + self.ap[i + 1] * w)
     }
     fn data_until(&self) -> String {
         let m = self.m0 + self.f107.len() as i32 - 1;
         format!("{:04}-{:02}", m / 12, m % 12 + 1)
     }
-    /// 高度 h（km）、F10.7 的密度（kg/m³）與局部尺度高度（km）：對 ln ρ 做雙線性內插（F10.7 方向用 ln F）
-    fn rho(&self, h: f64, f: f64) -> (f64, f64) {
+    /// 高度 h（km）、F10.7、日 Ap 的密度（kg/m³）與局部尺度高度（km）：對 ln ρ 三線性內插（F10.7 方向用 ln F、Ap 方向線性）
+    fn rho(&self, h: f64, f: f64, ap: f64) -> (f64, f64) {
         let na = self.alts.len();
         let hc = h.clamp(self.alts[0], self.alts[na - 1]);
         let ia = ((hc - self.alts[0]) / (self.alts[1] - self.alts[0])).floor().min((na - 2) as f64) as usize;
         let fc = f.clamp(self.fs[0], self.fs[self.fs.len() - 1]);
         let jf = self.fs.iter().rposition(|&x| x <= fc).unwrap_or(0).min(self.fs.len() - 2);
         let wf = (fc.ln() - self.fs[jf].ln()) / (self.fs[jf + 1].ln() - self.fs[jf].ln());
-        let at = |i: usize| self.ln_rho[i][jf] * (1.0 - wf) + self.ln_rho[i][jf + 1] * wf;
+        let pc = ap.clamp(self.aps[0], self.aps[self.aps.len() - 1]);
+        let kp = self.aps.iter().rposition(|&x| x <= pc).unwrap_or(0).min(self.aps.len() - 2);
+        let wp = (pc - self.aps[kp]) / (self.aps[kp + 1] - self.aps[kp]);
+        let at = |i: usize| {
+            let g = |k: usize| self.ln_rho[i][k][jf] * (1.0 - wf) + self.ln_rho[i][k][jf + 1] * wf;
+            g(kp) * (1.0 - wp) + g(kp + 1) * wp
+        };
         let (l0, l1) = (at(ia), at(ia + 1));
         let dh = self.alts[ia + 1] - self.alts[ia];
         let hs = dh / (l0 - l1).max(1e-6); // 尺度高度
@@ -274,10 +298,10 @@ impl Solar {
 }
 
 /// 一個時間步的阻力衰減（King-Hele 近似：近圓軌道均勻衰減；偏心軌道近地點不動、遠地點下降）
-/// f107 = None 用舊版 Vallado 靜態指數大氣；Some(F) 用 NRLMSISE-00 全球平均密度表
-fn decay(el: &mut El, am: f64, dt: f64, f107: Option<f64>) {
+/// sw = None 用舊版 Vallado 靜態指數大氣；Some((F10.7, Ap)) 用 NRLMSISE-00 全球平均密度表
+fn decay(el: &mut El, am: f64, dt: f64, sw: Option<(f64, f64)>) {
     let hp = el.perigee_alt();
-    let (rho, h_km) = match f107 { Some(f) => solar().rho(hp.max(100.0), f), None => atm(hp.max(100.0)) };
+    let (rho, h_km) = match sw { Some((f, ap)) => solar().rho(hp.max(100.0), f, ap), None => atm(hp.max(100.0)) };
     let a_m = el.a * 1000.0;
     let mut dadt = -2.2 * am * rho * (MU * 1e9 * a_m).sqrt(); // m/s
     let ae = el.a * el.e;
@@ -317,8 +341,10 @@ fn area(l: f64) -> f64 {
 struct Frag { l: f64, am: f64, mass: f64, dv: V3 }
 
 /// collision=false：爆炸（N=6·Lc^−1.6）；true：碰撞（N=0.1·M^0.75·Lc^−1.71，M 為參考質量）
-fn breakup(rng: &mut Rng, n_target: Option<usize>, collision: bool, m_ref: f64, m_total: f64, l_max: f64, cap: f64) -> Vec<Frag> {
+/// dv_k：碰撞模型 log₁₀Δv 常態分布的截斷點（μ + kσ 以上重抽）；INFINITY = 原始 SBM。爆炸模型一律不截斷
+fn breakup(rng: &mut Rng, n_target: Option<usize>, collision: bool, m_ref: f64, m_total: f64, l_max: f64, cap: f64, dv_k: f64) -> Vec<Frag> {
     let (k, b) = if collision { (0.1 * m_ref.powf(0.75), 1.71) } else { (6.0, 1.6) };
+    let dv_k = if collision { dv_k } else { f64::INFINITY };
     let lc = match n_target {
         Some(n) => (n as f64 / k).powf(-1.0 / b),
         None => (cap / k).powf(-1.0 / b).max(0.1),
@@ -334,7 +360,13 @@ fn breakup(rng: &mut Rng, n_target: Option<usize>, collision: bool, m_ref: f64, 
             let mass = area(l) / am;
             let chi = am.log10();
             let mu = if collision { 0.9 * chi + 2.9 } else { 0.2 * chi + 1.85 };
-            let dvm = 10f64.powf(mu + 0.4 * rng.normal()) / 1000.0; // km/s
+            let mut z = rng.normal();
+            let mut tries = 0;
+            while z > dv_k && tries < 50 {
+                z = rng.normal();
+                tries += 1;
+            }
+            let dvm = 10f64.powf(mu + 0.4 * z.min(dv_k)) / 1000.0; // km/s
             let d = rng.dir();
             Frag { l, am, mass, dv: [d[0] * dvm, d[1] * dvm, d[2] * dvm] }
         })
@@ -371,6 +403,8 @@ struct Obj {
     alive: bool,
     death: f64,
     name: Option<String>,
+    fail_t: f64,  // 有效載荷失效時刻（秒；INFINITY = 一直維持軌道）：之後依 am_eol 衰減、不再避碰
+    am_eol: f64,
 }
 
 fn cat_props(s: &SatInfo) -> (f64, f64, u8) {
@@ -417,6 +451,8 @@ pub struct ActionReq {
     kind: String,
     t_days: f64,
     n: Option<usize>,
+    /// 避碰能力：low（碰撞率降至 50%）、std（10%，預設）、high（2%）
+    level: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -438,6 +474,16 @@ pub struct BreakupReq {
     solar: Option<String>,
     /// 解體日期（YYYY-MM-DD）：只決定太陽活動序列從哪一天開始（歷史情境用）；目錄位置仍是現在
     epoch: Option<String>,
+    /// 解體時刻（RFC 3339）：對照組與多種子比較沿用主結果的 t0，確保母體位置與目錄相同（共同隨機數）；未給＝現在，限現在 ±3 天
+    t0: Option<String>,
+    /// 有效載荷平均剩餘壽命（年）：給值時每顆在 0～2L 年間失效，之後依 B* 衰減且不再避碰；未給為保守假設（一直維持軌道）
+    payload_life: Option<f64>,
+    /// 驗證用（介面不提供）：Δv 截斷點 k（log₁₀Δv 超過 μ + kσ 重抽）；未給為預設值
+    dv_sigma_max: Option<f64>,
+    /// 驗證用：密度整體倍率（0.25–4，敏感度測試）
+    rho_scale: Option<f64>,
+    /// 驗證用：固定 Ap（不隨月份變化；v0.1.18 以前為 15）
+    ap_fixed: Option<f64>,
 }
 
 fn bad(msg: &str) -> Response {
@@ -459,8 +505,8 @@ fn sgp4_rv(s: &SatInfo, t: &DateTime<Utc>) -> Option<(V3, V3)> {
 }
 
 pub async fn breakup_api(State(st): State<Arc<AppState>>, Json(rq): Json<BreakupReq>) -> Response {
-    if !(2..=1000).contains(&rq.n_frag) {
-        return bad("碎片數需介於 2 到 1000");
+    if !(2..=2000).contains(&rq.n_frag) {
+        return bad("碎片數需介於 2 到 2000");
     }
     if rq.actions.len() > 6 {
         return bad("緩解決策最多 6 項");
@@ -512,7 +558,15 @@ pub async fn breakup_api(State(st): State<Arc<AppState>>, Json(rq): Json<Breakup
 fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -> Result<Value, String> {
     let t_start = std::time::Instant::now();
     let idx = st.index();
-    let t0 = Utc::now();
+    let now = Utc::now();
+    let t0 = match rq.t0.as_deref() {
+        Some(s) => {
+            let t = DateTime::parse_from_rfc3339(s).map_err(|_| "t0 需為 RFC 3339 時刻")?.with_timezone(&Utc);
+            if (t - now).num_seconds().abs() > 3 * 86400 { return Err("t0 需在現在 ±3 天內".into()); }
+            t
+        }
+        None => now,
+    };
     // 母體：目錄衛星（SGP4）或自訂圓軌道（升交點赤經 0、從升交點出發）
     let (pr, pv, pname, custom) = if let Some(o) = &rq.orbit {
         let a = R_EARTH_KM + o.alt_km;
@@ -532,19 +586,31 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
         .and_then(|d| d.and_hms_opt(0, 0, 0))
         .map(|d| d.and_utc())
         .unwrap_or(t0);
-    let f_at = |t: f64| -> Option<f64> {
+    let ap_fixed = rq.ap_fixed.map(|a| a.clamp(0.0, 400.0));
+    let f_at = |t: f64| -> Option<(f64, f64)> {
         match mode.as_str() {
             "static" => None,
-            _ => Some(fixed_f.unwrap_or_else(|| solar().f107_at(&(epoch + Duration::seconds(t as i64))))),
+            _ => {
+                let (f, ap) = solar().at(&(epoch + Duration::seconds(t as i64)));
+                Some((fixed_f.unwrap_or(f), ap_fixed.unwrap_or(if fixed_f.is_some() { AP_DEFAULT } else { ap })))
+            }
         }
     };
+    let rho_scale = rq.rho_scale.unwrap_or(1.0).clamp(0.25, 4.0);
+    let dv_k = rq.dv_sigma_max.map(|k| k.clamp(0.5, 10.0)).unwrap_or(DV_SIGMA_MAX);
+    let mut knots: Vec<Value> = Vec::new();
+    let mut knot_a: Vec<(f64, usize)> = Vec::new();   // 每個碎片上一筆節點的半長軸與節點數
+    let mut payload_failed = 0usize;
     let mut f_hist: Vec<f64> = Vec::new();
+    let mut ap_hist: Vec<f64> = Vec::new();
     let mut rng = Rng(rq.seed.unwrap_or(1) ^ 0x5DEECE66D);
     // 快照時刻用獨立亂數流：決策移除物件會改變擲骰次數，但不影響取樣時刻，同種子的對照組與決策組可直接比較（共同隨機數）
     let mut rng_snap = Rng(rq.seed.unwrap_or(1) ^ 0x2545F4914F6CDD1D);
 
     // 目錄物件（排除母體）轉成 t0 的根數；面積質量比由 TLE 的 B* 換算（阻力衰減用）
     let skip_id = if custom { u32::MAX } else { rq.norad };
+    let seed = rq.seed.unwrap_or(1);
+    let payload_life = rq.payload_life.map(|l| l.clamp(0.5, 50.0));
     let cats: Vec<&SatInfo> = idx.sats.values().filter(|s| s.prop.is_some() && s.norad_id != skip_id).collect();
     let cat_objs: Vec<Option<Obj>> = cats
         .par_iter()
@@ -554,7 +620,16 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
             let (rk, m, kind) = cat_props(s);
             // 有效載荷假設會維持軌道（或由同類補充），不衰減；火箭體、碎片與其他物件依 B* 衰減
             let am = if kind == 0 { 0.0 } else { bstar_am(parse_bstar(&s.line1)) };
-            Some(Obj { el, r_km: rk, mass: m, am, gen: 0, kind, alive: true, death: -1.0, name: Some(s.name.clone()) })
+            // 可選情境：有效載荷在剩餘壽命（0～2L 年均勻，平均 L 年；依 NORAD 與種子決定，不消耗主亂數流）後失效，改依 B* 衰減
+            let (fail_t, am_eol) = match payload_life {
+                Some(l) if kind == 0 => {
+                    let u = Rng((s.norad_id as u64) << 20 ^ seed ^ 0x9E3779B97F4A7C15).next();
+                    let b = bstar_am(parse_bstar(&s.line1));
+                    (u * 2.0 * l * YEAR_S, if b > 0.0 { b } else { 0.01 })
+                }
+                _ => (f64::INFINITY, 0.0),
+            };
+            Some(Obj { el, r_km: rk, mass: m, am, gen: 0, kind, alive: true, death: -1.0, name: Some(s.name.clone()), fail_t, am_eol })
         })
         .collect();
     let mut objs: Vec<Obj> = cat_objs.into_iter().flatten().collect();
@@ -577,7 +652,8 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
             let reentered = el.perigee_alt() < REENTRY_KM;
             let id = objs.len() - n_cat;
             frag_out.push(json!([id, t, gen, f.l, f.am, el.a, el.e, el.i, el.raan, el.argp, el.m0, el.raan_dot, el.argp_dot, el.m_dot]));
-            objs.push(Obj { el, r_km: f.l / 2000.0, mass: f.mass, am: f.am, gen, kind: 2, alive: !reentered, death: if reentered { t } else { -1.0 }, name: None });
+            objs.push(Obj { el, r_km: f.l / 2000.0, mass: f.mass, am: f.am, gen, kind: 2, alive: !reentered, death: if reentered { t } else { -1.0 }, name: None,
+                fail_t: f64::INFINITY, am_eol: 0.0 });
             n += 1;
         }
         n
@@ -585,7 +661,7 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
 
     // 第一次解體
     let l_max = (mass / 100.0).cbrt().clamp(0.5, 10.0);
-    let fr = breakup(&mut rng, Some(rq.n_frag), rq.collision, mass, mass, l_max, 1000.0);
+    let fr = breakup(&mut rng, Some(rq.n_frag), rq.collision, mass, mass, l_max, 2000.0, dv_k);
     let n0 = spawn(&mut objs, &mut frag_out, fr, pr, pv, 0.0, 1, &mut capped);
     events.push(json!({"t": 0.0, "kind": if rq.collision { "collision" } else { "explosion" }, "a": pname, "b": null,
         "n_new": n0, "pos": pr, "catastrophic": true, "gen": 1}));
@@ -597,6 +673,7 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
     actions.sort_by(|a, b| a.t_days.partial_cmp(&b.t_days).unwrap_or(std::cmp::Ordering::Equal));
     let mut next_act = 0usize;
     let mut avoid_from = f64::INFINITY;
+    let mut avoid_k = 0.1;
 
     // 時間步：前 30 天每天、之後依總年數 5／10／30 天；每步 3 個快照（隨機時刻）
     let total_s = years * 365.25 * 86400.0;
@@ -672,8 +749,14 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
                 }
                 "avoid" => {
                     avoid_from = avoid_from.min(t);
-                    events.push(json!({"t": t, "kind": "avoid", "a": "簡化避碰假設：在軌衛星對 ≥ 10 cm 物件避碰，碰撞機率降至 10%（實際效果取決於預警、燃料、協調與虛警率）", "b": null,
-                        "n_new": 0, "pos": pr, "catastrophic": false, "gen": 0}));
+                    let (k, lv) = match a.level.as_deref() {
+                        Some("low") => (0.5, "基礎（預警與燃料有限）"),
+                        Some("high") => (0.02, "進階（精密定軌、自動化協調）"),
+                        _ => (0.1, "標準"),
+                    };
+                    avoid_k = k;
+                    events.push(json!({"t": t, "kind": "avoid", "a": format!("簡化避碰假設・{}：運作中的衛星對 ≥ 10 cm 物件避碰，碰撞機率降至 {:.0}%（實際效果取決於預警、燃料、協調與虛警率）", lv, k * 100.0), "b": null,
+                        "n_new": 0, "level": a.level.clone().unwrap_or_else(|| "std".into()), "factor": k, "pos": pr, "catastrophic": false, "gen": 0}));
                 }
                 _ => {}
             }
@@ -716,8 +799,8 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
                         let rr = objs[a].r_km + objs[b].r_km;
                         let mut lam = vr / chord * (rr * rr) / d2 * dt / ks as f64 * accel;
                         // 避碰：有效載荷（目錄 kind 0）對可追蹤（≥ 10 cm）的物件做機動，碰撞率降為一成
-                        if avoid_on && b < n_cat && objs[b].kind == 0 && objs[a].r_km * 2000.0 >= 0.1 {
-                            lam *= 0.1;
+                        if avoid_on && b < n_cat && objs[b].kind == 0 && objs[b].fail_t > ts && objs[a].r_km * 2000.0 >= 0.1 {
+                            lam *= avoid_k;
                         }
                         Some((a, b, lam, vr))
                     })
@@ -757,7 +840,7 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
             };
             let gen = objs[a].gen.max(objs[b].gen) + 1;
             let lmax = (m_tot / 100.0).cbrt().clamp(0.1, 10.0);
-            let fr = breakup(&mut rng, None, true, m_ref, m_tot, lmax, PER_EVENT_MAX);
+            let fr = breakup(&mut rng, None, true, m_ref, m_tot, lmax, PER_EVENT_MAX, dv_k);
             objs[small].alive = false;
             objs[small].death = tc;
             if cat {
@@ -775,17 +858,32 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
         // 阻力衰減與再入：碎片依 A/M，目錄物件依 TLE 的 B*（am = 0 者不衰減）；密度依時間步中點的 F10.7
         let t_end = t + dt;
         let fstep = f_at(t + dt / 2.0);
-        if let Some(fv) = fstep { f_hist.push(fv); }
-        objs.par_iter_mut().filter(|o| o.alive && o.am > 0.0).for_each(|o| {
+        if let Some((fv, av)) = fstep { f_hist.push(fv); ap_hist.push(av); }
+        objs.par_iter_mut().filter(|o| o.alive && (o.am > 0.0 || o.fail_t <= t_end)).for_each(|o| {
+            if o.am == 0.0 { o.am = o.am_eol; }
             o.el.rebase(t_end);
-            decay(&mut o.el, o.am, dt, fstep);
+            decay(&mut o.el, o.am * rho_scale, dt, fstep);
             if o.el.perigee_alt() < REENTRY_KM {
                 o.alive = false;
                 o.death = t_end;
             }
         });
+        // 衰減節點：碎片半長軸比上一筆低 KNOT_DA_KM 以上時記錄（前端在節點間內插 a、e，畫出軌道下降）
+        if knots.len() < KNOT_MAX {
+            for (k, o) in objs.iter().enumerate().skip(n_cat) {
+                let id = k - n_cat;
+                if id >= knot_a.len() { knot_a.push((o.el.a, 0)); }
+                let (la, nk) = knot_a[id];
+                if o.alive && nk < KNOT_PER_FRAG && la - o.el.a >= KNOT_DA_KM && knots.len() < KNOT_MAX {
+                    knots.push(json!([id, t_end, (o.el.a * 10.0).round() / 10.0, (o.el.e * 1e5).round() / 1e5]));
+                    knot_a[id] = (o.el.a, nk + 1);
+                }
+            }
+        }
+        let pl_failed = objs.iter().take(n_cat).filter(|o| o.kind == 0 && o.fail_t <= t_end).count();
+        if pl_failed > 0 { payload_failed = pl_failed; }
         t = t_end;
-        series.push(json!({"t": t, "alive": alive_counts(&objs), "expected": expected, "collisions": n_coll, "cat_gone": cat_gone(&objs), "f107": fstep}));
+        series.push(json!({"t": t, "alive": alive_counts(&objs), "expected": expected, "collisions": n_coll, "cat_gone": cat_gone(&objs), "f107": fstep.map(|x| x.0), "ap": fstep.map(|x| x.1)}));
         if t_start.elapsed().as_secs() > 90 {
             break;
         }
@@ -819,12 +917,16 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
                     "expected_linear": expected / accel, "expected_real": expected / accel,
                     // 只計第一代碎片與目錄物件：較接近「沒有加速」的寫實期望碰撞
                     "expected_gen1_real": expected_g1 / accel,
-                    "cat_reentered": cat_gone(&objs), "capped": capped},
+                    "cat_reentered": cat_gone(&objs), "capped": capped,
+                    "payload_life": payload_life, "payload_failed": payload_failed},
+        "knots": knots,
         "solar": {
             "mode": mode, "epoch": epoch.format("%Y-%m-%d").to_string(),
             "f107_mean": if f_hist.is_empty() { Value::Null } else { json!(f_hist.iter().sum::<f64>() / f_hist.len() as f64) },
             "f107_min": f_hist.iter().cloned().fold(f64::INFINITY, f64::min).min(1e9),
             "f107_max": f_hist.iter().cloned().fold(0.0, f64::max),
+            "ap_mean": if ap_hist.is_empty() { Value::Null } else { json!(ap_hist.iter().sum::<f64>() / ap_hist.len() as f64) },
+            "ap_max": ap_hist.iter().cloned().fold(0.0, f64::max),
             "obs_until": solar().obs_until, "data_until": solar().data_until(),
             "beyond_data": mode == "series" && (epoch + Duration::seconds((t) as i64)).format("%Y-%m").to_string() > solar().data_until(),
         },
