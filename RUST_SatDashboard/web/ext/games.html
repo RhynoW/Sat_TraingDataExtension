@@ -41,6 +41,14 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
 .views{display:flex;flex-wrap:wrap;gap:4px}
 #status{color:var(--mute);font-size:11px;margin-top:6px}
 #side a{color:#79c0ff}
+#moon-float{position:absolute;top:10px;right:10px;z-index:4;max-width:min(420px,calc(100% - 20px))}
+#moon-float[hidden]{display:none}
+#moon-float>summary{list-style:none;cursor:pointer;margin-left:auto;width:max-content;background:#161b22e6;border:1px solid #a371f7;border-radius:8px;padding:5px 10px;color:var(--hi)}
+#moon-float>summary::-webkit-details-marker{display:none}
+#moon-float>summary::after{content:" ▸";color:var(--mute)}
+#moon-float[open]>summary::after{content:" ▾"}
+#moon-float .mf-body{margin-top:6px;width:min(420px,calc(100vw - 40px));max-height:calc(100vh - 200px);overflow:auto;background:#0d1117eb;border:1px solid var(--line);border-radius:8px;padding:2px 10px 10px}
+#moon-float .mf-body h3:first-child{margin-top:8px}
 /* 共通體驗層（games_ux.js） */
 #t-box>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:6px;margin:6px 0 4px}
 #t-box>summary::-webkit-details-marker{display:none}
@@ -96,6 +104,7 @@ button.flash{animation:flash 1s ease-in-out 4}
   #map{order:-1;flex:none;position:sticky;top:0;z-index:6;height:42vh;min-height:220px;border-bottom:2px solid #a371f7}
   #side{width:auto;min-width:0;overflow:visible;border-right:none;padding:8px 12px 24px}
   #b-float{width:min(200px,55%) !important}
+  #moon-float .mf-body{max-height:calc(42vh - 60px)}
   #b-float>div:first-child{font-size:11px}
   .cesium-viewer-bottom,.cesium-viewer-timelineContainer{font-size:10px}
   [id$="-res"],#res,#a-miss,#w-board,#s-cmp{scroll-margin-top:calc(42vh + 10px)}
@@ -134,24 +143,6 @@ button.flash{animation:flash 1s ease-in-out 4}
     </details>
 
     <div id="tab-moon">
-    <h3>月相與台北看月亮</h3>
-    <div id="phase-wrap"><canvas id="phase" width="192" height="192"></canvas><table class="kv" id="moon-kv"></table></div>
-    <table class="kv" id="moon-ev" style="margin-top:6px"></table>
-
-    <h3>月面圖（白天／黑夜與地球可見半球）</h3>
-    <canvas id="moonmap" width="720" height="360"></canvas>
-    <div class="hint">暗區為月夜；虛線圈內是此刻從地球看得到的半球（含天平動），＋ 為地球正下方、☀ 為太陽正下方。圓點為歷來登月與撞月地點（座標取至 0.1°）。月面影像：NASA LRO LROC（NASA SVS CGI Moon Kit，公有領域）。</div>
-
-    <h3>畫面</h3>
-    <label class="chk"><input type="checkbox" id="o-inertial" checked>慣性座標視角（星空不動、地球自轉；看月球軌道用）</label>
-    <label class="chk"><input type="checkbox" id="o-orbit" checked>月球軌道（前後各 15 天）</label>
-    <label class="chk"><input type="checkbox" id="o-geo" checked>地球同步軌道（GEO，高度 35,786 km）</label>
-    <label class="chk"><input type="checkbox" id="o-sites" checked>月面登陸點</label>
-    <div class="views">
-      <button data-view="earth">地球近景</button><button data-view="cislunar">地月全景</button>
-      <button data-view="moon">飛到月球</button><button data-view="ship">跟隨太空船</button>
-    </div>
-
     <h3>🚀 射月球（地—月—日三體軌道）</h3>
     <div class="row"><label>挑戰</label><select id="g-ch">
       <option value="impact">撞月（Luna 2，1959）</option>
@@ -168,6 +159,17 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div class="row act"><button class="go" id="g-run">發射</button><button id="g-clear">清除軌跡</button><span class="hint">最長模擬 <input id="g-days" type="number" value="12" min="2" max="30" style="width:52px"> 天</span></div>
     <div id="res" class="hint">從低地球停泊軌道點火，飛向月球。「點火位置」是點火點在停泊軌道上的角度（180° 約在月球抵達位置的正對面）；調整 Δv 和點火位置，或按「自動瞄準」找出近月點等於目標高度的點火位置。</div>
     <div class="hint" style="margin-top:6px">模型：地球、月球、太陽點質量重力（不含 J2、大氣與輻射壓），RK4 變步長積分；停泊軌道簡化為與月球軌道共面。參考：Apollo 11 TLI 約 3.18 km/s、飛行約 73 小時；LOI 約 0.9 km/s。</div>
+
+    <h3>畫面</h3>
+    <label class="chk"><input type="checkbox" id="o-inertial" checked>慣性座標視角（星空不動、地球自轉；看月球軌道用）</label>
+    <label class="chk"><input type="checkbox" id="o-orbit" checked>月球軌道（前後各 15 天）</label>
+    <label class="chk"><input type="checkbox" id="o-geo" checked>地球同步軌道（GEO，高度 35,786 km）</label>
+    <label class="chk"><input type="checkbox" id="o-sites" checked>月面登陸點</label>
+    <div class="views">
+      <button data-view="earth">地球近景</button><button data-view="cislunar">地月全景</button>
+      <button data-view="moon">飛到月球</button><button data-view="ship">跟隨太空船</button>
+    </div>
+
     </div>
 
     <div id="tab-crowd" hidden>
@@ -330,7 +332,17 @@ button.flash{animation:flash 1s ease-in-out 4}
     </div>
     <div id="status"></div>
   </div>
-  <div id="map"><div id="cesium"></div></div>
+  <div id="map"><div id="cesium"></div>
+    <details id="moon-float"><summary>🌙 月相與月面圖</summary><div class="mf-body">
+    <h3>月相與台北看月亮</h3>
+    <div id="phase-wrap"><canvas id="phase" width="192" height="192"></canvas><table class="kv" id="moon-kv"></table></div>
+    <table class="kv" id="moon-ev" style="margin-top:6px"></table>
+
+    <h3>月面圖（白天／黑夜與地球可見半球）</h3>
+    <canvas id="moonmap" width="720" height="360"></canvas>
+    <div class="hint">暗區為月夜；虛線圈內是此刻從地球看得到的半球（含天平動），＋ 為地球正下方、☀ 為太陽正下方。圓點為歷來登月與撞月地點（座標取至 0.1°）。月面影像：NASA LRO LROC（NASA SVS CGI Moon Kit，公有領域）。</div>
+    </div></details>
+  </div>
 </div>
 <div id="lightbox" hidden><div class="cap">點任意處關閉</div><img alt="CCD 影像放大"></div>
 <div id="w-modal" hidden><div class="card"></div></div>

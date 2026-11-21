@@ -84,7 +84,7 @@
       det.innerHTML = "<summary>背景說明</summary>"; intro.parentNode.insertBefore(det, intro); det.appendChild(intro);
     }
     var card = document.createElement("div"); card.className = "mission";
-    // 月球分頁開頭是月相資訊，任務卡放最上方並顯示問題；其他分頁的標題本身就是問題，卡片接在標題後
+    // 月球分頁：任務卡放最上方並顯示問題，射月球緊接在下（月相與月面圖在地球畫面右上角的收合選單）；其他分頁的標題本身就是問題，卡片接在標題後
     var top = t === "moon";
     card.innerHTML = (top ? "<div class='q'>🎯 " + m.q + "</div>" : "") + "<ol>" + m.s.map(function (x) { return "<li>" + x + "</li>"; }).join("") +
       "</ol><button class='demo'>▶ 示範</button><span class='hint'>自動帶入一組參數並執行</span>";
@@ -104,6 +104,7 @@
   function onTab(t) {
     tbox.open = !!OPEN[t];
     $("t-moonnote").hidden = t !== "moon";
+    $("moon-float").hidden = t !== "moon";
     // 兵棋：從其他分頁切回來時，相機回到台灣周邊海纜
     if (t === "war" && $("w-board").textContent) viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(121, 23.5, 4.5e6) });
   }
