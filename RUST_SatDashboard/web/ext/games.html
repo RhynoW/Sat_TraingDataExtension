@@ -213,12 +213,12 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div class="hint">選一顆衛星讓它爆炸（或被撞），碎片依 NASA 標準解體模型產生，再看這些碎片會不會撞上其他物件、引發下一代碎片（凱斯勒效應）。</div>
     <div class="row"><label>任務</label><select id="d-mission">
       <option value="">自由實驗</option><option value="m1">任務 1：自然清除（5 年內碎片減半）</option>
-      <option value="m2">任務 2：連鎖觸發者（觸發第 3 代碎片）</option><option value="m3">任務 3：守護者（用決策讓碰撞減半）</option></select></div>
+      <option value="m2">任務 2：連鎖觸發者（觸發第 3 代碎片）</option><option value="m3">任務 3：守護者（用決策降低碰撞風險）</option></select></div>
     <div id="d-mission-card" class="coach" hidden></div>
     <div class="row"><label>情境</label><select id="d-tpl">
       <option value="">自訂（選目錄中的衛星）</option><option value="envisat">Envisat 電池爆炸（假想，770 km）</option>
-      <option value="fy1c">風雲一號 C 反衛星試驗（2007，示意，865 km）</option><option value="iridium">Iridium 33 × Cosmos 2251 碰撞（2009，示意，789 km）</option>
-      <option value="c1408">Cosmos 1408 反衛星試驗（2021，示意，480 km）</option></select></div>
+      <option value="fy1c">風雲一號 C 反衛星試驗情境（2007，教學近似，865 km）</option><option value="iridium">Iridium–Cosmos 碰撞情境（2009，教學近似，789 km）</option>
+      <option value="c1408">Cosmos 1408 反衛星試驗情境（2021，教學近似，480 km）</option></select></div>
     <div id="d-tpl-note" class="hint"></div>
     <div class="row"><label>衛星</label><input id="d-q" type="text" placeholder="NORAD 或名稱" style="flex:1;background:var(--bg);color:var(--hi);border:1px solid var(--line);border-radius:6px;padding:3px 6px"><button id="d-find">搜尋</button></div>
     <div class="row"><select id="d-pick"><option value="27386|8211|ENVISAT">ENVISAT（約 770 km、8,211 kg）</option>
@@ -226,7 +226,8 @@ button.flash{animation:flash 1s ease-in-out 4}
       <option value="39634|2300|SENTINEL-1A">Sentinel-1A（約 690 km、2,300 kg）</option></select></div>
     <div class="row"><label>質量</label><input id="d-m" type="number" value="8211" min="1" step="10"><span class="hint">kg</span></div>
     <div class="row"><label>碎片數</label><input id="d-n" type="range" min="2" max="1000" step="1" value="1000"><span id="d-nv" class="hint" style="min-width:44px">1000</span></div>
-    <div class="row"><label>解體方式</label><select id="d-kind"><option value="0">爆炸（電池、殘餘推進劑）</option><option value="1">被撞擊（碰撞模型，Δv 較大）</option></select></div>
+    <div class="row"><label>解體模型</label><select id="d-kind"><option value="0">爆炸模型：內部能量（電池、殘餘推進劑）</option><option value="1">碰撞模型：外部撞擊（反衛星、衛星互撞）</option></select></div>
+    <div id="d-kind-note" class="hint"></div>
     <div class="row"><label>模擬年數</label><select id="d-y"><option>1</option><option>3</option><option>5</option><option selected>10</option><option>20</option><option>50</option></select>
       <label title="放大碰撞截面，讓連鎖在幾年內看得到；不是把時間加速，也不是真實碰撞率">碰撞誇張倍率</label><select id="d-acc"><option value="1" selected>×1 寫實</option><option value="100">×100 誇張</option><option value="1000">×1,000 誇張</option><option value="10000">×10,000 誇張</option><option value="100000">×100,000 誇張</option></select></div>
     <div class="hint">碰撞誇張倍率只放大「碰撞截面」，讓凱斯勒連鎖在遊戲時間內看得到；軌道演化與大氣衰減不變。</div>
@@ -247,7 +248,7 @@ button.flash{animation:flash 1s ease-in-out 4}
     <h3>🏅 成就</h3>
     <div id="d-ach" class="hint"></div>
     <label class="chk"><input type="checkbox" id="d-bg">顯示目錄背景（灰點，瀏覽器端 SGP4）</label>
-    <div class="hint" style="margin-top:8px">模型：NASA 標準解體模型（碎片數由尺寸冪律反推最小尺寸；面積質量比、Δv 依模型分布抽樣；質量與動量守恆）。傳播用克卜勒根數＋J2 長期項；碎片依面積質量比、目錄中的火箭體與碎片依 TLE 阻力項 B* 換算的面積質量比，以 Vallado 指數大氣衰減，近地點低於 120 km 視為再入（有效載荷假設會維持軌道，不衰減）。碰撞以 KD-tree 快照估計：配對碰撞率＝相對速度÷(4d/3)×(R₁+R₂)²/d²；能量質量比 > 40 J/g 為完全解體。目錄物件的尺寸與質量依類別取代表值。<b>碰撞誇張倍率</b>只放大碰撞截面；判讀真實風險請看「第一代寫實期望碰撞」。歷史案例為近似教學設定，不是事件重演。</div>
+    <div class="hint" style="margin-top:8px">模型：NASA 標準解體模型（碎片數由尺寸冪律反推最小尺寸；面積質量比、Δv 依模型分布抽樣；質量與動量守恆）。傳播用克卜勒根數＋J2 長期項；碎片依面積質量比、目錄中的火箭體與碎片依 TLE 阻力項 B* 換算的面積質量比，以 Vallado 指數大氣衰減，近地點低於 120 km 視為再入（有效載荷假設會維持軌道，不衰減）。碰撞以 KD-tree 快照估計：配對碰撞率＝相對速度÷(4d/3)×(R₁+R₂)²/d²；能量質量比 > 40 J/g 為完全解體。目錄物件的尺寸與質量依類別取代表值。<b>碰撞誇張倍率</b>只放大碰撞截面；判讀真實風險請看「第一代碎片近似風險」。清理、移除火箭體、避碰三張決策卡都是教學簡化；歷史案例為教學近似，不是事件重演。參考：Kessler &amp; Cour-Palais（1978，碰撞率）、Johnson et al.（2001，NASA 標準解體模型）、Vallado（大氣與 SGP4）、King-Hele（阻力衰減）。</div>
     </div>
     <div id="tab-asat" hidden>
     <h3>🎯 更強的火箭打得到衛星嗎？</h3>

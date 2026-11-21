@@ -60,12 +60,31 @@
     return fetch("/api/games/breakup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(req) })
       .then(function (r) { return r.json(); });
   };
+  // 伺服器忙碌（429）時依 retry_after 倒數後自動重試，最多 10 次
+  HOOK.postRetry = function (req, onWait) {
+    return new Promise(function (ok, no) {
+      (function go(n) {
+        HOOK.post(req).then(function (d) {
+          if (d.retry_after && n < 10) {
+            var left = d.retry_after;
+            (function tick() {
+              if (onWait) onWait(left);
+              if (left-- <= 0) { go(n + 1); return; }
+              setTimeout(tick, 1000);
+            })();
+            return;
+          }
+          ok(d);
+        }).catch(no);
+      })(0);
+    });
+  };
   $("d-run").onclick = function () {
     var btn = this, req = baseReq();
     if (HOOK.extend) req = HOOK.extend(req);
     if (!req.orbit && !req.norad) { SDG.status("請輸入 NORAD 編號或從清單選擇"); return; }
     btn.disabled = true; $("d-res").textContent = "模擬中…（10 年約需數秒）";
-    HOOK.post(req)
+    HOOK.postRetry(req, function (left) { $("d-res").textContent = "另一個碎片模擬正在計算（可能是對照組或其他使用者），" + left + " 秒後自動重試…"; })
       .then(function (d) {
         btn.disabled = false;
         if (d.error) { $("d-res").textContent = d.error; return; }
@@ -84,21 +103,23 @@
     var g1 = s.expected_gen1_real != null ? s.expected_gen1_real : s.expected_real;
     var rows = [
       ["母體", p.name + "（" + (p.custom ? "自訂軌道，示意" : "NORAD " + p.norad) + "，高度 " + fmt(p.alt_km) + " km，" + fmt(p.mass_kg) + " kg）"],
-      ["第一次解體", fmt(first.length) + " 個碎片（最小約 " + (lmin * 100).toFixed(1) + " cm）"],
+      ["解體模型", d.events[0].kind === "explosion" ? "爆炸模型（內部能量：電池、殘餘推進劑；Δv 較小）" : "碰撞模型（外部撞擊：反衛星、衛星互撞；Δv 較大）"],
+      ["第一次解體", fmt(first.length) + " 個碎片（最小約 " + (lmin * 100).toFixed(1) + " cm）；之後的碰撞一律用碰撞模型"],
       ["碎片總數", fmt(s.fragments_total) + (s.capped ? "（達 30,000 上限，之後不再產生）" : "") + "，最多 " + gens + " 代"],
       [fmt(d.years, 1) + " 年後仍在軌道", fmt(s.alive_end) + " 個（已再入 " + fmt(s.reentered || 0) + " 個）"],
       ["碰撞（擲骰）", fmt(s.collisions) + " 次" + (d.accel > 1 ? "（碰撞誇張倍率 ×" + fmt(d.accel) + "）" : "（寫實）")],
-      ["第一代寫實期望碰撞", "<b>" + num(g1) + " 次</b>（只計第一代碎片撞上目錄物件；判讀真實風險看這個）"],
+      ["第一代碎片近似風險", "<b>" + num(g1) + " 次</b>（未加速情境下，第一代碎片撞上現有目錄物件的近似期望次數" + (d.accel > 1 ? "；誇張模式下第一代碎片也會被撞毀，所以略偏低" : "") + "）"],
     ];
     if (d.accel > 1) rows.push(["線性反推（偏高）", num(s.expected_linear != null ? s.expected_linear : s.expected_real) + " 次（全部期望值 ÷ 倍率；誇張模式多出的後代碎片也算進去，未補償連鎖偏差）"]);
     if (s.cat_reentered != null) rows.push(["目錄物件再入", fmt(s.cat_reentered) + " 個（火箭體、碎片依 TLE 阻力項衰減；含被撞毀與決策移除）"]);
     rows.push(["計算", d.elapsed_s.toFixed(1) + " 秒（目錄 " + fmt(d.n_catalog) + " 個物件）" + (d.cached ? "，<b>快取結果</b>（5 分鐘內相同參數）" : "")]);
-    $("d-res").innerHTML = "<div style='color:#f2a73b;margin:2px 0'>⚠ 統計模擬，不是碰撞預報：同樣參數換一個亂數種子，碰撞次數就可能不同。</div>" +
+    var valid = d.years > 1 ? "<div style='color:#d29922;margin:2px 0'>📏 已驗證（Cosmos 1408 試射碎片）：第 1 年的碎片存活比例與觀測吻合；<b>一年以後衰減太慢</b>（第 3 年模擬 8.2%、觀測 0.9%），所以一年以上的在軌數與期望碰撞<b>偏高</b>。碰撞率尚未驗證。</div>" : "";
+    $("d-res").innerHTML = "<div style='color:#f2a73b;margin:2px 0'>⚠ 統計模擬，不是碰撞預報：同樣參數換一個亂數種子，碰撞次數就可能不同。</div>" + valid +
       "<table class='kv'>" + rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("") + "</table>" +
       "<details style='margin-top:4px'><summary style='cursor:pointer;color:var(--hi)'>怎麼看這個結果？（看到的、真實的、誇張的）</summary>" +
       "<div style='line-height:1.7;margin-top:4px'><b>你看到的是什麼</b>：碎片雲沿軌道拉成環、幾個月內散成殼層；點的顏色代表第幾代碎片，閃光是碰撞。<br>" +
-      "<b>什麼接近真實</b>：初始碎片的數量與尺寸分布（NASA 標準解體模型）、軌道擴散、低軌碎片被大氣拖慢而再入的趨勢。<br>" +
-      "<b>什麼是誇張或簡化</b>：碰撞誇張倍率（只放大碰撞截面）、每步 3 個快照的統計估計、目錄物件依類別取代表質量、靜態大氣（不含太陽活動）、畫面上的碎片軌道不含阻力。</div></details>";
+      "<b>什麼接近真實</b>：初始碎片的數量與尺寸分布（NASA 標準解體模型）、軌道擴散、第一年的碎片衰減（Cosmos 1408 驗證吻合）。<br>" +
+      "<b>什麼是誇張或簡化</b>：碰撞誇張倍率（只放大碰撞截面）、每步 3 個快照的統計估計、目錄物件依類別取代表質量、靜態大氣（不含太陽活動）、一年以後衰減偏慢（遠地點很高的碎片活太久）、畫面上的碎片軌道不含阻力。</div></details>";
   }
 
   // 圖例可點擊開關；圖表畫好後存底圖，播放時只疊上目前時間的游標
@@ -123,12 +144,21 @@
     for (var k = 1; k <= gmax; k++) (function (k) { if (!hidden["g" + k]) line(function (s) { return s.alive[k]; }, GEN_C[k], 1.5); })(k);
     if (!hidden.tot) line(function (s) { return s.alive.reduce(function (x, y) { return x + y; }, 0); }, "#e6edf3", 2.2);
     if (!hidden.col) line(function (s) { return s.collisions; }, "#f2cc60", 1.8, [5, 4]);
+    // 決策生效時間：綠色虛線＋圖示
+    var ICON = { cleanup: "🧹", derelict: "🚀", avoid: "🛰" };
+    d.events.forEach(function (e) {
+      if (!ICON[e.kind]) return;
+      var x = X(e.t / 86400);
+      g.strokeStyle = "#3fb950"; g.lineWidth = 1.5; g.setLineDash([4, 3]); g.beginPath(); g.moveTo(x, T); g.lineTo(x, H - B); g.stroke(); g.setLineDash([]);
+      g.font = "13px sans-serif"; g.textAlign = "center"; g.fillText(ICON[e.kind], x, H - B - 6);
+    });
+    g.font = "12px 'Microsoft JhengHei',sans-serif";
     var item = function (key, col, txt) {
       return "<span data-lg='" + key + "' style='cursor:pointer;white-space:nowrap;margin-right:10px;color:" + col + ";" + (hidden[key] ? "opacity:.35;text-decoration:line-through" : "") + "'>" + txt + "</span>";
     };
     var lg = item("tot", "#e6edf3", "━ 在軌碎片總數") + item("col", "#f2cc60", "┅ 累計碰撞");
     for (k = 1; k <= gmax; k++) lg += item("g" + k, GEN_C[k], "━ 第 " + k + " 代");
-    $("d-legend").innerHTML = lg + "<span class='hint'>（點圖例可開關）</span>";
+    $("d-legend").innerHTML = lg + "<span class='hint'>（點圖例可開關" + (d.events.some(function (e) { return ICON[e.kind]; }) ? "；<span style='color:#3fb950'>綠色虛線</span>＝決策生效時間" : "") + "）</span>";
     $("d-legend").querySelectorAll("[data-lg]").forEach(function (el) { el.onclick = function () { hidden[el.dataset.lg] = !hidden[el.dataset.lg]; chart(res); }; });
     cv._base = g.getImageData(0, 0, W, H); cv._X = X; cv._range = [T, H - B]; cv._last = null;
   }
@@ -153,7 +183,7 @@
     var on = res && res.accel > 1 && SDG.tab() === "debris";
     badge.style.display = on ? "block" : "none";
     var g1 = res && (res.summary.expected_gen1_real != null ? res.summary.expected_gen1_real : res.summary.expected_real);
-    if (on) badge.innerHTML = "⚠ 誇張模式：碰撞截面放大 ×" + fmt(res.accel) + "，連鎖遠快於真實；第一代寫實期望碰撞 " +
+    if (on) badge.innerHTML = "⚠ 誇張模式：碰撞截面放大 ×" + fmt(res.accel) + "，連鎖遠快於真實；未加速時第一代碎片近似風險 " +
       (g1 < 0.01 ? g1.toExponential(1) : g1.toFixed(2)) + " 次";
   }
 
@@ -191,7 +221,7 @@
   function update() {
     if (!res || SDG.tab() !== "debris") { note.style.display = "none"; return; }
     var now = JD.toDate(viewer.clock.currentTime).getTime(), t = (now - Date.parse(res.t0)) / 1000, g = gmst(now);
-    note.style.display = t > 365.25 * 86400 ? "block" : "none";
+    note.style.display = t > 30 * 86400 ? "block" : "none";
     var c = new Cesium.Cartesian3(), D = res.deaths;
     for (var i = 0; i < pts.length; i++) {
       var f = res.frags[i];

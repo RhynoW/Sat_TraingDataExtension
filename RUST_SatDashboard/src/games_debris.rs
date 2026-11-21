@@ -378,17 +378,22 @@ pub async fn breakup_api(State(st): State<Arc<AppState>>, Json(rq): Json<Breakup
     let years = rq.years.clamp(0.1, 50.0);
     let accel = rq.accel.clamp(1.0, 1e6);
     let mass = rq.mass_kg.clamp(1.0, 1e6);
-    // 快取：同參數 5 分鐘內直接回傳（伺服器時間分桶；結果的 t0 沿用原計算）
-    let key = serde_json::to_string(&rq).unwrap_or_default();
+    // 快取：同參數、同一份目錄（索引建立時間）5 分鐘內直接回傳；LRU（命中時移到最後）
+    let key = format!("{}|{}", st.index().built_at.timestamp(), serde_json::to_string(&rq).unwrap_or_default());
     let bucket = Utc::now().timestamp() / CACHE_SECS;
-    if let Some(v) = CACHE.lock().ok().and_then(|c| c.iter().find(|e| e.0 == key && e.1 == bucket).map(|e| e.2.clone())) {
-        let mut v = v;
-        v["cached"] = json!(true);
-        return Json(v).into_response();
+    if let Ok(mut c) = CACHE.lock() {
+        if let Some(pos) = c.iter().position(|e| e.0 == key && e.1 == bucket) {
+            let e = c.remove(pos);
+            let mut v = e.2.clone();
+            c.push(e);
+            v["cached"] = json!(true);
+            return Json(v).into_response();
+        }
     }
-    // 同時只算一個：區網多人或連點時避免把 CPU 打滿
+    // 同時只算一個：區網多人或連點時避免把 CPU 打滿；附 Retry-After 讓前端倒數重試
     if BUSY.swap(true, Ordering::SeqCst) {
-        return (StatusCode::TOO_MANY_REQUESTS, Json(json!({"error": "另一個碎片模擬正在計算，請稍候幾秒再試"}))).into_response();
+        return (StatusCode::TOO_MANY_REQUESTS, [(axum::http::header::RETRY_AFTER, "3")],
+            Json(json!({"error": "另一個碎片模擬正在計算", "retry_after": 3}))).into_response();
     }
     let out = tokio::task::spawn_blocking(move || {
         let _g = BusyGuard;
@@ -398,7 +403,7 @@ pub async fn breakup_api(State(st): State<Arc<AppState>>, Json(rq): Json<Breakup
     match out {
         Ok(Ok(v)) => {
             if let Ok(mut c) = CACHE.lock() {
-                c.retain(|e| e.1 == bucket && e.0 != key);
+                c.retain(|e| e.1 == bucket && e.0 != key);   // 過期的分桶一併清掉
                 if c.len() >= CACHE_MAX { c.remove(0); }
                 c.push((key, bucket, v.clone()));
             }
@@ -425,6 +430,8 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
         (r, v, parent.name.clone(), false)
     };
     let mut rng = Rng(rq.seed.unwrap_or(1) ^ 0x5DEECE66D);
+    // 快照時刻用獨立亂數流：決策移除物件會改變擲骰次數，但不影響取樣時刻，同種子的對照組與決策組可直接比較（共同隨機數）
+    let mut rng_snap = Rng(rq.seed.unwrap_or(1) ^ 0x2545F4914F6CDD1D);
 
     // 目錄物件（排除母體）轉成 t0 的根數；面積質量比由 TLE 的 B* 換算（阻力衰減用）
     let skip_id = if custom { u32::MAX } else { rq.norad };
@@ -473,6 +480,7 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
     events.push(json!({"t": 0.0, "kind": if rq.collision { "collision" } else { "explosion" }, "a": pname, "b": null,
         "n_new": n0, "pos": pr, "catastrophic": true, "gen": 1}));
     let parent_alt = norm(&pr) - R_EARTH_KM;
+    let parent_el = El::from_rv(&pr, &pv, 0.0);   // 移除火箭體時比對軌道面用
 
     // 緩解決策：依時刻排序，於時間步開頭生效
     let mut actions: Vec<ActionReq> = rq.actions.clone();
@@ -489,6 +497,7 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
     let mut expected_g1 = 0.0; // 只計第一代碎片與目錄物件之間（不含加速產生的後代）
     let mut n_coll = 0usize;
     let mut risk: HashMap<usize, f64> = HashMap::new(); // 目錄物件累計期望碰撞
+    let mut frag_risk: HashMap<usize, f64> = HashMap::new(); // 碎片累計期望碰撞（清理任務排序用）
     let d2 = SCREEN_D * SCREEN_D;
     let chord = 4.0 * SCREEN_D / 3.0;
     let alive_counts = |objs: &Vec<Obj>| -> Vec<usize> {
@@ -508,18 +517,28 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
             match a.kind.as_str() {
                 "cleanup" => {
                     let n = a.n.unwrap_or(20).min(200);
+                    // 依累計期望碰撞（到目前為止的碰撞風險貢獻）排序，同分再比質量；解體後太早還沒有風險資料時等同依質量
                     let mut idx: Vec<usize> = (n_cat..objs.len()).filter(|&i| objs[i].alive).collect();
-                    idx.sort_by(|&x, &y| objs[y].mass.partial_cmp(&objs[x].mass).unwrap_or(std::cmp::Ordering::Equal));
+                    let rk = |i: &usize| frag_risk.get(i).copied().unwrap_or(0.0);
+                    idx.sort_by(|x, y| rk(y).partial_cmp(&rk(x)).unwrap_or(std::cmp::Ordering::Equal)
+                        .then(objs[*y].mass.partial_cmp(&objs[*x].mass).unwrap_or(std::cmp::Ordering::Equal)));
                     let took: Vec<usize> = idx.into_iter().take(n).collect();
                     let m: f64 = took.iter().map(|&i| objs[i].mass).sum();
                     for &i in &took { objs[i].alive = false; objs[i].death = t; }
-                    events.push(json!({"t": t, "kind": "cleanup", "a": format!("清理任務移除最重的 {} 個碎片", took.len()), "b": null,
+                    events.push(json!({"t": t, "kind": "cleanup", "a": format!("清理任務（教學簡化）：移除累計碰撞風險最高的 {} 個碎片（共 {:.0} kg）", took.len(), m), "b": null,
                         "n_new": 0, "removed": took.len(), "mass_kg": m, "pos": pr, "catastrophic": false, "gen": 0}));
                 }
                 "derelict" => {
                     let n = a.n.unwrap_or(10).min(100);
+                    // 軌道可及性的粗略篩選：與母體軌道面相近（傾角差 ≤ 5°、升交點赤經差 ≤ 30°，依 J2 漂移推到當下），且高度帶重疊 ±100 km
+                    let (pi, praan) = parent_el.as_ref().map(|p| (p.i, p.raan + p.raan_dot * t)).unwrap_or((0.0, 0.0));
                     let mut idx: Vec<(usize, f64)> = (0..n_cat)
                         .filter(|&i| objs[i].alive && objs[i].kind == 1)
+                        .filter(|&i| {
+                            let e = &objs[i].el;
+                            let draan = ((e.raan + e.raan_dot * (t - e.t_ref) - praan).rem_euclid(TAU) + TAU / 2.0).rem_euclid(TAU) - TAU / 2.0;
+                            parent_el.is_none() || ((e.i - pi).abs() <= 5f64.to_radians() && draan.abs() <= 30f64.to_radians())
+                        })
                         .map(|i| {
                             let e = &objs[i].el;
                             let (hp, ha) = (e.a * (1.0 - e.e) - R_EARTH_KM, e.a * (1.0 + e.e) - R_EARTH_KM);
@@ -531,12 +550,17 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
                     idx.sort_by(|x, y| x.1.partial_cmp(&y.1).unwrap_or(std::cmp::Ordering::Equal));
                     let took: Vec<usize> = idx.into_iter().take(n).map(|x| x.0).collect();
                     for &i in &took { objs[i].alive = false; objs[i].death = t; }
-                    events.push(json!({"t": t, "kind": "derelict", "a": format!("主動移除母體高度 ±100 km 內 {} 個火箭體", took.len()), "b": null,
+                    let msg = if took.len() < n {
+                        format!("移除廢棄火箭體（教學簡化）：與母體軌道面相近、高度 ±100 km 內只找到 {} 個，全部移除", took.len())
+                    } else {
+                        format!("移除廢棄火箭體（教學簡化）：移除與母體軌道面相近、高度 ±100 km 內最接近的 {} 個", took.len())
+                    };
+                    events.push(json!({"t": t, "kind": "derelict", "a": msg, "b": null,
                         "n_new": 0, "removed": took.len(), "pos": pr, "catastrophic": false, "gen": 0}));
                 }
                 "avoid" => {
                     avoid_from = avoid_from.min(t);
-                    events.push(json!({"t": t, "kind": "avoid", "a": "有效載荷開始對 ≥ 10 cm 物件避碰（碰撞率 ×0.1）", "b": null,
+                    events.push(json!({"t": t, "kind": "avoid", "a": "簡化避碰假設：在軌衛星對 ≥ 10 cm 物件避碰，碰撞機率降至 10%（實際效果取決於預警、燃料、協調與虛警率）", "b": null,
                         "n_new": 0, "pos": pr, "catastrophic": false, "gen": 0}));
                 }
                 _ => {}
@@ -547,7 +571,7 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
         let avoid_on = t >= avoid_from;
         let mut cand: Vec<(usize, usize, f64, f64)> = Vec::new(); // (i, j, λ, 相對速度)
         for _ in 0..ks {
-            let ts = t + rng.next() * dt;
+            let ts = t + rng_snap.next() * dt;
             let states: Vec<Option<(V3, V3)>> = objs.par_iter().map(|o| o.alive.then(|| o.el.rv(ts))).collect();
             let mut pts = Vec::with_capacity(objs.len());
             let mut map = Vec::with_capacity(objs.len());
@@ -597,7 +621,10 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
             }
             if b < n_cat {
                 *risk.entry(b).or_insert(0.0) += lam;
+            } else {
+                *frag_risk.entry(b).or_insert(0.0) += lam;
             }
+            *frag_risk.entry(a).or_insert(0.0) += lam;
             if !objs[a].alive || !objs[b].alive || rng.next() >= 1.0 - (-lam).exp() {
                 continue;
             }
