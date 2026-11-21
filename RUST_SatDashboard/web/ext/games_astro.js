@@ -35,29 +35,137 @@
     if (ev) { viewer.clock.currentTime = JD.fromDate(ev.date); viewer.clock.shouldAnimate = false; $("t-play").textContent = "▶"; SDG.status("時間設為 " + tw(ev.date) + "（太陽 −13°）"); }
   };
 
-  $("s-run").onclick = function () {
-    var btn = this, s = site(), T = tel(), exp = +$("s-exp").value, date = JD.toDate(viewer.clock.currentTime);
+  // 依目前畫面設定組出請求；groups 為 null 時依「情境」選單
+  function shot(groups, night) {
+    var s = site(), T = tel(), exp = +$("s-exp").value, date = JD.toDate(viewer.clock.currentTime);
     var tg = $("s-target").value, rd;
     if (tg === "altaz") rd = altaz2radec(+$("s-alt").value, +$("s-az").value, s, date);
     else { var q = tg.split(","); rd = { ra: +q[0], dec: +q[1] }; }
     var req = { lat: s.lat, lon: s.lon, h_km: s.h, ra_deg: rd.ra, dec_deg: rd.dec, fov_deg: T.fov, exp_s: exp,
-      t: date.toISOString(), groups: $("s-scen").value === "mega" ? MEGA : [], night: true };
+      t: date.toISOString(), groups: groups || ($("s-scen").value === "mega" ? MEGA : []), night: night };
+    return fetch("/api/games/astro", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(req) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { if (d.error) throw new Error(d.error); return { d: d, rd: rd, s: s, T: T, exp: exp }; });
+  }
+
+  $("s-run").onclick = function () {
+    var btn = this;
     btn.disabled = true; $("s-res").textContent = "計算中…";
-    Promise.all([loadStars(), fetch("/api/games/astro", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(req) }).then(function (r) { return r.json(); })])
+    Promise.all([loadStars(), shot(null, true)])
       .then(function (a) {
         btn.disabled = false;
-        var d = a[1]; if (d.error) { $("s-res").textContent = d.error; return; }
-        last = { d: d, rd: rd, s: s, T: T, exp: exp };
-        render(last); nightChart(d);
+        last = a[1];
+        render(last, $("s-img"), true); nightChart(last.d); draw3D(last);
       })
-      .catch(function (e) { btn.disabled = false; $("s-res").textContent = "計算失敗：" + e; });
+      .catch(function (e) { btn.disabled = false; $("s-res").textContent = "計算失敗：" + e.message; });
   };
+
+  // 現況與 10 萬 Starlink 情境同時刻、同指向各拍一張，左右拖曳比較（背景星用同一組亂數，只差在光跡）
+  $("s-cmp-run").onclick = function () {
+    var btn = this;
+    btn.disabled = true; $("s-cmp-res").textContent = "計算中…";
+    Promise.all([loadStars(), shot([], false), shot(MEGA, false)])
+      .then(function (a) {
+        btn.disabled = false; $("s-cmp").hidden = false;
+        var ra = render(a[1], $("s-cmp-a"), false), rb = render(a[2], $("s-cmp-b"), false);
+        setCmp(+$("s-cmp-x").value);
+        var row = function (n, r) { return "<tr><td>" + n + "</td><td>" + r.n + " 條</td><td>" + (r.lost * 100).toFixed(3) + "%</td><td>" + (r.brightest ? r.brightest.mag.toFixed(1) + " 等" : "—") + "</td></tr>"; };
+        $("s-cmp-res").innerHTML = "<table class='kv'><tr><td>情境</td><td>光跡</td><td>佔去像素</td><td>最亮</td></tr>" + row("現況", ra) + row("10 萬 Starlink", rb) + "</table>" +
+          "<div>光跡變成 <b>" + (ra.n ? (rb.n / ra.n).toFixed(1) + " 倍" : rb.n + " 條（現況 0 條）") + "</b>，佔去的像素變成 <b>" +
+          (ra.lost > 0 ? (rb.lost / ra.lost).toFixed(1) + " 倍" : "—") + "</b>。拖曳影像或下方滑桿比較。</div>";
+        $("s-cmp").scrollIntoView({ block: "nearest", behavior: "smooth" });
+      })
+      .catch(function (e) { btn.disabled = false; $("s-cmp-res").textContent = "計算失敗：" + e.message; });
+  };
+  function setCmp(x) {
+    $("s-cmp-b").style.clipPath = "inset(0 0 0 " + x + "%)"; $("s-cmp-line").style.left = x + "%"; $("s-cmp-x").value = x;
+  }
+  $("s-cmp-x").oninput = function () { setCmp(+this.value); };
+  (function () {
+    var box = $("s-cmp-box"), drag = false;
+    function at(e) { var r = box.getBoundingClientRect(); setCmp(Math.max(0, Math.min(100, (e.clientX - r.left) / r.width * 100))); }
+    box.addEventListener("pointerdown", function (e) { drag = true; box.setPointerCapture(e.pointerId); at(e); });
+    box.addEventListener("pointermove", function (e) { if (drag) at(e); });
+    box.addEventListener("pointerup", function () { drag = false; });
+  })();
+
+  // 放大檢視
+  $("s-img").onclick = function () {
+    if (!this._base) return;
+    var lb = $("lightbox"); lb.querySelector("img").src = this.toDataURL(); lb.hidden = false;
+  };
+  $("lightbox").onclick = function () { this.hidden = true; };
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") $("lightbox").hidden = true; });
+
+  // 標出光跡：在原始影像上疊色線與星等標籤（不重算影像）
+  var GC = ["#3fb950", "#58a6ff", "#f2a73b", "#ff7b72", "#d2a8ff"];   // 其他、Starlink、Kuiper、千帆、國網
+  function mark(cv) {
+    if (!cv._base) return;
+    var g = cv.getContext("2d"), L = cv._L, fov = L.T.fov;
+    g.putImageData(cv._base, 0, 0);
+    if (!$("s-mark").checked) return;
+    var toPx = function (q) { return [N / 2 + q[0] / fov * N, N / 2 - q[1] / fov * N]; };
+    g.save(); g.font = "bold 13px 'Microsoft JhengHei',sans-serif"; g.lineCap = "round";
+    L.d.streaks.forEach(function (st) {
+      var col = GC[st.group] || GC[0], ps = st.pts.map(toPx);
+      g.globalAlpha = 0.5; g.strokeStyle = col; g.lineWidth = 7; g.beginPath();
+      ps.forEach(function (p, i) { if (i) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); }); g.stroke();
+      var inside = ps.filter(function (p) { return p[0] > 8 && p[0] < N - 8 && p[1] > 34 && p[1] < N - 8; });
+      if (!inside.length) return;
+      var p = inside[Math.floor(inside.length / 2)], txt = st.mag.toFixed(1) + " 等 " + st.name.slice(0, 16);
+      var tw2 = g.measureText(txt).width, x = Math.max(4, Math.min(N - tw2 - 4, p[0] + 8)), y = Math.max(46, Math.min(N - 6, p[1] - 8));
+      g.globalAlpha = 0.75; g.fillStyle = "#000"; g.fillRect(x - 3, y - 13, tw2 + 6, 17);
+      g.globalAlpha = 1; g.fillStyle = col; g.fillText(txt, x, y);
+    });
+    g.restore();
+  }
+  $("s-mark").onchange = function () { ["s-img", "s-cmp-a", "s-cmp-b"].forEach(function (id) { mark($(id)); }); };
+
+  // 3D：觀測點、望遠鏡視野錐（延伸到最遠一條光跡之外）與被拍到的衛星（第一次進入視野時的位置）
+  var ents3 = [];
+  function clear3() { ents3.forEach(function (e) { viewer.entities.remove(e); }); ents3 = []; }
+  function draw3D(L) {
+    clear3();
+    var d = L.d, s = L.s, C3 = Cesium.Cartesian3, jd0 = JD.fromDate(new Date(d.t0));
+    var M0 = Cesium.Transforms.computeTemeToPseudoFixedMatrix(jd0);
+    var ra = L.rd.ra * D2R, de = L.rd.dec * D2R, p = [Math.cos(de) * Math.cos(ra), Math.cos(de) * Math.sin(ra), Math.sin(de)];
+    var ne = Math.hypot(p[0], p[1]) || 1, e = [-p[1] / ne, p[0] / ne, 0], n = [p[1] * e[2] - p[2] * e[1], p[2] * e[0] - p[0] * e[2], p[0] * e[1] - p[1] * e[0]];
+    var fx = function (v, M) { return C3.normalize(Cesium.Matrix3.multiplyByVector(M || M0, new C3(v[0], v[1], v[2]), new C3()), new C3()); };
+    var O = C3.fromDegrees(s.lon, s.lat, s.h * 1000);
+    var maxR = d.streaks.reduce(function (m, st) { return Math.max(m, st.range_km); }, 0);
+    var R = Math.max(1500, Math.min(40000, maxR * 1.15)) * 1000, t = Math.tan(L.T.fov / 2 * D2R);
+    var far = [[1, 1], [1, -1], [-1, -1], [-1, 1]].map(function (c) {
+      var v = [p[0] + (e[0] * c[0] + n[0] * c[1]) * t, p[1] + (e[1] * c[0] + n[1] * c[1]) * t, p[2] + (e[2] * c[0] + n[2] * c[1]) * t];
+      return C3.add(O, C3.multiplyByScalar(fx(v), R, new C3()), new C3());
+    });
+    var vio = Cesium.Color.fromCssColorString("#a371f7");
+    far.forEach(function (q) { ents3.push(viewer.entities.add({ polyline: { positions: [O, q], width: 1.5, material: vio.withAlpha(0.8), arcType: Cesium.ArcType.NONE } })); });
+    ents3.push(viewer.entities.add({ polyline: { positions: far.concat([far[0]]), width: 2, material: vio, arcType: Cesium.ArcType.NONE } }));
+    var siteName = $("s-site").selectedOptions[0].textContent.replace(/（.*$/, "");
+    ents3.push(viewer.entities.add({ position: O, point: { pixelSize: 9, color: Cesium.Color.YELLOW, outlineColor: Cesium.Color.BLACK, outlineWidth: 1 },
+      label: { text: siteName, font: "13px 'Microsoft JhengHei'", fillColor: Cesium.Color.YELLOW, pixelOffset: new Cesium.Cartesian2(0, 16), style: Cesium.LabelStyle.FILL_AND_OUTLINE, outlineWidth: 2 } }));
+    var order = d.streaks.slice().sort(function (a, b) { return a.mag - b.mag; });
+    order.forEach(function (st, i) {
+      if (!st.r_teme) return;
+      var M = Cesium.Transforms.computeTemeToPseudoFixedMatrix(JD.addSeconds(jd0, st.t_s || 0, new JD()));
+      var pos = Cesium.Matrix3.multiplyByVector(M, new C3(st.r_teme[0] * 1000, st.r_teme[1] * 1000, st.r_teme[2] * 1000), new C3());
+      var col = Cesium.Color.fromCssColorString(GC[st.group] || GC[0]);
+      ents3.push(viewer.entities.add({ position: pos, point: { pixelSize: 7, color: col, outlineColor: Cesium.Color.BLACK, outlineWidth: 1 },
+        label: i < 8 ? { text: st.name.slice(0, 18) + " " + st.mag.toFixed(1) + "等", font: "12px 'Microsoft JhengHei'", fillColor: col, pixelOffset: new Cesium.Cartesian2(10, -10),
+          horizontalOrigin: Cesium.HorizontalOrigin.LEFT, style: Cesium.LabelStyle.FILL_AND_OUTLINE, outlineWidth: 2 } : undefined }));
+    });
+    // 相機站在觀測點後上方，順著望遠鏡指向看出去
+    var dir = fx(p), enu = Cesium.Transforms.eastNorthUpToFixedFrame(O), inv = Cesium.Matrix4.inverseTransformation(enu, new Cesium.Matrix4());
+    var loc = Cesium.Matrix4.multiplyByPointAsVector(inv, dir, new C3());
+    viewer.camera.lookAt(O, new Cesium.HeadingPitchRange(Math.atan2(loc.x, loc.y), -0.45, R * 1.1));
+    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+  }
 
   // 簡單可重現亂數
   function rng(seed) { var x = seed >>> 0 || 1; return function () { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return (x >>> 0) / 4294967296; }; }
   function gauss(r) { return Math.sqrt(-2 * Math.log(Math.max(1e-12, r()))) * Math.cos(2 * Math.PI * r()); }
 
-  function render(L) {
+  function render(L, cv, withRes) {
     var d = L.d, T = L.T, exp = L.exp, s = L.s, fov = T.fov;
     var A = Math.PI * T.D * T.D / 4, pix = fov * 3600 / N, pixA = pix * pix;
     // 昏影時天空變亮：太陽高於 −18° 時每度約亮 0.4 等
@@ -109,7 +217,7 @@
       }
     });
     // 顯示：滿井截斷後 asinh 拉伸
-    var cv = $("s-img"), g = cv.getContext("2d"), out = g.createImageData(N, N), hi = Math.asinh(Math.min(full - sky, 3000 * sig) / (3 * sig)), lost = 0;
+    var g = cv.getContext("2d"), out = g.createImageData(N, N), hi = Math.asinh(Math.min(full - sky, 3000 * sig) / (3 * sig)), lost = 0;
     for (var i2 = 0; i2 < img.length; i2++) {
       var v = Math.min(full, img[i2]), z = Math.max(0, Math.asinh(Math.max(0, v - sky - 2 * sig) / (3 * sig)) / hi), c8 = Math.round(255 * Math.min(1, z * 1.4));
       out.data[i2 * 4] = out.data[i2 * 4 + 1] = out.data[i2 * 4 + 2] = c8; out.data[i2 * 4 + 3] = 255;
@@ -118,6 +226,7 @@
     g.putImageData(out, 0, 0);
     g.fillStyle = "rgba(255,255,255,.75)"; g.font = "14px 'Microsoft JhengHei',sans-serif";
     g.fillText(fov + "° × " + fov + "°　曝光 " + exp + " 秒　光跡 " + d.streaks.length + " 條", 10, 22);
+    cv._base = g.getImageData(0, 0, N, N); cv._L = L; mark(cv);
     var rows = [
       ["拍攝時刻", tw(new Date(d.t0), true) + "（太陽仰角 " + d.sun_alt.toFixed(1) + "°，指向仰角 " + d.point_alt.toFixed(1) + "°）"],
       ["劃過視野", "<b>" + d.streaks.length + " 條光跡</b>（另 " + d.shadowed + " 顆在地影中，看不到）；計算 " + fmt(d.objects) + " 個物件"],
@@ -126,7 +235,8 @@
       ["背景星", fmt(nst) + " 顆星表恆星＋" + fmt(faint) + " 顆示意背景星（極限約 " + Math.min(lim, 23).toFixed(1) + " 等）"],
       ["天空亮度", mu.toFixed(1) + " 等／平方角秒"],
     ];
-    $("s-res").innerHTML = "<table class='kv'>" + rows.map(function (x) { return "<tr><td>" + x[0] + "</td><td>" + x[1] + "</td></tr>"; }).join("") + "</table>";
+    if (withRes) $("s-res").innerHTML = "<table class='kv'>" + rows.map(function (x) { return "<tr><td>" + x[0] + "</td><td>" + x[1] + "</td></tr>"; }).join("") + "</table>";
+    return { n: d.streaks.length, lost: lost / img.length, brightest: brightest };
   }
 
   function nightChart(d) {
@@ -149,6 +259,8 @@
   }
 
   document.addEventListener("sdg-tab", function (e) {
-    if (e.detail === "astro") { loadStars(); viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(120.87, 23.47, 9e6) }); }
+    var on = e.detail === "astro";
+    ents3.forEach(function (x) { x.show = on; });
+    if (on) { loadStars(); if (!ents3.length) viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(120.87, 23.47, 9e6) }); }
   });
 })();

@@ -62,6 +62,26 @@ button.busy::after{content:attr(data-el)}
 button.flash{animation:flash 1s ease-in-out 4}
 @keyframes flash{50%{box-shadow:0 0 0 4px #f2a73b}}
 [id$="-res"],#res,#a-miss,#w-board{scroll-margin-bottom:70px}
+/* 天文夢魘：放大檢視、比較滑桿 */
+#lightbox{position:fixed;inset:0;z-index:50;background:#000e;display:flex;align-items:center;justify-content:center;cursor:zoom-out}
+#lightbox[hidden]{display:none}
+#lightbox img{max-width:96vw;max-height:92vh;image-rendering:pixelated;border:1px solid var(--line)}
+#lightbox .cap{position:absolute;top:10px;left:0;right:0;text-align:center;color:var(--mute)}
+#s-cmp-box{position:relative;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:#000}
+#s-cmp-box canvas{display:block;width:100%}
+#s-cmp-b{position:absolute;inset:0}
+#s-cmp-line{position:absolute;top:0;bottom:0;width:2px;background:#f2a73b;left:50%;pointer-events:none}
+#s-cmp-box .lab{position:absolute;bottom:6px;background:#000a;padding:1px 6px;border-radius:4px;font-size:11px}
+#s-cmp-box .lab.l{left:6px}#s-cmp-box .lab.r{right:6px;color:#f2a73b}
+/* 太空兵棋：教練提示、回合結算 */
+.coach{margin:6px 0;padding:6px 9px;border-left:3px solid #f2a73b;background:#2a2010;border-radius:4px;line-height:1.6}
+.coach b{color:#f2c46b}
+#w-modal{position:fixed;inset:0;z-index:40;background:#0008;display:flex;align-items:center;justify-content:center}
+#w-modal[hidden]{display:none}
+#w-modal .card{width:min(520px,92vw);max-height:84vh;overflow:auto;background:var(--panel);border:1px solid #a371f7;border-radius:10px;padding:14px 18px;box-shadow:0 10px 40px #000}
+#w-modal h2{font-size:16px;margin:0 0 8px;color:#d2a8ff}
+#w-modal .delta{font-size:22px;font-weight:700;margin:4px 0 8px}
+#w-modal ul{margin:6px 0;padding-left:18px;line-height:1.7}
 </style>
 <script>window.CESIUM_BASE_URL="/cesium/";</script>
 <script src="/cesium/Cesium.js"></script>
@@ -219,8 +239,17 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div class="row"><label>曝光</label><select id="s-exp"><option>15</option><option selected>30</option><option>60</option><option>300</option></select><span class="hint">秒</span>
       <label>情境</label><select id="s-scen"><option value="now">現況目錄</option><option value="mega">10 萬 Starlink 情境</option></select></div>
     <div class="row act"><button id="s-dusk">跳到今晚天文昏影（太陽 −13°）</button><button class="go" id="s-run">拍一張</button></div>
-    <canvas id="s-img" width="720" height="720" style="width:100%;background:#000;border:1px solid var(--line);border-radius:6px;margin-top:6px"></canvas>
+    <canvas id="s-img" width="720" height="720" title="點一下放大" style="width:100%;background:#000;border:1px solid var(--line);border-radius:6px;margin-top:6px;cursor:zoom-in"></canvas>
+    <div class="row"><label class="chk" style="margin:0"><input type="checkbox" id="s-mark" checked>標出光跡</label>
+      <button id="s-cmp-run">比較：現況 vs 10 萬 Starlink</button></div>
     <div id="s-res" class="hint"></div>
+    <div id="s-cmp" hidden>
+      <h3>現況 vs 10 萬 Starlink（左右拖曳）</h3>
+      <div id="s-cmp-box"><canvas id="s-cmp-a" width="720" height="720"></canvas><canvas id="s-cmp-b" width="720" height="720"></canvas>
+        <div id="s-cmp-line"></div><span class="lab l">現況</span><span class="lab r">10 萬 Starlink</span></div>
+      <input id="s-cmp-x" type="range" min="0" max="100" step="0.5" value="50">
+      <div id="s-cmp-res" class="hint"></div>
+    </div>
     <h3>整夜每次曝光被劃幾條（同指向、每 10 分鐘）</h3>
     <canvas id="s-night" width="760" height="220" style="width:100%;background:#0b1622;border:1px solid var(--line);border-radius:6px"></canvas>
     <div class="hint">灰色區為太陽仰角高於 −12°（不算）或指向仰角低於 20°。</div>
@@ -252,6 +281,8 @@ button.flash{animation:flash 1s ease-in-out 4}
   </div>
   <div id="map"><div id="cesium"></div></div>
 </div>
+<div id="lightbox" hidden><div class="cap">點任意處關閉</div><img alt="CCD 影像放大"></div>
+<div id="w-modal" hidden><div class="card"></div></div>
 <script src="/ext/games.js?v=__BUILD__"></script>
 <script src="/ext/games_crowd.js?v=__BUILD__"></script>
 <script src="/ext/games_balloon.js?v=__BUILD__"></script>

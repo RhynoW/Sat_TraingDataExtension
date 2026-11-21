@@ -195,7 +195,7 @@ fn run(st: &Arc<AppState>, rq: &AstroReq) -> Response {
         let it = &items[i];
         let n = ((exp / 0.25).ceil() as usize).clamp(8, 2400);
         let mut pts = Vec::new();
-        let mut mid: Option<(V3, V3)> = None;
+        let mut mid: Option<(V3, V3, f64)> = None;
         for k in 0..=n {
             let s = exp * k as f64 / n as f64;
             let t = at(s);
@@ -205,11 +205,11 @@ fn run(st: &Arc<AppState>, rq: &AstroReq) -> Response {
             if let Some(q) = view.proj(&u) {
                 if q.0.abs() < view.half * 1.3 && q.1.abs() < view.half * 1.3 {
                     pts.push([(q.0 * 1e5).round() / 1e5, (q.1 * 1e5).round() / 1e5]);
-                    if mid.is_none() { mid = Some((r, o)); }
+                    if mid.is_none() { mid = Some((r, o, s)); }
                 }
             }
         }
-        let Some((r, o)) = mid else { continue };
+        let Some((r, o, s_mid)) = mid else { continue };
         if !sunlit(&r, &sun0) { shadowed += 1; continue; }
         if pts.len() < 2 { continue; }
         let m = mag_at(&r, &o, &sun0, std_mag(it));
@@ -217,7 +217,9 @@ fn run(st: &Arc<AppState>, rq: &AstroReq) -> Response {
         let span_s = exp * (pts.len() - 1) as f64 / ((exp / 0.25).ceil().clamp(8.0, 2400.0));
         let omega = ((b[0] - a[0]).powi(2) + (b[1] - a[1]).powi(2)).sqrt() / span_s.max(1e-3);
         streaks.push(json!({"name": name_of(it), "group": it.group, "mag": (m * 10.0).round() / 10.0,
-            "omega": omega, "range_km": norm(&sub(&r, &o)).round(), "pts": pts}));
+            "omega": omega, "range_km": norm(&sub(&r, &o)).round(), "pts": pts,
+            // 3D 顯示用：第一次進入視野時的 TEME 位置（km）與距曝光開始的秒數
+            "r_teme": [r[0].round(), r[1].round(), r[2].round()], "t_s": (s_mid * 100.0).round() / 100.0}));
     }
 
     // 整夜統計：14 小時內每 10 分鐘一次曝光，天文昏影後、指向仰角 > 20° 才算

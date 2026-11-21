@@ -41,10 +41,11 @@
         return wait(300).then(function () { return until(enabled("d-run"), 180000); }).then(function () { click("[data-dplay='3h']"); });
       } },
     astro: { q: "衛星光跡會毀掉一張天文照片嗎？",
-      s: ["選觀測地點、指向與望遠鏡", "按「跳到今晚天文昏影」", "按「拍一張」，再把情境換成 10 萬 Starlink 比較"],
+      s: ["選觀測地點、指向與望遠鏡", "按「跳到今晚天文昏影」，再按「拍一張」（點影像可放大）", "按「比較」，左右拖曳看 10 萬 Starlink 多了多少光跡"],
       demo: function () {
-        click("s-dusk"); setv("s-scen", "mega"); click("s-run");
-        return wait(300).then(function () { return until(enabled("s-run")); });
+        click("s-dusk"); setv("s-scen", "now"); click("s-run");
+        return wait(300).then(function () { return until(enabled("s-run")); })
+          .then(function () { click("s-cmp-run"); return wait(300); }).then(function () { return until(enabled("s-cmp-run")); });
       } },
     balloon: { q: "鋁箔氣球要多大，才能在台北造成日食？",
       s: ["上方時間設在台北白天", "輸入氣球直徑與軌道高度", "按「計算並播放」，看是全食、環食還是偏食"],
@@ -149,7 +150,7 @@
   }
 
   // ── 計算中：按鈕轉圈＋經過秒數；結束後把結果捲入畫面 ─────────────────────
-  var RESULT = { "g-aim": "res", "g-run": "res", "cr-run": "cr-res", "d-run": "d-res", "s-run": "s-res", "b-run": "b-res", "a-solve": "a-res", "w-mc": "w-mc-res" };
+  var RESULT = { "g-aim": "res", "g-run": "res", "cr-run": "cr-res", "d-run": "d-res", "s-run": "s-res", "s-cmp-run": "s-cmp","b-run": "b-res", "a-solve": "a-res", "w-mc": "w-mc-res" };
   var timers = {};
   new MutationObserver(function (list) {
     list.forEach(function (r) {
