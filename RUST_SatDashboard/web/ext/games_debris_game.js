@@ -123,7 +123,7 @@
             "只靠一種措施效果有限，可以搭配避碰保護在軌衛星。");
         }
         return { ok: r <= 0.85, stars: r <= 0.75 ? 3 : r <= 0.8 ? 2 : 1,
-          msg: "累計期望碰撞為對照組的 <b>" + Math.round(r * 100) + "%</b>。<span class='hint'>教學判定：同種子、同取樣時刻的期望值比較，不是統計結論。</span>" + why +
+          msg: "累計期望碰撞為對照組的 <b>" + Math.round(r * 100) + "%</b>。<span class='hint'>教學判定：單一種子、同取樣時刻的期望值比較，屬初步結果，不是統計結論。</span>" + why +
             "<br>💡 即使三張卡都用上，通常也只能減少兩到三成：碎片一旦產生就很難收回，<b>預防解體（任務後處置、鈍化電池與殘餘推進劑）比事後清除有效得多</b>。" };
       } },  };
   $("d-mission").onchange = function () {
@@ -188,8 +188,15 @@
     if (fv.length > 2 && d.solar && d.solar.mode === "series") {
       var W = 360, H = 46, t1 = fv[fv.length - 1].t, fmin = 60, fmax = Math.max(200, Math.max.apply(null, fv.map(function (x) { return x.f107; })));
       var pts = fv.map(function (x) { return (x.t / t1 * W).toFixed(1) + "," + (H - (x.f107 - fmin) / (fmax - fmin) * H).toFixed(1); }).join(" ");
+      // 預報資料之後（2041-10 起）為 11 年週期外推：灰底標出
+      var ext = "";
+      if (d.solar.beyond_data) {
+        var du = d.solar.data_until.split("-"), tb = (Date.UTC(+du[0], +du[1], 1) - Date.parse(d.solar.epoch + "T00:00:00Z")) / 1000, xb = Math.max(0, Math.min(W, tb / t1 * W));
+        ext = "<rect x='" + xb.toFixed(1) + "' y='0' width='" + (W - xb).toFixed(1) + "' height='" + H + "' fill='#30363d' opacity='0.6'/>" +
+          "<text x='" + (xb + 4).toFixed(1) + "' y='12' fill='#c9d1d9' font-size='10'>" + d.solar.data_until.slice(0, 4) + " 後：週期外推（情境假設，非預報）</text>";
+      }
       h += "<div style='margin-top:6px'><b>太陽活動 F10.7</b>（" + d.solar.epoch + " 起；越高大氣越密、碎片衰減越快）</div>" +
-        "<svg viewBox='0 0 " + W + " " + H + "' style='width:100%;height:46px;background:#0b1622;border-radius:4px'><polyline points='" + pts +
+        "<svg viewBox='0 0 " + W + " " + H + "' style='width:100%;height:46px;background:#0b1622;border-radius:4px'>" + ext + "<polyline points='" + pts +
         "' fill='none' stroke='#f2a73b' stroke-width='1.5'/><text x='4' y='12' fill='#8b949e' font-size='10'>" + Math.round(fmax) + "</text><text x='4' y='" + (H - 3) + "' fill='#8b949e' font-size='10'>" + fmin + "</text></svg>";
     }
     // 5. 累計再入

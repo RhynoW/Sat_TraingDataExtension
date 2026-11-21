@@ -43,6 +43,19 @@ const CACHE_SECS: i64 = 300;
 const CACHE_MAX: usize = 6;
 
 static BUSY: AtomicBool = AtomicBool::new(false);
+
+/// 快取鍵的模型版本：程式版本＋太陽活動與密度表內容的雜湊（更新資料或重新建置後，舊結果不會再命中）
+fn model_version() -> &'static str {
+    static V: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+    V.get_or_init(|| {
+        let mut h: u64 = 0xcbf29ce484222325; // FNV-1a
+        for b in F107_CSV.bytes().chain(MSIS_CSV.bytes()) {
+            h ^= b as u64;
+            h = h.wrapping_mul(0x100000001b3);
+        }
+        format!("{}+{:016x}", env!("CARGO_PKG_VERSION"), h)
+    })
+}
 static CACHE: Mutex<Vec<(String, i64, Value)>> = Mutex::new(Vec::new());
 
 type V3 = [f64; 3];
@@ -461,7 +474,7 @@ pub async fn breakup_api(State(st): State<Arc<AppState>>, Json(rq): Json<Breakup
     let accel = rq.accel.clamp(1.0, 1e6);
     let mass = rq.mass_kg.clamp(1.0, 1e6);
     // 快取：同參數、同一份目錄（索引建立時間）5 分鐘內直接回傳；LRU（命中時移到最後）
-    let key = format!("{}|{}", st.index().built_at.timestamp(), serde_json::to_string(&rq).unwrap_or_default());
+    let key = format!("{}|{}|{}", model_version(), st.index().built_at.timestamp(), serde_json::to_string(&rq).unwrap_or_default());
     let bucket = Utc::now().timestamp() / CACHE_SECS;
     if let Ok(mut c) = CACHE.lock() {
         if let Some(pos) = c.iter().position(|e| e.0 == key && e.1 == bucket) {
@@ -619,11 +632,12 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
                     let rk = |i: &usize| frag_risk.get(i).copied().unwrap_or(0.0);
                     idx.sort_by(|x, y| rk(y).partial_cmp(&rk(x)).unwrap_or(std::cmp::Ordering::Equal)
                         .then(objs[*y].mass.partial_cmp(&objs[*x].mass).unwrap_or(std::cmp::Ordering::Equal)));
+                    let cand = idx.len();
                     let took: Vec<usize> = idx.into_iter().take(n).collect();
                     let m: f64 = took.iter().map(|&i| objs[i].mass).sum();
                     for &i in &took { objs[i].alive = false; objs[i].death = t; }
-                    events.push(json!({"t": t, "kind": "cleanup", "a": format!("清理任務（教學簡化）：移除累計碰撞風險最高的 {} 個碎片（共 {:.0} kg）", took.len(), m), "b": null,
-                        "n_new": 0, "removed": took.len(), "mass_kg": m, "pos": pr, "catastrophic": false, "gen": 0}));
+                    events.push(json!({"t": t, "kind": "cleanup", "a": format!("清理任務（教學簡化）：在 {} 個在軌碎片中，移除累計碰撞風險最高的 {} 個（共 {:.0} kg）", cand, took.len(), m), "b": null,
+                        "n_new": 0, "removed": took.len(), "candidates": cand, "mass_kg": m, "pos": pr, "catastrophic": false, "gen": 0}));
                 }
                 "derelict" => {
                     let n = a.n.unwrap_or(10).min(100);
@@ -645,14 +659,15 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
                         .filter(|x| x.1 <= 100.0)
                         .collect();
                     idx.sort_by(|x, y| x.1.partial_cmp(&y.1).unwrap_or(std::cmp::Ordering::Equal));
+                    let cand = idx.len();
                     let took: Vec<usize> = idx.into_iter().take(n).map(|x| x.0).collect();
                     for &i in &took { objs[i].alive = false; objs[i].death = t; }
                     let msg = if took.len() < n {
-                        format!("移除廢棄火箭體（教學簡化）：與母體軌道面相近、高度 ±100 km 內只找到 {} 個，全部移除", took.len())
+                        format!("移除廢棄火箭體（教學簡化）：與母體軌道面相近、高度 ±100 km 內只找到 {} 個候選，全部移除", took.len())
                     } else {
-                        format!("移除廢棄火箭體（教學簡化）：移除與母體軌道面相近、高度 ±100 km 內最接近的 {} 個", took.len())
+                        format!("移除廢棄火箭體（教學簡化）：在 {} 個符合條件的候選中，移除最接近的 {} 個", cand, took.len())
                     };
-                    events.push(json!({"t": t, "kind": "derelict", "a": msg, "b": null,
+                    events.push(json!({"t": t, "kind": "derelict", "a": msg, "b": null, "candidates": cand,
                         "n_new": 0, "removed": took.len(), "pos": pr, "catastrophic": false, "gen": 0}));
                 }
                 "avoid" => {
@@ -813,6 +828,6 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
             "obs_until": solar().obs_until, "data_until": solar().data_until(),
             "beyond_data": mode == "series" && (epoch + Duration::seconds((t) as i64)).format("%Y-%m").to_string() > solar().data_until(),
         },
-        "elapsed_s": elapsed, "cached": false,
+        "elapsed_s": elapsed, "cached": false, "model_version": model_version(),
     }))
 }

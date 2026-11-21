@@ -1,4 +1,5 @@
-# 每月 F10.7 81 天中心平均（sfu）；type：OBS 實測、PRD 日預報、PRM 月預報。來源 CelesTrak SW-All.csv
+# 每月 F10.7 81 天中心平均（sfu）；type：OBS 實測、PRD 日預報、PRM 月預報。來源 CelesTrak SW-All.csv（https://celestrak.org/SpaceData/SW-All.csv）
+# 來源檔 sha256 edcf2f02212653b83d5338ec7bcd75633a1448318f7a4e5d910b2467ff38d61a，實測至 2026-10
 month,f107,type
 1957-10,271.1,OBS
 1957-11,274.0,OBS

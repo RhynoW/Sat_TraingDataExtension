@@ -5,7 +5,8 @@
   config/msis_density.csv   NRLMSISE-00 全球平均總質量密度（kg/m³），高度 × F10.7 網格
 
 全球平均：緯度 −80°～80°（每 20°）、經度每 45°（等效地方時每 3 小時）、四季各一天（1、4、7、10 月 1 日 0 UT），
-F10.7 與 81 天平均取同值、Ap 固定 15（中等地磁活動）。
+F10.7 與 81 天平均取同值（近似：模擬以每月 81 天平均驅動，不區分當日值，磁暴後或太陽活動快速變化時的密度響應會被平滑）、
+Ap 固定 15（中等地磁活動，不含磁暴）。
 
 用法（在 RUST_SatDashboard 目錄）：
   py -3.13 scripts/gen_solar_tables.py [--sw ../data/space_weather_full/SW-All.csv]
@@ -15,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 from collections import defaultdict
 from pathlib import Path
 
@@ -64,7 +66,9 @@ def main() -> None:
     rows = monthly_f107(Path(a.sw))
     p = ROOT / "config" / "f107_monthly.csv"
     with p.open("w", encoding="utf-8", newline="\n") as f:
-        f.write("# 每月 F10.7 81 天中心平均（sfu）；type：OBS 實測、PRD 日預報、PRM 月預報。來源 CelesTrak SW-All.csv\n")
+        sha = hashlib.sha256(Path(a.sw).read_bytes()).hexdigest()
+        f.write("# 每月 F10.7 81 天中心平均（sfu）；type：OBS 實測、PRD 日預報、PRM 月預報。來源 CelesTrak SW-All.csv（https://celestrak.org/SpaceData/SW-All.csv）\n")
+        f.write(f"# 來源檔 sha256 {sha}，實測至 {max(r[0] for r in rows if r[2] == 'OBS')}\n")
         f.write("month,f107,type\n")
         for ym, v, k in rows:
             f.write(f"{ym},{v:.1f},{k}\n")
