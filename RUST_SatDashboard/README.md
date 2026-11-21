@@ -228,6 +228,12 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 
 ## 版本紀錄
 
+### v0.1.14（2026-11-21）
+
+文件
+- 內建操作手冊（`/manual`）新增第八節「太空小遊戲」：共通操作與 7 個遊戲的玩法、判讀與注意事項
+- 新增 [docs/games_debris_architecture.md](docs/games_debris_architecture.md)：碎片連鎖的架構說明（API、模擬管線、前端、限制與擴充指引）
+
 ### v0.1.13（2026-11-21）
 
 改進
