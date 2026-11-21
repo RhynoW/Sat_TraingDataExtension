@@ -1,6 +1,6 @@
 # 太空小遊戲「碎片連鎖」架構說明
 
-> 適用版本：Rust 單機版 v0.1.16（`/games` 的 💥 碎片連鎖分頁）
+> 適用版本：Rust 單機版 v0.1.17（`/games` 的 💥 碎片連鎖分頁）
 > 讀者：要維護或擴充這個遊戲的開發者
 
 ## 1. 概要
@@ -77,6 +77,8 @@ sequenceDiagram
 | `accel` | f64 | 碰撞誇張倍率（放大碰撞截面） | 夾限 1 – 10⁶ |
 | `seed` | u64？ | 亂數種子（同種子結果可重現） | 預設 1 |
 | `actions` | 陣列 | 緩解決策：`kind`、`t_days`、`n`（見 4.6） | 最多 6 項，否則 400 |
+| `solar` | 字串？ | 大氣：`series`（預設，隨實測＋預報 F10.7）、`low`／`mid`／`high`（固定 F10.7 = 70／120／200）、`static`（舊版 Vallado 靜態大氣） | — |
+| `epoch` | 字串？ | 解體日期 YYYY-MM-DD：只決定太陽活動序列的起點（歷史情境用）；目錄位置仍是現在 | 預設＝解體時刻 t0 |
 
 ### 回應
 
@@ -91,6 +93,7 @@ sequenceDiagram
 | `series` | 每個時間步：`t`、`alive`（第 0–7 代在軌數）、`expected`（累計期望碰撞）、`collisions`（累計擲中次數）、`cat_gone`（已消失的目錄物件數） |
 | `risk_top` | 累計期望碰撞最高的 5 個目錄物件：`name`、`kind`、`alt_km`、`expected_real`（已除回倍率） |
 | `summary` | 見下表 |
+| `solar` | `mode`、`epoch`、`f107_mean`／`f107_min`／`f107_max`（模擬期間用到的 F10.7）、`obs_until`（實測到哪個月）、`data_until`（預報到哪個月）、`beyond_data`（是否用到週期外推）；`series` 每一步另有 `f107` |
 | `elapsed_s`、`cached` | 計算時間；是否為快取結果 |
 
 `summary` 欄位：
@@ -157,7 +160,12 @@ sequenceDiagram
 
 - `El`：克卜勒根數加 J2 長期項（Ω̇、ω̇、Ṁ）。`rv(t)` 以 8 次牛頓迭代解克卜勒方程。
 - **阻力衰減**（`decay()`，套用在所有 `am > 0` 的物件，即碎片與非有效載荷的目錄物件）：
-  - 大氣密度用 Vallado 指數大氣模型（100–1000 km，19 層）[6]，取近地點高度的密度。
+  - **大氣密度隨太陽活動變化**（v0.1.17 起，預設）：每個時間步取中點的 F10.7，從 NRLMSISE-00 [9] 的全球平均密度表內插近地點高度的密度，並由表的局部梯度得到尺度高度。
+    - **F10.7 序列**（`config/f107_monthly.csv`）：每月 81 天中心平均，1957 年起為實測，之後接 CelesTrak 日預報與月預報（到 2041-10）[11]；更晚以 11 年週期外推（平均 120、振幅 52，接在 2041 年的極小期）。逐月線性內插。
+    - **密度表**（`config/msis_density.csv`）：高度 100–1000 km 每 20 km × F10.7 = 60–300 共 10 檔；全球平均為緯度 −80°～80°（cos 緯度加權）、經度每 45°（等效地方時每 3 小時）、四季各一天；F10.7 與 81 天平均取同值、Ap 固定 15。對 ln ρ 雙線性內插（F10.7 方向用 ln F）；超出 1000 km 時沿表頂的尺度高度外推。
+    - 兩張表由 `scripts/gen_solar_tables.py`（numpy＋pymsis 0.13.0 [10]）產生後以 `include_str!` 內嵌，離線可用；更新太陽活動資料後重跑腳本、重新建置即可。
+    - 太陽活動的影響很大：500 km 處 F10.7 = 250 時的密度約是 70 時的 25 倍（600 km 約 40 倍）。
+    - `solar = static` 時沿用舊版 Vallado 指數大氣模型（100–1000 km，19 層）[6]，相當於中等偏高的太陽活動（500 km 密度約等於 F10.7 ≈ 140）。
   - King-Hele 近似 [7]：da/dt = −2.2·(A/M)·ρ·√(μa)。偏心軌道（a·e > 尺度高度）乘上 √(H / 2πae)，並保持近地點不動、只降遠地點。
   - 每步先 `rebase()` 重設參考時刻，再改 a、e，確保位置連續。近地點低於 120 km 視為再入。
 
@@ -278,11 +286,24 @@ sequenceDiagram
 
 - **第一年吻合，之後衰減太慢**。不是大氣整體尺度的問題：把阻力整體乘上 k 倍，碰撞模型的最佳 k 仍是 1.00；問題在曲線形狀（剩一半的時間模擬 135 天、觀測 192 天，後期又偏慢）。
 - **長尾主要來自高遠地點碎片**：模擬中活過 3 年的碎片，出生遠地點中位數 1,637 km；本機 DB 的長壽真實碎片最高只到 1,192 km。排除遠地點 > 1,200 km 的模擬碎片（8.3%）後，第 3 年降為 3.1%，差距縮小約三分之二。可能來源是 Δv 等向假設與分布尾端（真實撞擊由下而上、方向不等向）。
-- **剩下的差距與靜態大氣一致，但未證實**：2021–2026 年 F10.7 平均 151，高於 1996–2019 年的 108。
+- **剩下的差距與靜態大氣一致**：2021–2026 年 F10.7 平均 151，高於 1996–2019 年的 108。v0.1.17 改用隨太陽活動的大氣後重跑（見下表），差距明顯縮小，支持這個推論。
 - **爆炸模型不適合動能撞擊**，這次驗證直接支持兩種模型必須區分。
 - **限制**：觀測只含編目碎片（約 10 cm 以上）；長壽真實碎片樣本只有 54 件且偏長壽；只驗證衰減，寫實倍率下 10 次模擬只撞 1 次，碰撞率沒有驗證到。
 
-**對遊戲的影響**：寫實倍率下第一年的碎片量級可信；**一年以上的在軌數與期望碰撞數偏高**。介面在模擬超過 1 年時會標示這點。報告建議的模型修改（大氣隨 F10.7 變化、截斷極端 Δv 或改用不等向分布）**尚未實作**。
+**v0.1.17 重跑：隨太陽活動的大氣**（同樣的母體與方法，碰撞模型、種子 1–5、`epoch = 2021-11-15`；舊版一欄與報告數字完全一致，表示重現正確）
+
+| 仍在軌比例 | 觀測 | 舊版靜態大氣 | 隨太陽活動 | 隨太陽活動＋排除遠地點 > 1,200 km |
+|---|---|---|---|---|
+| 第 1 年 | 25.3% | 24.8% | 28.6%（21.0%–35.1%） | 22.0% |
+| 第 2 年 | 4.8% | 12.8% | 10.9% | 5.0% |
+| 第 3 年 | 0.9% | 8.2% | 4.9% | 1.4% |
+| 第 5 年 | 0.2% | 4.5% | 2.9% | 0.5% |
+| 剩一半的天數 | 192 | 137 | 170 | — |
+
+- 隨太陽活動的大氣讓第 3 年的差距縮小約 45%（8.2% → 4.9%），剩一半的天數從 137 天改善到 170 天；模擬期間 F10.7 平均 148。
+- 再排除高遠地點碎片後，各年都接近觀測。**剩下的偏差主要來自高遠地點長尾**（極端 Δv 或 Δv 等向假設），這是報告建議的第二項，尚未實作。
+
+**對遊戲的影響**：寫實倍率下第一年的碎片量級可信；**一年以上的在軌數與期望碰撞數仍偏高**，只是程度比 v0.1.16 小。介面在模擬超過 1 年時會標示這點。
 
 ## 7. 效能（參考）
 
@@ -300,11 +321,11 @@ sequenceDiagram
 2. 有效載荷一律不衰減；B* 雜訊大的物件，衰減速度可能失真（上限 0.2 m²/kg）。
 3. 不計目錄物件之間的碰撞，只計「碎片 × 任何物件」。
 4. 碰撞以快照統計估計，不是逐一求解最接近時刻；每步只有 3 個快照，統計雜訊較大。
-5. 大氣為靜態指數模型，不含太陽活動變化。
+5. 大氣密度為全球平均（不分緯度、地方時與季節），Ap 固定 15（不含磁暴）；2041 年以後的太陽活動是週期外推，不是預報。
 6. 碎片總數上限 3 萬，誇張倍率高時很快達到上限，之後的連鎖會被低估。
 7. 歷史案例以單一圓軌道母體近似，不是事件重演（例如 Iridium 與 Cosmos 實際分屬不同軌道面）。
 8. 決策卡效果為抽象模型（例如避碰一律降為一成、清理依累計風險排序、火箭體以軌道面與高度粗略篩選），不代表實際作業能力。
-9. **一年以上衰減偏慢**（6.1 驗證）：長期在軌數與期望碰撞偏高；高遠地點長尾與靜態大氣是主要來源。
+9. **一年以上衰減偏慢**（6.1 驗證）：長期在軌數與期望碰撞偏高；v0.1.17 改用隨太陽活動的大氣後縮小約 45%，剩下主要來自高遠地點長尾。
 10. 尚未實作：「最佳 3 點組合」的機會成本提示（需多跑數次模擬）、多種子平均與信賴區間、前端碎片位置計入阻力（可由後端輸出稀疏位置樣本、前端插值）。
 
 ## 9. 擴充指引
@@ -312,7 +333,8 @@ sequenceDiagram
 | 想做的事 | 修改位置 |
 |---|---|
 | 改解體模型參數（如 Δv 分布） | `breakup()`、`am_dist()` |
-| 改大氣模型或加入太陽活動 | `ATM`、`atm()`、`decay()` |
+| 更新太陽活動資料或密度表 | 重跑 `scripts/gen_solar_tables.py` 後重新建置；模型在 `Solar`（`f107_at()`、`rho()`）與 `decay()` |
+| 改善一年以上的長尾偏差 | `breakup()` 的 Δv 分布：截斷極端 Δv，或改用不等向分布（6.1 的建議第二項） |
 | 加入目錄物件之間的碰撞 | `run()` 的查詢點篩選 `q`（目前只取 `map[k] >= n_cat`） |
 | 新增決策卡 | 後端 `run()` 的決策 `match`、前端 `CARDS` |
 | 新增情境或任務 | 前端 `TPL`、`MIS`（任務的 `setup` 與 `judge`） |
@@ -345,6 +367,7 @@ sequenceDiagram
 1. Kessler, D. J., & Cour-Palais, B. G. (1978). Collision frequency of artificial satellites: The creation of a debris belt. *Journal of Geophysical Research*, 83(A6), 2637–2646. https://doi.org/10.1029/JA083iA06p02637
    - 對應：4.5 碰撞率（氣體動力論估計），以及「凱斯勒連鎖」概念本身。
 2. Johnson, N. L., Krisko, P. H., Liou, J.-C., & Anz-Meador, P. D. (2001). NASA's new breakup model of EVOLVE 4.0. *Advances in Space Research*, 28(9), 1377–1384. https://doi.org/10.1016/S0273-1177(01)00423-9
+   - DOI 查證（2026-11-21）：doi.org 導向 Elsevier（PII S0273117701004239），確認已向出版社註冊；ScienceDirect 頁面拒絕自動存取（403），卷期頁與圖書館目錄紀錄一致。
    - 對應：4.2 解體模型（碎片數冪律、A/M 分布、Δv 分布）。
 3. Liou, J.-C., & Johnson, N. L. (2006). Risks in space from orbiting debris. *Science*, 311(5759), 340–341. https://doi.org/10.1126/science.1121337
    - 對應：低軌碎片環境即使停止發射仍會因碰撞而增長的結論（LEGEND 投影）；遊戲中「寫實倍率下連鎖很慢，但長期累積」的說明背景。
@@ -355,12 +378,21 @@ sequenceDiagram
    - 對應：半決定論長期演化、緩解與主動移除（ADR）情境分析；本遊戲的決策卡是這類情境的簡化版。
 5. Giudici, L., Colombo, C., Horstmann, A., Letizia, F., & Lemmens, S. (2024). Density-based evolutionary model of the space debris environment in low-Earth orbit. *Acta Astronautica*, 219, 115–127. https://doi.org/10.1016/j.actaastro.2024.03.008
    - 對應：以密度（連續體）方式描述碎片雲的長期演化模型，可處理公分級碎片，並投影 200 年、含未來發射與任務後處置情境；可作為本遊戲「逐顆碎片＋快照統計」做法的對照，以及第 10 節驗證比對的參考。
-   - 相關（風險指標）：Institute for Defense Analyses (2023). *On the Increased Risk of Kessler Syndrome by Anti-Satellite Tests*. [連結](https://www.ida.org/research-and-publications/publications/all/o/on/on-the-increased-risk-of-kessler-syndrome-by-anti-satellite-tests)（以失控增長機率 P_Exp 作為風險參數）
+   - 相關（風險指標）：Liang, C. J., Fanto, P. E., & Signoracci, A. J. (2023, October). *On the increased risk of Kessler syndrome by anti-satellite tests* (IDA Document 3000896). Institute for Defense Analyses, Systems and Analyses Center.（以失控增長機率 P_Exp 作為風險參數）
+     - 同作者海報：Liang, C. J., Fanto, P. E., & Signoracci, A. J. (2023). *Advanced Maui Optical and Space Surveillance Technologies Conference (AMOS)*. https://amostech.com/TechnicalPapers/2023/Poster/Liang.pdf
+     - 註：書目依 IDA 出版品列表（2026-11-21 搜尋結果）；IDA 頁面的作者欄顯示「See more authors」，可能還有其他共同作者，正式引用前請以報告本文確認。原頁面網址目前回應 404。
 
 **模型與資料**
 
-6. Vallado, D. A. *Fundamentals of Astrodynamics and Applications*. Microcosm Press／Springer（指數大氣模型表）。
+6. Vallado, D. A. (2013). *Fundamentals of Astrodynamics and Applications* (4th ed.). Microcosm Press（Space Technology Library）.（指數大氣模型表，`solar = static` 時使用；表值源自 CIRA-72，第 2–4 版相同，本專案以第 4 版為準）
 7. King-Hele, D. (1987). *Satellite Orbits in an Atmosphere: Theory and Applications*. Blackie（阻力衰減近似）。
 8. Vallado, D. A., Crawford, P., Hujsak, R., & Kelso, T. S. (2006). Revisiting Spacetrack Report #3. *AIAA/AAS Astrodynamics Specialist Conference*, AIAA 2006-6753（SGP4 與 B* 定義）。
+9. Picone, J. M., Hedin, A. E., Drob, D. P., & Aikin, A. C. (2002). NRLMSISE-00 empirical model of the atmosphere: Statistical comparisons and scientific issues. *Journal of Geophysical Research: Space Physics*, 107(A12), 1468. https://doi.org/10.1029/2002JA009430（v0.1.17 起的大氣密度表）
+10. pymsis（NRLMSIS 的 Python 介面），版本 0.13.0。https://github.com/SWxTREC/pymsis（產生密度表）
+
+**資料來源**
+
+11. CelesTrak. *Space Weather Data*（SW-All.csv：Kp、Ap、F10.7 實測與預報）。https://celestrak.org/SpaceData/ 。本專案檔案 `data/space_weather_full/SW-All.csv`，擷取日期 2026-11-18；實測至 2026-10，日預報與月預報至 2041-10。
+12. CelesTrak. *SATCAT records, INTDES 1982-092*（Cosmos 1408 與其試射碎片）。https://celestrak.org/satcat/records.php?INTDES=1982-092&FORMAT=CSV 。擷取日期 2026-11-21；6.1 驗證的觀測資料，CSV 存於驗證報告資料夾。
 
 > 歷史案例（風雲一號 C、Iridium 33 × Cosmos 2251、Cosmos 1408）的軌道高度、傾角與質量為公開資料的近似值，僅作教學設定。

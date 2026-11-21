@@ -231,6 +231,12 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div class="row"><label>模擬年數</label><select id="d-y"><option>1</option><option>3</option><option>5</option><option selected>10</option><option>20</option><option>50</option></select>
       <label title="放大碰撞截面，讓連鎖在幾年內看得到；不是把時間加速，也不是真實碰撞率">碰撞誇張倍率</label><select id="d-acc"><option value="1" selected>×1 寫實</option><option value="100">×100 誇張</option><option value="1000">×1,000 誇張</option><option value="10000">×10,000 誇張</option><option value="100000">×100,000 誇張</option></select></div>
     <div class="hint">碰撞誇張倍率只放大「碰撞截面」，讓凱斯勒連鎖在遊戲時間內看得到；軌道演化與大氣衰減不變。</div>
+    <div class="row"><label>大氣</label><select id="d-solar"><option value="series" selected>隨太陽活動（實測＋預報 F10.7）</option>
+      <option value="low">固定：太陽活動低（F10.7 = 70）</option><option value="mid">固定：太陽活動中等（120）</option><option value="high">固定：太陽活動高（200）</option>
+      <option value="static">舊版靜態大氣（v0.1.16 以前）</option></select></div>
+    <div class="row"><label>解體日期</label><input id="d-epoch" type="date" style="background:var(--bg);color:var(--hi);border:1px solid var(--line);border-radius:6px;padding:3px 6px;flex:1">
+      <span class="hint">決定太陽活動從哪天開始；空白＝今天</span></div>
+    <div class="hint">太陽活動越強，高層大氣越熱、越膨脹，低軌碎片越快被拖下來：500 km 處太陽活動高時的大氣密度約是低時的 25 倍。F10.7 為 10.7 cm 太陽電波通量，1957 年起有實測，之後接 CelesTrak 預報（到 2041 年），再往後以 11 年週期外推。</div>
     <h3>🃏 緩解決策（選用，預算 3 點）</h3>
     <div id="d-cards"></div>
     <div class="row act"><label>亂數種子</label><input id="d-seed" type="number" value="7" min="1" step="1"><button class="go" id="d-run">引爆</button></div>

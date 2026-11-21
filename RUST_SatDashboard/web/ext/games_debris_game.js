@@ -9,13 +9,13 @@
 
   // ── 情境模板（歷史案例為近似教學設定，不是事件重演）────────────────────
   var TPL = {
-    envisat: { norad: 27386, mass: 8211, coll: false, n: 1000, years: 10, acc: 1,
+    envisat: { norad: 27386, mass: 8211, coll: false, n: 1000, years: 10, acc: 1, epoch: "",
       note: "Envisat 2012 年失聯，至今仍在約 770 km 的軌道上；這裡假想殘餘電池或推進劑爆炸。" },
-    fy1c: { orbit: { alt_km: 865, inc_deg: 98.8, name: "風雲一號 C 反衛星試驗情境（教學近似）" }, mass: 958, coll: true, n: 1000, years: 20, acc: 1,
+    fy1c: { orbit: { alt_km: 865, inc_deg: 98.8, name: "風雲一號 C 反衛星試驗情境（教學近似）" }, mass: 958, coll: true, n: 1000, years: 20, acc: 1, epoch: "2007-01-11",
       note: "2007 年被直升式反衛星飛彈擊毀，編目碎片超過 3,500 個（> 10 cm）。本模擬初始碎片上限 1,000 個；865 km 的碎片壽命以數十年計。" },
-    iridium: { orbit: { alt_km: 789, inc_deg: 86.4, name: "Iridium–Cosmos 碰撞情境（教學近似）" }, mass: 1510, coll: true, n: 1000, years: 10, acc: 1,
+    iridium: { orbit: { alt_km: 789, inc_deg: 86.4, name: "Iridium–Cosmos 碰撞情境（教學近似）" }, mass: 1510, coll: true, n: 1000, years: 10, acc: 1, epoch: "2009-02-10",
       note: "史上第一次完整衛星互撞。教學近似：以兩星合計質量（約 560＋950 kg）在單一圓軌道上做一次碰撞解體；實際兩星分屬不同軌道面，結果不是事件重演。" },
-    c1408: { orbit: { alt_km: 480, inc_deg: 82.6, name: "Cosmos 1408 反衛星試驗情境（教學近似）" }, mass: 2200, coll: true, n: 1000, years: 5, acc: 1,
+    c1408: { orbit: { alt_km: 480, inc_deg: 82.6, name: "Cosmos 1408 反衛星試驗情境（教學近似）" }, mass: 2200, coll: true, n: 1000, years: 5, acc: 1, epoch: "2021-11-15",
       note: "2021 年被俄羅斯反衛星飛彈擊毀。480 km 的碎片受大氣拖曳，約 2–3 年內大多再入；可和風雲一號 C 對照。" },
   };
   // ── 解體模型：爆炸（內部能量）與碰撞（外部撞擊）分開說明 ─────────────────
@@ -26,7 +26,7 @@
       "Δv 較大（log₁₀Δv 平均 = 0.9χ + 2.9），碎片散得較開。適用：反衛星試射、Iridium–Cosmos 這類互撞。遊戲中所有後續碰撞都用這個模型。",
   };
   // Cosmos 1408（動能反衛星撞擊）衰減驗證：docs/book/sim_validation/cosmos1408/
-  var VALID = "📏 驗證（Cosmos 1408 試射碎片，寫實 ×1）：碰撞模型第 1 年存活 24.8%、觀測 25.3%；爆炸模型 43.9%，第 5 年仍剩 13.8%（觀測 0.2%）。動能撞擊應選碰撞模型。";
+  var VALID = "📏 驗證（Cosmos 1408 試射碎片，寫實 ×1，舊版靜態大氣）：碰撞模型第 1 年存活 24.8%、觀測 25.3%；爆炸模型 43.9%，第 5 年仍剩 13.8%（觀測 0.2%）。動能撞擊應選碰撞模型。";
   function kindNote() {
     var k = $("d-kind").value, h = KIND[k] + "<br>" + VALID;
     if (cur && String(cur.coll ? 1 : 0) !== k)
@@ -46,6 +46,7 @@
     $("d-m").value = cur.mass; $("d-kind").value = cur.coll ? "1" : "0";
     $("d-n").value = cur.n; $("d-n").oninput();
     $("d-y").value = String(cur.years); $("d-acc").value = String(cur.acc);
+    $("d-epoch").value = cur.epoch || ""; $("d-solar").value = "series";   // 歷史情境從事件當天的太陽活動起算
     kindNote();
   }
   $("d-tpl").onchange = function () { applyTpl(this.value); };
@@ -182,7 +183,16 @@
         return v ? "<div title='第 " + k + " 代：" + fmt(v) + " 個' style='width:" + (v / tot * 100) + "%;background:" + GEN_C[k] + "'></div>" : "";
       }).join("") + "</div><div>" + last.map(function (v, k) { return v ? "<span style='color:" + GEN_C[k] + ";margin-right:8px'>第 " + k + " 代 " + Math.round(v / tot * 100) + "%</span>" : ""; }).join("") + "</div>";
     } else h += "<div>碎片已全數再入或被撞毀。</div>";
-    // 4. 累計再入
+    // 4. 太陽活動走勢（F10.7，隨太陽活動模式才有）
+    var fv = d.series.filter(function (x) { return x.f107 != null; });
+    if (fv.length > 2 && d.solar && d.solar.mode === "series") {
+      var W = 360, H = 46, t1 = fv[fv.length - 1].t, fmin = 60, fmax = Math.max(200, Math.max.apply(null, fv.map(function (x) { return x.f107; })));
+      var pts = fv.map(function (x) { return (x.t / t1 * W).toFixed(1) + "," + (H - (x.f107 - fmin) / (fmax - fmin) * H).toFixed(1); }).join(" ");
+      h += "<div style='margin-top:6px'><b>太陽活動 F10.7</b>（" + d.solar.epoch + " 起；越高大氣越密、碎片衰減越快）</div>" +
+        "<svg viewBox='0 0 " + W + " " + H + "' style='width:100%;height:46px;background:#0b1622;border-radius:4px'><polyline points='" + pts +
+        "' fill='none' stroke='#f2a73b' stroke-width='1.5'/><text x='4' y='12' fill='#8b949e' font-size='10'>" + Math.round(fmax) + "</text><text x='4' y='" + (H - 3) + "' fill='#8b949e' font-size='10'>" + fmin + "</text></svg>";
+    }
+    // 5. 累計再入
     h += "<div style='margin-top:6px'><b>累計再入</b>：碎片 " + fmt(s.reentered || 0) + " 個（含被撞毀與清理移除）；目錄物件 " + fmt(s.cat_reentered || 0) + " 個</div>";
     $("d-dash").innerHTML = h;
   }

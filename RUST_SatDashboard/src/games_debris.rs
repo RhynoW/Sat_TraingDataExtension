@@ -21,7 +21,7 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum::Json;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use kiddo::immutable::float::kdtree::ImmutableKdTree;
 use kiddo::SquaredEuclidean;
 use rayon::prelude::*;
@@ -183,10 +183,88 @@ fn atm(h: f64) -> (f64, f64) {
     (row.1 * (-(h - row.0) / row.2).exp(), row.2)
 }
 
+// ── 隨太陽活動變化的大氣（v0.1.17）──────────────────────────────────────
+// 每月 F10.7（81 天中心平均；實測＋CelesTrak 預報，scripts/gen_solar_tables.py 產生）與 NRLMSISE-00 全球平均密度表
+static F107_CSV: &str = include_str!("../config/f107_monthly.csv");
+static MSIS_CSV: &str = include_str!("../config/msis_density.csv");
+
+struct Solar {
+    m0: i32,               // 第一個月（年×12＋月−1）
+    f107: Vec<f64>,        // 逐月
+    obs_until: String,     // 最後一個實測月
+    alts: Vec<f64>,
+    fs: Vec<f64>,
+    ln_rho: Vec<Vec<f64>>, // [高度][F10.7]
+}
+static SOLAR: std::sync::OnceLock<Solar> = std::sync::OnceLock::new();
+
+fn solar() -> &'static Solar {
+    SOLAR.get_or_init(|| {
+        let mut m0 = 0;
+        let mut f107 = Vec::new();
+        let mut obs_until = String::new();
+        for l in F107_CSV.lines().filter(|l| !l.starts_with('#') && !l.starts_with("month")) {
+            let c: Vec<&str> = l.split(',').collect();
+            if c.len() < 3 { continue; }
+            let (y, m): (i32, i32) = (c[0][..4].parse().unwrap_or(2000), c[0][5..7].parse().unwrap_or(1));
+            if f107.is_empty() { m0 = y * 12 + m - 1; }
+            f107.push(c[1].parse().unwrap_or(120.0));
+            if c[2] == "OBS" { obs_until = c[0].to_string(); }
+        }
+        let mut lines = MSIS_CSV.lines().filter(|l| !l.starts_with('#'));
+        let fs: Vec<f64> = lines.next().unwrap_or("").split(',').skip(1).filter_map(|x| x.parse().ok()).collect();
+        let (mut alts, mut ln_rho) = (Vec::new(), Vec::new());
+        for l in lines {
+            let v: Vec<f64> = l.split(',').filter_map(|x| x.parse().ok()).collect();
+            if v.len() != fs.len() + 1 { continue; }
+            alts.push(v[0]);
+            ln_rho.push(v[1..].iter().map(|r| r.ln()).collect());
+        }
+        Solar { m0, f107, obs_until, alts, fs, ln_rho }
+    })
+}
+
+impl Solar {
+    /// 時刻的 F10.7（逐月線性內插）；早於資料取第一個月，晚於資料（2041 年後）以 11 年週期外推（平均 120、振幅 52，接在最後一個月的極小期）
+    fn f107_at(&self, t: &DateTime<Utc>) -> f64 {
+        use chrono::Datelike;
+        let mi = (t.year() * 12 + t.month() as i32 - 1 - self.m0) as f64 + (t.day() as f64 - 1.0) / 30.4;
+        let n = self.f107.len();
+        if mi <= 0.0 { return self.f107[0]; }
+        if mi >= (n - 1) as f64 {
+            let k = mi - (n - 1) as f64;
+            return 120.0 - 52.0 * (TAU * k / 132.0).cos();
+        }
+        let i = mi.floor() as usize;
+        let w = mi - i as f64;
+        self.f107[i] * (1.0 - w) + self.f107[i + 1] * w
+    }
+    fn data_until(&self) -> String {
+        let m = self.m0 + self.f107.len() as i32 - 1;
+        format!("{:04}-{:02}", m / 12, m % 12 + 1)
+    }
+    /// 高度 h（km）、F10.7 的密度（kg/m³）與局部尺度高度（km）：對 ln ρ 做雙線性內插（F10.7 方向用 ln F）
+    fn rho(&self, h: f64, f: f64) -> (f64, f64) {
+        let na = self.alts.len();
+        let hc = h.clamp(self.alts[0], self.alts[na - 1]);
+        let ia = ((hc - self.alts[0]) / (self.alts[1] - self.alts[0])).floor().min((na - 2) as f64) as usize;
+        let fc = f.clamp(self.fs[0], self.fs[self.fs.len() - 1]);
+        let jf = self.fs.iter().rposition(|&x| x <= fc).unwrap_or(0).min(self.fs.len() - 2);
+        let wf = (fc.ln() - self.fs[jf].ln()) / (self.fs[jf + 1].ln() - self.fs[jf].ln());
+        let at = |i: usize| self.ln_rho[i][jf] * (1.0 - wf) + self.ln_rho[i][jf + 1] * wf;
+        let (l0, l1) = (at(ia), at(ia + 1));
+        let dh = self.alts[ia + 1] - self.alts[ia];
+        let hs = dh / (l0 - l1).max(1e-6); // 尺度高度
+        let wa = (h - self.alts[ia]) / dh;  // 超出表格時沿兩端的尺度高度外推
+        ((l0 + (l1 - l0) * wa).exp(), hs)
+    }
+}
+
 /// 一個時間步的阻力衰減（King-Hele 近似：近圓軌道均勻衰減；偏心軌道近地點不動、遠地點下降）
-fn decay(el: &mut El, am: f64, dt: f64) {
+/// f107 = None 用舊版 Vallado 靜態指數大氣；Some(F) 用 NRLMSISE-00 全球平均密度表
+fn decay(el: &mut El, am: f64, dt: f64, f107: Option<f64>) {
     let hp = el.perigee_alt();
-    let (rho, h_km) = atm(hp.max(100.0));
+    let (rho, h_km) = match f107 { Some(f) => solar().rho(hp.max(100.0), f), None => atm(hp.max(100.0)) };
     let a_m = el.a * 1000.0;
     let mut dadt = -2.2 * am * rho * (MU * 1e9 * a_m).sqrt(); // m/s
     let ae = el.a * el.e;
@@ -343,6 +421,10 @@ pub struct BreakupReq {
     orbit: Option<OrbitReq>,
     #[serde(default)]
     actions: Vec<ActionReq>,
+    /// 大氣：series（預設，隨實測與預報的 F10.7 變化）、low／mid／high（固定 F10.7 = 70／120／200）、static（舊版 Vallado 靜態大氣）
+    solar: Option<String>,
+    /// 解體日期（YYYY-MM-DD）：只決定太陽活動序列從哪一天開始（歷史情境用）；目錄位置仍是現在
+    epoch: Option<String>,
 }
 
 fn bad(msg: &str) -> Response {
@@ -429,6 +511,21 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
         let (r, v) = sgp4_rv(parent, &t0).ok_or("這顆衛星目前無法傳播（TLE 失效或已再入）")?;
         (r, v, parent.name.clone(), false)
     };
+    // 太陽活動：模式與起始日期
+    let mode = rq.solar.clone().unwrap_or_else(|| "series".into());
+    let fixed_f = match mode.as_str() { "low" => Some(70.0), "mid" => Some(120.0), "high" => Some(200.0), _ => None };
+    let epoch = rq.epoch.as_deref()
+        .and_then(|d| chrono::NaiveDate::parse_from_str(d, "%Y-%m-%d").ok())
+        .and_then(|d| d.and_hms_opt(0, 0, 0))
+        .map(|d| d.and_utc())
+        .unwrap_or(t0);
+    let f_at = |t: f64| -> Option<f64> {
+        match mode.as_str() {
+            "static" => None,
+            _ => Some(fixed_f.unwrap_or_else(|| solar().f107_at(&(epoch + Duration::seconds(t as i64))))),
+        }
+    };
+    let mut f_hist: Vec<f64> = Vec::new();
     let mut rng = Rng(rq.seed.unwrap_or(1) ^ 0x5DEECE66D);
     // 快照時刻用獨立亂數流：決策移除物件會改變擲骰次數，但不影響取樣時刻，同種子的對照組與決策組可直接比較（共同隨機數）
     let mut rng_snap = Rng(rq.seed.unwrap_or(1) ^ 0x2545F4914F6CDD1D);
@@ -660,18 +757,20 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
             events.push(json!({"t": tc, "kind": "collision", "a": nm(&objs[big]), "b": nm(&objs[small]),
                 "v_rel": vr, "emr": emr, "catastrophic": cat, "n_new": n_new, "pos": rb, "gen": gen}));
         }
-        // 阻力衰減與再入：碎片依 A/M，目錄物件依 TLE 的 B*（am = 0 者不衰減）
+        // 阻力衰減與再入：碎片依 A/M，目錄物件依 TLE 的 B*（am = 0 者不衰減）；密度依時間步中點的 F10.7
         let t_end = t + dt;
+        let fstep = f_at(t + dt / 2.0);
+        if let Some(fv) = fstep { f_hist.push(fv); }
         objs.par_iter_mut().filter(|o| o.alive && o.am > 0.0).for_each(|o| {
             o.el.rebase(t_end);
-            decay(&mut o.el, o.am, dt);
+            decay(&mut o.el, o.am, dt, fstep);
             if o.el.perigee_alt() < REENTRY_KM {
                 o.alive = false;
                 o.death = t_end;
             }
         });
         t = t_end;
-        series.push(json!({"t": t, "alive": alive_counts(&objs), "expected": expected, "collisions": n_coll, "cat_gone": cat_gone(&objs)}));
+        series.push(json!({"t": t, "alive": alive_counts(&objs), "expected": expected, "collisions": n_coll, "cat_gone": cat_gone(&objs), "f107": fstep}));
         if t_start.elapsed().as_secs() > 90 {
             break;
         }
@@ -706,6 +805,14 @@ fn run(st: &Arc<AppState>, rq: &BreakupReq, years: f64, accel: f64, mass: f64) -
                     // 只計第一代碎片與目錄物件：較接近「沒有加速」的寫實期望碰撞
                     "expected_gen1_real": expected_g1 / accel,
                     "cat_reentered": cat_gone(&objs), "capped": capped},
+        "solar": {
+            "mode": mode, "epoch": epoch.format("%Y-%m-%d").to_string(),
+            "f107_mean": if f_hist.is_empty() { Value::Null } else { json!(f_hist.iter().sum::<f64>() / f_hist.len() as f64) },
+            "f107_min": f_hist.iter().cloned().fold(f64::INFINITY, f64::min).min(1e9),
+            "f107_max": f_hist.iter().cloned().fold(0.0, f64::max),
+            "obs_until": solar().obs_until, "data_until": solar().data_until(),
+            "beyond_data": mode == "series" && (epoch + Duration::seconds((t) as i64)).format("%Y-%m").to_string() > solar().data_until(),
+        },
         "elapsed_s": elapsed, "cached": false,
     }))
 }

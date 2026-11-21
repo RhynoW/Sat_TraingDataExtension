@@ -228,6 +228,15 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 
 ## 版本紀錄
 
+### v0.1.17（2026-11-21）
+
+碎片連鎖：大氣改為隨太陽活動變化（依 Cosmos 1408 驗證報告建議）
+- 阻力衰減改用 NRLMSISE-00 全球平均密度表 × 當月 F10.7（81 天平均；1957 年起實測，接 CelesTrak 預報到 2041 年，再往後以 11 年週期外推）
+- 兩張表由新腳本 `scripts/gen_solar_tables.py`（numpy＋pymsis）產生並內嵌（`config/f107_monthly.csv`、`config/msis_density.csv`），離線可用
+- 新增「大氣」選單（隨太陽活動／固定低中高／舊版靜態）與「解體日期」；歷史情境自動從事件日期起算；結果列出 F10.7，儀表板加 F10.7 走勢圖
+- Cosmos 1408 重跑：第 3 年存活 8.2% → 4.9%（觀測 0.9%），剩一半的天數 137 → 170 天（觀測 192）；剩下偏差主要來自高遠地點長尾
+- 架構文件：大氣模型說明、驗證重跑結果、文獻補強（Vallado 第 4 版、NRLMSISE-00、IDA 報告完整書目、Johnson DOI 查證紀錄、CelesTrak 資料來源與擷取日期）
+
 ### v0.1.16（2026-11-21）
 
 碎片連鎖（依第二輪審查意見改進）

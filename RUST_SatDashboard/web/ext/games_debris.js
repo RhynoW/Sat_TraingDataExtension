@@ -53,7 +53,8 @@
   function baseReq() {
     var p = $("d-pick").value.split("|");
     return { norad: +($("d-q").value.trim() || p[0]) || 0, mass_kg: +$("d-m").value, n_frag: +$("d-n").value, collision: $("d-kind").value === "1",
-      years: +$("d-y").value, accel: +$("d-acc").value, seed: +$("d-seed").value || 1 };
+      years: +$("d-y").value, accel: +$("d-acc").value, seed: +$("d-seed").value || 1,
+      solar: $("d-solar").value, epoch: $("d-epoch").value || undefined };
   }
   HOOK.baseReq = baseReq;
   HOOK.post = function (req) {
@@ -111,9 +112,14 @@
       ["第一代碎片近似風險", "<b>" + num(g1) + " 次</b>（未加速情境下，第一代碎片撞上現有目錄物件的近似期望次數" + (d.accel > 1 ? "；誇張模式下第一代碎片也會被撞毀，所以略偏低" : "") + "）"],
     ];
     if (d.accel > 1) rows.push(["線性反推（偏高）", num(s.expected_linear != null ? s.expected_linear : s.expected_real) + " 次（全部期望值 ÷ 倍率；誇張模式多出的後代碎片也算進去，未補償連鎖偏差）"]);
+    if (d.solar) {
+      var so = d.solar, MODE = { series: "隨太陽活動（實測＋預報）", low: "固定：太陽活動低", mid: "固定：太陽活動中等", high: "固定：太陽活動高", static: "舊版靜態大氣" };
+      rows.push(["大氣", MODE[so.mode] + (so.f107_mean != null ? "；F10.7 平均 " + Math.round(so.f107_mean) + (so.mode === "series" ? "（" + Math.round(so.f107_min) + "–" + Math.round(so.f107_max) + "）" : "") : "") +
+        (so.mode === "series" ? "；從 " + so.epoch + " 起算，實測到 " + so.obs_until + "、預報到 " + so.data_until + (so.beyond_data ? "，之後以 11 年週期外推" : "") : "")]);
+    }
     if (s.cat_reentered != null) rows.push(["目錄物件再入", fmt(s.cat_reentered) + " 個（火箭體、碎片依 TLE 阻力項衰減；含被撞毀與決策移除）"]);
     rows.push(["計算", d.elapsed_s.toFixed(1) + " 秒（目錄 " + fmt(d.n_catalog) + " 個物件）" + (d.cached ? "，<b>快取結果</b>（5 分鐘內相同參數）" : "")]);
-    var valid = d.years > 1 ? "<div style='color:#d29922;margin:2px 0'>📏 已驗證（Cosmos 1408 試射碎片）：第 1 年的碎片存活比例與觀測吻合；<b>一年以後衰減太慢</b>（第 3 年模擬 8.2%、觀測 0.9%），所以一年以上的在軌數與期望碰撞<b>偏高</b>。碰撞率尚未驗證。</div>" : "";
+    var valid = d.years > 1 ? "<div style='color:#d29922;margin:2px 0'>📏 已驗證（Cosmos 1408 試射碎片）：第 1 年的碎片存活比例與觀測吻合；<b>一年以後衰減仍偏慢</b>（第 3 年：隨太陽活動大氣 4.9%、舊版靜態大氣 8.2%、觀測 0.9%），所以一年以上的在軌數與期望碰撞<b>偏高</b>，主因是遠地點很高的碎片活太久。碰撞率尚未驗證。</div>" : "";
     $("d-res").innerHTML = "<div style='color:#f2a73b;margin:2px 0'>⚠ 統計模擬，不是碰撞預報：同樣參數換一個亂數種子，碰撞次數就可能不同。</div>" + valid +
       "<table class='kv'>" + rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("") + "</table>" +
       "<details style='margin-top:4px'><summary style='cursor:pointer;color:var(--hi)'>怎麼看這個結果？（看到的、真實的、誇張的）</summary>" +
