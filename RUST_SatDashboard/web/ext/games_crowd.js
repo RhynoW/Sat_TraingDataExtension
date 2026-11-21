@@ -53,16 +53,25 @@
   function num(x, n) { return x >= 100 ? fmt(x) : x >= 1 ? fmt(x, 1) : x >= 0.01 ? fmt(x, 3) : x.toExponential(1); }
   function render(d) {
     var b = d.baseline, s = d.scenario;
+    // [名稱, 現況, 情境, 現況值, 情境值, 說明]
     var rows = [
-      ["物件總數", fmt(b.objects), fmt(s.objects), ratio(s.objects, b.objects)],
-      ["同時相距 < 20 km 的配對", num(b.pairs_within_d), num(s.pairs_within_d), ratio(s.pairs_within_d, b.pairs_within_d)],
-      ["全系統每天 < 1 km 接近", num(b.enc_day_1km), num(s.enc_day_1km), ratio(s.enc_day_1km, b.enc_day_1km)],
-      ["若都不避碰：每年碰撞期望值", num(b.coll_year), num(s.coll_year), ratio(s.coll_year, b.coll_year)],
-      ["台北天空仰角 > 10° 平均顆數", fmt(b.sky10), fmt(s.sky10), ratio(s.sky10, b.sky10)],
-      ["台北天空仰角 > 30° 平均顆數", fmt(b.sky30), fmt(s.sky30), ratio(s.sky30, b.sky30)],
+      ["物件總數", fmt(b.objects), fmt(s.objects), b.objects, s.objects, "目錄中仍在軌道的衛星、火箭體與碎片，加上情境的假想星座。"],
+      ["同時相距 < 20 km 的配對", num(b.pairs_within_d), num(s.pairs_within_d), b.pairs_within_d, s.pairs_within_d, "任一時刻彼此相距不到 20 km 的物件對數（各快照平均）。"],
+      ["全系統每天 < 1 km 接近", num(b.enc_day_1km), num(s.enc_day_1km), b.enc_day_1km, s.enc_day_1km, "全部物件每天發生幾次相距不到 1 km 的接近；營運者通常以此量級評估是否避碰。"],
+      ["若都不避碰：每年碰撞期望值", num(b.coll_year), num(s.coll_year), b.coll_year, s.coll_year, "假設沒有人做避碰機動、以 10 m 合併半徑估計的年碰撞次數；實際會少很多，用來比較風險倍數。"],
+      ["台北天空仰角 > 10° 平均顆數", fmt(b.sky10), fmt(s.sky10), b.sky10, s.sky10, "任一時刻台北上空仰角 10° 以上的物件數（不論是否被照亮）。"],
+      ["台北天空仰角 > 30° 平均顆數", fmt(b.sky30), fmt(s.sky30), b.sky30, s.sky30, "同上，仰角 30° 以上。"],
     ];
-    var h = "<table class='kv'><tr><td></td><td>現況</td><td>情境</td><td>倍數</td></tr>" +
-      rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td><td><b>" + r[2] + "</b></td><td>" + r[3] + "</td></tr>"; }).join("") + "</table>";
+    // 倍數橫條：對數長度，×1 為 0、×100 以上填滿
+    function bar(a, c) {
+      if (!(c > 0)) return "—";
+      var r = a / c, w = Math.max(2, Math.min(100, Math.log10(Math.max(1, r)) / 2 * 100)), col = r >= 10 ? "#ff7b72" : r >= 3 ? "#f2a73b" : "#58a6ff";
+      return "<div style='display:flex;align-items:center;gap:4px'><div style='flex:1;background:#21262d;border-radius:3px;height:9px;min-width:50px'><div style='width:" + w +
+        "%;height:100%;background:" + col + ";border-radius:3px'></div></div><b style='color:" + col + ";min-width:36px;text-align:right'>" + ratio(a, c) + "</b></div>";
+    }
+    var h = "<table class='kv'><tr><td></td><td>現況</td><td>情境</td><td style='width:34%'>倍數</td></tr>" +
+      rows.map(function (r) { return "<tr><td title='" + r[5] + "' style='cursor:help;text-decoration:underline dotted'>" + r[0] + "</td><td>" + r[1] + "</td><td><b>" + r[2] + "</b></td><td>" + bar(r[4], r[3]) + "</td></tr>"; }).join("") +
+      "</table><div class='hint'>滑鼠移到指標名稱上可看說明；倍數條為對數長度（×100 以上填滿）。</div>";
     h += "<div style='margin-top:6px'>每顆衛星每年 < 1 km 接近次數（約等於需要評估的避碰機動次數）：</div><table class='kv'>" +
       "<tr><td>群組</td><td>現況</td><td>情境</td></tr>";
     var keys = {};

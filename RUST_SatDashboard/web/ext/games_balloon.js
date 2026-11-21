@@ -115,7 +115,8 @@
       ["結果", kind],
       ["台北到氣球距離", fmt(s0) + " km（太陽仰角 " + elev.toFixed(1) + "°）"],
       ["太陽視直徑", (g0.alpha * R2D * 60).toFixed(2) + "′"],
-      ["全食所需最小直徑", "<b>" + fmt(dmin * 1000) + " m</b>（目前 " + fmt(D * 1000) + " m）"],
+      ["全食所需最小直徑", "<b>" + fmt(dmin * 1000) + " m</b>（目前 " + fmt(D * 1000) + " m）" +
+        (ru > 0 ? "" : "<br><button id='b-apply' class='go' style='margin-top:3px'>套用 " + fmt(Math.ceil(dmin * 1050)) + " m（多 5%）並重算</button>")],
       ["本影長度", fmt(D / (2 * ta)) + " km（約直徑的 " + (1 / (2 * ta)).toFixed(0) + " 倍）"],
       [ru > 0 ? "本影直徑（垂直影軸）" : "偽本影直徑", fmt(Math.abs(ru) * 2000) + " m"],
       ["半影直徑", fmt(rp * 2) + " km"],
@@ -128,6 +129,8 @@
       ["夜空亮度（天頂）", mag.toFixed(1) + " 等（滿月約 −12.7、金星約 −4.5）"],
     ];
     $("b-res").innerHTML = "<table class='kv'>" + rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("") + "</table>";
+    if ($("b-apply")) $("b-apply").onclick = function () { $("b-d").value = Math.ceil(dmin * 1050); viewer.clock.currentTime = JD.clone(t0); $("b-run").click(); };
+    skyBox.style.display = "block";
 
     // 3D：影子中心線、影子足跡、氣球、陽光方向
     clearEnts();
@@ -206,9 +209,22 @@
   function geomCached(t) { var k = t.dayNumber * 86400 + t.secondsOfDay; if (gc.key !== k) { gc.key = k; gc.g = geom(t); } return gc.g; }
   scene.postRender.addEventListener(drawSky);
 
+  // 「從台北看太陽」移到地球畫面右上角，邊看影子掃過邊看日面被遮
+  var skyBox = document.createElement("div");
+  skyBox.id = "b-float";
+  skyBox.style.cssText = "position:absolute;top:10px;right:10px;z-index:3;width:min(300px,45%);background:#0d1117e6;border:1px solid #30363d;border-radius:8px;padding:6px;display:none";
+  skyBox.innerHTML = "<div style='color:#e6edf3;font-weight:700;margin-bottom:4px'>從台北看太陽（慢動作）</div>";
+  (function () {
+    var cv = $("b-sky"), now = $("b-now"), h3 = cv.previousElementSibling;
+    cv.style.maxWidth = "100%"; skyBox.appendChild(cv); skyBox.appendChild(now);
+    if (h3 && h3.tagName === "H3") h3.remove();
+    $("map").appendChild(skyBox);
+  })();
+
   document.addEventListener("sdg-tab", function (e) {
     var on = e.detail === "balloon";
     ents.forEach(function (x) { x.show = on; });
+    skyBox.style.display = on && sim ? "block" : "none";
     if (on && !sim) {
       var d = JD.toDate(viewer.clock.currentTime), twh = (d.getUTCHours() + 8) % 24;
       if (twh < 8 || twh > 16) {                          // 預設跳到台北今天中午

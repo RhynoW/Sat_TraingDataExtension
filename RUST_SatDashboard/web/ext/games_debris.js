@@ -61,7 +61,7 @@
         btn.disabled = false;
         if (d.error) { $("d-res").textContent = d.error; return; }
         res = d; t0 = JD.fromDate(new Date(d.t0));
-        summary(d); chart(d); evTable(d); build(d); play("3h");
+        summary(d); chart(d); evTable(d); build(d); play("3h"); setBadge();
       })
       .catch(function (e) { btn.disabled = false; $("d-res").textContent = "模擬失敗：" + e; });
   };
@@ -82,6 +82,8 @@
     $("d-res").innerHTML = "<table class='kv'>" + rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("") + "</table>";
   }
 
+  // 圖例可點擊開關；圖表畫好後存底圖，播放時只疊上目前時間的游標
+  var hidden = {};
   function chart(d) {
     var cv = $("d-chart"), g = cv.getContext("2d"), W = cv.width, H = cv.height, L = 56, R = 12, T = 12, B = 30;
     var S = d.series, tmax = S[S.length - 1].t / 86400;
@@ -99,12 +101,40 @@
       g.stroke(); g.setLineDash([]);
     }
     var gmax = 0; S.forEach(function (s) { s.alive.forEach(function (v, k) { if (v) gmax = Math.max(gmax, k); }); });
-    for (var k = 1; k <= gmax; k++) (function (k) { line(function (s) { return s.alive[k]; }, GEN_C[k], 1.5); })(k);
-    line(function (s) { return s.alive.reduce(function (x, y) { return x + y; }, 0); }, "#e6edf3", 2.2);
-    line(function (s) { return s.collisions; }, "#f2cc60", 1.8, [5, 4]);
-    var lg = "<span style='color:#e6edf3'>━ 在軌碎片總數</span>　<span style='color:#f2cc60'>┅ 累計碰撞</span>";
-    for (k = 1; k <= gmax; k++) lg += "　<span style='color:" + GEN_C[k] + "'>━ 第 " + k + " 代</span>";
-    $("d-legend").innerHTML = lg;
+    for (var k = 1; k <= gmax; k++) (function (k) { if (!hidden["g" + k]) line(function (s) { return s.alive[k]; }, GEN_C[k], 1.5); })(k);
+    if (!hidden.tot) line(function (s) { return s.alive.reduce(function (x, y) { return x + y; }, 0); }, "#e6edf3", 2.2);
+    if (!hidden.col) line(function (s) { return s.collisions; }, "#f2cc60", 1.8, [5, 4]);
+    var item = function (key, col, txt) {
+      return "<span data-lg='" + key + "' style='cursor:pointer;white-space:nowrap;margin-right:10px;color:" + col + ";" + (hidden[key] ? "opacity:.35;text-decoration:line-through" : "") + "'>" + txt + "</span>";
+    };
+    var lg = item("tot", "#e6edf3", "━ 在軌碎片總數") + item("col", "#f2cc60", "┅ 累計碰撞");
+    for (k = 1; k <= gmax; k++) lg += item("g" + k, GEN_C[k], "━ 第 " + k + " 代");
+    $("d-legend").innerHTML = lg + "<span class='hint'>（點圖例可開關）</span>";
+    $("d-legend").querySelectorAll("[data-lg]").forEach(function (el) { el.onclick = function () { hidden[el.dataset.lg] = !hidden[el.dataset.lg]; chart(res); }; });
+    cv._base = g.getImageData(0, 0, W, H); cv._X = X; cv._range = [T, H - B]; cv._last = null;
+  }
+  function cursor() {
+    var cv = $("d-chart"); if (!res || !cv._base) return;
+    var t = (JD.toDate(viewer.clock.currentTime).getTime() - Date.parse(res.t0)) / 86400000;
+    var tmax = res.series[res.series.length - 1].t / 86400;
+    if (t < 0 || t > tmax) t = null;
+    var key = t == null ? "x" : Math.round(t * 200);
+    if (cv._last === key) return; cv._last = key;
+    var g = cv.getContext("2d"); g.putImageData(cv._base, 0, 0);
+    if (t == null) return;
+    var x = cv._X(t); g.strokeStyle = "#f2a73b"; g.lineWidth = 1.5; g.beginPath(); g.moveTo(x, cv._range[0]); g.lineTo(x, cv._range[1]); g.stroke();
+    g.fillStyle = "#f2a73b"; g.font = "12px 'Microsoft JhengHei',sans-serif"; g.textAlign = x > cv.width - 90 ? "right" : "left";
+    g.fillText(t < 1 ? (t * 24).toFixed(1) + " 時" : t < 365 ? t.toFixed(0) + " 天" : (t / 365.25).toFixed(1) + " 年", x + (g.textAlign === "left" ? 4 : -4), cv._range[0] + 12);
+  }
+  // 加速模式提示：疊在地球畫面上，避免把誇張結果當成真實
+  var badge = document.createElement("div");
+  badge.style.cssText = "position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:3;background:#3d1f00e6;color:#f2c46b;border:1px solid #f2a73b;border-radius:6px;padding:4px 12px;font-size:13px;pointer-events:none;display:none;max-width:90%;text-align:center";
+  $("map").appendChild(badge);
+  function setBadge() {
+    var on = res && res.accel > 1 && SDG.tab() === "debris";
+    badge.style.display = on ? "block" : "none";
+    if (on) badge.innerHTML = "⚠ 誇張模式：碰撞截面放大 ×" + fmt(res.accel) + "，連鎖速度遠快於真實；寫實等效期望碰撞 " +
+      (res.summary.expected_real < 0.01 ? res.summary.expected_real.toExponential(1) : res.summary.expected_real.toFixed(2)) + " 次";
   }
 
   function evTable(d) {
@@ -192,10 +222,11 @@
 
   document.addEventListener("sdg-tab", function (e) {
     var on = e.detail === "debris";
+    setBadge();
     [fragPC, flashPC].forEach(function (p) { if (p) p.show = on; });
     if (bgPC) bgPC.show = on && $("d-bg").checked;
     if (!on) return;
-    if (!timer) timer = setInterval(function () { update(); bgTick(); }, 250);
+    if (!timer) timer = setInterval(function () { update(); bgTick(); cursor(); }, 250);
     if (!$("d-q").value) $("d-pick").onchange();
     viewer.camera.setView({ destination: Cesium.Cartesian3.fromDegrees(121, 20, 2.6e7) });
   });

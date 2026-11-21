@@ -35,9 +35,9 @@
         return wait(300).then(function () { return until(enabled("cr-run"), 300000); });
       } },
     debris: { q: "一顆大衛星解體，會引發碎片連鎖碰撞嗎？",
-      s: ["選衛星，設定碎片數與解體方式", "選加速倍率（×1 為寫實），按「引爆」", "點「看前 3 小時」看碎片雲拉成環"],
+      s: ["選衛星，設定碎片數與解體方式", "按「引爆」（預設 ×1 寫實；想看連鎖可改 ×1,000 誇張模式）", "點「看前 3 小時」看碎片雲拉成環，或「看全程」"],
       demo: function () {
-        click("d-run");
+        setv("d-acc", "1000"); click("d-run");
         return wait(300).then(function () { return until(enabled("d-run"), 180000); }).then(function () { click("[data-dplay='3h']"); });
       } },
     astro: { q: "衛星光跡會毀掉一張天文照片嗎？",
@@ -128,6 +128,8 @@
       }
     }
     $("t-play").textContent = clock.shouldAnimate ? "⏸" : "▶";
+    // 時間輸入框原本只在月球分頁更新；這裡統一同步（使用者正在編輯時不覆蓋）
+    if (document.activeElement !== $("t-pick")) $("t-pick").value = SDG.tw(JD.toDate(clock.currentTime)).replace(" ", "T");
     $("t-sum").textContent = SDG.tw(JD.toDate(clock.currentTime)) + "（台灣）· " + (clock.shouldAnimate ? speedText(m) : "暫停");
   }
   setInterval(syncClock, 250); syncClock();

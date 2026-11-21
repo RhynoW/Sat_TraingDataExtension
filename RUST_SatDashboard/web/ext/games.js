@@ -517,6 +517,8 @@
     };
   }
   $("g-th").oninput = function () { $("g-thv").textContent = (+this.value).toFixed(2) + "°"; };
+  $("g-dvr").oninput = function () { $("g-dv").value = this.value; };
+  $("g-dv").addEventListener("input", function () { $("g-dvr").value = this.value; });
   $("g-ch").onchange = function () {
     var c = this.value;
     $("g-loi").checked = c === "orbit";
@@ -573,9 +575,44 @@
     clock.shouldAnimate = true; $("t-play").textContent = "⏸";
     viewer.timeline.zoomTo(ship.t0, stop);
   }
+  // ── 計分與逐關解鎖（最佳星數存在瀏覽器；無法存取時只在本頁有效）──────────
+  var CH = ["impact", "flyby", "free", "orbit"], CH_N = { impact: "撞月", flyby: "飛掠", free: "自由返回", orbit: "繞月" };
+  // 星數門檻：撞月、自由返回、繞月比總 Δv（越省越好）；飛掠比近月點與 110 km 的差距（越準越好）
+  var STAR = { impact: [3130, 3170], free: [3140, 3180], orbit: [3450, 3700], flyby: [15, 50] };
+  var best = {};
+  try { best = JSON.parse(localStorage.getItem("sdg-moon-best") || "{}") || {}; } catch (e) { best = {}; }
+  function saveBest() { try { localStorage.setItem("sdg-moon-best", JSON.stringify(best)); } catch (e) { /* 私密模式等 */ } }
+  function stars(ch, res, dvTot) {
+    var s = STAR[ch], x = ch === "flyby" ? Math.abs(res.minAlt - 110) : dvTot;
+    return x <= s[0] ? 3 : x <= s[1] ? 2 : 1;
+  }
+  function starTxt(n) { return "★★★".slice(0, n) + "☆☆☆".slice(0, 3 - n); }
+  function unlocked(ch) { var i = CH.indexOf(ch); return i <= 1 || !!best[CH[i - 1]] || !!best.all; }
+  function scoreBoard() {
+    $("g-score").innerHTML = CH.map(function (c) {
+      return CH_N[c] + " " + (best[c] ? "<span style='color:#f2cc60'>" + starTxt(best[c]) + "</span>" : unlocked(c) ? "☆☆☆" : "🔒");
+    }).join("　") + (CH.every(unlocked) ? "" : "　<a href='#' id='g-unlock'>全部解鎖</a>");
+    Array.prototype.forEach.call($("g-ch").options, function (o) {
+      o.disabled = !unlocked(o.value); o.textContent = o.textContent.replace(/^🔒 /, "");
+      if (o.disabled) o.textContent = "🔒 " + o.textContent;
+    });
+    var u = $("g-unlock"); if (u) u.onclick = function (e) { e.preventDefault(); best.all = 1; saveBest(); scoreBoard(); };
+  }
+  scoreBoard();
+  var RULE = { impact: "總 Δv ≤ " + STAR.impact[0] + " m/s 得 3 星、≤ " + STAR.impact[1] + " 得 2 星", free: "總 Δv ≤ " + STAR.free[0] + " m/s 得 3 星、≤ " + STAR.free[1] + " 得 2 星",
+    orbit: "總 Δv ≤ " + STAR.orbit[0] + " m/s 得 3 星、≤ " + STAR.orbit[1] + " 得 2 星", flyby: "近月點離 110 km 在 " + STAR.flyby[0] + " km 內得 3 星、" + STAR.flyby[1] + " km 內得 2 星" };
+
   function report(res, prm, ch) {
     var ok = challengeOk(ch, res), dvTot = prm.dv + (res.loi ? prm.dvLoi : 0);
     var h = "<span class='" + (ok ? "ok" : "bad") + "'>" + (ok ? "✅ 挑戰成功" : "❌ 挑戰未達成") + "</span>：" + OUT_TXT[res.outcome] + "<br>";
+    if (ok) {
+      var n = stars(ch, res, dvTot), nb = !best[ch] || n > best[ch], wasLocked = CH.filter(function (c) { return !unlocked(c); });
+      if (nb) { best[ch] = n; saveBest(); }
+      var newly = wasLocked.filter(unlocked);
+      h += "<span style='color:#f2cc60;font-size:16px'>" + starTxt(n) + "</span> " + (nb ? "（新紀錄）" : "（最佳 " + starTxt(best[ch]) + "）") +
+        (n < 3 ? "　<span class='hint'>" + RULE[ch] + "</span>" : "") + (newly.length ? "<br>🔓 解鎖新挑戰：" + newly.map(function (c) { return CH_N[c]; }).join("、") : "") + "<br>";
+      scoreBoard();
+    }
     if (res.outcome === "impact" && !res.peri1) h += "撞月時刻：發射後 <b>" + (res.tEnd / 3600).toFixed(1) + " 小時</b>";
     else h += "抵達時近月點高度 <b>" + fmt(res.minAlt) + " km</b>（發射後 " + (res.tMin / 3600).toFixed(1) + " 小時）";
     if (res.perigeeAfter != null && (ch === "free" || res.outcome === "free"))

@@ -136,7 +136,7 @@
       h += "<tr data-i='" + i + "' style='cursor:pointer" + (o === sel ? ";background:#1f2d3d" : "") + "'><td>" + tw(new Date(o.ms), true).slice(5) +
         "</td><td>" + fmt(o.h) + " km</td><td style='color:" + (ok ? "#3fb950" : "#ff7b72") + "'>" + o.speed.toFixed(2) + " km/s</td><td>" + Math.round(o.tau / 60) + " 分</td></tr>";
     });
-    h += "</table>";
+    h += "</table><div class='hint'>所需速度：<span style='color:#3fb950'>綠色</span>＝目前燃燒結束速度到得了、<span style='color:#ff7b72'>紅色</span>＝速度不足；點選一列看細節與播放。</div>";
     if (sel) {
       var vclose = norm(sub(sel.V2, sel.vs)), vs = norm(sel.vs);
       var ok = v >= sel.speed;
@@ -170,7 +170,7 @@
   }
   function clearEnts() { ents.forEach(function (e) { viewer.entities.remove(e); }); ents = []; }
 
-  $("a-fly").onclick = function () {
+  function fly(cam) {
     if (!sel) { $("a-miss").textContent = "請先找出交會機會。"; return; }
     var v = +$("a-v").value;
     if (v < sel.speed) { $("a-miss").innerHTML = "<span style='color:#ff7b72'>燃燒結束速度不足，無法到達這個交會點。</span>把滑桿調到 " + sel.speed.toFixed(2) + " km/s 以上，或選所需速度較低的一次。"; return; }
@@ -246,9 +246,18 @@
     clk.multiplier = (JD.secondsDifference(clk.stopTime, clk.startTime)) / 25; clk.shouldAnimate = true;
     $("t-speed").value = ""; $("t-play").textContent = "⏸";
     viewer.timeline.zoomTo(clk.startTime, clk.stopTime);
-    viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(st2.lon, st2.lat), new Cesium.HeadingPitchRange(0.4, -0.6, 4.5e6));
-    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-  };
+    if (cam) {
+      viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(st2.lon, st2.lat), new Cesium.HeadingPitchRange(0.4, -0.6, 4.5e6));
+      viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+    }
+  }
+  $("a-fly").onclick = function () { fly(true); };
+  // 播放過一次後，拖動「發射時間誤差」即時重算落點（不移動相機）
+  var dtTimer = null;
+  $("a-dt").addEventListener("input", function () {
+    if (!ents.length || !sel) return;
+    clearTimeout(dtTimer); dtTimer = setTimeout(function () { fly(false); }, 200);
+  });
 
   document.addEventListener("sdg-tab", function (e) {
     var on = e.detail === "asat";

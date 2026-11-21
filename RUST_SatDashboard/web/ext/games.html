@@ -82,6 +82,24 @@ button.flash{animation:flash 1s ease-in-out 4}
 #w-modal h2{font-size:16px;margin:0 0 8px;color:#d2a8ff}
 #w-modal .delta{font-size:22px;font-weight:700;margin:4px 0 8px}
 #w-modal ul{margin:6px 0;padding-left:18px;line-height:1.7}
+/* 手機與窄螢幕：地球在上（捲動時固定）、面板在下；分頁列可橫向捲動 */
+@media (max-width: 820px){
+  html,body{height:auto}
+  #top{height:auto;flex-wrap:wrap;gap:4px 8px;padding:6px 10px}
+  #top h1{font-size:15px}
+  #top>a{margin-left:auto !important;font-size:12px}
+  #about-slot{display:none}
+  #tabs{order:3;width:100%;margin-left:0;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+  #tabs::-webkit-scrollbar{display:none}
+  #tabs button{white-space:nowrap;flex:none;padding:5px 10px}
+  #main{display:flex;flex-direction:column;height:auto}
+  #map{order:-1;flex:none;position:sticky;top:0;z-index:6;height:42vh;min-height:220px;border-bottom:2px solid #a371f7}
+  #side{width:auto;min-width:0;overflow:visible;border-right:none;padding:8px 12px 24px}
+  #b-float{width:min(200px,55%) !important}
+  #b-float>div:first-child{font-size:11px}
+  .cesium-viewer-bottom,.cesium-viewer-timelineContainer{font-size:10px}
+  [id$="-res"],#res,#a-miss,#w-board,#s-cmp{scroll-margin-top:calc(42vh + 10px)}
+}
 </style>
 <script>window.CESIUM_BASE_URL="/cesium/";</script>
 <script src="/cesium/Cesium.js"></script>
@@ -140,8 +158,10 @@ button.flash{animation:flash 1s ease-in-out 4}
       <option value="flyby" selected>繞月飛掠：近月點 50–200 km</option>
       <option value="free">自由返回（Apollo 13）：飛掠後回到地球大氣</option>
       <option value="orbit">進入繞月軌道：用最少 Δv</option></select></div>
+    <div id="g-score" class="hint"></div>
     <div class="row"><label>停泊高度</label><input id="g-h" type="number" value="185" min="150" max="2000" step="5"><span class="hint">km</span></div>
-    <div class="row"><label>TLI Δv</label><input id="g-dv" type="number" value="3150" min="2500" max="4500" step="5"><span class="hint">m/s</span></div>
+    <div class="row"><label>TLI Δv</label><input id="g-dv" type="number" value="3150" min="2500" max="4500" step="5" style="width:80px;flex:none"><span class="hint">m/s</span>
+      <input id="g-dvr" type="range" min="3000" max="3400" step="1" value="3150" title="TLI Δv（m/s）"></div>
     <div class="row"><label>點火位置</label><input id="g-th" type="range" min="0" max="360" step="0.001" value="180"><span id="g-thv" class="hint" style="min-width:52px">180.00°</span></div>
     <div class="row"><label>目標近月點</label><input id="g-tgt" type="number" value="110" step="10"><span class="hint">km</span><button id="g-aim">自動瞄準</button></div>
     <label class="chk"><input type="checkbox" id="g-loi">近月點制動（LOI）<input id="g-dvl" type="number" value="900" min="0" max="2000" step="10" style="width:80px"><span class="hint">m/s</span></label>
@@ -199,13 +219,13 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div class="row"><label>碎片數</label><input id="d-n" type="range" min="2" max="1000" step="1" value="1000"><span id="d-nv" class="hint" style="min-width:44px">1000</span></div>
     <div class="row"><label>解體方式</label><select id="d-kind"><option value="0">爆炸（電池、殘餘推進劑）</option><option value="1">被撞擊（碰撞模型，Δv 較大）</option></select></div>
     <div class="row"><label>模擬年數</label><select id="d-y"><option>1</option><option selected>10</option><option>20</option><option>50</option></select>
-      <label>加速倍率</label><select id="d-acc"><option value="1">×1 寫實</option><option value="100">×100</option><option value="1000" selected>×1,000</option><option value="10000">×10,000</option><option value="100000">×100,000</option></select></div>
+      <label>加速倍率</label><select id="d-acc"><option value="1" selected>×1 寫實</option><option value="100">×100</option><option value="1000">×1,000</option><option value="10000">×10,000</option><option value="100000">×100,000</option></select></div>
     <div class="row act"><label>亂數種子</label><input id="d-seed" type="number" value="7" min="1" step="1"><button class="go" id="d-run">引爆</button></div>
     <div id="d-res" class="hint"></div>
     <div class="views" style="margin-top:6px"><button data-dplay="3h">看前 3 小時（碎片雲拉成環）</button><button data-dplay="90d">看前 90 天（散成殼層）</button><button data-dplay="all">看全程</button></div>
     <h3>碎片數與碰撞次數（對數）</h3>
     <canvas id="d-chart" width="760" height="300" style="width:100%;background:#0b1622;border:1px solid var(--line);border-radius:6px"></canvas>
-    <div class="hint" id="d-legend"></div>
+    <div class="hint" id="d-legend" style="font-size:12px;line-height:1.9"></div>
     <h3>碰撞事件</h3>
     <div id="d-ev" class="hint"></div>
     <label class="chk"><input type="checkbox" id="d-bg">顯示目錄背景（灰點，瀏覽器端 SGP4）</label>
