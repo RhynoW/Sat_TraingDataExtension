@@ -35,7 +35,7 @@
         return wait(300).then(function () { return until(enabled("cr-run"), 300000); });
       } },
     debris: { q: "一顆大衛星解體，會引發碎片連鎖碰撞嗎？",
-      s: ["選衛星，設定碎片數與解體方式", "按「引爆」（預設 ×1 寫實；想看連鎖可改 ×1,000 誇張模式）", "點「看前 3 小時」看碎片雲拉成環，或「看全程」"],
+      s: ["選任務或情境（含歷史案例），或自選衛星、碎片數與解體方式", "可選緩解決策卡，按「引爆」（預設 ×1 寫實；想看連鎖可改 ×1,000 誇張模式）", "看結果、風險儀表板與成就；點「看全程」播放"],
       demo: function () {
         setv("d-acc", "1000"); click("d-run");
         return wait(300).then(function () { return until(enabled("d-run"), 180000); }).then(function () { click("[data-dplay='3h']"); });
@@ -142,6 +142,7 @@
       // 依時間軸跨度取整（Cesium 刻度在長跨度時會有幾十毫秒的浮點偏差）
       var span = tl._timeBarSecondsSpan || 0, q = span > 7200 ? 60000 : span > 60 ? 1000 : 10;
       var d = new Date(Math.round(JD.toDate(t).getTime() / q) * q + 8 * 3600e3);
+      if (span > 180 * 86400) return d.getUTCFullYear() + "/" + (d.getUTCMonth() + 1) + "/" + d.getUTCDate();   // 跨年的時間軸要看得到年份
       var s = (d.getUTCMonth() + 1) + "/" + d.getUTCDate() + " " + p2(d.getUTCHours()) + ":" + p2(d.getUTCMinutes());
       var sec = d.getUTCSeconds(), ms = d.getUTCMilliseconds();
       if (sec || ms) s += ":" + p2(sec);
