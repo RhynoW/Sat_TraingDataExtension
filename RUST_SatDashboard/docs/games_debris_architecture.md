@@ -292,8 +292,8 @@ sequenceDiagram
 
 1. **可重現**：已有亂數種子與快取；可再加入匯出完整參數與結果的功能。
 2. **可量化**：決策比較目前只用單一種子。改成同參數跑多個種子、報告平均與信賴區間（太空兵棋已有這類蒙地卡羅框架可沿用），才能把「決策有效」說得有統計意義。
-3. **可驗證**：用相同初始條件與 DELTA／LEGEND 的已發表結果比對趨勢，例如 Cosmos 1408、風雲一號 C 碎片的衰減曲線。
-4. **風險指標**：參考以「失控增長機率」量化凱斯勒風險的統計框架 [5]，把結果轉成玩家看得懂的單一風險分數。
+3. **可驗證**：用相同初始條件與 DELTA／LEGEND 及密度型演化模型 [5] 的已發表結果比對趨勢，例如 Cosmos 1408、風雲一號 C 碎片的衰減曲線。
+4. **風險指標**：參考以「失控增長機率」量化凱斯勒風險的做法（見 [5] 下的相關文獻），把結果轉成玩家看得懂的單一風險分數。
 
 ## 11. 參考文獻
 
@@ -308,9 +308,11 @@ sequenceDiagram
 4. ESA DELTA（Debris Environment Long-Term Analysis）：
    - Bastida Virgili, B. (2016). DELTA (Debris Environment Long-Term Analysis). *6th International Conference on Astrodynamics Tools and Techniques (ICATT)*, Darmstadt. [PDF](https://indico.esa.int/event/111/contributions/234/attachments/486/531/DELTA_paper.pdf)
    - Klinkrad, H., Martin, C., & Walker, R. (2006). Modeling of the future space debris environment. In H. Klinkrad, *Space Debris: Models and Risk Analysis*. Springer. [連結](https://link.springer.com/chapter/10.1007/3-540-37674-7_5)
+   - European Space Agency. *Analysis and prediction*. ESA Space Debris Office. https://www.esa.int/Space_Safety/Space_Debris/Analysis_and_prediction（DELTA 等 ESA 碎片分析工具的官方說明）
    - 對應：半決定論長期演化、緩解與主動移除（ADR）情境分析；本遊戲的決策卡是這類情境的簡化版。
-5. **待查證**：「On the Risk of Kessler Syndrome（2024，Springer）」。以標題與主題搜尋都找不到這篇，作者、期刊與年份需要原作者確認後再引用。主題最接近、可查證的是：
-   - Institute for Defense Analyses (2023). *On the Increased Risk of Kessler Syndrome by Anti-Satellite Tests*. [連結](https://www.ida.org/research-and-publications/publications/all/o/on/on-the-increased-risk-of-kessler-syndrome-by-anti-satellite-tests)（以失控增長機率 P_Exp 作為風險參數）
+5. Giudici, L., Colombo, C., Horstmann, A., Letizia, F., & Lemmens, S. (2024). Density-based evolutionary model of the space debris environment in low-Earth orbit. *Acta Astronautica*, 219, 115–127. https://doi.org/10.1016/j.actaastro.2024.03.008
+   - 對應：以密度（連續體）方式描述碎片雲的長期演化模型，可處理公分級碎片，並投影 200 年、含未來發射與任務後處置情境；可作為本遊戲「逐顆碎片＋快照統計」做法的對照，以及第 10 節驗證比對的參考。
+   - 相關（風險指標）：Institute for Defense Analyses (2023). *On the Increased Risk of Kessler Syndrome by Anti-Satellite Tests*. [連結](https://www.ida.org/research-and-publications/publications/all/o/on/on-the-increased-risk-of-kessler-syndrome-by-anti-satellite-tests)（以失控增長機率 P_Exp 作為風險參數）
 
 **模型與資料**
 
