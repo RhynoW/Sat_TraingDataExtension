@@ -41,6 +41,27 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
 .views{display:flex;flex-wrap:wrap;gap:4px}
 #status{color:var(--mute);font-size:11px;margin-top:6px}
 #side a{color:#79c0ff}
+/* 共通體驗層（games_ux.js） */
+#t-box>summary{list-style:none;cursor:pointer;display:flex;align-items:baseline;gap:6px;margin:6px 0 4px}
+#t-box>summary::-webkit-details-marker{display:none}
+#t-box>summary h3{margin:6px 0 2px;flex:none}
+#t-box>summary h3::after{content:" ▸";color:var(--mute)}
+#t-box[open]>summary h3::after{content:" ▾"}
+#t-sum{color:var(--mute);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mission{margin:6px 0 8px;padding:7px 10px;border:1px solid #6e40c9;border-radius:8px;background:#1b1530}
+.mission .q{color:var(--hi);font-weight:700;margin-bottom:2px}
+.mission ol{margin:2px 0 6px;padding-left:20px;line-height:1.6}
+.mission .demo{background:#238636;border-color:#2ea043;margin-right:6px}
+details.intro{margin:2px 0 4px}
+details.intro>summary{color:var(--mute);font-size:11px;cursor:pointer}
+.act,#w-act .row:has(#w-submit){position:sticky;bottom:0;z-index:5;background:var(--bg);padding:6px 0;box-shadow:0 -8px 8px -6px #000a}
+button.busy{opacity:1 !important;cursor:progress}
+button.busy::before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border:2px solid #fff6;border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px}
+button.busy::after{content:attr(data-el)}
+@keyframes spin{to{transform:rotate(360deg)}}
+button.flash{animation:flash 1s ease-in-out 4}
+@keyframes flash{50%{box-shadow:0 0 0 4px #f2a73b}}
+[id$="-res"],#res,#a-miss,#w-board{scroll-margin-bottom:70px}
 </style>
 <script>window.CESIUM_BASE_URL="/cesium/";</script>
 <script src="/cesium/Cesium.js"></script>
@@ -65,13 +86,14 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
 </div>
 <div id="main">
   <div id="side">
-    <h3>時間</h3>
+    <details id="t-box" open><summary><h3>時間</h3><span id="t-sum"></span></summary>
     <div class="row"><input id="t-pick" type="datetime-local" step="60"><button id="t-now">現在</button></div>
     <div class="row"><label>播放速度</label><select id="t-speed">
       <option value="1">即時</option><option value="60">1 分鐘／秒</option><option value="3600" selected>1 小時／秒</option>
       <option value="21600">6 小時／秒</option><option value="86400">1 天／秒</option></select>
       <button id="t-play">⏸</button></div>
-    <div class="hint">時間以台灣時間（UTC+8）顯示；月球位置與月相由 astronomy-engine（Don Cross，MIT）計算。</div>
+    <div class="hint">時間（含下方時間軸）以台灣時間（UTC+8）顯示<span id="t-moonnote">；月球位置與月相由 astronomy-engine（Don Cross，MIT）計算</span>。</div>
+    </details>
 
     <div id="tab-moon">
     <h3>月相與台北看月亮</h3>
@@ -103,7 +125,7 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
     <div class="row"><label>點火位置</label><input id="g-th" type="range" min="0" max="360" step="0.001" value="180"><span id="g-thv" class="hint" style="min-width:52px">180.00°</span></div>
     <div class="row"><label>目標近月點</label><input id="g-tgt" type="number" value="110" step="10"><span class="hint">km</span><button id="g-aim">自動瞄準</button></div>
     <label class="chk"><input type="checkbox" id="g-loi">近月點制動（LOI）<input id="g-dvl" type="number" value="900" min="0" max="2000" step="10" style="width:80px"><span class="hint">m/s</span></label>
-    <div class="row"><button class="go" id="g-run">發射</button><button id="g-clear">清除軌跡</button><span class="hint">最長模擬 <input id="g-days" type="number" value="12" min="2" max="30" style="width:52px"> 天</span></div>
+    <div class="row act"><button class="go" id="g-run">發射</button><button id="g-clear">清除軌跡</button><span class="hint">最長模擬 <input id="g-days" type="number" value="12" min="2" max="30" style="width:52px"> 天</span></div>
     <div id="res" class="hint">從低地球停泊軌道點火，飛向月球。「點火位置」是點火點在停泊軌道上的角度（180° 約在月球抵達位置的正對面）；調整 Δv 和點火位置，或按「自動瞄準」找出近月點等於目標高度的點火位置。</div>
     <div class="hint" style="margin-top:6px">模型：地球、月球、太陽點質量重力（不含 J2、大氣與輻射壓），RK4 變步長積分；停泊軌道簡化為與月球軌道共面。參考：Apollo 11 TLI 約 3.18 km/s、飛行約 73 小時；LOI 約 0.9 km/s。</div>
     </div>
@@ -117,7 +139,7 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
     </div>
     <div class="row" style="margin-top:8px"><label>配對計算</label><select id="cr-skip">
       <option value="0">全部配對都計</option><option value="1" selected>同殼層不計（營運者協調）</option><option value="2">同星座不計（營運者完全協調）</option></select></div>
-    <div class="row"><label>取樣</label><select id="cr-hours"><option value="1">1 小時</option><option value="2" selected>2 小時</option><option value="6">6 小時</option></select>
+    <div class="row act"><label>取樣</label><select id="cr-hours"><option value="1">1 小時</option><option value="2" selected>2 小時</option><option value="6">6 小時</option></select>
       <button class="go" id="cr-run">計算壅擠指標</button></div>
     <div id="cr-res" class="hint">按「計算壅擠指標」比較現況與情境。</div>
     <h3>高度密度剖面（個／km³）</h3>
@@ -139,7 +161,7 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
       <option value="1600">1,600 km（Echo 1）</option><option value="20200">20,200 km（GPS）</option><option value="35786">35,786 km（GEO）</option></select></div>
     <div class="row"><label>軌道傾角</label><input id="b-i" type="number" value="53" min="0" max="180" step="1"><span class="hint">°</span>
       <select id="b-dir" style="width:120px"><option value="asc">北上段</option><option value="desc">南下段</option></select></div>
-    <div class="row"><button class="go" id="b-run">計算並播放</button><span class="hint">播放為慢動作，影子掃過台北的過程約 15 秒</span></div>
+    <div class="row act"><button class="go" id="b-run">計算並播放</button><span class="hint">播放為慢動作，影子掃過台北的過程約 15 秒</span></div>
     <div id="b-res" class="hint"></div>
     <h3>從台北看太陽（慢動作）</h3>
     <canvas id="b-sky" width="360" height="240" style="width:100%;max-width:360px;display:block;margin:auto;background:#5b8fd6;border-radius:6px"></canvas>
@@ -158,7 +180,7 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
     <div class="row"><label>解體方式</label><select id="d-kind"><option value="0">爆炸（電池、殘餘推進劑）</option><option value="1">被撞擊（碰撞模型，Δv 較大）</option></select></div>
     <div class="row"><label>模擬年數</label><select id="d-y"><option>1</option><option selected>10</option><option>20</option><option>50</option></select>
       <label>加速倍率</label><select id="d-acc"><option value="1">×1 寫實</option><option value="100">×100</option><option value="1000" selected>×1,000</option><option value="10000">×10,000</option><option value="100000">×100,000</option></select></div>
-    <div class="row"><label>亂數種子</label><input id="d-seed" type="number" value="7" min="1" step="1"><button class="go" id="d-run">引爆</button></div>
+    <div class="row act"><label>亂數種子</label><input id="d-seed" type="number" value="7" min="1" step="1"><button class="go" id="d-run">引爆</button></div>
     <div id="d-res" class="hint"></div>
     <div class="views" style="margin-top:6px"><button data-dplay="3h">看前 3 小時（碎片雲拉成環）</button><button data-dplay="90d">看前 90 天（散成殼層）</button><button data-dplay="all">看全程</button></div>
     <h3>碎片數與碰撞次數（對數）</h3>
@@ -176,7 +198,7 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
     <div class="row"><select id="a-pick"><option value="25544">ISS（約 420 km）</option></select></div>
     <div class="row"><label>發射點</label><select id="a-site"><option value="22.2,120.8">台灣南部海岸（示意）</option><option value="25.03,121.56">台北（示意）</option></select></div>
     <div class="row"><label>燃燒結束速度</label><input id="a-v" type="range" min="1.5" max="8" step="0.05" value="3.0"><span id="a-vv" class="hint" style="min-width:150px"></span></div>
-    <div class="row"><button class="go" id="a-solve">找出交會機會（未來 12 小時）</button></div>
+    <div class="row act"><button class="go" id="a-solve">找出交會機會（未來 12 小時）</button></div>
     <div id="a-res" class="hint"></div>
     <div class="row" style="margin-top:6px"><label>發射時間誤差</label><input id="a-dt" type="range" min="0" max="5" step="0.05" value="0"><span id="a-dtv" class="hint" style="min-width:60px">0 秒</span></div>
     <div class="row"><button id="a-fly">播放飛行</button><span class="hint">誤差 &gt; 0 時看沒打到的彈頭落點</span></div>
@@ -196,7 +218,7 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
       <option value="3.5,6.4" selected>Rubin 級巡天 8.4 m（視野 3.5°）</option><option value="10,0.1">廣角相機 10 cm（視野 10°）</option></select></div>
     <div class="row"><label>曝光</label><select id="s-exp"><option>15</option><option selected>30</option><option>60</option><option>300</option></select><span class="hint">秒</span>
       <label>情境</label><select id="s-scen"><option value="now">現況目錄</option><option value="mega">10 萬 Starlink 情境</option></select></div>
-    <div class="row"><button id="s-dusk">跳到今晚天文昏影（太陽 −13°）</button><button class="go" id="s-run">拍一張</button></div>
+    <div class="row act"><button id="s-dusk">跳到今晚天文昏影（太陽 −13°）</button><button class="go" id="s-run">拍一張</button></div>
     <canvas id="s-img" width="720" height="720" style="width:100%;background:#000;border:1px solid var(--line);border-radius:6px;margin-top:6px"></canvas>
     <div id="s-res" class="hint"></div>
     <h3>整夜每次曝光被劃幾條（同指向、每 10 分鐘）</h3>
@@ -209,7 +231,7 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
     <div class="hint">紅藍對抗＋白方 GM，雙方同時下令（WEGO）、伺服器裁決。藍方要在海纜被切斷時維持國際通訊並執行偵察；紅方以灰色地帶手段施壓，但升級指數過高會付出代價。每回合 6 小時、共 8 回合、每方每回合 5 行動點。可與 AI 對戰，或在另一個瀏覽器分頁（區網：以 --host 0.0.0.0 啟動）用連結加入。</div>
     <div class="row"><label>藍方</label><select id="w-ai-blue"><option value="">真人</option><option value="balanced">AI：均衡</option><option value="geo">AI：重 GEO</option><option value="leo">AI：重低軌</option><option value="repair">AI：重修纜</option></select>
       <label>紅方</label><select id="w-ai-red"><option value="balanced">AI：灰色地帶</option><option value="escalate">AI：升級（含反衛星）</option><option value="">真人</option></select></div>
-    <div class="row"><label>我扮演</label><select id="w-role"><option value="blue">藍方</option><option value="red">紅方</option><option value="white">白方（GM／觀察）</option></select>
+    <div class="row act"><label>我扮演</label><select id="w-role"><option value="blue">藍方</option><option value="red">紅方</option><option value="white">白方（GM／觀察）</option></select>
       <button class="go" id="w-new">開新推演</button></div>
     <div id="w-links" class="hint"></div>
     <div id="w-board"></div>
@@ -237,5 +259,6 @@ table.kv td:first-child{color:var(--mute);white-space:nowrap;width:96px}
 <script src="/ext/games_asat.js?v=__BUILD__"></script>
 <script src="/ext/games_astro.js?v=__BUILD__"></script>
 <script src="/ext/games_war.js?v=__BUILD__"></script>
+<script src="/ext/games_ux.js?v=__BUILD__"></script>
 </body>
 </html>
