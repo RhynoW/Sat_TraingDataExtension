@@ -99,7 +99,7 @@ VERSION, DATE, COPY = "v1.3", "2026.11.19", "©Sat_Dashboard"
 ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
 TMP = Path(ARGS[0]) if ARGS else BOOKDIR / "_build_tmp"
 # --with-ext：另排「全書＋延伸模擬篇（S1–S3）」版本，輸出到 sim_chapters/pdf/，不覆蓋送審版檔案；
-# 延伸篇不屬於送審版，放在結語之後、附錄之前。未加此選項時，行為與原本相同。
+# 延伸篇放在結語之後、附錄之前。未加此選項時，行為與原本相同。
 WITH_EXT = "--with-ext" in sys.argv
 SIMDIR = D.parent / "sim_chapters"
 if WITH_EXT:
@@ -283,7 +283,7 @@ def ext_opener(c):
   <div class="num">EXTENSION {k}</div>
   <h1 class="t long">{br_title(m['title'])}</h1>
   <div class="q"><div class="bar"></div><div class="k">核心問題</div><p>{html.escape(m['q'])}</p></div>
-  <div class="run">延伸篇 {k}　{html.escape(m['title'])}｜延伸模擬篇不屬於送審版</div>
+  <div class="run">延伸篇 {k}　{html.escape(m['title'])}</div>
 </div>
 <div class="op op-r">
   {vis}
@@ -303,7 +303,7 @@ def ext_part(toc_pages):
   <div class="num">EXTENSION｜PART</div>
   <h1 class="t">延伸模擬篇</h1>
   <div class="pq">碎片連鎖、巨型星座的外部成本、兵棋推演：用三個可以操作的教學模型，把本書的證據鏈延伸到「推演」。</div>
-  <div class="pnote">本篇不屬於送審版（v1.3），也不是國家太空中心委託研究的成果。內容取自本專案 Rust 單機版的教學模型；除碎片衰減曲線已對照 CelesTrak 觀測外，數值一律為教學模型示意，不是預報，也不是政策或能力評估。證據等級另設「M｜教學模型（示意）」與「M＋｜教學模型，部分已對照觀測」。</div>
+  <div class="pnote">內容取自本專案 Rust 單機版的教學模型；除碎片衰減曲線已對照 CelesTrak 觀測外，數值一律為教學模型示意，不是預報，也不是政策或能力評估。證據等級另設「M｜教學模型（示意）」與「M＋｜教學模型，部分已對照觀測」。</div>
   <ol class="ptoc">{rows}</ol>
   <div class="run">延伸模擬篇｜2026-11-22 初稿</div>
 </div>"""
@@ -520,7 +520,7 @@ p.spec strong{{color:#0F5E46}}
   <div class="title-page"><div class="t">{TITLE}</div><div class="rule"></div><div class="s">太空態勢感知的基礎——<br>智慧化低軌通訊衛星軌道異常與太空事件偵測演算法研究</div><div class="a">Sat_Dashboard<br><span style="font-size:9pt">{VERSION}　{DATE}</span></div>{QR_BLOCK}</div>
   <div class="copyright"><div class="bt">{TITLE}</div><div>{SUB}</div><br>
     <div><b>作者</b>Sat_Dashboard</div><div><b>版本</b>{VERSION}</div><div><b>日期</b>{DATE}</div>
-    <div><b>版權</b>{DATE} {COPY}</div><div><b>授權</b>請來信洽詢</div><br><div><b>封面照片</b>NASA（iss036e024096），Expedition 36 國際太空站組員 Karen Nyberg 攝，2013-07-22 16:44:23 UTC，台灣夜間；取自 NASA Image and Video Library（images.nasa.gov）</div><div><b>封底照片</b>NASA（iss073e0848542），國際太空站組員油井龜美攝，2025-09-17 15:55:52 UTC，台灣海峽夜景</div><div><b>內頁照片</b>NASA、NASA/JPL、NASA/GSFC、NASA Ames Research Center 及 SpaceX（經 NASA 發布），出處與攝影者見各照片說明</div><div><b>最後一頁照片</b>Rocket Lab（經 NASA 發布，KSC-20240605-PH-RKL01_0002），Electron「PREFIRE and Ice」升空，2024-06-05，紐西蘭馬希亞；取自 NASA Image and Video Library</div><div><b>第 14 章章首圖</b>NASA（S64-03507），Diagrams of Spacecraft Responses to Orbit Attitude Control Thrust，1964；取自 NASA Image and Video Library，本書反相並調色</div><div><b>第 15 章章首圖</b>NASA（S65-05399），Gemini Spacecraft – Maneuvering Control，1965；取自 NASA Image and Video Library，本書反相並調色</div><div><b>第 16 章章首圖</b>NASA Ames Research Center（ARC-1977-A77-0851），Voyager Saturn Mission Artwork，1977-07-06；取自 NASA Image and Video Library，裁去沖印白邊</div><div><b>結語章首左頁照片</b>國家太空中心（TASA）提供，三節式入軌火箭模型首度亮相（2023 台北國際航太暨國防工業展）；取自自由時報 2023-09-14 報導（記者吳柏軒）</div><div><b>結語章首照片</b>國家太空中心（TASA），「島脈 MARAHO」首次飛試任務團隊合影，2026-08-22，屏東旭海科研火箭發射場；取自 TASA 官網公告</div>{'<div><b>延伸模擬篇</b>不屬於送審版（v1.3），也不是國家太空中心委託研究的成果；配圖、模擬畫面與章首圖為本專案製作（Rust 單機版，2026-11-22）</div>' if WITH_EXT else ''}</div>
+    <div><b>版權</b>{DATE} {COPY}</div><div><b>授權</b>請來信洽詢</div><br><div><b>封面照片</b>NASA（iss036e024096），Expedition 36 國際太空站組員 Karen Nyberg 攝，2013-07-22 16:44:23 UTC，台灣夜間；取自 NASA Image and Video Library（images.nasa.gov）</div><div><b>封底照片</b>NASA（iss073e0848542），國際太空站組員油井龜美攝，2025-09-17 15:55:52 UTC，台灣海峽夜景</div><div><b>內頁照片</b>NASA、NASA/JPL、NASA/GSFC、NASA Ames Research Center 及 SpaceX（經 NASA 發布），出處與攝影者見各照片說明</div><div><b>最後一頁照片</b>Rocket Lab（經 NASA 發布，KSC-20240605-PH-RKL01_0002），Electron「PREFIRE and Ice」升空，2024-06-05，紐西蘭馬希亞；取自 NASA Image and Video Library</div><div><b>第 14 章章首圖</b>NASA（S64-03507），Diagrams of Spacecraft Responses to Orbit Attitude Control Thrust，1964；取自 NASA Image and Video Library，本書反相並調色</div><div><b>第 15 章章首圖</b>NASA（S65-05399），Gemini Spacecraft – Maneuvering Control，1965；取自 NASA Image and Video Library，本書反相並調色</div><div><b>第 16 章章首圖</b>NASA Ames Research Center（ARC-1977-A77-0851），Voyager Saturn Mission Artwork，1977-07-06；取自 NASA Image and Video Library，裁去沖印白邊</div><div><b>結語章首左頁照片</b>國家太空中心（TASA）提供，三節式入軌火箭模型首度亮相（2023 台北國際航太暨國防工業展）；取自自由時報 2023-09-14 報導（記者吳柏軒）</div><div><b>結語章首照片</b>國家太空中心（TASA），「島脈 MARAHO」首次飛試任務團隊合影，2026-08-22，屏東旭海科研火箭發射場；取自 TASA 官網公告</div>{'<div><b>延伸模擬篇</b>配圖、模擬畫面與章首圖為本專案製作（Rust 單機版，2026-11-22）</div>' if WITH_EXT else ''}</div>
   <div class="toc"><h2>目錄</h2><ol>{toc}</ol></div>
 </div>
 {sections}
@@ -632,7 +632,7 @@ if EXT_KEYS:
         one.insert_pdf(full, from_page=full.page_count - 1, to_page=full.page_count - 1)
         title = f"延伸篇 {k}　{EXT_META[k]['title']}"
         one.set_toc([[1, "封面", 1], [1, "扉頁", 2], [1, "版權頁", 3], [1, title, 4], [1, "封底", one.page_count]])
-        one.set_metadata({"title": f"{TITLE}｜{title}（單篇試閱，不屬於送審版）", "author": "Sat_Dashboard", "subject": "太空態勢感知"})
+        one.set_metadata({"title": f"{TITLE}｜{title}（單篇試閱）", "author": "Sat_Dashboard", "subject": "太空態勢感知"})
         name = OUT_PDF.parent / f"延伸篇{k}_{re.sub(r'[：，、]', '', EXT_META[k]['title'])}_單篇.pdf"
         one.save(name, garbage=3, deflate=True)
         print(f"{name.name}：{one.page_count} 頁（該篇 {b - a + 1} 頁，全書第 {a}–{b} 頁），{name.stat().st_size / 1e6:.1f} MB")
