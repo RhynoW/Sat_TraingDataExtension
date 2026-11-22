@@ -190,7 +190,7 @@ button.flash{animation:flash 1s ease-in-out 4}
     <h3>畫面</h3>
     <label class="chk"><input type="checkbox" id="cr-show" checked>3D 顯示所有物件（每秒更新 4 次）</label>
     <div class="hint" id="cr-legend"></div>
-    <div class="hint" style="margin-top:8px">方法：取多個時刻快照，用 KD-tree 找出相距 20 km 內的配對，依「進入半徑 d 球的頻率＝球內配對數×相對速度÷(4d/3)」估計接近頻率，再依通量與 d² 成正比換算到 1 km（避碰機動的代理門檻）與 10 m（兩顆大型衛星的合併硬體半徑，視為碰撞）。這是一階估計：真實星座有相位安排與避碰機動，實際碰撞遠少於「若都不避碰」的期望值。假想星座以圓軌道加 J2 長期項傳播。<br>校正參考：選「同星座不計」時，現況 Starlink 每顆每年約 20 次 < 1 km 接近，和營運者公開的避碰機動量級（每顆每年十幾到數十次）相近；選「同殼層不計」會把同一家不同殼層、以及真實星座內部的交會也算進去，數字偏高，可視為「協調失效」的上限。</div>
+    <div class="hint" style="margin-top:8px">方法：取多個時刻快照，用 KD-tree 找出相距 20 km 內的配對，依「進入半徑 d 球的頻率＝球內配對數×相對速度÷(4d/3)」估計接近頻率，再依通量與 d² 成正比換算到 1 km（避碰機動的代理門檻）與 10 m（兩顆大型衛星的合併硬體半徑，視為碰撞）。這是一階估計：真實星座有相位安排與避碰機動，實際碰撞遠少於「若都不避碰」的期望值。假想星座以圓軌道加 J2 長期項傳播。<br>量級參考：選「同星座不計」時，現況 Starlink 每顆每年約 20 次 < 1 km 接近。SpaceX 2026 年 7 月向 FCC 提交的半年報告（Space.com 2026-07-15 轉述）：2025-06 至 2026-05 每顆衛星平均每年避碰機動 40 次以上，觸發門檻為碰撞機率高於千萬分之三。兩者指標不同（距離門檻 vs 碰撞機率門檻），只能比量級，不代表模型已驗證；選「同殼層不計」會把同一家不同殼層、以及真實星座內部的交會也算進去，數字偏高，可視為「協調失效」的上限。</div>
     </div>
     <div id="tab-balloon" hidden>
     <h3>🎈 多大的鋁箔氣球能在台北造成日食？</h3>
@@ -308,9 +308,9 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div id="tab-war" hidden>
     <h3>♟ 太空兵棋：海纜中斷下的通訊韌性</h3>
     <div class="hint">紅藍對抗＋白方 GM，雙方同時下令（WEGO）、伺服器裁決。藍方要在海纜被切斷時維持國際通訊並執行偵察；紅方以灰色地帶手段施壓，但升級指數過高會付出代價。每回合 6 小時、共 8 回合、每方每回合 5 行動點。可與 AI 對戰，或在另一個瀏覽器分頁（區網：以 --host 0.0.0.0 啟動）用連結加入。</div>
-    <div class="row"><label>想定</label><select id="w-scen"><option value="base">原始想定：海纜中斷</option><option value="a">想定 A：灰色地帶（商用低軌也被干擾，依 DIA 2026）</option></select></div>
+    <div class="row"><label>想定</label><select id="w-scen"><option value="base">原始想定：海纜中斷</option><option value="a">想定 A：灰色地帶（商用低軌也被干擾，依 DIA 2026）</option><option value="b">想定 B：致盲致聾（偵察、通信、導航都被干擾，依 DIA 2026）</option><option value="b_typhoon">想定 B＋開場颱風</option><option value="c">想定 C：共軌接近（紅方衛星逼近藍方租用的 GEO 衛星，依 DIA 2026）</option><option value="d">想定 D：直升式反衛星（擊毀藍方光學衛星或商用低軌衛星，依 DIA 2026）</option></select></div>
     <div class="hint" id="w-scen-hint"></div>
-    <div class="row"><label>藍方</label><select id="w-ai-blue"><option value="">真人</option><option value="balanced">AI：均衡</option><option value="geo">AI：重 GEO</option><option value="leo">AI：重低軌</option><option value="repair">AI：重修纜</option></select>
+    <div class="row"><label>藍方</label><select id="w-ai-blue"><option value="">真人</option><option value="balanced">AI：均衡</option><option value="geo">AI：重 GEO</option><option value="leo">AI：重低軌</option><option value="repair">AI：重修纜</option><option value="sensor">AI：重感測（僅想定 B）</option><option value="hybrid">AI：均衡＋備援（僅想定 B）</option><option value="watch">AI：太空監視（僅想定 C）</option><option value="evade">AI：監視＋規避（僅想定 C）</option><option value="spread">AI：分散租用（僅想定 C）</option><option value="imagery">AI：重 GEO＋商業影像（僅想定 D）</option><option value="avoid">AI：均衡＋避碰（僅想定 D）</option></select>
       <label>紅方</label><select id="w-ai-red"><option value="balanced">AI：灰色地帶</option><option value="escalate">AI：升級（含反衛星）</option><option value="">真人</option></select></div>
     <div class="row act"><label>我扮演</label><select id="w-role"><option value="blue">藍方</option><option value="red">紅方</option><option value="white">白方（GM／觀察）</option></select>
       <button class="go" id="w-new">開新推演</button></div>
@@ -324,11 +324,11 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div id="w-log" class="hint" style="max-height:260px;overflow:auto"></div>
     <h3>蒙地卡羅分析（雙方 AI）</h3>
     <div class="row"><label>局數</label><select id="w-runs"><option>200</option><option selected>500</option><option>2000</option></select>
-      <label>想定</label><select id="w-mc-scen"><option value="base">原始</option><option value="a">A 灰色地帶</option></select>
+      <label>想定</label><select id="w-mc-scen"><option value="base">原始</option><option value="a">A 灰色地帶</option><option value="b">B 致盲致聾</option><option value="b_typhoon">B＋颱風</option><option value="c">C 共軌接近</option><option value="c_loiter">C 對照：只接近不攻擊</option><option value="d">D 直升式反衛星</option><option value="d_noasat">D 對照：不用反衛星</option></select>
       <label>紅方策略</label><select id="w-mc-red"><option value="balanced">灰色地帶</option><option value="escalate">升級</option></select>
       <button id="w-mc">比較藍方策略</button></div>
     <div id="w-mc-res" class="hint"></div>
-    <div class="hint" style="margin-top:8px">參考：謝沛學〈從遊戲到實戰：商用兵棋軟體如何協助軍事分析與訓練〉（國防安全雙週報，2020）。本推演為教育用抽象模型：國際海纜每條 10 單位、離島海纜 1 單位、需求 150 單位起每回合 +5；GEO 租用每次 +15（上限 60）、低軌終端每 500 套 +10（上限 4,000 套），均下回合生效；海纜取自內嵌的 TeleGeography 圖資。數值為示意，不代表實際容量。想定 A 的情境依據美國國防情報局（DIA）《Challenges to Security in Space 2026》繁中譯本（本站「文件」可下載）：商用衛星終端被列為合法目標（p.4、37）、Viasat 惡意軟體攻擊（p.43）、Starlink 干擾（p.43）；效果數值仍是本遊戲的示意假設。</div>
+    <div class="hint" style="margin-top:8px">參考：謝沛學〈從遊戲到實戰：商用兵棋軟體如何協助軍事分析與訓練〉（國防安全雙週報，2020）。本推演為教育用抽象模型：國際海纜每條 10 單位、離島海纜 1 單位、需求 150 單位起每回合 +5；GEO 租用每次 +15（上限 60）、低軌終端每 500 套 +10（上限 4,000 套），均下回合生效；海纜取自內嵌的 TeleGeography 圖資。數值為示意，不代表實際容量。想定 A 的情境依據美國國防情報局（DIA）《Challenges to Security in Space 2026》繁中譯本（本站「文件」可下載）：商用衛星終端被列為合法目標（p.4、37）、Viasat 惡意軟體攻擊（p.43）、Starlink 干擾（p.43）；想定 B 依據「致盲並致聾敵人」（p.18）、PLA 演習的上下行鏈路與 GPS 干擾及 SAR 干擾器（p.31–32）、GPS 干擾波及民用（p.15）；想定 C 依據 TJS-3 在 GEO 接近他國太空器至 10 km 內、近距離接近與宣稱任務不一致（p.33）、Cosmos 2543 跟蹤美國衛星後釋放投射物與 Cosmos 2576（p.44）、天基武器可造成暫時或永久損害（p.71）、購買商業資料取得基本太空監視（p.64）；想定 D 依據中國 2007 年 ASAT 試射與碎片（p.32）、俄羅斯 Nudol 試射（p.44）、ASAT 碎片可停留數十年至數世紀（p.15）、避碰提高成本（p.56）、ASAT 容易歸因（p.70）、商業衛星影像可得性提高（p.57）。效果數值仍是本遊戲的示意假設。</div>
     </div>
     <div id="status"></div>
   </div>

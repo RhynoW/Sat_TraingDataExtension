@@ -110,22 +110,34 @@ fn group_by_key(k: &str) -> Option<(usize, &'static Group)> {
     GROUPS.iter().enumerate().find(|(_, g)| g.key == k)
 }
 
-/// 依目標總數等比例縮放各殼層（保留軌道面數，調整每面顆數）
-fn scaled(g: &Group, total: u32) -> Vec<Shell> {
+/// 依目標總數等比例縮放各殼層（保留軌道面數，調整每面顆數）；回傳（樣板中的殼層序號, 殼層）
+fn scaled(g: &Group, total: u32) -> Vec<(usize, Shell)> {
     let n0: u32 = g.shells.iter().map(|s| s.2 * s.3).sum();
     let k = total as f64 / n0 as f64;
     g.shells
         .iter()
-        .filter_map(|&(h, i, p, s)| {
+        .enumerate()
+        .filter_map(|(j, &(h, i, p, s))| {
             let c = ((p * s) as f64 * k).round() as u32;
             if c == 0 {
                 return None;
             }
             let planes = p.min(c);
             let per = ((c as f64 / planes as f64).round() as u32).max(1);
-            Some((h, i, planes, per))
+            Some((j, (h, i, planes, per)))
         })
         .collect()
+}
+
+/// 殼層的相位偏移（弧度）：升交點赤經偏移不到一個軌道面間隔、緯度幅角偏移不到一個衛星間隔。
+/// 各殼層若都從同一相位起點排列，參數相近的殼層（例如 550 km／53° 與 540 km／53.2°）會產生並肩飛行的假想衛星。
+/// 偏移只依（群組序號, 樣板殼層序號）決定，與請求順序和縮放無關，同參數結果可重現；
+/// 以黃金比例與塑膠數的小數部分做低差異序列，讓各殼層的偏移彼此錯開。
+fn shell_phase(gi: usize, j: usize, planes: u32, per: u32) -> (f64, f64) {
+    let m = (gi * 32 + j + 1) as f64;
+    let fr = (m * 0.618_033_988_749_895).fract();
+    let fu = (m * 0.754_877_666_246_693).fract();
+    (std::f64::consts::TAU * fr / planes as f64, std::f64::consts::TAU * fu / per as f64)
 }
 
 #[derive(Deserialize, Clone)]
@@ -249,15 +261,17 @@ pub(crate) fn build_items<'a>(sats: &'a [&'a SatInfo], reqs: &[GroupReq]) -> (Ve
             continue;
         }
         replaced[gi] = true;
-        for (h, inc, p, s) in scaled(g, rq.total) {
+        for (j, (h, inc, p, s)) in scaled(g, rq.total) {
+            let (raan0, u0) = shell_phase(gi, j, p, s);
             for pi in 0..p {
                 for si in 0..s {
-                    let raan = std::f64::consts::TAU * pi as f64 / p as f64;
-                    let u = std::f64::consts::TAU * (si as f64 / s as f64 + pi as f64 / (p * s) as f64);
+                    let raan = raan0 + std::f64::consts::TAU * pi as f64 / p as f64;
+                    let u = u0 + std::f64::consts::TAU * (si as f64 / s as f64 + pi as f64 / (p * s) as f64);
                     items.push(Item { obj: Obj::Syn(Walker::new(h, inc, raan, u)), group: (gi + 1) as u8, shell: shell_id });
                 }
             }
-            shells_out.push(json!({"group": g.key, "alt": h, "inc": inc, "planes": p, "per_plane": s}));
+            shells_out.push(json!({"group": g.key, "alt": h, "inc": inc, "planes": p, "per_plane": s,
+                                   "raan0": raan0, "u0": u0}));
             shell_id += 1;
         }
     }

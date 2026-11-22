@@ -164,9 +164,9 @@
     var els = [], cols = [], cmap = {};
     groups.forEach(function (g) { cmap[g.key] = Cesium.Color.fromCssColorString(g.color); });
     shells.forEach(function (sh) {
-      var P = sh.planes, S = sh.per_plane, inc = sh.inc * Math.PI / 180;
+      var P = sh.planes, S = sh.per_plane, inc = sh.inc * Math.PI / 180, r0 = sh.raan0 || 0, u0 = sh.u0 || 0;  // 殼層相位偏移（後端 shell_phase）
       for (var p = 0; p < P; p++) for (var q = 0; q < S; q++) {
-        els.push(sh.alt, inc, 2 * Math.PI * p / P, 2 * Math.PI * (q / S + p / (P * S)));
+        els.push(sh.alt, inc, r0 + 2 * Math.PI * p / P, u0 + 2 * Math.PI * (q / S + p / (P * S)));
         cols.push(cmap[sh.group]);
       }
     });
