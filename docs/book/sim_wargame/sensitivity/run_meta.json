@@ -1,0 +1,599 @@
+{
+ "run_at": "2026-11-22T10:09:33",
+ "server": "http://127.0.0.1:5092",
+ "runs": 500,
+ "seeds": "1000–1499",
+ "git_head": "92bd75c95337b6de92492f82345b0256a3d0e831",
+ "games_war_rs_sha256": "d004ebce426aca13f7122229cf0bf60d886f09c6e19e86b2597b2dc842d76911",
+ "note": "games_war.rs 為未 commit 的工作版；以檔案雜湊識別版本",
+ "experiments": [
+  {
+   "exp": "A_pre",
+   "scenario": "a_pre",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair"
+   ],
+   "params": {}
+  },
+  {
+   "exp": "A_wipe0.15",
+   "scenario": "a",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair"
+   ],
+   "params": {
+    "a_wipe": 0.15
+   }
+  },
+  {
+   "exp": "A_wipe0.3",
+   "scenario": "a",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair"
+   ],
+   "params": {
+    "a_wipe": 0.3
+   }
+  },
+  {
+   "exp": "A_wipe0.6",
+   "scenario": "a",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair"
+   ],
+   "params": {
+    "a_wipe": 0.6
+   }
+  },
+  {
+   "exp": "A_none",
+   "scenario": "a",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair"
+   ],
+   "params": {
+    "red_ban": [
+     "cut_cable",
+     "jam_leo",
+     "cyber_gateway"
+    ]
+   }
+  },
+  {
+   "exp": "A_only_cut",
+   "scenario": "a",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair"
+   ],
+   "params": {
+    "red_ban": [
+     "jam_leo",
+     "cyber_gateway"
+    ]
+   }
+  },
+  {
+   "exp": "A_only_jam",
+   "scenario": "a",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair"
+   ],
+   "params": {
+    "red_ban": [
+     "cut_cable",
+     "cyber_gateway"
+    ]
+   }
+  },
+  {
+   "exp": "A_only_cyber",
+   "scenario": "a",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair"
+   ],
+   "params": {
+    "red_ban": [
+     "cut_cable",
+     "jam_leo"
+    ]
+   }
+  },
+  {
+   "exp": "B0",
+   "scenario": "b",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "hybrid",
+    "sensor"
+   ],
+   "params": {}
+  },
+  {
+   "exp": "B_nojam",
+   "scenario": "b",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "hybrid",
+    "sensor"
+   ],
+   "params": {
+    "red_ban": [
+     "jam_gps",
+     "jam_sar"
+    ]
+   }
+  },
+  {
+   "exp": "B_pnt0.1",
+   "scenario": "b",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "hybrid",
+    "sensor"
+   ],
+   "params": {
+    "b_pnt_jammed": 0.1
+   }
+  },
+  {
+   "exp": "B_pnt0.6",
+   "scenario": "b",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "hybrid",
+    "sensor"
+   ],
+   "params": {
+    "b_pnt_jammed": 0.6
+   }
+  },
+  {
+   "exp": "B_sar0.5",
+   "scenario": "b",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "hybrid",
+    "sensor"
+   ],
+   "params": {
+    "b_sar_p": 0.5
+   }
+  },
+  {
+   "exp": "B_sar0.95",
+   "scenario": "b",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "hybrid",
+    "sensor"
+   ],
+   "params": {
+    "b_sar_p": 0.95
+   }
+  },
+  {
+   "exp": "C0",
+   "scenario": "c",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {}
+  },
+  {
+   "exp": "C_loiter",
+   "scenario": "c_loiter",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {}
+  },
+  {
+   "exp": "C_risk0.05",
+   "scenario": "c",
+   "red": [
+    "balanced"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {
+    "c_p_strike_tracked": 0.05
+   }
+  },
+  {
+   "exp": "C_risk0.3",
+   "scenario": "c",
+   "red": [
+    "balanced"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {
+    "c_p_strike_tracked": 0.3
+   }
+  },
+  {
+   "exp": "C_track0.7",
+   "scenario": "c",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {
+    "c_track_p": 0.7
+   }
+  },
+  {
+   "exp": "C_track0.4",
+   "scenario": "c",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {
+    "c_track_p": 0.4
+   }
+  },
+  {
+   "exp": "C_attrib0.5",
+   "scenario": "c",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {
+    "c_attrib_p": 0.5
+   }
+  },
+  {
+   "exp": "C_evade0.8",
+   "scenario": "c",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {
+    "c_evade_p": 0.8
+   }
+  },
+  {
+   "exp": "C_evade0.5",
+   "scenario": "c",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {
+    "c_evade_p": 0.5
+   }
+  },
+  {
+   "exp": "C_dip0.85",
+   "scenario": "c",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {
+    "c_evade_dip": 0.85
+   }
+  },
+  {
+   "exp": "C_dip0.5",
+   "scenario": "c",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {
+    "c_evade_dip": 0.5
+   }
+  },
+  {
+   "exp": "C_cons",
+   "scenario": "c",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "watch",
+    "evade",
+    "spread"
+   ],
+   "params": {
+    "c_track_p": 0.7,
+    "c_attrib_p": 0.5,
+    "c_evade_p": 0.8,
+    "c_p_strike_tracked": 0.3
+   }
+  },
+  {
+   "exp": "D0",
+   "scenario": "d",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "imagery",
+    "avoid"
+   ],
+   "params": {}
+  },
+  {
+   "exp": "D_noasat",
+   "scenario": "d_noasat",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "imagery",
+    "avoid"
+   ],
+   "params": {}
+  },
+  {
+   "exp": "D_adapt_img0.4",
+   "scenario": "d",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "imagery",
+    "avoid"
+   ],
+   "params": {
+    "d_img_factor": 0.4
+   }
+  },
+  {
+   "exp": "D_isr_img1.0",
+   "scenario": "d",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "imagery",
+    "avoid"
+   ],
+   "params": {
+    "d_red_pref": "isr",
+    "d_img_factor": 1.0
+   }
+  },
+  {
+   "exp": "D_isr_img0.7",
+   "scenario": "d",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "imagery",
+    "avoid"
+   ],
+   "params": {
+    "d_red_pref": "isr",
+    "d_img_factor": 0.7
+   }
+  },
+  {
+   "exp": "D_isr_img0.4",
+   "scenario": "d",
+   "red": [
+    "balanced",
+    "escalate"
+   ],
+   "blue": [
+    "balanced",
+    "geo",
+    "leo",
+    "repair",
+    "imagery",
+    "avoid"
+   ],
+   "params": {
+    "d_red_pref": "isr",
+    "d_img_factor": 0.4
+   }
+  }
+ ]
+}

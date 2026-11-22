@@ -1,0 +1,1568 @@
+{
+ "c_balanced_vs_balanced": {
+  "log": [
+   {
+    "turn": 0,
+    "side": "white",
+    "text": "想定開始：8 條海纜同時中斷（Taiwan-Matsu No.4、ORCA、Taiwan Penghu Kinmen Matsu No.2 (TPKM2)、Taiwan Penghu Kinmen Matsu No.3 (TPKM3)、Topaz、Southeast Asia-Japan Cable 2 (SJC2)、New Cross Pacific (NCP) Cable System、Asia Pacific Gateway (APG)）。國際頻寬需求 150 單位（每回合 +5）。"
+   },
+   {
+    "turn": 0,
+    "side": "white",
+    "text": "想定 C：紅方一顆宣稱為「通信技術試驗」的衛星進入與藍方租用 GEO 通信衛星相同的軌道（目前距離 > 100 km）。它是檢查衛星還是武器，無從得知。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：低軌閘道站完成資安強化。"
+   },
+   {
+    "turn": 0,
+    "side": "red",
+    "text": "可疑船隻在海纜區徘徊，未造成中斷。"
+   },
+   {
+    "turn": 0,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：租用 GEO 衛星頻寬 +15（下回合生效）。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 1,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 1,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 ORCA（3 回合）。"
+   },
+   {
+    "turn": 1,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 2,
+    "side": "red",
+    "text": "可疑船隻在海纜區徘徊，未造成中斷。"
+   },
+   {
+    "turn": 2,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 2,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 2,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Topaz（3 回合）。"
+   },
+   {
+    "turn": 2,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "FASTER 中斷（疑似船錨拖斷）。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 3,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Southeast Asia-Japan Cable 2 (SJC2)（3 回合）。"
+   },
+   {
+    "turn": 3,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "海纜修復：ORCA。"
+   },
+   {
+    "turn": 4,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 4,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 New Cross Pacific (NCP) Cable System（3 回合）。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "海纜修復：Topaz。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "Apricot 中斷（疑似船錨拖斷）。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 FASTER（3 回合）。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "海纜修復：Southeast Asia-Japan Cable 2 (SJC2)。"
+   },
+   {
+    "turn": 6,
+    "side": "red",
+    "text": "可疑船隻在海纜區徘徊，未造成中斷。"
+   },
+   {
+    "turn": 6,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 6,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Apricot（3 回合）。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "海纜修復：New Cross Pacific (NCP) Cable System。"
+   },
+   {
+    "turn": 7,
+    "side": "red",
+    "text": "Pacific Light Cable Network (PLCN) 中斷（疑似船錨拖斷）。"
+   },
+   {
+    "turn": 7,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 7,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Asia Pacific Gateway (APG)（3 回合）。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 8,
+    "side": "blue",
+    "text": "海纜修復：FASTER。"
+   },
+   {
+    "turn": 8,
+    "side": "white",
+    "text": "推演結束。"
+   }
+  ],
+  "history": [
+   {
+    "turn": 0,
+    "demand": 150.0,
+    "cable": 111.0,
+    "geo": 5.0,
+    "leo": 0.0,
+    "avail": 0.7733333333333333,
+    "cut": 8,
+    "escalation": 0.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 0.0,
+    "pnt": 1.0,
+    "rpo": 0
+   },
+   {
+    "turn": 1,
+    "demand": 155.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 10.0,
+    "avail": 0.9096774193548387,
+    "cut": 8,
+    "escalation": 5.5,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 500.0,
+    "pnt": 1.0,
+    "rpo": 1
+   },
+   {
+    "turn": 2,
+    "demand": 160.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 20.0,
+    "avail": 0.94375,
+    "cut": 8,
+    "escalation": 7.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 1000.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 3,
+    "demand": 165.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 22.5,
+    "avail": 0.9303030303030303,
+    "cut": 8,
+    "escalation": 14.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 4,
+    "demand": 170.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 22.5,
+    "avail": 0.9029411764705882,
+    "cut": 8,
+    "escalation": 21.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 5,
+    "demand": 175.0,
+    "cable": 121.0,
+    "geo": 20.0,
+    "leo": 22.5,
+    "avail": 0.9342857142857143,
+    "cut": 7,
+    "escalation": 24.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 6,
+    "demand": 180.0,
+    "cable": 121.0,
+    "geo": 20.0,
+    "leo": 22.5,
+    "avail": 0.9083333333333333,
+    "cut": 7,
+    "escalation": 31.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 7,
+    "demand": 185.0,
+    "cable": 131.0,
+    "geo": 20.0,
+    "leo": 22.5,
+    "avail": 0.9378378378378378,
+    "cut": 6,
+    "escalation": 38.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 8,
+    "demand": 190.0,
+    "cable": 131.0,
+    "geo": 20.0,
+    "leo": 22.5,
+    "avail": 0.9131578947368421,
+    "cut": 6,
+    "escalation": 45.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   }
+  ],
+  "scores": {
+   "mean_avail": 0.922535800790273,
+   "min_avail": 0.9029411764705882,
+   "early_avail": 0.9279101498859563,
+   "cyber_lost": 0.0,
+   "pnt_avail": 1.0,
+   "sar_ok": 0,
+   "sar_try": 0,
+   "blue": 90.2535800790273,
+   "red": -14.753580079027298,
+   "escalation": 45.0,
+   "debris": 0.0,
+   "isr_ok": 0,
+   "isr_try": 0,
+   "struck": false,
+   "attributed": false,
+   "geo_lost": 0.0,
+   "evades": 0
+  }
+ },
+ "c_watch_vs_balanced": {
+  "log": [
+   {
+    "turn": 0,
+    "side": "white",
+    "text": "想定開始：8 條海纜同時中斷（Taiwan-Matsu No.4、ORCA、Taiwan Penghu Kinmen Matsu No.2 (TPKM2)、Taiwan Penghu Kinmen Matsu No.3 (TPKM3)、Topaz、Southeast Asia-Japan Cable 2 (SJC2)、New Cross Pacific (NCP) Cable System、Asia Pacific Gateway (APG)）。國際頻寬需求 150 單位（每回合 +5）。"
+   },
+   {
+    "turn": 0,
+    "side": "white",
+    "text": "想定 C：紅方一顆宣稱為「通信技術試驗」的衛星進入與藍方租用 GEO 通信衛星相同的軌道（目前距離 > 100 km）。它是檢查衛星還是武器，無從得知。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：購買商業太空監視資料，之後持續追蹤紅方衛星。"
+   },
+   {
+    "turn": 0,
+    "side": "red",
+    "text": "太空監視：紅方衛星逼近藍方租用的 GEO 衛星（距離 < 100 km）。"
+   },
+   {
+    "turn": 0,
+    "side": "red",
+    "text": "可疑船隻在海纜區徘徊，未造成中斷。"
+   },
+   {
+    "turn": 0,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：租用 GEO 衛星頻寬 +15（下回合生效）。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 1,
+    "side": "blue",
+    "text": "藍方：低軌閘道站完成資安強化。"
+   },
+   {
+    "turn": 1,
+    "side": "red",
+    "text": "太空監視：紅方衛星逼近藍方租用的 GEO 衛星（距離 < 10 km）。"
+   },
+   {
+    "turn": 1,
+    "side": "red",
+    "text": "低軌閘道站遭網攻，已強化，未受影響。"
+   },
+   {
+    "turn": 1,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 1,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 ORCA（3 回合）。"
+   },
+   {
+    "turn": 2,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 2,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Topaz（3 回合）。"
+   },
+   {
+    "turn": 2,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "可疑船隻在海纜區徘徊，未造成中斷。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 3,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Southeast Asia-Japan Cable 2 (SJC2)（3 回合）。"
+   },
+   {
+    "turn": 3,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "海纜修復：ORCA。"
+   },
+   {
+    "turn": 4,
+    "side": "white",
+    "text": "白方事件：強烈太陽風暴，GEO 容量 −30%、低軌 −20%，持續 2 回合。"
+   },
+   {
+    "turn": 4,
+    "side": "red",
+    "text": "Apricot 中斷（疑似船錨拖斷）。"
+   },
+   {
+    "turn": 4,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 4,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 New Cross Pacific (NCP) Cable System（3 回合）。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "海纜修復：Topaz。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "可疑船隻在海纜區徘徊，未造成中斷。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Apricot（3 回合）。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "海纜修復：Southeast Asia-Japan Cable 2 (SJC2)。"
+   },
+   {
+    "turn": 6,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 6,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Asia Pacific Gateway (APG)（3 回合）。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "海纜修復：New Cross Pacific (NCP) Cable System。"
+   },
+   {
+    "turn": 7,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 7,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 8,
+    "side": "blue",
+    "text": "海纜修復：Apricot。"
+   },
+   {
+    "turn": 8,
+    "side": "white",
+    "text": "推演結束。"
+   }
+  ],
+  "history": [
+   {
+    "turn": 0,
+    "demand": 150.0,
+    "cable": 111.0,
+    "geo": 5.0,
+    "leo": 0.0,
+    "avail": 0.7733333333333333,
+    "cut": 8,
+    "escalation": 0.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 0.0,
+    "pnt": 1.0,
+    "rpo": 0
+   },
+   {
+    "turn": 1,
+    "demand": 155.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 10.0,
+    "avail": 0.9096774193548387,
+    "cut": 8,
+    "escalation": 5.5,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 500.0,
+    "pnt": 1.0,
+    "rpo": 1
+   },
+   {
+    "turn": 2,
+    "demand": 160.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 10.0,
+    "avail": 0.88125,
+    "cut": 8,
+    "escalation": 9.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 3,
+    "demand": 165.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 20.0,
+    "avail": 0.9151515151515152,
+    "cut": 8,
+    "escalation": 10.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 1000.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 4,
+    "demand": 170.0,
+    "cable": 121.0,
+    "geo": 20.0,
+    "leo": 22.5,
+    "avail": 0.961764705882353,
+    "cut": 7,
+    "escalation": 17.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 5,
+    "demand": 175.0,
+    "cable": 121.0,
+    "geo": 14.0,
+    "leo": 18.0,
+    "avail": 0.8742857142857143,
+    "cut": 7,
+    "escalation": 24.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 6,
+    "demand": 180.0,
+    "cable": 131.0,
+    "geo": 20.0,
+    "leo": 22.5,
+    "avail": 0.9638888888888889,
+    "cut": 6,
+    "escalation": 31.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 7,
+    "demand": 185.0,
+    "cable": 141.0,
+    "geo": 20.0,
+    "leo": 22.5,
+    "avail": 0.9918918918918919,
+    "cut": 5,
+    "escalation": 34.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 8,
+    "demand": 190.0,
+    "cable": 151.0,
+    "geo": 20.0,
+    "leo": 30.0,
+    "avail": 1.0,
+    "cut": 4,
+    "escalation": 37.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 4,
+    "leo_terms": 2000.0,
+    "pnt": 1.0,
+    "rpo": 2
+   }
+  ],
+  "scores": {
+   "mean_avail": 0.9372387669319002,
+   "min_avail": 0.8742857142857143,
+   "early_avail": 0.902026311502118,
+   "cyber_lost": 0.0,
+   "pnt_avail": 1.0,
+   "sar_ok": 0,
+   "sar_try": 0,
+   "blue": 90.72387669319002,
+   "red": -12.223876693190022,
+   "escalation": 37.0,
+   "debris": 0.0,
+   "isr_ok": 0,
+   "isr_try": 4,
+   "struck": false,
+   "attributed": false,
+   "geo_lost": 0.0,
+   "evades": 0
+  }
+ },
+ "c_evade_vs_balanced": {
+  "log": [
+   {
+    "turn": 0,
+    "side": "white",
+    "text": "想定開始：8 條海纜同時中斷（Taiwan-Matsu No.4、ORCA、Taiwan Penghu Kinmen Matsu No.2 (TPKM2)、Taiwan Penghu Kinmen Matsu No.3 (TPKM3)、Topaz、Southeast Asia-Japan Cable 2 (SJC2)、New Cross Pacific (NCP) Cable System、Asia Pacific Gateway (APG)）。國際頻寬需求 150 單位（每回合 +5）。"
+   },
+   {
+    "turn": 0,
+    "side": "white",
+    "text": "想定 C：紅方一顆宣稱為「通信技術試驗」的衛星進入與藍方租用 GEO 通信衛星相同的軌道（目前距離 > 100 km）。它是檢查衛星還是武器，無從得知。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：購買商業太空監視資料，之後持續追蹤紅方衛星。"
+   },
+   {
+    "turn": 0,
+    "side": "red",
+    "text": "太空監視：紅方衛星逼近藍方租用的 GEO 衛星（距離 < 100 km）。"
+   },
+   {
+    "turn": 0,
+    "side": "red",
+    "text": "可疑船隻在海纜區徘徊，未造成中斷。"
+   },
+   {
+    "turn": 0,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：租用 GEO 衛星頻寬 +15（下回合生效）。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 1,
+    "side": "blue",
+    "text": "藍方：低軌閘道站完成資安強化。"
+   },
+   {
+    "turn": 1,
+    "side": "red",
+    "text": "太空監視：紅方衛星逼近藍方租用的 GEO 衛星（距離 < 10 km）。"
+   },
+   {
+    "turn": 1,
+    "side": "red",
+    "text": "低軌閘道站遭網攻，已強化，未受影響。"
+   },
+   {
+    "turn": 1,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 1,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 ORCA（3 回合）。"
+   },
+   {
+    "turn": 2,
+    "side": "blue",
+    "text": "藍方：GEO 衛星業者執行規避機動，拉開距離；下回合服務暫降 30%。"
+   },
+   {
+    "turn": 2,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 2,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Topaz（3 回合）。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "太空監視：紅方衛星逼近藍方租用的 GEO 衛星（距離 < 10 km）。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "FASTER 中斷（疑似船錨拖斷）。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 3,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Southeast Asia-Japan Cable 2 (SJC2)（3 回合）。"
+   },
+   {
+    "turn": 3,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "海纜修復：ORCA。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "藍方：GEO 衛星業者執行規避機動，拉開距離；下回合服務暫降 30%。"
+   },
+   {
+    "turn": 4,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 4,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 New Cross Pacific (NCP) Cable System（3 回合）。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "海纜修復：Topaz。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "太空監視：紅方衛星逼近藍方租用的 GEO 衛星（距離 < 10 km）。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "Asia United Gateway East (AUG East) 中斷（疑似船錨拖斷）。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 FASTER（3 回合）。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "海纜修復：Southeast Asia-Japan Cable 2 (SJC2)。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "藍方：GEO 衛星業者執行規避機動，拉開距離；下回合服務暫降 30%。"
+   },
+   {
+    "turn": 6,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 6,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Asia United Gateway East (AUG East)（3 回合）。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "海纜修復：New Cross Pacific (NCP) Cable System。"
+   },
+   {
+    "turn": 7,
+    "side": "red",
+    "text": "太空監視：紅方衛星逼近藍方租用的 GEO 衛星（距離 < 10 km）。"
+   },
+   {
+    "turn": 7,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 7,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Asia Pacific Gateway (APG)（3 回合）。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 8,
+    "side": "blue",
+    "text": "海纜修復：FASTER。"
+   },
+   {
+    "turn": 8,
+    "side": "white",
+    "text": "推演結束。"
+   }
+  ],
+  "history": [
+   {
+    "turn": 0,
+    "demand": 150.0,
+    "cable": 111.0,
+    "geo": 5.0,
+    "leo": 0.0,
+    "avail": 0.7733333333333333,
+    "cut": 8,
+    "escalation": 0.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 0.0,
+    "pnt": 1.0,
+    "rpo": 0
+   },
+   {
+    "turn": 1,
+    "demand": 155.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 10.0,
+    "avail": 0.9096774193548387,
+    "cut": 8,
+    "escalation": 5.5,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 500.0,
+    "pnt": 1.0,
+    "rpo": 1
+   },
+   {
+    "turn": 2,
+    "demand": 160.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 10.0,
+    "avail": 0.88125,
+    "cut": 8,
+    "escalation": 9.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 3,
+    "demand": 165.0,
+    "cable": 111.0,
+    "geo": 14.0,
+    "leo": 10.0,
+    "avail": 0.8181818181818182,
+    "cut": 8,
+    "escalation": 10.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 500.0,
+    "pnt": 1.0,
+    "rpo": 1
+   },
+   {
+    "turn": 4,
+    "demand": 170.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 20.0,
+    "avail": 0.888235294117647,
+    "cut": 8,
+    "escalation": 15.5,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 1000.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 5,
+    "demand": 175.0,
+    "cable": 121.0,
+    "geo": 14.0,
+    "leo": 15.0,
+    "avail": 0.8571428571428571,
+    "cut": 7,
+    "escalation": 18.5,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 1000.0,
+    "pnt": 1.0,
+    "rpo": 1
+   },
+   {
+    "turn": 6,
+    "demand": 180.0,
+    "cable": 121.0,
+    "geo": 20.0,
+    "leo": 30.0,
+    "avail": 0.95,
+    "cut": 7,
+    "escalation": 24.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 7,
+    "demand": 185.0,
+    "cable": 131.0,
+    "geo": 14.0,
+    "leo": 15.0,
+    "avail": 0.8648648648648649,
+    "cut": 6,
+    "escalation": 27.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 1
+   },
+   {
+    "turn": 8,
+    "demand": 190.0,
+    "cable": 141.0,
+    "geo": 20.0,
+    "leo": 21.0,
+    "avail": 0.9578947368421052,
+    "cut": 5,
+    "escalation": 30.5,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 2,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   }
+  ],
+  "scores": {
+   "mean_avail": 0.8909058738130164,
+   "min_avail": 0.8181818181818182,
+   "early_avail": 0.8697030791788857,
+   "cyber_lost": 0.0,
+   "pnt_avail": 1.0,
+   "sar_ok": 0,
+   "sar_try": 0,
+   "blue": 86.09058738130165,
+   "red": -4.340587381301646,
+   "escalation": 30.5,
+   "debris": 0.0,
+   "isr_ok": 0,
+   "isr_try": 2,
+   "struck": false,
+   "attributed": false,
+   "geo_lost": 0.0,
+   "evades": 3
+  }
+ },
+ "c_balanced_vs_escalate": {
+  "log": [
+   {
+    "turn": 0,
+    "side": "white",
+    "text": "想定開始：8 條海纜同時中斷（Taiwan-Matsu No.4、ORCA、Taiwan Penghu Kinmen Matsu No.2 (TPKM2)、Taiwan Penghu Kinmen Matsu No.3 (TPKM3)、Topaz、Southeast Asia-Japan Cable 2 (SJC2)、New Cross Pacific (NCP) Cable System、Asia Pacific Gateway (APG)）。國際頻寬需求 150 單位（每回合 +5）。"
+   },
+   {
+    "turn": 0,
+    "side": "white",
+    "text": "想定 C：紅方一顆宣稱為「通信技術試驗」的衛星進入與藍方租用 GEO 通信衛星相同的軌道（目前距離 > 100 km）。它是檢查衛星還是武器，無從得知。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：低軌閘道站完成資安強化。"
+   },
+   {
+    "turn": 0,
+    "side": "red",
+    "text": "可疑船隻在海纜區徘徊，未造成中斷。"
+   },
+   {
+    "turn": 0,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：租用 GEO 衛星頻寬 +15（下回合生效）。"
+   },
+   {
+    "turn": 0,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 1,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 1,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 ORCA（3 回合）。"
+   },
+   {
+    "turn": 1,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 2,
+    "side": "red",
+    "text": "藍方租用的 GEO 通信衛星突然失效，損失 10 單位頻寬。沒有追蹤資料，無法證明是人為攻擊。"
+   },
+   {
+    "turn": 2,
+    "side": "red",
+    "text": "可疑船隻在海纜區徘徊，未造成中斷。"
+   },
+   {
+    "turn": 2,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Topaz（3 回合）。"
+   },
+   {
+    "turn": 2,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "FASTER 中斷（疑似船錨拖斷）。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 3,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 3,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Southeast Asia-Japan Cable 2 (SJC2)（3 回合）。"
+   },
+   {
+    "turn": 3,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "海纜修復：ORCA。"
+   },
+   {
+    "turn": 4,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 4,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 New Cross Pacific (NCP) Cable System（3 回合）。"
+   },
+   {
+    "turn": 4,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "海纜修復：Topaz。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "紅方進行直升式反衛星試射，低軌碎片大增（所有低軌星系含紅方自己都受影響）。"
+   },
+   {
+    "turn": 5,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 FASTER（3 回合）。"
+   },
+   {
+    "turn": 5,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "海纜修復：Southeast Asia-Japan Cable 2 (SJC2)。"
+   },
+   {
+    "turn": 6,
+    "side": "red",
+    "text": "可疑船隻在海纜區徘徊，未造成中斷。"
+   },
+   {
+    "turn": 6,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 6,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "藍方：派修纜船搶修 Asia Pacific Gateway (APG)（3 回合）。"
+   },
+   {
+    "turn": 6,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "海纜修復：New Cross Pacific (NCP) Cable System。"
+   },
+   {
+    "turn": 7,
+    "side": "red",
+    "text": "偵測到針對低軌使用者終端的干擾。"
+   },
+   {
+    "turn": 7,
+    "side": "red",
+    "text": "光學偵察衛星疑遭雷射致盲干擾。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "藍方：部署 500 套低軌衛星終端（下回合生效）。"
+   },
+   {
+    "turn": 7,
+    "side": "blue",
+    "text": "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。"
+   },
+   {
+    "turn": 8,
+    "side": "blue",
+    "text": "海纜修復：FASTER。"
+   },
+   {
+    "turn": 8,
+    "side": "white",
+    "text": "推演結束。"
+   }
+  ],
+  "history": [
+   {
+    "turn": 0,
+    "demand": 150.0,
+    "cable": 111.0,
+    "geo": 5.0,
+    "leo": 0.0,
+    "avail": 0.7733333333333333,
+    "cut": 8,
+    "escalation": 0.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 0.0,
+    "pnt": 1.0,
+    "rpo": 0
+   },
+   {
+    "turn": 1,
+    "demand": 155.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 10.0,
+    "avail": 0.9096774193548387,
+    "cut": 8,
+    "escalation": 5.5,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 500.0,
+    "pnt": 1.0,
+    "rpo": 1
+   },
+   {
+    "turn": 2,
+    "demand": 160.0,
+    "cable": 111.0,
+    "geo": 20.0,
+    "leo": 20.0,
+    "avail": 0.94375,
+    "cut": 8,
+    "escalation": 7.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 1000.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 3,
+    "demand": 165.0,
+    "cable": 111.0,
+    "geo": 10.0,
+    "leo": 30.0,
+    "avail": 0.9151515151515152,
+    "cut": 8,
+    "escalation": 17.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 1500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 4,
+    "demand": 170.0,
+    "cable": 111.0,
+    "geo": 10.0,
+    "leo": 30.0,
+    "avail": 0.888235294117647,
+    "cut": 8,
+    "escalation": 24.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 2000.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 5,
+    "demand": 175.0,
+    "cable": 121.0,
+    "geo": 10.0,
+    "leo": 30.0,
+    "avail": 0.92,
+    "cut": 7,
+    "escalation": 27.0,
+    "debris": 0.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 2000.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 6,
+    "demand": 180.0,
+    "cable": 131.0,
+    "geo": 10.0,
+    "leo": 36.0,
+    "avail": 0.9833333333333333,
+    "cut": 6,
+    "escalation": 43.0,
+    "debris": 1.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 2000.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 7,
+    "demand": 185.0,
+    "cable": 141.0,
+    "geo": 10.0,
+    "leo": 28.125,
+    "avail": 0.9682432432432433,
+    "cut": 5,
+    "escalation": 50.0,
+    "debris": 1.0,
+    "isr_ok": 0,
+    "isr_try": 0,
+    "leo_terms": 2500.0,
+    "pnt": 1.0,
+    "rpo": 2
+   },
+   {
+    "turn": 8,
+    "demand": 190.0,
+    "cable": 151.0,
+    "geo": 10.0,
+    "leo": 37.800000000000004,
+    "avail": 1.0,
+    "cut": 4,
+    "escalation": 53.0,
+    "debris": 1.0,
+    "isr_ok": 1,
+    "isr_try": 2,
+    "leo_terms": 3000.0,
+    "pnt": 1.0,
+    "rpo": 2
+   }
+  ],
+  "scores": {
+   "mean_avail": 0.9410488506500723,
+   "min_avail": 0.888235294117647,
+   "early_avail": 0.9228596448354512,
+   "cyber_lost": 0.0,
+   "pnt_avail": 1.0,
+   "sar_ok": 0,
+   "sar_try": 0,
+   "blue": 94.10488506500722,
+   "red": -30.604885065007227,
+   "escalation": 53.0,
+   "debris": 1.0,
+   "isr_ok": 1,
+   "isr_try": 2,
+   "struck": true,
+   "attributed": false,
+   "geo_lost": 10.0,
+   "evades": 0
+  }
+ }
+}
