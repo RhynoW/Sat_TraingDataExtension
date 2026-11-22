@@ -96,8 +96,19 @@ SRC = BOOKDIR / "全書_送審版_v1.3.md"
 OUT_HTML = BOOKDIR / "全書_排版版_v1.3.html"
 OUT_PDF = BOOKDIR / "全書_排版版_v1.3.pdf"
 VERSION, DATE, COPY = "v1.3", "2026.11.19", "©Sat_Dashboard"
-TMP = Path(sys.argv[1]) if len(sys.argv) > 1 else BOOKDIR / "_build_tmp"
-TMP.mkdir(exist_ok=True)
+ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
+TMP = Path(ARGS[0]) if ARGS else BOOKDIR / "_build_tmp"
+# --with-ext：另排「全書＋延伸模擬篇（S1–S3）」版本，輸出到 sim_chapters/pdf/，不覆蓋送審版檔案；
+# 延伸篇不屬於送審版，放在結語之後、附錄之前。未加此選項時，行為與原本相同。
+WITH_EXT = "--with-ext" in sys.argv
+SIMDIR = D.parent / "sim_chapters"
+if WITH_EXT:
+    OUT_HTML = SIMDIR / "pdf" / "全書_排版版_v1.3_含延伸篇.html"
+    OUT_PDF = SIMDIR / "pdf" / "全書_排版版_v1.3_含延伸篇.pdf"
+    VERSION, DATE = "v1.3＋延伸模擬篇", "2026.11.22"
+    if not ARGS:
+        TMP = SIMDIR / "pdf" / "_build_tmp"
+TMP.mkdir(parents=True, exist_ok=True)
 
 TITLE = "從衛星軌道論國家安全"
 SUB = "太空態勢感知的基礎——智慧化低軌通訊衛星軌道異常與太空事件偵測演算法研究"
@@ -219,6 +230,98 @@ for n, raw in enumerate(parts, 1):
     stats.append((n, len(goals), n_as))
 
 
+# ---------- 延伸模擬篇（--with-ext） ----------
+EXT_META = {
+    "S1": dict(file="S1_碎片連鎖一次解體會引發什麼_初稿.md", title="碎片連鎖：一次解體會引發什麼",
+               q="一次解體之後，碎片多快消失？在消失之前，會不會撞出下一代碎片？",
+               route=["解體模型", "傳播與大氣", "碰撞率", "Cosmos 1408 驗證", "緩解決策"],
+               img="../sim_chapters/img/op_s1.jpg", credit="碎片連鎖模擬畫面：Cosmos 1408 情境，解體後約 46 天｜本專案 Rust 單機版，2026-11-22"),
+    "S2": dict(file="S2_巨型星座的外部成本壅擠與光害_初稿.md", title="巨型星座的外部成本：壅擠與光害",
+               q="星座變大之後，接近與光跡的成本落在誰身上？",
+               route=["假想星座", "接近頻率", "協調假設", "第三方成本", "光跡與地影"],
+               img="../sim_chapters/img/op_s2.jpg", credit="星座壅擠模擬畫面：10 萬 Starlink 情境｜本專案 Rust 單機版，2026-11-22"),
+    "S3": dict(file="S3_兵棋推演海纜中斷下的太空通訊韌性_初稿.md", title="兵棋推演：海纜中斷下的太空通訊韌性",
+               q="在寫清楚的假設下，哪些選擇比較好？假設改變時，結論會不會翻轉？",
+               route=["想定依據", "對照組", "四個想定", "配對差值", "敏感度分析"],
+               img="../sim_chapters/img/op_s3.jpg", credit="太空兵棋模擬畫面：想定 C 的一局｜本專案 Rust 單機版，2026-11-22"),
+}
+EXT_KEYS = list(EXT_META) if WITH_EXT else []
+ext_chapters = []
+for k in EXT_KEYS:
+    lines = (SIMDIR / EXT_META[k]["file"]).read_text(encoding="utf-8").split("\n")
+    assert lines[0].startswith(f"# 延伸篇 {k}"), lines[0]
+    body = lines[1:]
+    i = next(x for x, l in enumerate(body) if l.strip() == "## 學習目標")
+    j = next(x for x in range(i + 1, len(body)) if body[x].startswith("## "))
+    goals = [re.sub(r"^(?:[-*]|\d+\.)\s+", "", l).strip() for l in body[i + 1:j] if re.match(r"^\s*(?:[-*]|\d+\.)\s+", l)]
+    h, kk = md2html("\n".join(body[:i] + body[j:]))
+    n_math += kk
+    h = h.replace('src="img/', 'src="../sim_chapters/img/')
+    h = re.sub(r"<blockquote>\s*<p><strong>證據等級", r'<blockquote class="evidence">\n<p><strong>證據等級', h)
+    h = re.sub(r"(<blockquote class=\"evidence\">.*?</blockquote>)",
+               lambda m: m.group(1).replace("<br />\n", "</p>\n<p>"), h, flags=re.S)
+    h = re.sub(r"<p>((?:圖|畫面) S\d-\d+　)", r'<p class="cap">\1', h)
+    h = re.sub(r'<p><img ', r'<p class="fig"><img ', h)
+    h = re.sub(r"(<h2>本章外部事件來源</h2>)", r'<div class="notes">\1', h, count=1)
+    h = h + "</div>" if '<div class="notes">' in h else re.sub(r"(<h2>資料來源</h2>)", r'<div class="notes">\1', h, count=1) + "</div>"
+    ext_chapters.append(dict(n=k, goals=goals, html=h))
+
+
+def ext_opener(c):
+    k, m = c["n"], EXT_META[c["n"]]
+    chips = '<span class="arr">→</span>'.join(f'<span class="chip">{html.escape(r)}</span>' for r in m["route"])
+    goals = "".join("<li>" + html.escape(g) + "</li>" for g in c["goals"])
+    vis = (f'<svg class="visual" viewBox="0 0 210 150" preserveAspectRatio="xMidYMid slice">'
+           f'<defs><linearGradient id="v{k}g" x1="0" y1="0" x2="0" y2="1"><stop offset=".80" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>'
+           f'<mask id="v{k}"><rect width="210" height="150" fill="url(#v{k}g)"/></mask></defs>'
+           f'<g mask="url(#v{k})"><image href="{m["img"]}" x="0" y="0" width="210" height="150" preserveAspectRatio="xMidYMid slice"/></g></svg>'
+           f'<div class="vcredit">{html.escape(m["credit"])}</div>')
+    return f"""
+<div class="op op-l" id="op{k}">
+  <div class="bignum ext">{k}</div>
+  <svg class="bg" viewBox="0 0 210 297" preserveAspectRatio="none"><path d="M-10 270 C 60 240, 150 250, 230 214" fill="none" stroke="#35C6FF" stroke-opacity=".25" stroke-width=".35"/></svg>
+  <div class="num">EXTENSION {k}</div>
+  <h1 class="t long">{br_title(m['title'])}</h1>
+  <div class="q"><div class="bar"></div><div class="k">核心問題</div><p>{html.escape(m['q'])}</p></div>
+  <div class="run">延伸篇 {k}　{html.escape(m['title'])}｜延伸模擬篇不屬於送審版</div>
+</div>
+<div class="op op-r">
+  {vis}
+  <div class="flow">
+    <div><div class="k2">LEARNING GOALS　學習目標</div><ol class="goals">{goals}</ol></div>
+    <div><div class="k2">ROUTE　本篇路線</div><div class="chips">{chips}</div></div>
+  </div>
+</div>"""
+
+
+def ext_part(toc_pages):
+    rows = "".join(f'<li><span class="tn">延伸篇 {k}</span><span class="tt">{html.escape(EXT_META[k]["title"])}</span>'
+                   f'<span class="dots"></span><span class="tp">{toc_pages.get(k, "")}</span></li>' for k in EXT_KEYS)
+    return f"""
+<div class="op part" id="part">
+  <svg class="bg" viewBox="0 0 210 297" preserveAspectRatio="none"><path d="M-10 270 C 60 240, 150 250, 230 214" fill="none" stroke="#35C6FF" stroke-opacity=".25" stroke-width=".35"/></svg>
+  <div class="num">EXTENSION｜PART</div>
+  <h1 class="t">延伸模擬篇</h1>
+  <div class="pq">碎片連鎖、巨型星座的外部成本、兵棋推演：用三個可以操作的教學模型，把本書的證據鏈延伸到「推演」。</div>
+  <div class="pnote">本篇不屬於送審版（v1.3），也不是國家太空中心委託研究的成果。內容取自本專案 Rust 單機版的教學模型；除碎片衰減曲線已對照 CelesTrak 觀測外，數值一律為教學模型示意，不是預報，也不是政策或能力評估。證據等級另設「M｜教學模型（示意）」與「M＋｜教學模型，部分已對照觀測」。</div>
+  <ol class="ptoc">{rows}</ol>
+  <div class="run">延伸模擬篇｜2026-11-22 初稿</div>
+</div>"""
+
+
+EXT_CSS = """
+.op.part .t{top:58mm}
+.op.part .pq{position:absolute;left:20mm;right:24mm;top:84mm;font:600 14pt/1.8 "Noto Serif TC";color:var(--white)}
+.op.part .pnote{position:absolute;left:20mm;right:24mm;top:128mm;font:400 9.4pt/1.85 "Noto Sans TC";color:var(--gray);border-left:2px solid var(--amber);padding-left:5mm}
+.op.part .ptoc{position:absolute;left:20mm;right:24mm;top:188mm;list-style:none;margin:0;padding:0}
+.op.part .ptoc li{display:flex;align-items:baseline;gap:3mm;padding:2.6mm 0;border-bottom:1px solid rgba(201,211,222,.2);font:500 11.5pt "Noto Sans TC";color:var(--white)}
+.op.part .ptoc .tn{font:600 9pt "IBM Plex Mono","Noto Sans TC";color:var(--cyan);min-width:22mm;letter-spacing:.05em}
+.op.part .ptoc .dots{flex:1}
+.op.part .ptoc .tp{font:500 10pt "IBM Plex Mono";color:var(--gray)}
+.op .bignum.ext{font-size:120pt}
+.toc li.ext .tn{min-width:22mm}
+""" if WITH_EXT else ""
+
 appendix_html = md2html(appendix_md)[0] if appendix_md else ""
 APPX_TITLES = [t.split("　", 1)[-1].strip() for t in re.findall(r"^# (附錄.+)$", appendix_md, re.M)]
 
@@ -261,7 +364,11 @@ def build(toc_pages, pads=frozenset()):
         f'<li><span class="tn">{"結語" if c["n"] == 21 else f"第 {c["n"]} 章"}</span>'
         f'<span class="tt">{html.escape(meta[c["n"]]["title"]) if c["n"] != 21 else ""}</span>'
         f'<span class="dots"></span><span class="tp">{toc_pages.get(c["n"], "")}</span></li>'
-        for c in chapters) + "".join(f'<li><span class="tn">附錄</span><span class="tt">{html.escape(t)}</span><span class="dots"></span><span class="tp">{toc_pages.get(f"appx{k}", "")}</span></li>' for k, t in enumerate(APPX_TITLES))
+        for c in chapters) + "".join(
+        f'<li class="ext"><span class="tn">{"延伸模擬篇" if k == "part" else f"延伸篇 {k}"}</span>'
+        f'<span class="tt">{"" if k == "part" else html.escape(EXT_META[k]["title"])}</span>'
+        f'<span class="dots"></span><span class="tp">{toc_pages.get(k, "")}</span></li>'
+        for k in (["part"] + EXT_KEYS if EXT_KEYS else [])) + "".join(f'<li><span class="tn">附錄</span><span class="tt">{html.escape(t)}</span><span class="dots"></span><span class="tp">{toc_pages.get(f"appx{k}", "")}</span></li>' for k, t in enumerate(APPX_TITLES))
     named = []
     for c in chapters:
         n = c["n"]
@@ -269,12 +376,18 @@ def build(toc_pages, pads=frozenset()):
         named.append(f'@page c{n}:right {{ @top-right {{ content: "{run}"; }} }}')
     sections = "".join(
         ('<div class="pad"></div>' if c["n"] in pads else "") + opener(c, "") + f'<section class="chap" style="page:c{c["n"]}">{c["html"]}</section>' for c in chapters)
+    for idx, c in enumerate(ext_chapters):
+        k = c["n"]
+        named.append(f'@page c{k}:right {{ @top-right {{ content: "延伸篇 {k}　{EXT_META[k]["title"]}"; }} }}')
+        # S1 的補頁放在篇名頁之前，讓篇名頁落在右頁、S1 章首左頁落在偶數頁
+        sections += ('<div class="pad"></div>' if k in pads else "") + (ext_part(toc_pages) if idx == 0 else "") + \
+            ext_opener(c) + f'<section class="chap" style="page:c{k}">{c["html"]}</section>'
     if appendix_html:
         sections += f'<section class="chap appx" style="page:capp">{appendix_html}</section>'
         named.append('@page capp:right { @top-right { content: "附錄"; } }')
     sections += LAST_PAGE
     return f"""<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
-<title>{TITLE}</title>
+{f'<base href="{BOOKDIR.as_uri()}/">' if WITH_EXT else ""}<title>{TITLE}</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script>
 window.MathJax = {{ tex: {{ inlineMath: [["\\\\(", "\\\\)"]], displayMath: [["\\\\[", "\\\\]"]] }},
@@ -402,12 +515,12 @@ a.url::after{{content:"↗";font-size:.8em;margin-left:.15em}}
 .appx a:not(.url){{color:#1B4F8A;text-decoration:none;border-bottom:.4pt solid #9FB3C8}}
 p.spec{{font:400 8.9pt/1.7 "Noto Sans TC";color:#24324A;border-left:3px solid var(--teal,#35D6A4);background:#F1F8F5;padding:1.6mm 4.5mm;text-align:left}}
 p.spec strong{{color:#0F5E46}}
-</style></head><body>
+{EXT_CSS}</style></head><body>
 <div class="front">
   <div class="title-page"><div class="t">{TITLE}</div><div class="rule"></div><div class="s">太空態勢感知的基礎——<br>智慧化低軌通訊衛星軌道異常與太空事件偵測演算法研究</div><div class="a">Sat_Dashboard<br><span style="font-size:9pt">{VERSION}　{DATE}</span></div>{QR_BLOCK}</div>
   <div class="copyright"><div class="bt">{TITLE}</div><div>{SUB}</div><br>
     <div><b>作者</b>Sat_Dashboard</div><div><b>版本</b>{VERSION}</div><div><b>日期</b>{DATE}</div>
-    <div><b>版權</b>{DATE} {COPY}</div><div><b>授權</b>請來信洽詢</div><br><div><b>封面照片</b>NASA（iss036e024096），Expedition 36 國際太空站組員 Karen Nyberg 攝，2013-07-22 16:44:23 UTC，台灣夜間；取自 NASA Image and Video Library（images.nasa.gov）</div><div><b>封底照片</b>NASA（iss073e0848542），國際太空站組員油井龜美攝，2025-09-17 15:55:52 UTC，台灣海峽夜景</div><div><b>內頁照片</b>NASA、NASA/JPL、NASA/GSFC、NASA Ames Research Center 及 SpaceX（經 NASA 發布），出處與攝影者見各照片說明</div><div><b>最後一頁照片</b>Rocket Lab（經 NASA 發布，KSC-20240605-PH-RKL01_0002），Electron「PREFIRE and Ice」升空，2024-06-05，紐西蘭馬希亞；取自 NASA Image and Video Library</div><div><b>第 14 章章首圖</b>NASA（S64-03507），Diagrams of Spacecraft Responses to Orbit Attitude Control Thrust，1964；取自 NASA Image and Video Library，本書反相並調色</div><div><b>第 15 章章首圖</b>NASA（S65-05399），Gemini Spacecraft – Maneuvering Control，1965；取自 NASA Image and Video Library，本書反相並調色</div><div><b>第 16 章章首圖</b>NASA Ames Research Center（ARC-1977-A77-0851），Voyager Saturn Mission Artwork，1977-07-06；取自 NASA Image and Video Library，裁去沖印白邊</div><div><b>結語章首左頁照片</b>國家太空中心（TASA）提供，三節式入軌火箭模型首度亮相（2023 台北國際航太暨國防工業展）；取自自由時報 2023-09-14 報導（記者吳柏軒）</div><div><b>結語章首照片</b>國家太空中心（TASA），「島脈 MARAHO」首次飛試任務團隊合影，2026-08-22，屏東旭海科研火箭發射場；取自 TASA 官網公告</div></div>
+    <div><b>版權</b>{DATE} {COPY}</div><div><b>授權</b>請來信洽詢</div><br><div><b>封面照片</b>NASA（iss036e024096），Expedition 36 國際太空站組員 Karen Nyberg 攝，2013-07-22 16:44:23 UTC，台灣夜間；取自 NASA Image and Video Library（images.nasa.gov）</div><div><b>封底照片</b>NASA（iss073e0848542），國際太空站組員油井龜美攝，2025-09-17 15:55:52 UTC，台灣海峽夜景</div><div><b>內頁照片</b>NASA、NASA/JPL、NASA/GSFC、NASA Ames Research Center 及 SpaceX（經 NASA 發布），出處與攝影者見各照片說明</div><div><b>最後一頁照片</b>Rocket Lab（經 NASA 發布，KSC-20240605-PH-RKL01_0002），Electron「PREFIRE and Ice」升空，2024-06-05，紐西蘭馬希亞；取自 NASA Image and Video Library</div><div><b>第 14 章章首圖</b>NASA（S64-03507），Diagrams of Spacecraft Responses to Orbit Attitude Control Thrust，1964；取自 NASA Image and Video Library，本書反相並調色</div><div><b>第 15 章章首圖</b>NASA（S65-05399），Gemini Spacecraft – Maneuvering Control，1965；取自 NASA Image and Video Library，本書反相並調色</div><div><b>第 16 章章首圖</b>NASA Ames Research Center（ARC-1977-A77-0851），Voyager Saturn Mission Artwork，1977-07-06；取自 NASA Image and Video Library，裁去沖印白邊</div><div><b>結語章首左頁照片</b>國家太空中心（TASA）提供，三節式入軌火箭模型首度亮相（2023 台北國際航太暨國防工業展）；取自自由時報 2023-09-14 報導（記者吳柏軒）</div><div><b>結語章首照片</b>國家太空中心（TASA），「島脈 MARAHO」首次飛試任務團隊合影，2026-08-22，屏東旭海科研火箭發射場；取自 TASA 官網公告</div>{'<div><b>延伸模擬篇</b>不屬於送審版（v1.3），也不是國家太空中心委託研究的成果；配圖、模擬畫面與章首圖為本專案製作（Rust 單機版，2026-11-22）</div>' if WITH_EXT else ''}</div>
   <div class="toc"><h2>目錄</h2><ol>{toc}</ol></div>
 </div>
 {sections}
@@ -447,6 +560,9 @@ def chapter_pages(pdf):
             key = "EPILOGUE" if n == 21 else f"CHAPTER{n:02d}"
             if n not in found and key in t:
                 found[n] = i + 1
+        for k in EXT_KEYS:
+            if k not in found and f"EXTENSION{k}" in t:
+                found[k] = i + 1
         for k, at in enumerate(APPX_TITLES):
             key = f"appx{k}"
             if key not in found and 21 in found and "附錄" in t and ("附錄" + at.replace(" ", "")) in t.replace("　", ""):
@@ -461,12 +577,14 @@ with sync_playwright() as pw:
     pages, total = chapter_pages(inner)
     # 章首左頁須落在偶數頁（跨頁）；Chromium 不支援 break-before:left，改為在需要處補一張空白頁
     pads, shift, target = set(), 0, {}
-    for n in sorted(k for k in pages if isinstance(k, int)):
+    for n in sorted(k for k in pages if isinstance(k, int)) + [k for k in EXT_KEYS if k in pages]:
         if (pages[n] + shift) % 2:
             pads.add(n)
             shift += 1
         target[n] = pages[n] + shift
     pads = frozenset(pads)
+    if EXT_KEYS:
+        target["part"] = target[EXT_KEYS[0]] - 1   # 篇名頁緊接在 S1 章首之前
     katex = render(pw, build(target, pads), inner, OUT_HTML)
     pages2, total2 = chapter_pages(inner)
     if any(isinstance(k, str) for k in pages2):
@@ -486,7 +604,7 @@ for f in ["cover.pdf", "inner.pdf", "back.pdf"]:
         assert d.page_count == 1, (f, d.page_count)
     out.insert_pdf(d)
 out.set_metadata({"title": f"{TITLE}：{SUB}", "author": "Sat_Dashboard", "subject": "太空態勢感知"})
-toc = [[1, "封面", 1], [1, "目錄", 4]] + [[1, ("結語" if n == 21 else f"第 {n} 章　{meta[n]['title']}"), p + 1] for n, p in sorted((k, v) for k, v in pages2.items() if isinstance(k, int))] + [[1, f"附錄　{t}", pages2[f"appx{k}"] + 1] for k, t in enumerate(APPX_TITLES) if f"appx{k}" in pages2] + [[1, "封底", out.page_count]]
+toc = [[1, "封面", 1], [1, "目錄", 4]] + [[1, ("結語" if n == 21 else f"第 {n} 章　{meta[n]['title']}"), p + 1] for n, p in sorted((k, v) for k, v in pages2.items() if isinstance(k, int))] + ([[1, "延伸模擬篇", pages2[EXT_KEYS[0]]]] if EXT_KEYS else []) + [[1, f"延伸篇 {k}　{EXT_META[k]['title']}", pages2[k] + 1] for k in EXT_KEYS] + [[1, f"附錄　{t}", pages2[f"appx{k}"] + 1] for k, t in enumerate(APPX_TITLES) if f"appx{k}" in pages2] + [[1, "封底", out.page_count]]
 out.set_toc(toc)
 out.save(OUT_PDF, garbage=3, deflate=True)
 
@@ -494,8 +612,27 @@ print(f"章數 {len(chapters)}；公式保護 {n_math} 處；MathJax SVG 排出 
 print("學習目標條數／插敘樣式套用：", "；".join(f"{n}:{g}/{a}" for n, g, a in stats))
 print(f"插敘套用合計 {sum(a for _, _, a in stats)}；超連結 {N_LINKS[0]} 個；資料規格行 {sum(c['html'].count('class=\"spec\"') for c in chapters)} 個")
 print(f"章首頁碼（內頁）第一輪 {pages}")
-print(f"補空白頁於第 {sorted(pads)} 章之前；第二輪 {pages2}；與預計一致 {pages2 == target}")
-left_ok = all(p % 2 == 0 for k, p in pages2.items() if isinstance(k, int))
+print(f"補空白頁於第 {sorted(map(str, pads))} 章之前；第二輪 {pages2}；與預計一致 {all(pages2.get(k) == v for k, v in target.items() if k != 'part')}")
+left_ok = all(p % 2 == 0 for k, p in pages2.items() if isinstance(k, int) or k in EXT_KEYS)
 print(f"章首左頁皆在偶數頁（跨頁成立）：{left_ok}")
 print(f"內頁 {total2} 頁；含封面封底共 {out.page_count} 頁")
 print(f"PDF：{OUT_PDF}（{OUT_PDF.stat().st_size:,} 位元組）")
+
+# 延伸篇單篇 PDF：封面、扉頁、版權頁＋該篇＋封底（同 social/_book_pages.py 的單章作法）
+if EXT_KEYS:
+    full = fitz.open(OUT_PDF)
+    starts = [pages2[k] for k in EXT_KEYS] + [min(v for k, v in pages2.items() if str(k).startswith("appx"))]
+    for k, a, nxt in zip(EXT_KEYS, starts, starts[1:]):
+        b = nxt - 1                    # 內頁頁碼 = 合併檔索引（封面在索引 0）
+        while b > a and not full[b].get_text().strip() and not full[b].get_images():
+            b -= 1
+        one = fitz.open()
+        one.insert_pdf(full, from_page=0, to_page=2)
+        one.insert_pdf(full, from_page=a, to_page=b)
+        one.insert_pdf(full, from_page=full.page_count - 1, to_page=full.page_count - 1)
+        title = f"延伸篇 {k}　{EXT_META[k]['title']}"
+        one.set_toc([[1, "封面", 1], [1, "扉頁", 2], [1, "版權頁", 3], [1, title, 4], [1, "封底", one.page_count]])
+        one.set_metadata({"title": f"{TITLE}｜{title}（單篇試閱，不屬於送審版）", "author": "Sat_Dashboard", "subject": "太空態勢感知"})
+        name = OUT_PDF.parent / f"延伸篇{k}_{re.sub(r'[：，、]', '', EXT_META[k]['title'])}_單篇.pdf"
+        one.save(name, garbage=3, deflate=True)
+        print(f"{name.name}：{one.page_count} 頁（該篇 {b - a + 1} 頁，全書第 {a}–{b} 頁），{name.stat().st_size / 1e6:.1f} MB")
