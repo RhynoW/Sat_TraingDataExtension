@@ -3,7 +3,7 @@
 內容由 docs/book/web/_export_web.py 匯出到 data/book/（book.json、chapters/NN.md、img/；
 英文、日文譯文在 data/book/en|ja/chapters/，為 AI 輔助翻譯，中文原稿為準）。
 介面語言跟隨主程式的 app_lang（zh／ja／en）；某章沒有譯文時顯示中文原稿並加註。
-網址深連結：?mode=book&ch=05（章號兩位數；附錄為 A1、A2；不帶 ch 為封面與目錄）。
+網址深連結：?mode=book&ch=05（章號兩位數；延伸模擬篇為 S1–S3；附錄為 A1、A2；不帶 ch 為封面與目錄）。
 """
 from __future__ import annotations
 
@@ -26,8 +26,8 @@ UI = {
     "license_v": {"zh": "請來信洽詢", "en": "please contact the author", "ja": "著者にお問い合わせください"},
     "aside": {"zh": "背景脈絡｜外部事件，非本專案分析案例", "en": "Background | external event, not a case analyzed by this project",
               "ja": "背景｜外部の出来事であり、本プロジェクトの分析事例ではない"},
-    "footer": {"zh": "線上版取自送審版書稿 {v}（{d}）。", "en": "Online edition based on the review manuscript {v} ({d}).",
-               "ja": "オンライン版は審査用原稿 {v}（{d}）に基づく。"},
+    "footer": {"zh": "線上版取自書稿 {v}（{d}）。", "en": "Online edition based on the manuscript {v} ({d}).",
+               "ja": "オンライン版は原稿 {v}（{d}）に基づく。"},
     "fallback": {"zh": "", "en": "This chapter has not been translated yet; the Traditional Chinese original is shown.",
                  "ja": "この章はまだ翻訳されていないため、繁体字中国語の原文を表示している。"},
     "ai_note": {"zh": "", "en": "English edition: AI-assisted translation; the Traditional Chinese original prevails.",

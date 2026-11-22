@@ -4,6 +4,8 @@
 - 來源：docs/book/v1.0_送審版/全書_送審版_v1.3.md（已合併、已驗收的全書）
 - 輸出：data/book/book.json、data/book/chapters/NN.md、data/book/img/…（圖片縮至寬 1,600 像素以內）
 - 中央氣象署圖檔（img/cwa/）網站載明「非經授權禁止轉載」，線上版不轉載，改為連到原產品頁的說明。
+- 延伸模擬篇 S1–S3（docs/book/sim_chapters/S*_初稿.md）排在第 21 章之後、附錄之前（與 _build_book.py --with-ext 相同），
+  章號 S1–S3，圖片放在 data/book/img/ext/。
 """
 import json
 import re
@@ -18,6 +20,8 @@ BOOK = ROOT / "docs" / "book" / "v1.0_送審版"
 SRC = BOOK / "全書_送審版_v1.3.md"
 OUT = ROOT / "data" / "book"
 MAXW = 1600
+EXT_DIR = ROOT / "docs" / "book" / "sim_chapters"
+EXT_IDS = ["S1", "S2", "S3"]
 
 TITLE = "從衛星軌道論國家安全"
 SUBTITLE = "太空態勢感知的基礎：智慧化低軌通訊衛星軌道異常與太空事件偵測"
@@ -34,7 +38,7 @@ META = {"author": "Sat_Dashboard", "version": "v1.3", "date": "2026.11.19", "cop
 
 def web_image(rel: str) -> str:
     """複製並縮小圖片到 data/book/img/，回傳相對 data/book/ 的路徑。"""
-    src = BOOK / rel
+    src = EXT_DIR / "img" / rel[len("img/ext/"):] if rel.startswith("img/ext/") else BOOK / rel
     dst = OUT / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
     im = Image.open(src)
@@ -92,6 +96,13 @@ def main():
         title = p.split("\n", 1)[0][2:].strip()
         (OUT / "chapters" / f"{n:02d}.md").write_text(convert(p), encoding="utf-8")
         toc.append({"id": f"{n:02d}", "title": title})
+    for cid in EXT_IDS:                                            # 延伸模擬篇
+        f = next(EXT_DIR.glob(f"{cid}_*_初稿.md"))
+        p = f.read_text(encoding="utf-8").replace("](img/", "](img/ext/")
+        title = p.split("\n", 1)[0][2:].strip()
+        assert title.startswith(f"延伸篇 {cid}"), title
+        (OUT / "chapters" / f"{cid}.md").write_text(convert(p), encoding="utf-8")
+        toc.append({"id": cid, "title": title})
     for k, a in enumerate([x for x in re.split(r"^(?=# 附錄)", appx, flags=re.M) if x.strip()], 1):
         title = a.split("\n", 1)[0][2:].strip()
         (OUT / "chapters" / f"A{k}.md").write_text(convert(a), encoding="utf-8")
