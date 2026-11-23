@@ -1,10 +1,10 @@
 """延伸篇 S2：天文夢魘整夜錄影（鹿林、台北 × 現況、現況＋假想星座疊加），每 10 分鐘一次 30 秒曝光。
 只放兩地都能觀測的曝光：太陽仰角 ≤ -12° 且天區仰角 ≥ 20°（天區隨恆星西沉，約 6 小時後低於 20°），不能觀測的時段不模擬。
 
-資料：s2_data/astro_frames.json（fetch_astro_frames.py）；背景星：s2_data/gaia/（Gaia DR3，G < 15；不補統計示意星）。
+資料：s2_data/v2/astro_base.json（fetch_astro_v2.py，快照 S2-20261123）；背景星：s2_data/gaia/（Gaia DR3，G < 15；不補統計示意星）。
 影像：_photon.py（移植自遊戲 games_astro.js）合成：天空背景依地點與昏影亮度、光子雜訊、Gaia 恆星與示意暗星、
 光跡依星等換算光子數；每次曝光內光跡依取樣順序逐步畫出。只畫被太陽照到、且超過 3 倍天空雜訊的光跡；顯示拉伸比遊戲緩（避免暗星填滿畫面）。
-設備：鹿林 Rubin 級巡天望遠鏡（視野 3.5°）；台北業餘 20 cm（視野 1°）。指向：天文昏影時正北仰角 45° 的天區（追蹤恆星）。
+設備：鹿林巡天望遠鏡等效教學設定（口徑 6.4 m 等效、視野 3.5°）；台北業餘 20 cm（視野 1°）。指向：天文昏影時正北仰角 45° 的天區（追蹤恆星）。
 用法：python docs/book/sim_chapters/_astro_video.py   輸出：docs/book/sim_chapters/video/s2_astro_night.mp4
 """
 import datetime as dt
@@ -22,8 +22,13 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from _photon import Camera, N, overlay  # noqa: E402
 
-DATA = json.loads((HERE / "s2_data/astro_frames.json").read_text(encoding="utf-8"))
+_V2 = json.loads((HERE / "s2_data/v2/astro_base.json").read_text(encoding="utf-8"))
 PK = "north"
+DATA = {"exp_s": 30, "sites": {}}          # 轉成原 astro_frames.json 的結構
+for _site in ("lulin", "taipei"):
+    _P = _V2["sets"][f"{_site}/{PK}"]
+    DATA["sites"][_site] = {"fov_deg": _P["fov_deg"], "D_m": _P["D_m"], "mu": _P["mu"], "t0": _P["t0"],
+                            "pointings": {PK: {"ra_deg": _P["ra_deg"], "dec_deg": _P["dec_deg"], "frames": dict(_P["frames"])}}}
 for _S in DATA["sites"].values():          # 疊加情境：現況目錄＋假想 10 萬 Starlink、2 萬 Kuiper、1 萬千帆
     _F = _S["pointings"][PK]["frames"]
     _F["add"] = [overlay(a, b) for a, b in zip(_F["now"], _F["mega"])]
@@ -37,7 +42,7 @@ FONT = "C:/Windows/Fonts/msjh.ttc"
 f_big, f_mid, f_sm, f_xs = (ImageFont.truetype(FONT, s) for s in (34, 22, 17, 14))
 BG, INK, INK2, LINE = (11, 16, 26), (236, 240, 245), (150, 160, 175), (55, 63, 78)
 BLUE, ORANGE = (58, 135, 229), (235, 104, 52)
-SITE_NAME = {"lulin": "鹿林天文台（Rubin 級，視野 3.5°）", "taipei": "台北（業餘 20 cm，視野 1°）"}
+SITE_NAME = {"lulin": "鹿林天文台（巡天望遠鏡等效，視野 3.5°）", "taipei": "台北（業餘 20 cm，視野 1°）"}
 KIND_NAME = {"now": "現況目錄", "add": "現況＋13 萬顆假想衛星"}
 GROUP_NAME = {0: "", 1: "Starlink", 2: "Kuiper", 3: "千帆", 4: "國網"}
 LAYOUT = {("lulin", "now"): (40, 105), ("lulin", "add"): (40 + P + 40, 105),
@@ -160,18 +165,18 @@ def frame(k, frac):
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
     d.text((40, 24), "天文夢魘：一整夜，望遠鏡每 10 分鐘拍一張 30 秒曝光", font=f_big, fill=INK)
-    info = ["鹿林：Rubin 級巡天望遠鏡、視野 3.5°；台北：業餘 20 cm、視野 1°",
+    info = ["鹿林：巡天望遠鏡等效設定、視野 3.5°；台北：業餘 20 cm、視野 1°",
             "天空亮度：鹿林 21.5、台北 18.5 等／平方角秒；昏影時隨太陽變亮",
             f"指向：天文昏影時正北仰角 45° 的天區（追蹤恆星）；共 {NK} 次曝光",
             "只畫被太陽照到、且超過 3 倍天空雜訊的光跡（遊戲的光子模型）",
             "背景星：只畫 Gaia DR3 真實恆星（G<15）；灰底亮度示意天空背景",
             "情境為「疊加」：現況目錄全部保留，再加上 13 萬顆假想衛星",
             "只放能觀測的時段：天區約 6 小時後低於仰角 20°，之後不模擬",
-            "教學模型示意｜2026-11-22 推演｜Gaia 資料：ESA/Gaia/DPAC"]
+            "教學模型示意｜2026-11-22 晚，快照 S2-20261123｜Gaia 資料：ESA/Gaia/DPAC"]
     for i, s in enumerate(info):
         d.text((1050, 92 + i * 27), s, font=f_sm if i < 7 else f_xs, fill=INK2 if i < 7 else (120, 130, 145))
     t = dt.datetime.fromisoformat(DATA["sites"]["lulin"]["pointings"][PK]["frames"]["now"][k]["t"].replace("Z", "+00:00")) + dt.timedelta(hours=8)
-    d.text((1050, 370), f"第 {KS.index(k) + 1:02d} / {NK} 次曝光　鹿林 {t:%m-%d %H:%M}（台北早 5 分鐘）", font=f_mid, fill=INK)
+    d.text((1050, 370), f"第 {KS.index(k) + 1:02d} / {NK} 次曝光　鹿林 {t:%m-%d %H:%M}（台北早 4 分鐘）", font=f_mid, fill=INK)
     d.line([1050, 420, 1880, 420], fill=LINE)
     for site in ("lulin", "taipei"):
         for kind in ("now", "add"):

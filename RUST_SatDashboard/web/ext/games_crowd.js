@@ -58,7 +58,7 @@
       ["物件總數", fmt(b.objects), fmt(s.objects), b.objects, s.objects, "目錄中仍在軌道的衛星、火箭體與碎片，加上情境的假想星座。"],
       ["同時相距 < 20 km 的配對", num(b.pairs_within_d), num(s.pairs_within_d), b.pairs_within_d, s.pairs_within_d, "任一時刻彼此相距不到 20 km 的物件對數（各快照平均）。"],
       ["全系統每天 < 1 km 接近", num(b.enc_day_1km), num(s.enc_day_1km), b.enc_day_1km, s.enc_day_1km, "全部物件每天發生幾次相距不到 1 km 的接近；營運者通常以此量級評估是否避碰。"],
-      ["若都不避碰：每年碰撞期望值", num(b.coll_year), num(s.coll_year), b.coll_year, s.coll_year, "假設沒有人做避碰機動、以 10 m 合併半徑估計的年碰撞次數；實際會少很多，用來比較風險倍數。"],
+      ["理論碰撞率代理值", num(b.coll_year), num(s.coll_year), b.coll_year, s.coll_year, "每年次數；假設沒有任何避碰、所有物件為合計半徑 10 m 的硬球、軌道無誤差的理論值；不是碰撞預測，只用來比較情境間的倍數。"],
       ["台北天空仰角 > 10° 平均顆數", fmt(b.sky10), fmt(s.sky10), b.sky10, s.sky10, "任一時刻台北上空仰角 10° 以上的物件數（不論是否被照亮）。"],
       ["台北天空仰角 > 30° 平均顆數", fmt(b.sky30), fmt(s.sky30), b.sky30, s.sky30, "同上，仰角 30° 以上。"],
     ];
@@ -72,7 +72,7 @@
     var h = "<table class='kv'><tr><td></td><td>現況</td><td>情境</td><td style='width:34%'>倍數</td></tr>" +
       rows.map(function (r) { return "<tr><td title='" + r[5] + "' style='cursor:help;text-decoration:underline dotted'>" + r[0] + "</td><td>" + r[1] + "</td><td><b>" + r[2] + "</b></td><td>" + bar(r[4], r[3]) + "</td></tr>"; }).join("") +
       "</table><div class='hint'>滑鼠移到指標名稱上可看說明；倍數條為對數長度（×100 以上填滿）。</div>";
-    h += "<div style='margin-top:6px'>每顆衛星每年 < 1 km 接近次數（約等於需要評估的避碰機動次數）：</div><table class='kv'>" +
+    h += "<div style='margin-top:6px'>每顆衛星每年 < 1 km 幾何接近次數（不等於避碰次數；避碰門檻取決於碰撞機率）：</div><table class='kv'>" +
       "<tr><td>群組</td><td>現況</td><td>情境</td></tr>";
     var keys = {};
     b.groups.concat(s.groups).forEach(function (g) { keys[g.key] = g.name; });

@@ -1,0 +1,3908 @@
+{
+ "base": {
+  "lulin/north": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 0.8571428571428571,
+    "rest_total": 12,
+    "rest_n": 31,
+    "night_visible": 18,
+    "night_raw": 18,
+    "n_frames": 38,
+    "src": {
+     "其他衛星": 6,
+     "目錄中的星座衛星": 1,
+     "碎片": 2,
+     "火箭體": 2,
+     "高軌（GEO 等）": 7
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 3.857142857142857,
+    "rest_total": 16,
+    "rest_n": 31,
+    "night_visible": 43,
+    "night_raw": 43,
+    "n_frames": 38,
+    "src": {
+     "其他衛星": 6,
+     "假想星座": 25,
+     "目錄中的星座衛星": 1,
+     "碎片": 2,
+     "火箭體": 2,
+     "高軌（GEO 等）": 7
+    }
+   },
+   "per_frame": {
+    "now": [
+     {
+      "t": "2026-11-22T10:06:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:16:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "其他衛星": 1,
+       "目錄中的星座衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:26:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "碎片": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:36:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:56:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:06:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "火箭體": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:16:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:26:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:56:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:16:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:26:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:56:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T13:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:16:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T13:26:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T13:36:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "高軌（GEO 等）": 1,
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T13:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:56:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:06:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "高軌（GEO 等）": 1,
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T14:16:00Z",
+      "raw": 3,
+      "visible": 3,
+      "src": {
+       "火箭體": 1,
+       "高軌（GEO 等）": 1,
+       "碎片": 1
+      }
+     },
+     {
+      "t": "2026-11-22T14:26:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T14:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:56:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T15:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:16:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:26:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:56:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:16:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "add": [
+     {
+      "t": "2026-11-22T10:06:00Z",
+      "raw": 3,
+      "visible": 3,
+      "src": {
+       "其他衛星": 1,
+       "假想星座": 2
+      }
+     },
+     {
+      "t": "2026-11-22T10:16:00Z",
+      "raw": 6,
+      "visible": 6,
+      "src": {
+       "其他衛星": 1,
+       "目錄中的星座衛星": 1,
+       "假想星座": 4
+      }
+     },
+     {
+      "t": "2026-11-22T10:26:00Z",
+      "raw": 8,
+      "visible": 8,
+      "src": {
+       "碎片": 1,
+       "假想星座": 7
+      }
+     },
+     {
+      "t": "2026-11-22T10:36:00Z",
+      "raw": 5,
+      "visible": 5,
+      "src": {
+       "其他衛星": 1,
+       "假想星座": 4
+      }
+     },
+     {
+      "t": "2026-11-22T10:46:00Z",
+      "raw": 3,
+      "visible": 3,
+      "src": {
+       "假想星座": 3
+      }
+     },
+     {
+      "t": "2026-11-22T10:56:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "假想星座": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:06:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "火箭體": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:16:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "假想星座": 2
+      }
+     },
+     {
+      "t": "2026-11-22T11:26:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "假想星座": 2
+      }
+     },
+     {
+      "t": "2026-11-22T11:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:56:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:16:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:26:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:56:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T13:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:16:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T13:26:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T13:36:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "高軌（GEO 等）": 1,
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T13:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:56:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:06:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "高軌（GEO 等）": 1,
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T14:16:00Z",
+      "raw": 3,
+      "visible": 3,
+      "src": {
+       "火箭體": 1,
+       "高軌（GEO 等）": 1,
+       "碎片": 1
+      }
+     },
+     {
+      "t": "2026-11-22T14:26:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T14:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:56:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T15:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:16:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:26:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:56:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:16:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  },
+  "lulin/dusk60": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 0.8571428571428571,
+    "rest_total": 16,
+    "rest_n": 11,
+    "night_visible": 22,
+    "night_raw": 22,
+    "n_frames": 18,
+    "src": {
+     "其他衛星": 7,
+     "高軌（GEO 等）": 3,
+     "目錄中的星座衛星": 3,
+     "碎片": 4,
+     "火箭體": 5
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 3.4285714285714284,
+    "rest_total": 24,
+    "rest_n": 11,
+    "night_visible": 48,
+    "night_raw": 48,
+    "n_frames": 18,
+    "src": {
+     "假想星座": 26,
+     "其他衛星": 7,
+     "高軌（GEO 等）": 3,
+     "目錄中的星座衛星": 3,
+     "碎片": 4,
+     "火箭體": 5
+    }
+   },
+   "per_frame": {
+    "now": [
+     {
+      "t": "2026-11-22T10:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:16:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:26:00Z",
+      "raw": 3,
+      "visible": 3,
+      "src": {
+       "其他衛星": 1,
+       "高軌（GEO 等）": 1,
+       "目錄中的星座衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:36:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:56:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "碎片": 1,
+       "目錄中的星座衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:16:00Z",
+      "raw": 3,
+      "visible": 3,
+      "src": {
+       "高軌（GEO 等）": 1,
+       "火箭體": 1,
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:26:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "火箭體": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:46:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "目錄中的星座衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:56:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "碎片": 2
+      }
+     },
+     {
+      "t": "2026-11-22T12:06:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T12:16:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T12:26:00Z",
+      "raw": 4,
+      "visible": 4,
+      "src": {
+       "其他衛星": 2,
+       "火箭體": 1,
+       "碎片": 1
+      }
+     },
+     {
+      "t": "2026-11-22T12:36:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "火箭體": 1
+      }
+     },
+     {
+      "t": "2026-11-22T12:46:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "火箭體": 1
+      }
+     },
+     {
+      "t": "2026-11-22T12:56:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "add": [
+     {
+      "t": "2026-11-22T10:06:00Z",
+      "raw": 3,
+      "visible": 3,
+      "src": {
+       "假想星座": 3
+      }
+     },
+     {
+      "t": "2026-11-22T10:16:00Z",
+      "raw": 4,
+      "visible": 4,
+      "src": {
+       "假想星座": 4
+      }
+     },
+     {
+      "t": "2026-11-22T10:26:00Z",
+      "raw": 5,
+      "visible": 5,
+      "src": {
+       "其他衛星": 1,
+       "高軌（GEO 等）": 1,
+       "目錄中的星座衛星": 1,
+       "假想星座": 2
+      }
+     },
+     {
+      "t": "2026-11-22T10:36:00Z",
+      "raw": 4,
+      "visible": 4,
+      "src": {
+       "高軌（GEO 等）": 1,
+       "假想星座": 3
+      }
+     },
+     {
+      "t": "2026-11-22T10:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:56:00Z",
+      "raw": 3,
+      "visible": 3,
+      "src": {
+       "碎片": 1,
+       "目錄中的星座衛星": 1,
+       "假想星座": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:06:00Z",
+      "raw": 5,
+      "visible": 5,
+      "src": {
+       "假想星座": 5
+      }
+     },
+     {
+      "t": "2026-11-22T11:16:00Z",
+      "raw": 4,
+      "visible": 4,
+      "src": {
+       "高軌（GEO 等）": 1,
+       "火箭體": 1,
+       "其他衛星": 1,
+       "假想星座": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:26:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "火箭體": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:46:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "目錄中的星座衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:56:00Z",
+      "raw": 4,
+      "visible": 4,
+      "src": {
+       "碎片": 2,
+       "假想星座": 2
+      }
+     },
+     {
+      "t": "2026-11-22T12:06:00Z",
+      "raw": 4,
+      "visible": 4,
+      "src": {
+       "其他衛星": 1,
+       "假想星座": 3
+      }
+     },
+     {
+      "t": "2026-11-22T12:16:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T12:26:00Z",
+      "raw": 5,
+      "visible": 5,
+      "src": {
+       "其他衛星": 2,
+       "火箭體": 1,
+       "碎片": 1,
+       "假想星座": 1
+      }
+     },
+     {
+      "t": "2026-11-22T12:36:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "火箭體": 1,
+       "假想星座": 1
+      }
+     },
+     {
+      "t": "2026-11-22T12:46:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "火箭體": 1
+      }
+     },
+     {
+      "t": "2026-11-22T12:56:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  },
+  "lulin/m45": {
+   "now": {
+    "first_n": 4,
+    "first_mean": 0.0,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 0,
+    "night_raw": 0,
+    "n_frames": 4,
+    "src": {}
+   },
+   "add": {
+    "first_n": 4,
+    "first_mean": 0.0,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 0,
+    "night_raw": 0,
+    "n_frames": 4,
+    "src": {}
+   },
+   "per_frame": {
+    "now": [
+     null,
+     null,
+     null,
+     {
+      "t": "2026-11-22T10:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:56:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     }
+    ],
+    "add": [
+     null,
+     null,
+     null,
+     {
+      "t": "2026-11-22T10:36:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:46:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:56:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:06:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     }
+    ]
+   }
+  },
+  "taipei/north": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 0.5714285714285714,
+    "rest_total": 1,
+    "rest_n": 34,
+    "night_visible": 5,
+    "night_raw": 5,
+    "n_frames": 41,
+    "src": {
+     "目錄中的星座衛星": 3,
+     "其他衛星": 1,
+     "高軌（GEO 等）": 1
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 2.142857142857143,
+    "rest_total": 2,
+    "rest_n": 34,
+    "night_visible": 17,
+    "night_raw": 17,
+    "n_frames": 41,
+    "src": {
+     "目錄中的星座衛星": 3,
+     "假想星座": 12,
+     "其他衛星": 1,
+     "高軌（GEO 等）": 1
+    }
+   },
+   "per_frame": {
+    "now": [
+     {
+      "t": "2026-11-22T10:02:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "目錄中的星座衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:12:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "目錄中的星座衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:22:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:32:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "目錄中的星座衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:02:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T13:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "add": [
+     {
+      "t": "2026-11-22T10:02:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "目錄中的星座衛星": 1,
+       "假想星座": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:12:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "目錄中的星座衛星": 1,
+       "假想星座": 1
+      }
+     },
+     {
+      "t": "2026-11-22T10:22:00Z",
+      "raw": 6,
+      "visible": 6,
+      "src": {
+       "其他衛星": 1,
+       "假想星座": 5
+      }
+     },
+     {
+      "t": "2026-11-22T10:32:00Z",
+      "raw": 4,
+      "visible": 4,
+      "src": {
+       "目錄中的星座衛星": 1,
+       "假想星座": 3
+      }
+     },
+     {
+      "t": "2026-11-22T10:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:02:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "假想星座": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:12:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "假想星座": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:02:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "高軌（GEO 等）": 1
+      }
+     },
+     {
+      "t": "2026-11-22T13:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T13:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T14:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T15:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T16:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  },
+  "taipei/dusk60": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 0.0,
+    "rest_total": 1,
+    "rest_n": 11,
+    "night_visible": 1,
+    "night_raw": 3,
+    "n_frames": 18,
+    "src": {
+     "其他衛星": 1
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 1.0,
+    "rest_total": 2,
+    "rest_n": 11,
+    "night_visible": 9,
+    "night_raw": 11,
+    "n_frames": 18,
+    "src": {
+     "假想星座": 8,
+     "其他衛星": 1
+    }
+   },
+   "per_frame": {
+    "now": [
+     {
+      "t": "2026-11-22T10:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:52:00Z",
+      "raw": 1,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:32:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:02:00Z",
+      "raw": 1,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "add": [
+     {
+      "t": "2026-11-22T10:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:12:00Z",
+      "raw": 3,
+      "visible": 3,
+      "src": {
+       "假想星座": 3
+      }
+     },
+     {
+      "t": "2026-11-22T10:22:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "假想星座": 2
+      }
+     },
+     {
+      "t": "2026-11-22T10:32:00Z",
+      "raw": 2,
+      "visible": 2,
+      "src": {
+       "假想星座": 2
+      }
+     },
+     {
+      "t": "2026-11-22T10:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T10:52:00Z",
+      "raw": 1,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:02:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:12:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:32:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "其他衛星": 1
+      }
+     },
+     {
+      "t": "2026-11-22T11:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T11:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:02:00Z",
+      "raw": 1,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:12:00Z",
+      "raw": 1,
+      "visible": 1,
+      "src": {
+       "假想星座": 1
+      }
+     },
+     {
+      "t": "2026-11-22T12:22:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:32:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:42:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     {
+      "t": "2026-11-22T12:52:00Z",
+      "raw": 0,
+      "visible": 0,
+      "src": {}
+     },
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  }
+ },
+ "sens": {
+  "lulin/north": {
+   "m1000=4.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 12,
+     "rest_n": 31,
+     "night_visible": 18,
+     "night_raw": 18,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.857142857142857,
+     "rest_total": 16,
+     "rest_n": 31,
+     "night_visible": 43,
+     "night_raw": 43,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "假想星座": 25,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    }
+   },
+   "m1000=5.0": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 12,
+     "rest_n": 31,
+     "night_visible": 18,
+     "night_raw": 18,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.857142857142857,
+     "rest_total": 16,
+     "rest_n": 31,
+     "night_visible": 43,
+     "night_raw": 43,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "假想星座": 25,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    }
+   },
+   "m1000=5.8": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 12,
+     "rest_n": 31,
+     "night_visible": 18,
+     "night_raw": 18,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.857142857142857,
+     "rest_total": 16,
+     "rest_n": 31,
+     "night_visible": 43,
+     "night_raw": 43,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "假想星座": 25,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    }
+   },
+   "m1000=6.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 12,
+     "rest_n": 31,
+     "night_visible": 18,
+     "night_raw": 18,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.857142857142857,
+     "rest_total": 16,
+     "rest_n": 31,
+     "night_visible": 43,
+     "night_raw": 43,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "假想星座": 25,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    }
+   },
+   "k=2": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 12,
+     "rest_n": 31,
+     "night_visible": 18,
+     "night_raw": 18,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.857142857142857,
+     "rest_total": 16,
+     "rest_n": 31,
+     "night_visible": 43,
+     "night_raw": 43,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "假想星座": 25,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    }
+   },
+   "k=5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 12,
+     "rest_n": 31,
+     "night_visible": 18,
+     "night_raw": 18,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.857142857142857,
+     "rest_total": 16,
+     "rest_n": 31,
+     "night_visible": 43,
+     "night_raw": 43,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "假想星座": 25,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    }
+   },
+   "mu-0.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 12,
+     "rest_n": 31,
+     "night_visible": 18,
+     "night_raw": 18,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.857142857142857,
+     "rest_total": 16,
+     "rest_n": 31,
+     "night_visible": 43,
+     "night_raw": 43,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "假想星座": 25,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    }
+   },
+   "mu+0.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 12,
+     "rest_n": 31,
+     "night_visible": 18,
+     "night_raw": 18,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.857142857142857,
+     "rest_total": 16,
+     "rest_n": 31,
+     "night_visible": 43,
+     "night_raw": 43,
+     "n_frames": 38,
+     "src": {
+      "其他衛星": 6,
+      "假想星座": 25,
+      "目錄中的星座衛星": 1,
+      "碎片": 2,
+      "火箭體": 2,
+      "高軌（GEO 等）": 7
+     }
+    }
+   }
+  },
+  "lulin/dusk60": {
+   "m1000=4.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 16,
+     "rest_n": 11,
+     "night_visible": 22,
+     "night_raw": 22,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.4285714285714284,
+     "rest_total": 24,
+     "rest_n": 11,
+     "night_visible": 48,
+     "night_raw": 48,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 26,
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    }
+   },
+   "m1000=5.0": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 16,
+     "rest_n": 11,
+     "night_visible": 22,
+     "night_raw": 22,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.4285714285714284,
+     "rest_total": 24,
+     "rest_n": 11,
+     "night_visible": 48,
+     "night_raw": 48,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 26,
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    }
+   },
+   "m1000=5.8": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 16,
+     "rest_n": 11,
+     "night_visible": 22,
+     "night_raw": 22,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.4285714285714284,
+     "rest_total": 24,
+     "rest_n": 11,
+     "night_visible": 48,
+     "night_raw": 48,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 26,
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    }
+   },
+   "m1000=6.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 16,
+     "rest_n": 11,
+     "night_visible": 22,
+     "night_raw": 22,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.4285714285714284,
+     "rest_total": 24,
+     "rest_n": 11,
+     "night_visible": 48,
+     "night_raw": 48,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 26,
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    }
+   },
+   "k=2": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 16,
+     "rest_n": 11,
+     "night_visible": 22,
+     "night_raw": 22,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.4285714285714284,
+     "rest_total": 24,
+     "rest_n": 11,
+     "night_visible": 48,
+     "night_raw": 48,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 26,
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    }
+   },
+   "k=5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 16,
+     "rest_n": 11,
+     "night_visible": 22,
+     "night_raw": 22,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.4285714285714284,
+     "rest_total": 24,
+     "rest_n": 11,
+     "night_visible": 48,
+     "night_raw": 48,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 26,
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    }
+   },
+   "mu-0.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 16,
+     "rest_n": 11,
+     "night_visible": 22,
+     "night_raw": 22,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.4285714285714284,
+     "rest_total": 24,
+     "rest_n": 11,
+     "night_visible": 48,
+     "night_raw": 48,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 26,
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    }
+   },
+   "mu+0.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.8571428571428571,
+     "rest_total": 16,
+     "rest_n": 11,
+     "night_visible": 22,
+     "night_raw": 22,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 3.4285714285714284,
+     "rest_total": 24,
+     "rest_n": 11,
+     "night_visible": 48,
+     "night_raw": 48,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 26,
+      "其他衛星": 7,
+      "高軌（GEO 等）": 3,
+      "目錄中的星座衛星": 3,
+      "碎片": 4,
+      "火箭體": 5
+     }
+    }
+   }
+  },
+  "taipei/north": {
+   "m1000=4.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.5714285714285714,
+     "rest_total": 1,
+     "rest_n": 34,
+     "night_visible": 5,
+     "night_raw": 5,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 2.142857142857143,
+     "rest_total": 2,
+     "rest_n": 34,
+     "night_visible": 17,
+     "night_raw": 17,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "假想星座": 12,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    }
+   },
+   "m1000=5.0": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.5714285714285714,
+     "rest_total": 1,
+     "rest_n": 34,
+     "night_visible": 5,
+     "night_raw": 5,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 2.142857142857143,
+     "rest_total": 2,
+     "rest_n": 34,
+     "night_visible": 17,
+     "night_raw": 17,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "假想星座": 12,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    }
+   },
+   "m1000=5.8": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.5714285714285714,
+     "rest_total": 1,
+     "rest_n": 34,
+     "night_visible": 5,
+     "night_raw": 5,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 2.142857142857143,
+     "rest_total": 2,
+     "rest_n": 34,
+     "night_visible": 17,
+     "night_raw": 17,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "假想星座": 12,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    }
+   },
+   "m1000=6.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.5714285714285714,
+     "rest_total": 1,
+     "rest_n": 34,
+     "night_visible": 5,
+     "night_raw": 5,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 2.142857142857143,
+     "rest_total": 2,
+     "rest_n": 34,
+     "night_visible": 17,
+     "night_raw": 17,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "假想星座": 12,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    }
+   },
+   "k=2": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.5714285714285714,
+     "rest_total": 1,
+     "rest_n": 34,
+     "night_visible": 5,
+     "night_raw": 5,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 2.142857142857143,
+     "rest_total": 2,
+     "rest_n": 34,
+     "night_visible": 17,
+     "night_raw": 17,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "假想星座": 12,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    }
+   },
+   "k=5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.5714285714285714,
+     "rest_total": 1,
+     "rest_n": 34,
+     "night_visible": 5,
+     "night_raw": 5,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 2.142857142857143,
+     "rest_total": 2,
+     "rest_n": 34,
+     "night_visible": 17,
+     "night_raw": 17,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "假想星座": 12,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    }
+   },
+   "mu-0.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.5714285714285714,
+     "rest_total": 1,
+     "rest_n": 34,
+     "night_visible": 5,
+     "night_raw": 5,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 2.142857142857143,
+     "rest_total": 2,
+     "rest_n": 34,
+     "night_visible": 17,
+     "night_raw": 17,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "假想星座": 12,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    }
+   },
+   "mu+0.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.5714285714285714,
+     "rest_total": 1,
+     "rest_n": 34,
+     "night_visible": 5,
+     "night_raw": 5,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 2.142857142857143,
+     "rest_total": 2,
+     "rest_n": 34,
+     "night_visible": 17,
+     "night_raw": 17,
+     "n_frames": 41,
+     "src": {
+      "目錄中的星座衛星": 3,
+      "假想星座": 12,
+      "其他衛星": 1,
+      "高軌（GEO 等）": 1
+     }
+    }
+   }
+  },
+  "taipei/dusk60": {
+   "m1000=4.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.0,
+     "rest_total": 1,
+     "rest_n": 11,
+     "night_visible": 1,
+     "night_raw": 3,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 1.0,
+     "rest_total": 2,
+     "rest_n": 11,
+     "night_visible": 9,
+     "night_raw": 11,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 8,
+      "其他衛星": 1
+     }
+    }
+   },
+   "m1000=5.0": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.0,
+     "rest_total": 1,
+     "rest_n": 11,
+     "night_visible": 1,
+     "night_raw": 3,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 1.0,
+     "rest_total": 2,
+     "rest_n": 11,
+     "night_visible": 9,
+     "night_raw": 11,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 8,
+      "其他衛星": 1
+     }
+    }
+   },
+   "m1000=5.8": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.0,
+     "rest_total": 1,
+     "rest_n": 11,
+     "night_visible": 1,
+     "night_raw": 3,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 1.0,
+     "rest_total": 2,
+     "rest_n": 11,
+     "night_visible": 9,
+     "night_raw": 11,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 8,
+      "其他衛星": 1
+     }
+    }
+   },
+   "m1000=6.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.0,
+     "rest_total": 1,
+     "rest_n": 11,
+     "night_visible": 1,
+     "night_raw": 3,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 1.0,
+     "rest_total": 2,
+     "rest_n": 11,
+     "night_visible": 9,
+     "night_raw": 11,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 8,
+      "其他衛星": 1
+     }
+    }
+   },
+   "k=2": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.0,
+     "rest_total": 2,
+     "rest_n": 11,
+     "night_visible": 2,
+     "night_raw": 3,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 2
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 1.0,
+     "rest_total": 3,
+     "rest_n": 11,
+     "night_visible": 10,
+     "night_raw": 11,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 8,
+      "其他衛星": 2
+     }
+    }
+   },
+   "k=5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.0,
+     "rest_total": 1,
+     "rest_n": 11,
+     "night_visible": 1,
+     "night_raw": 3,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 1.0,
+     "rest_total": 2,
+     "rest_n": 11,
+     "night_visible": 9,
+     "night_raw": 11,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 8,
+      "其他衛星": 1
+     }
+    }
+   },
+   "mu-0.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.0,
+     "rest_total": 1,
+     "rest_n": 11,
+     "night_visible": 1,
+     "night_raw": 3,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 1.0,
+     "rest_total": 2,
+     "rest_n": 11,
+     "night_visible": 9,
+     "night_raw": 11,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 8,
+      "其他衛星": 1
+     }
+    }
+   },
+   "mu+0.5": {
+    "now": {
+     "first_n": 7,
+     "first_mean": 0.0,
+     "rest_total": 1,
+     "rest_n": 11,
+     "night_visible": 1,
+     "night_raw": 3,
+     "n_frames": 18,
+     "src": {
+      "其他衛星": 1
+     }
+    },
+    "add": {
+     "first_n": 7,
+     "first_mean": 1.0,
+     "rest_total": 2,
+     "rest_n": 11,
+     "night_visible": 9,
+     "night_raw": 11,
+     "n_frames": 18,
+     "src": {
+      "假想星座": 8,
+      "其他衛星": 1
+     }
+    }
+   }
+  }
+ },
+ "dates": {
+  "2026-03-20/north": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 2.2857142857142856,
+    "rest_total": 18,
+    "rest_n": 31,
+    "night_visible": 34,
+    "night_raw": 34,
+    "n_frames": 38,
+    "src": {
+     "火箭體": 9,
+     "碎片": 8,
+     "目錄中的星座衛星": 4,
+     "其他衛星": 11,
+     "高軌（GEO 等）": 2
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 4.571428571428571,
+    "rest_total": 20,
+    "rest_n": 31,
+    "night_visible": 52,
+    "night_raw": 52,
+    "n_frames": 38,
+    "src": {
+     "火箭體": 9,
+     "碎片": 8,
+     "目錄中的星座衛星": 4,
+     "假想星座": 18,
+     "其他衛星": 11,
+     "高軌（GEO 等）": 2
+    }
+   },
+   "t0": "2026-03-20T11:01:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "2026-03-20/dusk60": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 6.428571428571429,
+    "rest_total": 63,
+    "rest_n": 11,
+    "night_visible": 108,
+    "night_raw": 108,
+    "n_frames": 18,
+    "src": {
+     "高軌（GEO 等）": 88,
+     "火箭體": 4,
+     "目錄中的星座衛星": 2,
+     "碎片": 10,
+     "其他衛星": 4
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 8.571428571428571,
+    "rest_total": 72,
+    "rest_n": 11,
+    "night_visible": 132,
+    "night_raw": 132,
+    "n_frames": 18,
+    "src": {
+     "高軌（GEO 等）": 88,
+     "火箭體": 4,
+     "假想星座": 24,
+     "目錄中的星座衛星": 2,
+     "碎片": 10,
+     "其他衛星": 4
+    }
+   },
+   "t0": "2026-03-20T11:01:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "2026-06-21/north": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 1.1428571428571428,
+    "rest_total": 32,
+    "rest_n": 31,
+    "night_visible": 40,
+    "night_raw": 40,
+    "n_frames": 38,
+    "src": {
+     "高軌（GEO 等）": 12,
+     "其他衛星": 12,
+     "火箭體": 4,
+     "目錄中的星座衛星": 3,
+     "碎片": 9
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 4.571428571428571,
+    "rest_total": 66,
+    "rest_n": 31,
+    "night_visible": 98,
+    "night_raw": 98,
+    "n_frames": 38,
+    "src": {
+     "高軌（GEO 等）": 12,
+     "假想星座": 58,
+     "其他衛星": 12,
+     "火箭體": 4,
+     "目錄中的星座衛星": 3,
+     "碎片": 9
+    }
+   },
+   "t0": "2026-06-21T11:47:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "2026-06-21/dusk60": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 1.5714285714285714,
+    "rest_total": 13,
+    "rest_n": 11,
+    "night_visible": 24,
+    "night_raw": 24,
+    "n_frames": 18,
+    "src": {
+     "其他衛星": 5,
+     "碎片": 6,
+     "目錄中的星座衛星": 4,
+     "高軌（GEO 等）": 7,
+     "火箭體": 2
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 5.428571428571429,
+    "rest_total": 24,
+    "rest_n": 11,
+    "night_visible": 62,
+    "night_raw": 62,
+    "n_frames": 18,
+    "src": {
+     "其他衛星": 5,
+     "碎片": 6,
+     "目錄中的星座衛星": 4,
+     "假想星座": 38,
+     "高軌（GEO 等）": 7,
+     "火箭體": 2
+    }
+   },
+   "t0": "2026-06-21T11:47:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "2026-09-22/north": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 1.2857142857142858,
+    "rest_total": 25,
+    "rest_n": 31,
+    "night_visible": 34,
+    "night_raw": 34,
+    "n_frames": 38,
+    "src": {
+     "其他衛星": 5,
+     "目錄中的星座衛星": 7,
+     "碎片": 5,
+     "高軌（GEO 等）": 14,
+     "火箭體": 3
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 4.285714285714286,
+    "rest_total": 27,
+    "rest_n": 31,
+    "night_visible": 57,
+    "night_raw": 57,
+    "n_frames": 38,
+    "src": {
+     "其他衛星": 5,
+     "目錄中的星座衛星": 7,
+     "假想星座": 23,
+     "碎片": 5,
+     "高軌（GEO 等）": 14,
+     "火箭體": 3
+    }
+   },
+   "t0": "2026-09-22T10:47:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "2026-09-22/dusk60": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 1.8571428571428572,
+    "rest_total": 11,
+    "rest_n": 11,
+    "night_visible": 24,
+    "night_raw": 24,
+    "n_frames": 18,
+    "src": {
+     "碎片": 7,
+     "火箭體": 4,
+     "高軌（GEO 等）": 8,
+     "其他衛星": 5
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 3.4285714285714284,
+    "rest_total": 16,
+    "rest_n": 11,
+    "night_visible": 40,
+    "night_raw": 40,
+    "n_frames": 18,
+    "src": {
+     "假想星座": 16,
+     "碎片": 7,
+     "火箭體": 4,
+     "高軌（GEO 等）": 8,
+     "其他衛星": 5
+    }
+   },
+   "t0": "2026-09-22T10:47:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "2026-12-21/north": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 1.4285714285714286,
+    "rest_total": 29,
+    "rest_n": 31,
+    "night_visible": 39,
+    "night_raw": 39,
+    "n_frames": 38,
+    "src": {
+     "目錄中的星座衛星": 4,
+     "其他衛星": 6,
+     "碎片": 6,
+     "高軌（GEO 等）": 16,
+     "火箭體": 7
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 4.142857142857143,
+    "rest_total": 30,
+    "rest_n": 31,
+    "night_visible": 59,
+    "night_raw": 59,
+    "n_frames": 38,
+    "src": {
+     "目錄中的星座衛星": 4,
+     "假想星座": 20,
+     "其他衛星": 6,
+     "碎片": 6,
+     "高軌（GEO 等）": 16,
+     "火箭體": 7
+    }
+   },
+   "t0": "2026-12-21T10:13:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "2026-12-21/dusk60": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 1.7142857142857142,
+    "rest_total": 12,
+    "rest_n": 11,
+    "night_visible": 24,
+    "night_raw": 24,
+    "n_frames": 18,
+    "src": {
+     "碎片": 6,
+     "高軌（GEO 等）": 6,
+     "其他衛星": 7,
+     "目錄中的星座衛星": 1,
+     "火箭體": 4
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 5.428571428571429,
+    "rest_total": 19,
+    "rest_n": 11,
+    "night_visible": 57,
+    "night_raw": 57,
+    "n_frames": 18,
+    "src": {
+     "碎片": 6,
+     "高軌（GEO 等）": 6,
+     "其他衛星": 7,
+     "假想星座": 33,
+     "目錄中的星座衛星": 1,
+     "火箭體": 4
+    }
+   },
+   "t0": "2026-12-21T10:13:00Z",
+   "fov": 3.5,
+   "exp": 30
+  }
+ },
+ "scan": {
+  "az0": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 0.8571428571428571,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 6,
+    "night_raw": 6,
+    "n_frames": 7,
+    "src": {
+     "其他衛星": 3,
+     "目錄中的星座衛星": 1,
+     "碎片": 1,
+     "火箭體": 1
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 3.857142857142857,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 27,
+    "night_raw": 27,
+    "n_frames": 7,
+    "src": {
+     "其他衛星": 3,
+     "假想星座": 21,
+     "目錄中的星座衛星": 1,
+     "碎片": 1,
+     "火箭體": 1
+    }
+   },
+   "t0": "2026-11-22T10:06:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "az90": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 1.0,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 7,
+    "night_raw": 7,
+    "n_frames": 7,
+    "src": {
+     "其他衛星": 2,
+     "碎片": 3,
+     "目錄中的星座衛星": 2
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 3.5714285714285716,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 25,
+    "night_raw": 25,
+    "n_frames": 7,
+    "src": {
+     "其他衛星": 2,
+     "假想星座": 18,
+     "碎片": 3,
+     "目錄中的星座衛星": 2
+    }
+   },
+   "t0": "2026-11-22T10:06:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "az180": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 0.8571428571428571,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 6,
+    "night_raw": 6,
+    "n_frames": 7,
+    "src": {
+     "碎片": 3,
+     "其他衛星": 2,
+     "目錄中的星座衛星": 1
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 3.0,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 21,
+    "night_raw": 21,
+    "n_frames": 7,
+    "src": {
+     "假想星座": 15,
+     "碎片": 3,
+     "其他衛星": 2,
+     "目錄中的星座衛星": 1
+    }
+   },
+   "t0": "2026-11-22T10:06:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "az270": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 0.8571428571428571,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 6,
+    "night_raw": 6,
+    "n_frames": 7,
+    "src": {
+     "火箭體": 1,
+     "碎片": 2,
+     "其他衛星": 2,
+     "目錄中的星座衛星": 1
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 4.0,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 28,
+    "night_raw": 28,
+    "n_frames": 7,
+    "src": {
+     "火箭體": 1,
+     "假想星座": 22,
+     "碎片": 2,
+     "其他衛星": 2,
+     "目錄中的星座衛星": 1
+    }
+   },
+   "t0": "2026-11-22T10:06:00Z",
+   "fov": 3.5,
+   "exp": 30
+  },
+  "zenith": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 1.1428571428571428,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 8,
+    "night_raw": 8,
+    "n_frames": 7,
+    "src": {
+     "碎片": 4,
+     "目錄中的星座衛星": 3,
+     "其他衛星": 1
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 2.857142857142857,
+    "rest_total": 0,
+    "rest_n": 0,
+    "night_visible": 20,
+    "night_raw": 20,
+    "n_frames": 7,
+    "src": {
+     "碎片": 4,
+     "目錄中的星座衛星": 3,
+     "假想星座": 12,
+     "其他衛星": 1
+    }
+   },
+   "t0": "2026-11-22T10:06:00Z",
+   "fov": 3.5,
+   "exp": 30
+  }
+ },
+ "inst": {
+  "exp10": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 0.5714285714285714,
+    "rest_total": 0,
+    "rest_n": 6,
+    "night_visible": 4,
+    "night_raw": 4,
+    "n_frames": 13,
+    "src": {
+     "其他衛星": 2,
+     "目錄中的星座衛星": 1,
+     "碎片": 1
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 1.4285714285714286,
+    "rest_total": 1,
+    "rest_n": 6,
+    "night_visible": 11,
+    "night_raw": 11,
+    "n_frames": 13,
+    "src": {
+     "假想星座": 7,
+     "其他衛星": 2,
+     "目錄中的星座衛星": 1,
+     "碎片": 1
+    }
+   },
+   "t0": "2026-11-22T10:06:00Z",
+   "fov": 3.5,
+   "exp": 10
+  },
+  "exp60": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 1.4285714285714286,
+    "rest_total": 0,
+    "rest_n": 6,
+    "night_visible": 10,
+    "night_raw": 10,
+    "n_frames": 13,
+    "src": {
+     "其他衛星": 6,
+     "目錄中的星座衛星": 1,
+     "碎片": 2,
+     "火箭體": 1
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 8.285714285714286,
+    "rest_total": 5,
+    "rest_n": 6,
+    "night_visible": 63,
+    "night_raw": 63,
+    "n_frames": 13,
+    "src": {
+     "其他衛星": 6,
+     "假想星座": 53,
+     "目錄中的星座衛星": 1,
+     "碎片": 2,
+     "火箭體": 1
+    }
+   },
+   "t0": "2026-11-22T10:06:00Z",
+   "fov": 3.5,
+   "exp": 60
+  },
+  "fov1": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 0.14285714285714285,
+    "rest_total": 0,
+    "rest_n": 6,
+    "night_visible": 1,
+    "night_raw": 1,
+    "n_frames": 13,
+    "src": {
+     "火箭體": 1
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 0.7142857142857143,
+    "rest_total": 0,
+    "rest_n": 6,
+    "night_visible": 5,
+    "night_raw": 5,
+    "n_frames": 13,
+    "src": {
+     "假想星座": 4,
+     "火箭體": 1
+    }
+   },
+   "t0": "2026-11-22T10:06:00Z",
+   "fov": 1.0,
+   "exp": 30
+  },
+  "fov7": {
+   "now": {
+    "first_n": 7,
+    "first_mean": 2.5714285714285716,
+    "rest_total": 7,
+    "rest_n": 6,
+    "night_visible": 25,
+    "night_raw": 25,
+    "n_frames": 13,
+    "src": {
+     "高軌（GEO 等）": 10,
+     "其他衛星": 7,
+     "目錄中的星座衛星": 2,
+     "碎片": 5,
+     "火箭體": 1
+    }
+   },
+   "add": {
+    "first_n": 7,
+    "first_mean": 10.142857142857142,
+    "rest_total": 12,
+    "rest_n": 6,
+    "night_visible": 83,
+    "night_raw": 83,
+    "n_frames": 13,
+    "src": {
+     "高軌（GEO 等）": 10,
+     "其他衛星": 7,
+     "假想星座": 58,
+     "目錄中的星座衛星": 2,
+     "碎片": 5,
+     "火箭體": 1
+    }
+   },
+   "t0": "2026-11-22T10:06:00Z",
+   "fov": 7.0,
+   "exp": 30
+  }
+ }
+}

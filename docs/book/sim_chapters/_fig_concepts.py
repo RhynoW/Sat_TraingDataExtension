@@ -2,7 +2,7 @@
 
 數據來源（不新跑模擬）：
 - S1 誇張倍率：RUST_SatDashboard/docs/games_debris_architecture.md 第 6 節（Envisat、300 個碎片、×1,000）
-- S2 協調假設：s2_data/s2_results.json（run_s2.py，殼層相位修正後）
+- S2 協調假設：s2_data/v2/crowd_main.json（run_s2_v2.py，2026-11-23 目錄快照、推演起點固定）
 - S2 地影幾何：圓柱形地影；天頂方向高度 h 的衛星被照亮的條件為 h > R⊕·(1/cos δ − 1)，δ 為太陽俯角
 - S3 配對差值：docs/book/sim_wargame/sensitivity/敏感度分析_四想定.md「配對差值」表
 用法：python docs/book/sim_chapters/_fig_concepts.py
@@ -129,7 +129,8 @@ def s2_shadow():
 
 # ── S2：協調假設 vs 第三方 ──────────────────────────────────────────────────
 def s2_third_party():
-    d = json.loads((HERE / "s2_data/s2_results.json").read_text(encoding="utf-8"))
+    d = json.loads((HERE / "s2_data/v2/crowd_main.json").read_text(encoding="utf-8"))
+    d["crowd"] = d["runs"]
     rules = ["全部都計", "同殼層不計", "同星座不計"]
     ratio = {k: [] for k in ["plan", "mega"]}
     other = {k: [] for k in ["now", "plan", "mega"]}

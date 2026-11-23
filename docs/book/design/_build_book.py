@@ -105,7 +105,7 @@ SIMDIR = D.parent / "sim_chapters"
 if WITH_EXT:
     OUT_HTML = SIMDIR / "pdf" / "全書_排版版_v1.3_含延伸篇.html"
     OUT_PDF = SIMDIR / "pdf" / "全書_排版版_v1.3_含延伸篇.pdf"
-    VERSION, DATE = "v1.3＋延伸模擬篇", "2026.11.22"
+    VERSION, DATE = "v1.3＋延伸模擬篇", "2026.11.23"
     if not ARGS:
         TMP = SIMDIR / "pdf" / "_build_tmp"
 TMP.mkdir(parents=True, exist_ok=True)
@@ -238,7 +238,7 @@ EXT_META = {
                img="../sim_chapters/img/op_s1.jpg", credit="碎片連鎖模擬畫面：Cosmos 1408 情境，解體後約 46 天｜本專案 Rust 單機版，2026-11-22"),
     "S2": dict(file="S2_巨型星座的外部成本壅擠與光害_初稿.md", title="巨型星座的外部成本：壅擠與光害",
                q="星座變大之後，接近與光跡的成本落在誰身上？",
-               route=["假想星座", "接近頻率", "協調假設", "第三方成本", "光跡與地影"],
+               route=["假想星座", "接近頻率", "收斂與敏感度", "第三方成本", "光跡與地影"],
                img="../sim_chapters/img/op_s2.jpg", credit="星座壅擠模擬畫面：10 萬 Starlink 情境｜本專案 Rust 單機版，2026-11-22"),
     "S3": dict(file="S3_兵棋推演海纜中斷下的太空通訊韌性_初稿.md", title="兵棋推演：海纜中斷下的太空通訊韌性",
                q="在寫清楚的假設下，哪些選擇比較好？假設改變時，結論會不會翻轉？",

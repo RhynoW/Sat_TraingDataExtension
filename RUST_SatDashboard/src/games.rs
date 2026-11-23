@@ -112,9 +112,13 @@ fn group_by_key(k: &str) -> Option<(usize, &'static Group)> {
 
 /// 依目標總數等比例縮放各殼層（保留軌道面數，調整每面顆數）；回傳（樣板中的殼層序號, 殼層）
 fn scaled(g: &Group, total: u32) -> Vec<(usize, Shell)> {
-    let n0: u32 = g.shells.iter().map(|s| s.2 * s.3).sum();
-    let k = total as f64 / n0 as f64;
-    g.shells
+    scaled_from(g.shells, total)
+}
+
+fn scaled_from(shells: &[Shell], total: u32) -> Vec<(usize, Shell)> {
+    let n0: u32 = shells.iter().map(|s| s.2 * s.3).sum();
+    let k = total as f64 / n0.max(1) as f64;
+    shells
         .iter()
         .enumerate()
         .filter_map(|(j, &(h, i, p, s))| {
@@ -148,6 +152,9 @@ pub(crate) struct GroupReq {
     pub(crate) synthetic: bool,
     #[serde(default)]
     pub(crate) total: u32,
+    /// 自訂殼層（高度, 傾角, 軌道面數, 每面顆數）取代樣板；供殼層配置敏感度測試
+    #[serde(default)]
+    pub(crate) shells: Option<Vec<Shell>>,
 }
 
 fn group_counts(st: &Arc<AppState>) -> Vec<usize> {
@@ -261,7 +268,11 @@ pub(crate) fn build_items<'a>(sats: &'a [&'a SatInfo], reqs: &[GroupReq]) -> (Ve
             continue;
         }
         replaced[gi] = true;
-        for (j, (h, inc, p, s)) in scaled(g, rq.total) {
+        let sh = match &rq.shells {
+            Some(v) if !v.is_empty() => scaled_from(v, rq.total),
+            _ => scaled(g, rq.total),
+        };
+        for (j, (h, inc, p, s)) in sh {
             let (raan0, u0) = shell_phase(gi, j, p, s);
             for pi in 0..p {
                 for si in 0..s {
@@ -296,12 +307,32 @@ struct Stats {
     sky10: f64,
     sky30: f64,
     snapshots: usize,
+    /// 追蹤物件（第三方目錄物件與指定 NORAD）在 items 中的索引
+    tracked: Vec<usize>,
+    /// 追蹤物件每秒進入 d 球的次數：[與任何物件, 與星座群組（group > 0）]
+    trk_rate: Vec<[f64; 2]>,
 }
 
 /// skip：0 全部都計；1 同殼層（假想星座）不計；2 同星座（含真實目錄）不計——假設營運者完全協調
-fn run(items: &[Item], t0: &DateTime<Utc>, steps: usize, step_s: f64, d_km: f64, skip: u8) -> Stats {
+fn run(items: &[Item], t0: &DateTime<Utc>, steps: usize, step_s: f64, d_km: f64, skip: u8, watch: &[u32]) -> Stats {
     let obs = Observer::new(25.0330, 121.5654, 0.01);
-    let mut st = Stats { count: [0; NG], rate: [[0.0; NG]; NG], pairs_mean: 0.0, sky10: 0.0, sky30: 0.0, snapshots: 0 };
+    // 追蹤：所有第三方目錄物件（group 0）與指定 NORAD
+    let tracked: Vec<usize> = items
+        .iter()
+        .enumerate()
+        .filter(|(_, it)| match &it.obj {
+            Obj::Cat(s) => it.group == 0 || watch.contains(&s.norad_id),
+            Obj::Syn(_) => false,
+        })
+        .map(|(i, _)| i)
+        .collect();
+    let mut slot = vec![u32::MAX; items.len()];
+    for (k, &i) in tracked.iter().enumerate() {
+        slot[i] = k as u32;
+    }
+    let nt = tracked.len();
+    let mut st = Stats { count: [0; NG], rate: [[0.0; NG]; NG], pairs_mean: 0.0, sky10: 0.0, sky30: 0.0, snapshots: 0,
+                         trk_rate: vec![[0.0; 2]; nt], tracked };
     for it in items {
         st.count[it.group as usize] += 1;
     }
@@ -339,11 +370,11 @@ fn run(items: &[Item], t0: &DateTime<Utc>, steps: usize, step_s: f64, d_km: f64,
         st.sky10 += s10 as f64;
         st.sky30 += s30 as f64;
         let tree: ImmutableKdTree<f64, u64, 3, 32> = ImmutableKdTree::new_from_slice(&pts);
-        let (acc, npairs) = (0..pts.len())
+        let (acc, npairs, trk) = (0..pts.len())
             .into_par_iter()
             .fold(
-                || ([[0.0f64; NG]; NG], 0usize),
-                |(mut acc, mut n), a| {
+                || ([[0.0f64; NG]; NG], 0usize, vec![[0.0f64; 2]; nt]),
+                |(mut acc, mut n, mut trk), a| {
                     for nn in tree.within_unsorted::<SquaredEuclidean>(&pts[a], d2) {
                         let b = nn.item as usize;
                         if b <= a {
@@ -361,21 +392,42 @@ fn run(items: &[Item], t0: &DateTime<Utc>, steps: usize, step_s: f64, d_km: f64,
                         let (x, y) = (ia.group.min(ib.group) as usize, ia.group.max(ib.group) as usize);
                         acc[x][y] += vr / chord;
                         n += 1;
+                        let (sa, sb) = (slot[map[a]], slot[map[b]]);
+                        if sa != u32::MAX {
+                            trk[sa as usize][0] += vr / chord;
+                            if ib.group > 0 {
+                                trk[sa as usize][1] += vr / chord;
+                            }
+                        }
+                        if sb != u32::MAX {
+                            trk[sb as usize][0] += vr / chord;
+                            if ia.group > 0 {
+                                trk[sb as usize][1] += vr / chord;
+                            }
+                        }
                     }
-                    (acc, n)
+                    (acc, n, trk)
                 },
             )
             .reduce(
-                || ([[0.0f64; NG]; NG], 0usize),
-                |(mut a, na), (b, nb)| {
+                || ([[0.0f64; NG]; NG], 0usize, vec![[0.0f64; 2]; nt]),
+                |(mut a, na, mut ta), (b, nb, tb)| {
                     for i in 0..NG {
                         for j in 0..NG {
                             a[i][j] += b[i][j];
                         }
                     }
-                    (a, na + nb)
+                    for (x, y) in ta.iter_mut().zip(tb.iter()) {
+                        x[0] += y[0];
+                        x[1] += y[1];
+                    }
+                    (a, na + nb, ta)
                 },
             );
+        for (x, y) in st.trk_rate.iter_mut().zip(trk.iter()) {
+            x[0] += y[0];
+            x[1] += y[1];
+        }
         for i in 0..NG {
             for j in 0..NG {
                 st.rate[i][j] += acc[i][j];
@@ -393,7 +445,62 @@ fn run(items: &[Item], t0: &DateTime<Utc>, steps: usize, step_s: f64, d_km: f64,
     st.pairs_mean /= n;
     st.sky10 /= n;
     st.sky30 /= n;
+    for x in st.trk_rate.iter_mut() {
+        x[0] /= n;
+        x[1] /= n;
+    }
     st
+}
+
+/// 第三方物件分解：依目錄 purpose（有效載荷／火箭體／碎片／不明）與 t0 時之高度 50 km × 傾角 10° 分格；
+/// 另列指定 NORAD 之逐顆結果。數值皆為每顆每年 1 km 內接近次數（與任何物件、與星座群組）。
+fn tracked_json(s: &Stats, items: &[Item], t0: &DateTime<Utc>, d_km: f64, watch: &[u32]) -> Value {
+    let k = 365.25 * 86400.0 * (1.0 / d_km).powi(2);
+    let g = gmst_rad(t0);
+    let cls = |p: &str| match p {
+        "有效載荷" => "payload",
+        "火箭體" => "rocket_body",
+        "碎片" => "debris",
+        _ => "unknown",
+    };
+    let mut by_cls: std::collections::BTreeMap<&str, (usize, f64, f64)> = Default::default();
+    let mut cells: std::collections::BTreeMap<(i32, i32), (usize, f64, f64)> = Default::default();
+    let mut w = Vec::new();
+    for (j, &i) in s.tracked.iter().enumerate() {
+        let Obj::Cat(sat) = &items[i].obj else { continue };
+        let [r_any, r_con] = s.trk_rate[j];
+        if items[i].group == 0 {
+            let e = by_cls.entry(cls(&sat.purpose)).or_default();
+            e.0 += 1;
+            e.1 += r_any;
+            e.2 += r_con;
+            if let Some((r, v)) = sgp4_state(sat, t0) {
+                let h = eci_to_llh(&r, g)[2];
+                let hv = [r[1] * v[2] - r[2] * v[1], r[2] * v[0] - r[0] * v[2], r[0] * v[1] - r[1] * v[0]];
+                let hn = (hv[0] * hv[0] + hv[1] * hv[1] + hv[2] * hv[2]).sqrt();
+                let inc = (hv[2] / hn).acos().to_degrees();
+                let c = cells.entry(((h / 50.0).floor() as i32 * 50, (inc / 10.0).floor() as i32 * 10)).or_default();
+                c.0 += 1;
+                c.1 += r_any;
+                c.2 += r_con;
+            }
+        }
+        if watch.contains(&sat.norad_id) {
+            w.push(json!({"norad": sat.norad_id, "name": sat.name, "group": items[i].group,
+                          "per_year_1km": r_any * k, "per_year_1km_constellation": r_con * k}));
+        }
+    }
+    let classes: Vec<Value> = by_cls
+        .iter()
+        .map(|(c, (n, a, b))| json!({"class": c, "count": n, "per_sat_year_1km": a * k / *n as f64,
+                                      "per_sat_year_1km_constellation": b * k / *n as f64, "total_year_1km": a * k}))
+        .collect();
+    let grid: Vec<Value> = cells
+        .iter()
+        .map(|((h, i), (n, a, b))| json!({"alt": h, "inc": i, "count": n, "total_year_1km": a * k,
+                                          "total_year_1km_constellation": b * k}))
+        .collect();
+    json!({"classes": classes, "grid": grid, "watch": w})
 }
 
 fn stats_json(s: &Stats, d_km: f64) -> Value {
@@ -469,6 +576,10 @@ struct CrowdReq {
     d_km: Option<f64>,
     /// 0 全部、1 同殼層不計、2 同星座不計
     skip: Option<u8>,
+    /// 推演起點（RFC 3339）；未給時為伺服器現在時刻
+    t0: Option<String>,
+    /// 另列逐顆結果之 NORAD 編號
+    watch: Option<Vec<u32>>,
 }
 
 async fn crowd(State(st): State<Arc<AppState>>, Json(rq): Json<CrowdReq>) -> Response {
@@ -484,12 +595,13 @@ async fn crowd(State(st): State<Arc<AppState>>, Json(rq): Json<CrowdReq>) -> Res
         let t_start = std::time::Instant::now();
         let idx = st.index();
         let sats: Vec<&SatInfo> = idx.sats.values().filter(|s| s.prop.is_some()).collect();
-        let t0 = Utc::now();
+        let t0 = rq.t0.as_deref().and_then(|s| DateTime::parse_from_rfc3339(s).ok()).map(|d| d.with_timezone(&Utc)).unwrap_or_else(Utc::now);
+        let watch = rq.watch.clone().unwrap_or_default();
         let steps = ((hours * 3600.0 / step_s).round() as usize).max(1);
         let (base, _) = build_items(&sats, &[]);
         let (scen, shells) = build_items(&sats, &rq.groups);
-        let sb = run(&base, &t0, steps, step_s, d_km, skip);
-        let ss = run(&scen, &t0, steps, step_s, d_km, skip);
+        let sb = run(&base, &t0, steps, step_s, d_km, skip, &watch);
+        let ss = run(&scen, &t0, steps, step_s, d_km, skip, &watch);
         let mut alt = Vec::new();
         for i in 0..186 {
             alt.push(155 + i * 10);
@@ -499,6 +611,8 @@ async fn crowd(State(st): State<Arc<AppState>>, Json(rq): Json<CrowdReq>) -> Res
             "hours": hours, "step_s": step_s, "d_km": d_km, "skip": skip,
             "baseline": stats_json(&sb, d_km),
             "scenario": stats_json(&ss, d_km),
+            "third_party": {"baseline": tracked_json(&sb, &base, &t0, d_km, &watch),
+                            "scenario": tracked_json(&ss, &scen, &t0, d_km, &watch)},
             "density": {"alt_km": alt, "baseline": density(&base, &t0), "scenario": density(&scen, &t0)},
             "shells": shells,
             "elapsed_s": t_start.elapsed().as_secs_f64(),

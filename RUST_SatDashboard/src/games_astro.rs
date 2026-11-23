@@ -135,6 +135,8 @@ pub struct AstroReq {
     t: Option<String>,
     groups: Option<Vec<GroupReq>>,
     night: Option<bool>,
+    /// 假想星座的相位基準時刻（RFC 3339）；未給時為伺服器現在時刻。固定後重跑結果可重現
+    tref: Option<String>,
 }
 
 fn bad(msg: &str) -> Response {
@@ -160,7 +162,8 @@ fn run(st: &Arc<AppState>, rq: &AstroReq) -> Response {
     let sats: Vec<&SatInfo> = idx.sats.values().filter(|s| s.prop.is_some()).collect();
     let reqs = rq.groups.clone().unwrap_or_default();
     let (items, _) = build_items(&sats, &reqs);
-    let tref = Utc::now(); // 假想星座以「現在」為相位基準（與星座壅擠一致）
+    // 假想星座的相位基準：預設「現在」（與星座壅擠一致）；可由 tref 固定
+    let tref = rq.tref.as_deref().and_then(|s| DateTime::parse_from_rfc3339(s).ok()).map(|d| d.with_timezone(&Utc)).unwrap_or_else(Utc::now);
     let dt_of = |t: &DateTime<Utc>| (*t - tref).num_milliseconds() as f64 / 1000.0;
     let at = |s: f64| t0 + Duration::milliseconds((s * 1000.0) as i64);
 
@@ -216,7 +219,8 @@ fn run(st: &Arc<AppState>, rq: &AstroReq) -> Response {
         let (a, b) = (pts[0], pts[pts.len() - 1]);
         let span_s = exp * (pts.len() - 1) as f64 / ((exp / 0.25).ceil().clamp(8.0, 2400.0));
         let omega = ((b[0] - a[0]).powi(2) + (b[1] - a[1]).powi(2)).sqrt() / span_s.max(1e-3);
-        streaks.push(json!({"name": name_of(it), "group": it.group, "mag": (m * 10.0).round() / 10.0,
+        let kind = match &it.obj { Obj::Syn(_) => "假想", Obj::Cat(c) => c.purpose.as_str() };
+        streaks.push(json!({"name": name_of(it), "group": it.group, "kind": kind, "mag": (m * 10.0).round() / 10.0,
             "omega": omega, "range_km": norm(&sub(&r, &o)).round(), "pts": pts,
             // 3D 顯示用：第一次進入視野時的 TEME 位置（km）與距曝光開始的秒數
             "r_teme": [r[0].round(), r[1].round(), r[2].round()], "t_s": (s_mid * 100.0).round() / 100.0}));
