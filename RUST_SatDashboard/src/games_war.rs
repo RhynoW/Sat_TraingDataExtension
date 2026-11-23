@@ -31,7 +31,8 @@ use serde_json::{json, Value};
 use crate::{assets, state::AppState};
 
 /// 國際頻寬需求：危機期間逐回合上升（政府、金融、媒體流量湧入）
-fn demand(t: u32) -> f64 { 150.0 + 5.0 * t as f64 }
+/// 第 8 回合（48 小時）後持平：延長窗口（turns > 8）時不再外推危機初期的需求成長（假設）；8 回合內與原本相同
+fn demand(t: u32) -> f64 { 150.0 + 5.0 * t.min(8) as f64 }
 const MAX_TURNS: u32 = 8;
 const AP: i32 = 5;
 const LEO_PER_TERM: f64 = 0.02;
@@ -76,12 +77,34 @@ pub struct Params {
     d_img_factor: f64,
     /// 想定 D：紅方目標偏好。"adaptive"（預設：藍方有影像備援時灰色地帶紅方不出手、升級紅方改打商用星座）；"isr"（不論備援一律打光學衛星）
     d_red_pref: String,
+    /// ── 2026-11-23 擴充（延伸篇 S3 審查）；預設值不抽亂數、不改行動順序，結果與擴充前逐局相同 ──
+    /// 每局回合數（每回合 6 小時；28 = 7 天）
+    turns: u32,
+    /// GEO 可受攻擊：紅方「干擾 GEO 上行鏈路」使 GEO 容量下降的比例（0 = 紅方不使用，與原模型相同），持續 2 回合，抗干擾減半
+    geo_jam: f64,
+    /// GEO 可受攻擊：每回合租用 GEO 服務中斷（閘道站受攻擊或業者中斷）的機率，中斷當回合 GEO 容量減半
+    geo_outage_p: f64,
+    /// 紅方風險偏好：切纜、網攻、反衛星與想定 C／D 出手機率的倍數（0.5 保守、1 基準、1.5 激進；上限 1）
+    red_aggr: f64,
+    /// 紅方目標選擇："base"（原本的固定優先序）、"random"（每回合隨機排列切纜、干擾 GEO、干擾低軌、網攻的順序）、
+    /// "adaptive"（第 1 回合起看藍方的 GEO 與低軌容量，先打較大者：簡單適應）
+    red_target: String,
+    /// 想定 D：藍方有商業影像備援時，紅方改換目標的機率（每局決定一次；1 = 原本的 adaptive）
+    d_switch_p: f64,
+    /// 想定 D：紅方在藍方簽商業影像後，延遲幾回合才改換目標（期間照打光學衛星）
+    d_switch_delay: u32,
+    /// 想定 C：歸因成功時藍方的聲望加分（政治後果；原本 3）
+    c_attrib_rep: f64,
+    /// 想定 C：紅方衛星在 10 km 內但未出手時，藍方每回合誤把異常歸因於紅方的機率（誤歸因：聲望 −2、升級 +2）
+    c_misattrib_p: f64,
 }
 
 impl Default for Params {
     fn default() -> Self {
         Params { a_wipe: A_WIPE, red_ban: vec![], b_pnt_jammed: B_PNT_JAMMED, b_sar_p: B_SAR_P, c_p_strike: 0.3, c_p_strike_tracked: 0.1,
-                 c_track_p: 1.0, c_attrib_p: 1.0, c_evade_p: 1.0, c_evade_dip: C_EVADE_DIP, d_img_factor: 1.0, d_red_pref: "adaptive".into() }
+                 c_track_p: 1.0, c_attrib_p: 1.0, c_evade_p: 1.0, c_evade_dip: C_EVADE_DIP, d_img_factor: 1.0, d_red_pref: "adaptive".into(),
+                 turns: MAX_TURNS, geo_jam: 0.0, geo_outage_p: 0.0, red_aggr: 1.0, red_target: "base".into(), d_switch_p: 1.0, d_switch_delay: 0,
+                 c_attrib_rep: 3.0, c_misattrib_p: 0.0 }
     }
 }
 
@@ -152,7 +175,7 @@ fn cost(kind: &str) -> i32 {
         "geo_evade" | "rpo_approach" => 2,
         "rpo_strike" => 3,
         "buy_imagery" | "debris_avoid" => 1,
-        "cut_cable" | "jam_leo" | "cyber_gateway" => 2,
+        "cut_cable" | "jam_leo" | "cyber_gateway" | "jam_geo" => 2,
         "dazzle" | "propaganda" => 1,
         "asat" | "asat_isr" => 4,
         _ => 99,
@@ -226,6 +249,14 @@ struct War {
     isr_sat_dead: bool,
     imagery: bool,
     avoid_until: u32,
+    /// GEO 上行鏈路干擾、GEO 服務中斷（2026-11-23 擴充）
+    geo_jam_frac: f64,
+    geo_jam_until: u32,
+    geo_out_until: u32,
+    misattributed: u32,
+    /// 想定 D：簽商業影像的回合；紅方是否會因備援改換目標（每局決定一次）
+    imagery_from: u32,
+    d_switch: Option<bool>,
     /// 敏感度分析的參數覆寫（一般對局用預設值）
     p: Params,
 }
@@ -243,7 +274,8 @@ impl War {
             escalation: 0.0, reputation: 0.0, storm_until: 0, typhoon_until: 0, isr_ok: 0, isr_try: 0,
             orders_blue: None, orders_red: None, white_queue: vec![], log: vec![], history: vec![], ai_blue, ai_red, over: false,
             scenario, cyber_lost: 0.0, pnt_backup_from: u32::MAX, pnt: 1.0, sar_seen: false, sar_ok: 0, sar_try: 0,
-            rpo: 0, rpo_seen: None, track_until: 0, spread: false, struck: false, attributed: false, evades: 0, evade_dip: u32::MAX, geo_lost: 0.0, geo_cap: 60.0, isr_sat_dead: false, imagery: false, avoid_until: 0, p,
+            rpo: 0, rpo_seen: None, track_until: 0, spread: false, struck: false, attributed: false, evades: 0, evade_dip: u32::MAX, geo_lost: 0.0, geo_cap: 60.0, isr_sat_dead: false, imagery: false, avoid_until: 0,
+            geo_jam_frac: 0.0, geo_jam_until: 0, geo_out_until: 0, misattributed: 0, imagery_from: u32::MAX, d_switch: None, p,
         };
         // 想定開場：數條國際海纜與馬祖海纜同時中斷（灰色地帶「拖錨」）
         let mut intl: Vec<usize> = (0..w.cables.len()).filter(|&i| w.cables[i].intl).collect();
@@ -311,7 +343,8 @@ impl War {
         let t = self.turn;
         let cable: f64 = self.cables.iter().filter(|c| !c.cut).map(|c| if c.intl { 10.0 } else { 1.0 }).sum();
         let storm = t < self.storm_until;
-        let geo = self.geo * if storm { 0.7 } else { 1.0 } * if t == self.evade_dip { self.p.c_evade_dip } else { 1.0 };
+        let geo = self.geo * if storm { 0.7 } else { 1.0 } * if t == self.evade_dip { self.p.c_evade_dip } else { 1.0 }
+            * if t < self.geo_jam_until { 1.0 - self.geo_jam_frac } else { 1.0 } * if t < self.geo_out_until { 0.5 } else { 1.0 };
         let jam = if t < self.jam_until { self.jam } else { 0.0 };
         let gw = if t < self.gateway_down_until { 0.5 } else { 1.0 };
         let leo = self.leo_terms * LEO_PER_TERM * (1.0 - jam) * gw * (1.0 - if t < self.avoid_until { DEBRIS_HIT_AVOID } else { DEBRIS_HIT } * self.debris).max(0.5) * if storm { 0.8 } else { 1.0 };
@@ -396,6 +429,43 @@ impl War {
                         push(&mut out, &mut ap, "leo_deploy", None);
                     }
                 }
+                // 閾值規則（2026-11-23）：可用率 ≥ 90% 時只補低軌；低於 90% 時先抗干擾、修纜，再補 GEO 與低軌中較小的一方
+                "threshold" => {
+                    if t == 0 { push(&mut out, &mut ap, "geo_lease", None); push(&mut out, &mut ap, "leo_deploy", None); push(&mut out, &mut ap, "harden", None); }
+                    else {
+                        let (c, g, l) = self.caps();
+                        if (c + g + l) / demand(t) >= 0.9 { push(&mut out, &mut ap, "leo_deploy", None); }
+                        else {
+                            if t < self.jam_until && self.leo_terms > 0.0 { push(&mut out, &mut ap, "anti_jam", None); }
+                            if let Some(&i) = cut.first() { push(&mut out, &mut ap, "repair", Some(i)); }
+                            push(&mut out, &mut ap, if g < l { "geo_lease" } else { "leo_deploy" }, None);
+                        }
+                    }
+                }
+                // 簡單效用（2026-11-23）：每點行動點換到的「剩餘回合容量」最大者優先（貪婪；不預測紅方行動）
+                "utility" => {
+                    let rem = (self.p.turns.saturating_sub(t)) as f64;
+                    loop {
+                        let jam = if t < self.jam_until { self.jam } else { 0.0 };
+                        let mut cands: Vec<(f64, &str, Option<usize>)> = vec![
+                            ((self.geo_cap - self.geo - self.geo_pending).clamp(0.0, 15.0) * (rem - 1.0).max(0.0) / 2.0, "geo_lease", None),
+                            (if self.leo_terms + self.leo_pending < 4000.0 { 500.0 * LEO_PER_TERM * (1.0 - jam) * (rem - 1.0).max(0.0) / 2.0 } else { 0.0 }, "leo_deploy", None),
+                        ];
+                        if let Some(&i) = cut.iter().find(|&&i| !out.iter().any(|a: &Action| a.kind == "repair" && a.arg == Some(i))) {
+                            cands.push((10.0 * (rem - 3.0).max(0.0) / 3.0, "repair", Some(i)));
+                        }
+                        if jam > 0.0 && !out.iter().any(|a| a.kind == "anti_jam") {
+                            cands.push((self.leo_terms * LEO_PER_TERM * jam * 0.5 * (self.jam_until - t) as f64 / 2.0, "anti_jam", None));
+                        }
+                        if !self.hardened && !out.iter().any(|a| a.kind == "harden") {
+                            cands.push((self.leo_terms.max(500.0) * LEO_PER_TERM * 0.5 * rem.min(2.0), "harden", None));
+                        }
+                        cands.retain(|c| c.0 > 0.0 && cost(c.1) <= ap);
+                        let Some(best) = cands.into_iter().max_by(|a, b| a.0.partial_cmp(&b.0).unwrap()) else { break };
+                        push(&mut out, &mut ap, best.1, best.2);
+                        if ap <= 1 { break; }
+                    }
+                }
                 _ => {
                     if t == 0 { push(&mut out, &mut ap, "geo_lease", None); push(&mut out, &mut ap, "leo_deploy", None); push(&mut out, &mut ap, "harden", None); }
                     else {
@@ -417,33 +487,68 @@ impl War {
                 if self.scenario == "d" && !self.asat_used {
                     // d_red_pref = "isr"（敏感度分析）：不理會藍方的影像備援，一律打光學衛星
                     let adaptive = self.p.d_red_pref != "isr";
-                    let fire = if aggressive { t >= 3 && self.rng.f() < 0.5 }
-                        else { t >= 2 && (!self.imagery || !adaptive) && !self.isr_sat_dead && self.isr_try > 0 && self.rng.f() < 0.3 };
+                    // 2026-11-23：d_switch_p < 1 時，每局決定一次紅方是否因備援改換目標；d_switch_delay 為簽約後延遲幾回合才改換
+                    let mut adaptive = adaptive;
+                    if adaptive && self.imagery {
+                        if self.p.d_switch_p < 1.0 && self.d_switch.is_none() { let sw = self.rng.f() < self.p.d_switch_p; self.d_switch = Some(sw); }
+                        if self.d_switch == Some(false) || t < self.imagery_from.saturating_add(self.p.d_switch_delay) { adaptive = false; }
+                    }
+                    let ag = self.p.red_aggr;
+                    let fire = if aggressive { t >= 3 && self.rng.f() < (0.5 * ag).min(1.0) }
+                        else { t >= 2 && (!self.imagery || !adaptive) && !self.isr_sat_dead && self.isr_try > 0 && self.rng.f() < (0.3 * ag).min(1.0) };
                     if fire { push(&mut out, &mut ap, if self.imagery && adaptive { "asat" } else { "asat_isr" }, None); }
                 }
-            } else if aggressive && !self.asat_used && t >= 3 && self.rng.f() < 0.5 { push(&mut out, &mut ap, "asat", None); }
+            } else if aggressive && !self.asat_used && t >= 3 && self.rng.f() < (0.5 * self.p.red_aggr).min(1.0) { push(&mut out, &mut ap, "asat", None); }
             if self.is_c() && !self.struck {
                 // 想定 C：先逼近到 10 km 內；灰色地帶紅方第 4 回合起每回合 30% 機率出手（知道藍方在追蹤、攻擊會被歸因時降到 10%），
                 // 升級紅方一到位就出手。c_loiter 只接近、不攻擊（量測「威脅存在」本身的代價）。出手機率是 AI 行為假設
-                let p_strike = if t < self.track_until { self.p.c_p_strike_tracked } else { self.p.c_p_strike };
+                let p_strike = (if t < self.track_until { self.p.c_p_strike_tracked } else { self.p.c_p_strike } * self.p.red_aggr).min(1.0);
                 let strike = self.rpo == 2 && self.scenario == "c" && (aggressive || (t >= 3 && self.rng.f() < p_strike));
                 if strike { push(&mut out, &mut ap, "rpo_strike", None); }
                 else if self.rpo < 2 { push(&mut out, &mut ap, "rpo_approach", None); }
             }
-            if !intact.is_empty() && self.rng.f() < 0.7 {
-                let k = (self.rng.f() * intact.len() as f64) as usize % intact.len();
-                push(&mut out, &mut ap, "cut_cable", Some(intact[k]));
+            // 2026-11-23：目標順序可由 red_target 改變；預設（base）與原本完全相同：切纜 →（想定 B 專屬）→ 干擾 GEO（geo_jam > 0 才用）→ 干擾低軌 → 網攻
+            let mut ops: Vec<&str> = vec!["cut", "b", "jam_geo", "jam_leo", "cyber"];
+            match self.p.red_target.as_str() {
+                "random" => {
+                    let mut pool = vec!["cut", "jam_geo", "jam_leo", "cyber"];
+                    let mut order = Vec::new();
+                    while !pool.is_empty() { let k = (self.rng.f() * pool.len() as f64) as usize % pool.len(); order.push(pool.remove(k)); }
+                    ops = vec!["b"]; ops.extend(order);
+                }
+                "adaptive" if t >= 1 => {
+                    let (_, g, l) = self.caps();
+                    ops = if g >= l { vec!["b", "jam_geo", "cut", "jam_leo", "cyber"] } else { vec!["b", "jam_leo", "cut", "jam_geo", "cyber"] };
+                }
+                _ => {}
             }
-            if self.is_b() {
-                // 想定 B：致盲並致聾（DIA p.18）——先干擾導航與偵察，剩下的點數才打通信
-                push(&mut out, &mut ap, "jam_gps", None);
-                push(&mut out, &mut ap, "dazzle", None);
-                if self.sar_seen { push(&mut out, &mut ap, "jam_sar", None); }
+            let ag = self.p.red_aggr;
+            for op in ops {
+                match op {
+                    "cut" => {
+                        if !intact.is_empty() && self.rng.f() < (0.7 * ag).min(1.0) {
+                            let k = (self.rng.f() * intact.len() as f64) as usize % intact.len();
+                            push(&mut out, &mut ap, "cut_cable", Some(intact[k]));
+                        }
+                    }
+                    "b" => {
+                        if self.is_b() {
+                            // 想定 B：致盲並致聾（DIA p.18）——先干擾導航與偵察，剩下的點數才打通信
+                            push(&mut out, &mut ap, "jam_gps", None);
+                            push(&mut out, &mut ap, "dazzle", None);
+                            if self.sar_seen { push(&mut out, &mut ap, "jam_sar", None); }
+                        }
+                    }
+                    "jam_geo" => { if self.p.geo_jam > 0.0 && self.geo >= 10.0 { push(&mut out, &mut ap, "jam_geo", None); } }
+                    "jam_leo" => {
+                        // 想定 A：商用終端一出現就是目標（DIA p.4、37）；A 系列四組共用門檻 0，避免拆解變體因抹除後低於 800 套而延後被干擾（2026-11-22 修正）
+                        let jam_th = if self.is_a() { 0.0 } else { 800.0 };
+                        if self.leo_terms + self.leo_pending > jam_th { push(&mut out, &mut ap, "jam_leo", None); }
+                    }
+                    "cyber" => { if !self.hardened && self.rng.f() < (0.5 * ag).min(1.0) { push(&mut out, &mut ap, "cyber_gateway", None); } }
+                    _ => {}
+                }
             }
-            // 想定 A：商用終端一出現就是目標（DIA p.4、37）；A 系列四組共用門檻 0，避免拆解變體因抹除後低於 800 套而延後被干擾（2026-11-22 修正）
-            let jam_th = if self.is_a() { 0.0 } else { 800.0 };
-            if self.leo_terms + self.leo_pending > jam_th { push(&mut out, &mut ap, "jam_leo", None); }
-            if !self.hardened && self.rng.f() < 0.5 { push(&mut out, &mut ap, "cyber_gateway", None); }
             if !self.is_b() { push(&mut out, &mut ap, "dazzle", None); }
             push(&mut out, &mut ap, "propaganda", None);
         }
@@ -508,7 +613,7 @@ impl War {
                 if tracked && (self.p.c_attrib_p >= 1.0 || self.rng.f() < self.p.c_attrib_p) {
                     self.attributed = true;
                     self.escalation += 4.0;
-                    self.reputation += 3.0;
+                    self.reputation += self.p.c_attrib_rep;
                     self.say("red", format!("藍方租用的 GEO 通信衛星失效，損失 {lost:.0} 單位頻寬。太空監視資料顯示紅方衛星事前逼近到 10 km 內，國際社會譴責紅方。"));
                 } else {
                     self.say("red", format!("藍方租用的 GEO 通信衛星突然失效，損失 {lost:.0} 單位頻寬。{}", if tracked { "追蹤資料不足以證明是人為攻擊。" } else { "沒有追蹤資料，無法證明是人為攻擊。" }));
@@ -531,10 +636,25 @@ impl War {
             }
         }
         if tracked && self.is_c() { self.rpo_seen = Some(self.rpo); }
+        // 2026-11-23：誤歸因（紅方在 10 km 內但本回合未出手，藍方把其他異常歸因於紅方）；預設機率 0 不抽亂數
+        if self.is_c() && self.p.c_misattrib_p > 0.0 && tracked && self.rpo == 2 && !has(&red, "rpo_strike") && !self.struck
+            && self.rng.f() < self.p.c_misattrib_p {
+            self.misattributed += 1;
+            self.reputation -= 2.0;
+            self.escalation += 2.0;
+            self.say("blue", "藍方公開指控紅方衛星干擾，事後證據不足（誤歸因）。".into());
+        }
+        // 2026-11-23：GEO 租用服務中斷（閘道站或業者），預設機率 0 不抽亂數
+        if self.p.geo_outage_p > 0.0 && self.rng.f() < self.p.geo_outage_p {
+            // 可用率在回合推進後記錄（turn = t + 1），所以影響持續到 t + 2，才會反映在本回合結算的容量上
+            self.geo_out_until = t + 2;
+            self.say("white", "租用 GEO 服務中斷（閘道站或業者端），GEO 容量減半 1 回合。".into());
+        }
         // 想定 D：商業影像合約（一次有效）、業者避碰機動（2 回合）
         if has(&blue, "buy_imagery") && !self.imagery {
             // DIA p.57：商業衛星影像的可得性提高
             self.imagery = true;
+            self.imagery_from = t;
             self.say("blue", "藍方：簽訂商業衛星影像合約，自有光學衛星若被擊毀，仍可取得影像。".into());
         }
         if has(&blue, "debris_avoid") {
@@ -559,6 +679,8 @@ impl War {
                     }
                 }
                 "jam_leo" => { self.jam = (self.jam + 0.25).min(0.6); self.jam_until = t + 2; self.escalation += 2.0; self.say("red", "偵測到針對低軌使用者終端的干擾。".into()); }
+                // 2026-11-23：GEO 可受攻擊的敏感度情境（上行鏈路干擾）；預設 geo_jam = 0 時紅方不會下這個命令
+                "jam_geo" => { self.geo_jam_frac = self.p.geo_jam; self.geo_jam_until = t + 2; self.escalation += 2.0; self.say("red", format!("偵測到針對租用 GEO 衛星上行鏈路的干擾（容量 −{:.0}%，2 回合）。", self.p.geo_jam * 100.0)); }
                 "cyber_gateway" => {
                     self.escalation += 2.0;
                     if self.hardened { self.say("red", "低軌閘道站遭網攻，已強化，未受影響。".into()); }
@@ -617,6 +739,7 @@ impl War {
             }
         }
         if anti_jam && t < self.jam_until { self.jam *= 0.5; self.say("blue", "藍方：啟用抗干擾（跳頻、波束調整），干擾效果減半。".into()); }
+        if anti_jam && t < self.geo_jam_until { self.geo_jam_frac *= 0.5; }
         // 情監偵：每回合 2 次過頂，成功率受雲量與致盲影響
         let mut n_isr = blue.iter().filter(|a| a.kind == "isr").count() as u32 * 2;
         if n_isr > 0 && self.isr_sat_dead && !self.imagery {
@@ -658,7 +781,7 @@ impl War {
         self.geo_pending = 0.0;
         self.leo_pending = 0.0;
         self.record();
-        if self.turn >= MAX_TURNS { self.over = true; self.say("white", "推演結束。".into()); }
+        if self.turn >= self.p.turns { self.over = true; self.say("white", "推演結束。".into()); }
     }
 
     fn ready(&mut self) {
@@ -690,7 +813,7 @@ impl War {
         let mine = |b: bool| if b { "已提交" } else { "未提交" };
         let blue_visible = role == "blue" || role == "white";
         json!({
-            "turn": self.turn, "max_turns": MAX_TURNS, "over": self.over, "scenario": self.scenario, "demand": demand(self.turn), "ap": AP,
+            "turn": self.turn, "max_turns": self.p.turns, "over": self.over, "scenario": self.scenario, "demand": demand(self.turn), "ap": AP,
             "pnt": self.pnt, "pnt_backup": blue_visible.then_some(self.pnt_backup_from != u32::MAX),
             // 想定 C：紅方與白方看得到真實距離；藍方只看得到最後一次追蹤到的距離
             "rpo": if role == "blue" { json!(self.rpo_seen) } else { json!(self.rpo) },
@@ -802,8 +925,10 @@ pub async fn war_mc(Json(rq): Json<McReq>) -> Response {
                 let s = w.scores();
                 let m = s["mean_avail"].as_f64().unwrap_or(0.0);
                 if per_game {
+                    let series: Vec<f64> = w.history.iter().skip(1).filter_map(|h| h["avail"].as_f64()).map(|x| (x * 1e5).round() / 1e5).collect();
                     games.push(json!([m, s["min_avail"], s["early_avail"], s["blue"], s["red"], w.isr_ok, w.sar_ok, s["pnt_avail"], w.reputation,
-                                      w.escalation, w.struck as u8, w.attributed as u8, w.isr_sat_dead as u8, w.asat_used as u8, w.cyber_lost, w.geo_lost, w.evades]));
+                                      w.escalation, w.struck as u8, w.attributed as u8, w.isr_sat_dead as u8, w.asat_used as u8, w.cyber_lost, w.geo_lost, w.evades,
+                                      w.misattributed, series]));
                 }
                 means.push(m);
                 if s["min_avail"].as_f64().unwrap_or(1.0) < 0.5 { low += 1; }
@@ -835,7 +960,7 @@ pub async fn war_mc(Json(rq): Json<McReq>) -> Response {
                    "strike_rate": struck / n, "attrib_rate": attr / n, "geo_lost": glost / n, "evades": evades / n, "isr_sat_lost": isr_dead / n});
             if per_game {
                 r["game_cols"] = json!(["mean_avail", "min_avail", "early_avail", "blue_score", "red_score", "isr_ok", "sar_ok", "pnt_avail", "reputation",
-                                        "escalation", "struck", "attributed", "isr_sat_dead", "asat_used", "cyber_lost", "geo_lost", "evades"]);
+                                        "escalation", "struck", "attributed", "isr_sat_dead", "asat_used", "cyber_lost", "geo_lost", "evades", "misattributed", "series"]);
                 r["games"] = json!(games);
             }
             r
@@ -845,6 +970,8 @@ pub async fn war_mc(Json(rq): Json<McReq>) -> Response {
     let p = &rq.params;
     let params = json!({"a_wipe": p.a_wipe, "red_ban": p.red_ban, "b_pnt_jammed": p.b_pnt_jammed, "b_sar_p": p.b_sar_p, "c_p_strike": p.c_p_strike,
         "c_p_strike_tracked": p.c_p_strike_tracked, "c_track_p": p.c_track_p, "c_attrib_p": p.c_attrib_p, "c_evade_p": p.c_evade_p,
-        "c_evade_dip": p.c_evade_dip, "d_img_factor": p.d_img_factor, "d_red_pref": p.d_red_pref});
+        "c_evade_dip": p.c_evade_dip, "d_img_factor": p.d_img_factor, "d_red_pref": p.d_red_pref, "turns": p.turns, "geo_jam": p.geo_jam,
+        "geo_outage_p": p.geo_outage_p, "red_aggr": p.red_aggr, "red_target": p.red_target, "d_switch_p": p.d_switch_p, "d_switch_delay": p.d_switch_delay,
+        "c_attrib_rep": p.c_attrib_rep, "c_misattrib_p": p.c_misattrib_p});
     Json(json!({"runs": runs, "red": rq.red, "scenario": scenario, "params": params, "results": res})).into_response()
 }
