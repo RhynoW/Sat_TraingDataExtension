@@ -42,6 +42,9 @@ ruzstd = "0.9.1"
 ed25519-dalek = "3.0.0"
 semver = "1.0.28"
 sofars = "0.6.3"
+# AIS 船舶追蹤（src/ais.rs）：aisstream.io WebSocket，需 permessage-deflate（tungstenite 不支援壓縮）
+yawc = "0.5"
+futures = { version = "0.3", default-features = false, features = ["std"] }
 
 [build-dependencies]
 cc = "1"

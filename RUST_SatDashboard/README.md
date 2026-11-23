@@ -151,6 +151,14 @@ python scripts\publish_hf.py --local out\hf    # 只輸出到資料夾，搭配 
 
 私鑰遺失時要重新產生並重建 exe，已發出去的舊版 exe 就無法再自動更新（只能手動換）。私鑰請另外備份。
 
+### AIS 船舶追蹤
+
+- 地球儀左側「向量圖層」→「🚢 AIS 船舶」：伺服器端連 [aisstream.io](https://aisstream.io)（`src/ais.rs`，yawc WebSocket＋permessage-deflate），與 Python 版 `scenario04/api/ais.py` 同一套 API，前端共用 `web/static/js/ais.js`。
+- 來源：① aisstream.io（預設只訂閱台灣與東亞，`AIS_BBOX` 可改）；② 航港局「[臺灣海域船舶動態資訊系統](https://mpbais.motcmpb.gov.tw/aismpb/)」GeoJSON（台灣周邊約 9,000 艘、每 60 秒輪詢，**單機版預設開啟**，`AIS_MPB=0` 關閉；不需金鑰）。以 MMSI 合併、較新回報為準，圖層面板可勾選只看某一來源，點選船隻顯示資料來源與收到時間。
+- 金鑰：環境變數 `AISSTREAM_API_KEY`，或在圖層面板直接輸入（存成資料目錄的 `aisstream_key.txt`，只接受本機設定）。金鑰到 aisstream.io 用 GitHub 登入免費申請。
+- 勾選圖層才連線，閒置 10 分鐘（`AIS_IDLE_SEC`）自動斷線；狀態 `/api/ais/status` 含各來源狀態、每段連線長度與重連次數。船位只存在記憶體，1 小時未更新即移除，航跡保留 6 小時。
+- AIS 為船舶自主回報，只有岸基接收站約 15～40 浬內有資料；遠洋沒有資料，位置可能遭干擾或偽造。
+
 ### 網路圖磚與 Himawari
 
 - 圖資目錄沿用 `Rust_WMTS_Server/static/layers.js`（同步為 `web/static/js/map_layers.js`）：NLSC、中研院百年歷史地圖、臺北市歷史圖資、地調中心液化潛勢、防災／地籍等疊圖。

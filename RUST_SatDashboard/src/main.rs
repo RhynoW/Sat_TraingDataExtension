@@ -4,6 +4,7 @@
 //! 啟動後自動開啟瀏覽器；關閉主控台視窗或按 Ctrl+C 結束。
 
 mod about;
+mod ais;
 mod api;
 mod api_phase2;
 mod assets;

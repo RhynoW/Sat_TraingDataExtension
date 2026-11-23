@@ -228,3 +228,16 @@ body{font-family:Tahoma,sans-serif;background:#0a0e17;color:#c9d1d9;display:flex
   border-radius:3px;padding:4px 9px;cursor:pointer;font-family:inherit}
 .o6-connect-btns button:hover{background:#64DD1730}
 .o6-connect-btns .copied{color:#f0f6ff;background:#64DD1755;border-color:#64DD17}
+
+/* AIS 船舶圖層（ais.js） */
+#ais-ctl{margin:2px 0 4px 18px;font-size:11px;line-height:1.45}
+#ais-ctl .ais-sub{display:flex;align-items:center;gap:4px}
+#ais-ctl .ais-status{color:#8b949e;margin:2px 0}
+#ais-ctl .ais-srcs{flex-wrap:wrap;gap:2px 8px;align-items:center;color:#c9d1d9}
+#ais-ctl .ais-srcs label{display:flex;align-items:center;gap:3px}
+#ais-ctl .ais-legend{margin:3px 0;color:#c9d1d9}
+#ais-ctl .ais-note{color:#8b949e;font-size:10px;margin-top:3px}
+#ais-keybox{margin:4px 0;display:flex;flex-wrap:wrap;gap:4px}
+#ais-keybox input{flex:1 1 140px;min-width:0;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:4px;padding:2px 5px;font-size:11px}
+#ais-keybox button{font-size:11px;padding:1px 8px}
+#ais-keybox a{color:#58a6ff;font-size:10px;width:100%}

@@ -134,6 +134,23 @@ window.loadCesium=function(ok,fail){
           <span style="width:9px;height:9px;border-radius:50%;background:#00E5FF;display:inline-block;flex-shrink:0"></span>
           <span data-i18n="chk_ssn">SSN 地面觀測站</span>
         </label>
+        <label>
+          <input type="checkbox" id="chk-ais" onchange="window.AIS&&AIS.toggle(this)"/>
+          <span style="width:9px;height:9px;border-radius:50%;background:#4FC3F7;display:inline-block;flex-shrink:0"></span>
+          <span>&#128674; <span data-ais-i18n="layer">AIS 船舶</span></span>
+        </label>
+        <div id="ais-ctl" style="display:none">
+          <label class="ais-sub"><input type="checkbox" id="ais-moving" onchange="AIS.refresh()"/> <span data-ais-i18n="moving">只顯示航行中</span></label>
+          <div id="ais-srcs" class="ais-srcs" style="display:none"></div>
+          <div id="ais-status" class="ais-status"></div>
+          <div id="ais-keybox" style="display:none">
+            <input id="ais-key" type="password" autocomplete="off" placeholder="貼上 aisstream.io API 金鑰"/>
+            <button type="button" onclick="AIS.saveKey()" data-ais-i18n="key_save">儲存</button>
+            <a href="https://aisstream.io" target="_blank" rel="noopener" data-ais-i18n="key_get">免費申請（GitHub 登入）</a>
+          </div>
+          <div id="ais-legend" class="ais-legend"></div>
+          <div class="ais-note" data-ais-i18n="note">AIS 為船舶自主回報，僅岸基接收站約 15～40 浬內有資料；位置可能遭干擾或偽造，地圖上沒有船不代表沒有船。</div>
+        </div>
       </div>
     </div>
   </div>
@@ -147,6 +164,7 @@ window.loadCesium=function(ok,fail){
   </div>
 </div>
 
+<script src="/static/js/ais.js?v=__BUILD__"></script>
 <script>
 function toggleSec(el){
   var b=el.nextElementSibling;

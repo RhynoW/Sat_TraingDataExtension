@@ -149,6 +149,7 @@ function setLang(lang){
   document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = t(el.getAttribute('data-i18n-title')); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-placeholder')); });
   document.querySelectorAll('.lang-btn').forEach(b => { b.classList.toggle('active', b.dataset.lang === lang); });
+  if(window.AIS) window.AIS.relang();  // AIS 船舶圖層（ais.js）動態文字
 }
 document.addEventListener('DOMContentLoaded', () => setLang(GLOBE_LANG));
 window.setLang = setLang;

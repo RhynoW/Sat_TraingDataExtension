@@ -75,6 +75,7 @@ pub fn router(state: Arc<AppState>) -> Router {
     let r = crate::story::extend(r);
     let r = crate::starlink::extend(r);
     let r = crate::update::extend(r);
+    let r = crate::ais::extend(r);
     r.fallback(fallback).with_state(state)
 }
 
