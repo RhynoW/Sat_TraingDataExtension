@@ -3,7 +3,8 @@
 內容由 docs/book/web/_export_web.py 匯出到 data/book/（book.json、chapters/NN.md、img/；
 英文、日文譯文在 data/book/en|ja/chapters/，為 AI 輔助翻譯，中文原稿為準）。
 介面語言跟隨主程式的 app_lang（zh／ja／en）；某章沒有譯文時顯示中文原稿並加註。
-網址深連結：?mode=book&ch=05（章號兩位數；延伸模擬篇為 S1–S3；附錄為 A1、A2；不帶 ch 為封面與目錄）。
+網址深連結：?mode=book&ch=05（章號兩位數；延伸模擬篇為 S1–S3；附錄為 A1、A2；不帶 ch 為封面與目錄；&lang=en|ja 指定語言）。
+每章標題下顯示該章的分享連結。
 """
 from __future__ import annotations
 
@@ -14,6 +15,7 @@ from pathlib import Path
 import streamlit as st
 
 BOOK_DIR = Path("data") / "book"
+SPACE_URL = "https://huggingface.co/spaces/RhynoWu/maneuver-detection-i18n"
 ASIDE_PREFIX = ("**插敘：", "**Sidebar: ", "**コラム：")
 UI = {
     "cover": {"zh": "封面與目錄", "en": "Cover and contents", "ja": "表紙と目次"},
@@ -30,6 +32,8 @@ UI = {
                "ja": "オンライン版は原稿 {v}（{d}）に基づく。"},
     "fallback": {"zh": "", "en": "This chapter has not been translated yet; the Traditional Chinese original is shown.",
                  "ja": "この章はまだ翻訳されていないため、繁体字中国語の原文を表示している。"},
+    "share": {"zh": "本章連結（點選開新分頁；或複製下方網址分享）", "en": "Link to this chapter (opens in a new tab; or copy the URL below to share)",
+              "ja": "この章へのリンク（新しいタブで開く。下のURLをコピーして共有もできる）"},
     "ai_note": {"zh": "", "en": "English edition: AI-assisted translation; the Traditional Chinese original prevails.",
                 "ja": "日本語版：AI支援による翻訳。中国語の原文が優先する。"},
 }
@@ -118,6 +122,10 @@ def _render_chapter(cid: str):
     md, translated = _chapter(cid, lang)
     title, body = md.split("\n", 1) if "\n" in md else (md, "")
     st.title(title.lstrip("# ").strip(), anchor=False)
+    # 章節分享連結：huggingface.co 外層頁的網址（深連結 ?mode=book&ch=）；在 iframe 內以新分頁開啟
+    url = f"{SPACE_URL}?mode=book" + (f"&lang={lang}" if lang != "zh" else "") + f"&ch={cid}"
+    st.markdown(f"🔗 <a href='{url}' target='_blank' rel='noopener'>{_u('share')}</a>", unsafe_allow_html=True)
+    st.code(url, language=None)
     if lang != "zh" and not translated:
         st.info(_u("fallback"))
     for kind, payload in _blocks(body):
