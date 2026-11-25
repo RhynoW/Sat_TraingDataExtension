@@ -91,6 +91,23 @@ body.ro .edit-only{display:none!important}
       <div id="dup" style="display:none" class="card"></div>
       <div class="tw"><table id="res"><thead><tr><th>NORAD</th><th>目前名稱</th><th>Space-Track 原名</th><th>國際編號</th><th>TLE 曆元（UTC）</th><th>國別／用途</th><th>群組</th><th class="edit-only">操作</th></tr></thead><tbody></tbody></table></div>
     </div>
+    <div class="card">
+      <h2>建議名稱（OBJECT A/B/C…）</h2>
+      <div class="muted" style="margin-bottom:8px">依可靠度：<b>official</b> Space-Track 已正式命名 ＞ <b>inferred</b> GCAT 逐顆判讀或單一酬載發射 ＞ <b>group_inferred</b> 只能確認發射群組（不指派 A/B/C 個體）；<b>conflict</b> 來源矛盾。推論名稱一律加「（推論）」，只作為候選，需勾選才套用；依據、日期與注意事項會寫進備註。任務類型與用途一律不自動歸因。</div>
+      <div class="row">
+        <button class="pri" onclick="SA.loadSuggest()">列出目錄中所有 OBJECT x 的建議</button>
+        <label class="muted">狀態</label><select id="sg-filter"><option value="">全部</option><option value="official">official</option><option value="inferred">inferred</option><option value="group_inferred">group_inferred</option><option value="conflict">conflict</option><option value="unresolved">unresolved</option><option value="upgrade">可升級／有變動（已自訂）</option></select>
+        <span id="sg-msg" class="msg"></span>
+      </div>
+      <div class="row edit-only">
+        <input id="sg-evidence" style="width:420px;max-width:100%" placeholder="額外證據連結（選填，例如 SeeSat-L 討論串、SatTrackCam 文章），多個以空白分隔"/>
+        <label class="muted">複核狀態</label><select id="sg-review"><option value="unreviewed">未複核</option><option value="accepted">已接受</option><option value="disputed">有爭議</option></select>
+        <button onclick="SA.sgCheck('safe')">勾選 official／inferred</button><button onclick="SA.sgCheck('none')">全部取消</button>
+        <button class="pri" onclick="SA.applySuggest()">套用勾選的建議</button>
+      </div>
+      <div class="tw"><table id="sg"><thead><tr><th><input type="checkbox" id="sg-all"/></th><th>NORAD</th><th>目前名稱</th><th>建議名稱（可修改）</th><th>狀態／可信度</th><th>發射群組</th><th>候選任務</th><th>個體對應</th><th>注意</th></tr></thead><tbody></tbody></table></div>
+      <div class="muted" style="margin-top:6px">GCAT 資料：Jonathan C. McDowell, General Catalog of Artificial Space Objects（planet4589.org，CC BY 4.0）。</div>
+    </div>
     <div class="card edit-only">
       <h2>批次匯入／匯出（CSV）</h2>
       <div class="muted" style="margin-bottom:8px">欄位：<code>norad_id,name,group,note</code>。name 空白＝不改名；group 以「/」分層（例：<code>PRC偵察衛星/光學</code>），沒有的群組會自動建立。Excel 請另存為「CSV UTF-8」。</div>

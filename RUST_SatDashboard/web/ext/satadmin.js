@@ -67,13 +67,14 @@
     var tb = document.querySelector('#res tbody');
     if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" class="muted">沒有符合的衛星</td></tr>'; return; }
     tb.innerHTML = rows.map(function (r) {
-      var nm = r.custom ? '<span class="cust" title="自訂名稱（' + esc(r.renamed_by || '') + ' ' + esc(fmtT(r.renamed_at)) + '）">✎ ' + esc(r.name) + '</span>' : esc(r.name);
+      var nm = r.custom ? '<span class="cust" title="自訂名稱（' + esc(r.renamed_by || '') + ' ' + esc(fmtT(r.renamed_at)) + '）">✎ ' + esc(r.name) + '</span>' +
+        (r.name_status && r.name_status !== 'manual' ? ' <span class="muted">[' + esc(r.name_status) + (r.name_confidence ? '/' + esc(r.name_confidence) : '') + ']</span>' : '') : esc(r.name);
       nm += stBadge(r);
       if (r.note) nm += '<div class="muted">' + esc(r.note) + '</div>';
       var grp = (r.groups || []).map(function (g) { return '<span class="tag">' + esc(g) + '</span>'; }).join('');
       var ops = '<button onclick="SA.rename(' + r.norad_id + ')">更名</button> ' +
         (r.custom ? '<button class="dan" onclick="SA.unrename(' + r.norad_id + ')">還原</button> ' : '') +
-        '<button onclick="SA.addToGroup(' + r.norad_id + ')">加入群組</button>';
+        '<button onclick="SA.addToGroup(' + r.norad_id + ')">加入群組</button> <button onclick="SA.loadSuggest([' + r.norad_id + '])">建議名稱</button>';
       return '<tr id="r-' + r.norad_id + '"><td class="num">' + r.norad_id + '</td><td>' + nm + '</td><td>' + esc(r.orig_name || '—') +
         (r.in_catalog ? '' : ' <span class="muted">（不在目前目錄）</span>') + '</td><td>' + esc(r.intl_code || '—') + '</td><td class="num">' +
         esc(fmtT(r.tle_epoch)) + '</td><td>' + esc(r.country || '—') + '／' + esc(r.purpose || '—') + '</td><td>' + grp + '</td><td class="edit-only" style="white-space:nowrap">' + ops + '</td></tr>';
@@ -147,6 +148,76 @@
         (j.errors.length ? '；錯誤 ' + j.errors.length + ' 筆：' + j.errors.slice(0, 3).join('；') : ''), !j.errors.length);
       GROUPS = [];
     }).catch(function (e) { msg('csv-msg', e.message); });
+  }
+
+  // ── 建議名稱 ──
+  var SG = [], SG_STATUS = { official: 'official', inferred: 'inferred', group_inferred: 'group_inferred', conflict: 'conflict', unresolved: 'unresolved' };
+  var CONF_LABEL = { high: '高', medium: '中', low: '低' };
+  var IND_LABEL = { confirmed: '已確認', inferred: '推論', disputed: '有爭議', unconfirmed: '未確認' };
+  function sgChanged(r) {
+    var c = r.custom;
+    if (!c) return '';
+    if (r.name_status === 'official' && c.status !== 'official') return '可升級：Space-Track 已正式命名';
+    if (c.suggest_raw && r.raw_name && c.suggest_raw !== r.raw_name) return '來源名稱已變動：' + c.suggest_raw + ' → ' + r.raw_name;
+    return '';
+  }
+  function renderSuggest() {
+    var f = $('sg-filter').value;
+    var rows = SG.filter(function (r) { return !f || (f === 'upgrade' ? sgChanged(r) : r.name_status === f); });
+    var stc = { official: 'st-ok', inferred: 'st-stale', group_inferred: 'st-stale', conflict: 'st-decayed', unresolved: 'st-no_satcat' };
+    document.querySelector('#sg tbody').innerHTML = rows.map(function (r) {
+      var c = r.custom, ch = sgChanged(r), L = r.layers || {};
+      var mates = (r.mates || []).map(function (m) { return m.intl + ' ' + (m.name || '') + (m.gcat_name ? '（GCAT：' + m.gcat_name + '）' : '') + (m.self ? ' ←' : ''); }).join('\n');
+      var warn = (r.warnings || []).concat(ch ? [ch] : []);
+      return '<tr data-n="' + r.norad_id + '"><td>' + (r.suggest && canEdit() ? '<input type="checkbox" class="sg-chk" value="' + r.norad_id + '"/>' : '') + '</td><td class="num">' + r.norad_id +
+        '<div class="muted">' + esc(r.intl_code || '') + '</div></td><td>' + esc(r.current_name) + (c ? '<div class="cust">✎ ' + esc(c.name) + '</div>' : '') + '</td><td>' +
+        (r.suggest ? '<input class="sg-name" style="width:240px" maxlength="64" value="' + esc(r.suggest) + '"/>' + (r.raw_name && r.raw_name !== r.suggest ? '<div class="muted">原始：' + esc(r.raw_name) + '</div>' : '') : '<span class="muted">（無可靠來源，維持原名）</span>') +
+        '</td><td><span class="st ' + (stc[r.name_status] || '') + '">' + esc(r.name_status) + '</span>' + (r.confidence ? ' <span class="muted">可信度' + CONF_LABEL[r.confidence] + '</span>' : '') +
+        '</td><td title="' + esc(mates) + '">' + esc((L.launch_group || {}).value || '—') + '<div class="muted">同次發射 ' + (r.mates || []).length + ' 個物體（游標停留看清單）</div></td><td>' +
+        esc((L.candidate_mission || {}).value || '—') + '</td><td>' + esc(IND_LABEL[(L.individual || {}).status] || '—') + '</td><td style="white-space:normal;max-width:280px;color:#e3b341">' +
+        esc(warn.join('；')) + '</td></tr>';
+    }).join('') || '<tr><td colspan="9" class="muted">沒有符合的項目</td></tr>';
+    var all = $('sg-all'); if (all) all.onchange = function () { document.querySelectorAll('.sg-chk').forEach(function (x) { x.checked = all.checked; }); };
+  }
+  function loadSuggest(ids) {
+    msg('sg-msg', '分析中…', true);
+    var url = ids ? '/api/satadmin/suggest?norad=' + ids.join(',') : '/api/satadmin/suggest?scope=objects&limit=2000';
+    api('GET', url).then(function (j) {
+      SG = j.results;
+      if (!j.gcat) msg('sg-msg', '資料庫內尚無 GCAT 資料（每日管線更新後才有逐顆與發射任務名稱）', false);
+      else {
+        var c = j.counts;
+        msg('sg-msg', '共 ' + j.count + ' 顆：official ' + c.official + '、inferred ' + c.inferred + '、group_inferred ' + c.group_inferred + '、conflict ' + c.conflict + '、unresolved ' + c.unresolved + '（GCAT ' + (j.gcat.sat_updated || '') + '）', true);
+      }
+      renderSuggest();
+      if (ids) $('sg').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }).catch(function (e) { msg('sg-msg', e.message); });
+  }
+  function sgCheck(mode) {
+    document.querySelectorAll('.sg-chk').forEach(function (x) {
+      var r = SG.find(function (y) { return y.norad_id === +x.value; });
+      x.checked = mode === 'safe' && r && (r.name_status === 'official' || r.name_status === 'inferred') && !(r.warnings || []).length;
+    });
+  }
+  function applySuggest() {
+    var ev = ($('sg-evidence').value.match(/https?:\/\/\S+/g) || []), review = $('sg-review').value, items = [];
+    document.querySelectorAll('.sg-chk:checked').forEach(function (x) {
+      var r = SG.find(function (y) { return y.norad_id === +x.value; }); if (!r) return;
+      var name = x.closest('tr').querySelector('.sg-name').value.trim();
+      var evid = (r.sources || []).map(function (s) { return s.url; }).concat(ev).filter(function (u, i, a) { return u && a.indexOf(u) === i; });
+      items.push({ norad: r.norad_id, name: name, note: r.note + (name !== r.suggest ? '；人工修改建議名稱' : '') + (ev.length ? '；證據：' + ev.join(' ') : ''),
+        status: name !== r.suggest ? 'manual' : r.name_status, confidence: r.confidence || '', evidence: evid, review: review, suggest_raw: r.raw_name || '' });
+    });
+    if (!items.length) { msg('sg-msg', '請先勾選要套用的建議'); return; }
+    api('POST', '/api/satadmin/names_batch', items).then(function (j) {
+      // 只更新已套用的列（不重載整份清單，避免蓋掉訊息）
+      items.forEach(function (it) {
+        var r = SG.find(function (y) { return y.norad_id === it.norad; });
+        if (r) r.custom = { name: it.name, status: it.status, confidence: it.confidence, suggest_raw: it.suggest_raw };
+      });
+      renderSuggest();
+      msg('sg-msg', '已套用 ' + j.applied + ' 筆；地球儀約數秒後套用新名稱' + (j.errors.length ? '；失敗：' + j.errors.slice(0, 3).join('；') : ''), !j.errors.length);
+    }).catch(function (e) { msg('sg-msg', e.message); });
   }
 
   // ── 群組 ──
@@ -441,7 +512,8 @@
   }
 
   $('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') lookup(); });
-  window.SA = { lookup: lookup, rename: rename, unrename: unrename, loadDup: loadDup, loadNamed: loadNamed, importCsv: importCsv, newGroup: newGroup,
+  $('sg-filter').addEventListener('change', renderSuggest);
+  window.SA = { loadSuggest: loadSuggest, sgCheck: sgCheck, applySuggest: applySuggest, lookup: lookup, rename: rename, unrename: unrename, loadDup: loadDup, loadNamed: loadNamed, importCsv: importCsv, newGroup: newGroup,
     saveGroup: saveGroup, delGroup: delGroup, addMembers: function () { addMembers(); }, removeChecked: removeChecked, addToGroup: addToGroup,
     setup: setup, addUser: addUser, toggleUser: toggleUser, resetPw: resetPw, delUser: delUser, showPw: showPw, logout: logout, loadAudit: loadAudit,
     loadDecay: loadDecay, loadRecent: loadRecent, refresh: refresh, saveCred: saveCred, delCred: delCred };

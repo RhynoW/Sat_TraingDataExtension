@@ -38,6 +38,21 @@ pub struct NameRec {
     pub by: String,
     #[serde(default)]
     pub at: String,
+    /// 名稱證據等級：official／inferred／group_inferred／conflict／manual（人工輸入）
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub status: String,
+    /// high／medium／low
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub confidence: String,
+    /// 證據連結（來源網址、SeeSat-L 討論串等）
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub evidence: Vec<String>,
+    /// 複核狀態：unreviewed／accepted／disputed／superseded
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub review: String,
+    /// 套用時的原始建議名稱（日後來源變動可比對）
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub suggest_raw: String,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -350,6 +365,9 @@ fn sat_json(idx: &SatIndex, d: &Data, groups_of: &HashMap<u32, Vec<String>>, sc:
         "note": rec.map(|r| r.note.clone()).unwrap_or_default(),
         "renamed_by": rec.map(|r| r.by.clone()),
         "renamed_at": rec.map(|r| r.at.clone()),
+        "name_status": rec.map(|r| r.status.clone()).filter(|s| !s.is_empty()),
+        "name_confidence": rec.map(|r| r.confidence.clone()).filter(|s| !s.is_empty()),
+        "evidence": rec.map(|r| r.evidence.clone()).unwrap_or_default(),
         "in_catalog": s.is_some(),
         "intl_code": s.map(|s| intl_code(&s.line1)),
         "tle_epoch": s.and_then(|s| tle_epoch(&s.line1)).map(|t| t.to_rfc3339_opts(chrono::SecondsFormat::Secs, true)),
@@ -391,6 +409,7 @@ pub fn extend(r: Router<Arc<AppState>>) -> Router<Arc<AppState>> {
         .route("/api/satadmin/duplicates", get(api_duplicates))
         .route("/api/satadmin/names", get(api_names))
         .route("/api/satadmin/names/{nid}", put(api_rename).delete(api_unrename))
+        .route("/api/satadmin/names_batch", post(api_rename_batch))
         .route("/api/satadmin/groups", get(api_groups).post(api_group_create))
         .route("/api/satadmin/groups/{id}", put(api_group_update).delete(api_group_delete))
         .route("/api/satadmin/groups/{id}/members", post(api_group_members))
@@ -479,15 +498,46 @@ struct RenameReq {
     name: String,
     #[serde(default)]
     note: String,
+    #[serde(default)]
+    status: String,
+    #[serde(default)]
+    confidence: String,
+    #[serde(default)]
+    evidence: Vec<String>,
+    #[serde(default)]
+    review: String,
+    #[serde(default)]
+    suggest_raw: String,
+}
+
+const STATUSES: [&str; 6] = ["", "manual", "official", "inferred", "group_inferred", "conflict"];
+const REVIEWS: [&str; 5] = ["", "unreviewed", "accepted", "disputed", "superseded"];
+
+/// 驗證並組成更名紀錄
+fn make_rec(b: &RenameReq, orig: String, by: &str) -> Result<NameRec, String> {
+    let name = b.name.trim().to_string();
+    check_name(&name, "名稱")?;
+    if !STATUSES.contains(&b.status.as_str()) || !REVIEWS.contains(&b.review.as_str()) || !["", "high", "medium", "low"].contains(&b.confidence.as_str()) {
+        return Err("status／confidence／review 值不正確".into());
+    }
+    let evidence: Vec<String> = b.evidence.iter().map(|e| e.trim().to_string()).filter(|e| e.starts_with("http://") || e.starts_with("https://")).take(10).collect();
+    Ok(NameRec {
+        name,
+        orig,
+        note: b.note.trim().chars().take(500).collect(),
+        by: by.into(),
+        at: now_iso(),
+        status: if b.status.is_empty() { "manual".into() } else { b.status.clone() },
+        confidence: b.confidence.clone(),
+        evidence,
+        review: if b.review.is_empty() { "unreviewed".into() } else { b.review.clone() },
+        suggest_raw: b.suggest_raw.chars().take(200).collect(),
+    })
 }
 
 async fn api_rename(State(st): St, Extension(c): Extension<Caller>, Path(nid): Path<u32>, Json(b): Json<RenameReq>) -> Response {
     if !c.can_edit() {
         return forbid_edit();
-    }
-    let name = b.name.trim().to_string();
-    if let Err(e) = check_name(&name, "名稱") {
-        return json_err(StatusCode::BAD_REQUEST, e);
     }
     let idx = st.index();
     let cur = idx.sats.get(&nid).map(|s| s.name.clone());
@@ -498,8 +548,9 @@ async fn api_rename(State(st): St, Extension(c): Extension<Caller>, Path(nid): P
             _ => cur.clone().unwrap_or_default(),
         };
         let prev = d.names.get(&nid).map(|r| r.name.clone()).unwrap_or(orig.clone());
-        d.names.insert(nid, NameRec { name: name.clone(), orig: orig.clone(), note: b.note.trim().into(), by: by.clone(), at: now_iso() });
-        d.push_audit(&by, "更名", &format!("NORAD {nid}：{prev} → {name}"));
+        let rec = make_rec(&b, orig, &by)?;
+        d.push_audit(&by, "更名", &format!("NORAD {nid}：{prev} → {}（{}）", rec.name, rec.status));
+        d.names.insert(nid, rec);
         Ok(())
     });
     match res {
@@ -507,7 +558,57 @@ async fn api_rename(State(st): St, Extension(c): Extension<Caller>, Path(nid): P
             st.satadmin.schedule_rebuild(st.clone());
             Json(json!({"ok": true, "in_catalog": cur.is_some()})).into_response()
         }
-        Err(e) => json_err(StatusCode::INTERNAL_SERVER_ERROR, e),
+        Err(e) => json_err(StatusCode::BAD_REQUEST, e),
+    }
+}
+
+#[derive(Deserialize)]
+struct BatchItem {
+    norad: u32,
+    #[serde(flatten)]
+    req: RenameReq,
+}
+
+/// 批次更名（建議名稱「套用勾選」）：一次寫檔、一筆操作紀錄
+async fn api_rename_batch(State(st): St, Extension(c): Extension<Caller>, Json(items): Json<Vec<BatchItem>>) -> Response {
+    if !c.can_edit() {
+        return forbid_edit();
+    }
+    if items.is_empty() || items.len() > 3000 {
+        return json_err(StatusCode::BAD_REQUEST, "一次 1–3000 筆");
+    }
+    let idx = st.index();
+    let by = c.name();
+    let res = st.satadmin.edit(|d| {
+        let mut errs = Vec::new();
+        let mut n = 0;
+        let mut stat: HashMap<String, usize> = HashMap::new();
+        for it in &items {
+            let orig = match d.names.get(&it.norad) {
+                Some(r) if !r.orig.is_empty() => r.orig.clone(),
+                _ => idx.sats.get(&it.norad).map(|s| s.name.clone()).unwrap_or_default(),
+            };
+            match make_rec(&it.req, orig, &by) {
+                Ok(rec) => {
+                    *stat.entry(rec.status.clone()).or_default() += 1;
+                    d.names.insert(it.norad, rec);
+                    n += 1;
+                }
+                Err(e) => errs.push(format!("NORAD {}：{e}", it.norad)),
+            }
+        }
+        let mut s: Vec<String> = stat.iter().map(|(k, v)| format!("{k} {v}")).collect();
+        s.sort();
+        d.push_audit(&by, "批次更名（建議名稱）", &format!("{n} 筆（{}）：{}", s.join("、"), short_list(&items.iter().map(|i| i.norad).collect::<Vec<_>>())));
+        errs.truncate(50);
+        Ok(json!({"ok": true, "applied": n, "errors": errs}))
+    });
+    match res {
+        Ok(v) => {
+            st.satadmin.schedule_rebuild(st.clone());
+            Json(v).into_response()
+        }
+        Err(e) => json_err(StatusCode::BAD_REQUEST, e),
     }
 }
 
@@ -876,7 +977,7 @@ pub fn import_csv(d: &mut Data, text: &str, by: &str, cur_names: &HashMap<u32, S
                 };
                 let changed = d.names.get(&nid).map_or(true, |x| x.name != name || x.note != note);
                 if changed {
-                    d.names.insert(nid, NameRec { name: name.clone(), orig, note: note.clone(), by: by.into(), at: now_iso() });
+                    d.names.insert(nid, NameRec { name: name.clone(), orig, note: note.clone(), by: by.into(), at: now_iso(), status: "manual".into(), review: "unreviewed".into(), ..Default::default() });
                     renamed += 1;
                 }
             }

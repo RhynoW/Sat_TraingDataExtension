@@ -177,6 +177,7 @@ python scripts\publish_hf.py --local out\hf    # 只輸出到資料夾，搭配 
 | `user_private\sat_custom.json` | 自訂名稱、群組、操作紀錄（全組織共用；每次寫入保留上一版 `.bak`） |
 
 - **更名**：依 NORAD ID 或名稱／國際編號查詢，輸入自訂名稱與備註；原 Space-Track 名稱保留，可隨時還原。「列出重複名稱」可找出 OBJECT A、TBA - TO BE ASSIGNED 等同名衛星（可排除碎片與火箭殘骸）。更名約 1 秒後重建索引，地球儀、搜尋與報表都會使用新名稱。
+- **建議名稱**：「建議名稱」辨識 OBJECT A/B/C：official（Space-Track 已正式命名）＞ inferred（GCAT 逐顆判讀或單一酬載發射）＞ group_inferred（只確認發射群組，命名為「XX 群組衛星（推論）」、不指派 A/B/C 個體）；conflict 標示來源矛盾或類型不一致（例如 Space-Track 已判定為碎片）。每筆附發射群組／候選任務／個體對應分層判讀與來源鏈，勾選後才套用，更名紀錄保存名稱狀態、可信度、證據連結（可加 SeeSat-L 等）與複核狀態；任務類型與用途不自動歸因。GCAT（McDowell, planet4589.org, CC BY 4.0）與 SATCAT 由每日管線寫入 DB。API：`/api/satadmin/suggest`、`POST /api/satadmin/names_batch`。
 - **群組**：可多層（例：PRC偵察衛星 → 光學／雷達／電子偵察），逐顆加入或移除 NORAD ID；每個群組可設顏色、感測器類型與預設偵照角度（子群組未設定時沿用上層），供過頂預報使用。
 - **CSV**：匯入欄位 `norad_id,name,group,note`（group 以「/」分層，沒有的群組自動建立）；匯出含原名與群組路徑（UTF-8 BOM，Excel 可直接開啟）。
 - **帳號**：尚未建立帳號時維持原本行為，不需登入；此時本機視為管理者，區網連線只能查詢。在「帳號管理」由本機建立第一個管理者之後，所有頁面與 API 都需要登入（session 12 小時，閒置會延長；同一帳號連續錯 5 次鎖 60 秒）。
@@ -204,7 +205,7 @@ python scripts\publish_hf.py --local out\hf    # 只輸出到資料夾，搭配 
 
 地球儀頂端「📅 過頂預報」（`/forecast`），輸出 CSV，不做視覺化：
 
-- **中心點**：可設多個（最多 30 個），每個有經緯度、高度和範圍半徑。半徑 0 只看中心點；半徑大於 0 時，衛星偵照範圍與該圓形區域有交集就算可偵照。常用中心點存在 `user_privateorecast_sites.json`，由編輯者以上儲存。
+- **中心點**：可設多個（最多 30 個），每個有經緯度、高度和範圍半徑。半徑 0 只看中心點；半徑大於 0 時，衛星偵照範圍與該圓形區域有交集就算可偵照。常用中心點存在 `user_private\forecast_sites.json`，由編輯者以上儲存。
 - **期間**：最長 62 天，預設 31 天。1 個月、7 顆衛星、3 個中心點，debug 版約 1 秒。
 - **過頂判定**：以中心點仰角門檻定義過頂時段，預設 10°。
 - **偵照角度**：中心點相對衛星的離天底角 ≤ 偵照角度才算可偵照，CSV 會附可偵照起訖時間與偵照地面半徑（500 km 高度時 15° 約 135 km、30° 約 290 km）。角度優先用群組設定（子群組沿用上層），也可以一律套用同一角度。
@@ -272,6 +273,7 @@ src/
   state.rs      索引背景重建、歷史索引、快取
   auth.rs       帳號、角色權限、登入 session、權限中介層
   satadmin.rs   衛星更名、群組分類、CSV 匯入匯出、操作紀錄
+  suggest.rs    建議名稱：Space-Track／GCAT 證據等級（official／inferred／group_inferred／conflict）
   ephemeris.rs  星歷狀態、一鍵重抓（CelesTrak／Space-Track 覆蓋層）、SATCAT 與 DECAY 列表
   forecast.rs   過頂預報：多中心點、偵照角度、日照與日出日落、歷史 TLE 誤差估算、CSV
   api.rs        主頁 HTTP 路由；api_phase2.rs 台北／RPO／海纜路由
@@ -285,6 +287,12 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 ```
 
 ## 版本紀錄
+
+### v0.1.23（2026-11-26）
+
+- 衛星管理頁新增「建議名稱」：辨識 OBJECT A/B/C 的可能正式名稱。證據等級 official（Space-Track 已命名）＞ inferred（GCAT 逐顆判讀或單一酬載發射）＞ group_inferred（只確認發射群組，命名為「XX 群組衛星（推論）」、不指派 A/B/C 個體）；conflict 標示來源矛盾或類型不一致
+- 每筆附發射群組／候選任務／個體對應分層判讀、來源鏈與警示（非酬載、類型不一致）；勾選後以 `POST /api/satadmin/names_batch` 批次套用，更名紀錄保存名稱狀態、可信度、證據連結與複核狀態；任務類型與用途不自動歸因
+- GCAT（McDowell, planet4589.org, CC BY 4.0）由每日管線寫入 DB（`gcat_sat`／`gcat_launch`／`gcat_meta`）；API `/api/satadmin/suggest?scope=objects` 或 `?norad=`
 
 ### v0.1.22（2026-11-25）
 

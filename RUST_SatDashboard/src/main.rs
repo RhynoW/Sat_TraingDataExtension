@@ -30,6 +30,7 @@ mod starlink;
 mod story;
 mod rpo;
 mod satadmin;
+mod suggest;
 mod state;
 mod tiles;
 mod update;
