@@ -123,27 +123,98 @@ pub struct SatcatRec {
 
 pub type Satcat = Arc<HashMap<u32, SatcatRec>>;
 
-static SATCAT_CACHE: Lazy<Mutex<Option<(PathBuf, Option<SystemTime>, Satcat)>>> = Lazy::new(|| Mutex::new(None));
+type SatcatKey = (PathBuf, Option<SystemTime>, Option<PathBuf>, Option<SystemTime>);
+static SATCAT_CACHE: Lazy<Mutex<Option<(SatcatKey, Satcat, Option<FetchRec>)>>> = Lazy::new(|| Mutex::new(None));
 
-/// SATCAT（檔案更新才重讀）
+/// 資料庫內的 satcat／satcat_meta 表（本機每日管線 tools/update_satcat.py 寫入、跟著 DB 發布）
+fn db_satcat(db: &std::path::Path) -> Option<(Vec<SatcatRec>, FetchRec)> {
+    let con = crate::index::open_ro(db).ok()?;
+    let has = |t: &str| -> bool {
+        con.query_row("SELECT count(*) FROM information_schema.tables WHERE table_name = ?", [t], |r| r.get::<_, i64>(0))
+            .map(|n| n > 0)
+            .unwrap_or(false)
+    };
+    if !has("satcat") || !has("satcat_meta") {
+        return None;
+    }
+    let meta = con
+        .query_row("SELECT source, fetched_at, count, decayed FROM satcat_meta LIMIT 1", [], |r| {
+            Ok(FetchRec {
+                source: format!("資料庫（{}）", r.get::<_, Option<String>>(0)?.unwrap_or_default()),
+                fetched_at: r.get::<_, Option<String>>(1)?.unwrap_or_default(),
+                count: r.get::<_, Option<i64>>(2)?.unwrap_or(0) as usize,
+                decayed: r.get::<_, Option<i64>>(3)?.unwrap_or(0) as usize,
+                ..Default::default()
+            })
+        })
+        .ok()?;
+    let mut st = con
+        .prepare("SELECT norad_id, name, intl, object_type, ops_status, owner, launch, decay, period, incl, apogee, perigee FROM satcat")
+        .ok()?;
+    let s = |v: Option<String>| v.unwrap_or_default().trim().to_string();
+    let rows: Vec<SatcatRec> = st
+        .query_map([], |r| {
+            Ok(SatcatRec {
+                norad: r.get::<_, i64>(0)? as u32,
+                name: s(r.get(1)?),
+                intl: s(r.get(2)?),
+                object_type: s(r.get(3)?),
+                ops_status: s(r.get(4)?),
+                owner: s(r.get(5)?),
+                launch: s(r.get(6)?),
+                decay: s(r.get(7)?),
+                period: r.get(8)?,
+                incl: r.get(9)?,
+                apogee: r.get(10)?,
+                perigee: r.get(11)?,
+            })
+        })
+        .ok()?
+        .flatten()
+        .collect();
+    (!rows.is_empty()).then_some((rows, meta))
+}
+
+/// SATCAT：本機重抓的 satcat.json 與資料庫內 satcat 表取較新者（任一檔案更新才重讀）
 pub fn satcat(cfg: &Config) -> Satcat {
+    satcat_and_meta(cfg).0
+}
+
+/// 目前生效之 SATCAT 來源資訊
+pub fn satcat_meta(cfg: &Config) -> Option<FetchRec> {
+    satcat_and_meta(cfg).1
+}
+
+fn satcat_and_meta(cfg: &Config) -> (Satcat, Option<FetchRec>) {
     let p = dir(cfg).join(SATCAT);
     let mt = std::fs::metadata(&p).and_then(|m| m.modified()).ok();
+    let db = cfg.resolve_db();
+    let dbmt = db.as_ref().and_then(|d| std::fs::metadata(d).ok()).and_then(|m| m.modified().ok());
+    let key: SatcatKey = (p.clone(), mt, db.clone(), dbmt);
     let mut c = SATCAT_CACHE.lock();
-    if let Some((cp, cm, v)) = c.as_ref() {
-        if *cp == p && *cm == mt {
-            return v.clone();
+    if let Some((k, v, m)) = c.as_ref() {
+        if *k == key {
+            return (v.clone(), m.clone());
         }
     }
-    let v: Satcat = Arc::new(
-        std::fs::read(&p)
-            .ok()
-            .and_then(|b| serde_json::from_slice::<Vec<SatcatRec>>(&b).ok())
-            .map(|v| v.into_iter().map(|r| (r.norad, r)).collect())
-            .unwrap_or_default(),
-    );
-    *c = Some((p, mt, v.clone()));
-    v
+    let file: Option<(Vec<SatcatRec>, Option<FetchRec>)> = std::fs::read(&p)
+        .ok()
+        .and_then(|b| serde_json::from_slice::<Vec<SatcatRec>>(&b).ok())
+        .filter(|v| !v.is_empty())
+        .map(|v| (v, read_meta(cfg).satcat));
+    let from_db = db.as_deref().and_then(db_satcat);
+    let file_at = file.as_ref().and_then(|f| f.1.as_ref().map(|m| m.fetched_at.clone())).unwrap_or_default();
+    let (rows, meta) = match (file, from_db) {
+        (Some(f), Some(d)) => {
+            if d.1.fetched_at > file_at { (d.0, Some(d.1)) } else { (f.0, f.1) }
+        }
+        (Some(f), None) => (f.0, f.1),
+        (None, Some(d)) => (d.0, Some(d.1)),
+        (None, None) => (Vec::new(), None),
+    };
+    let v: Satcat = Arc::new(rows.into_iter().map(|r| (r.norad, r)).collect());
+    *c = Some((key, v.clone(), meta.clone()));
+    (v, meta)
 }
 
 fn fnum(s: &str) -> Option<f64> {
@@ -629,7 +700,7 @@ fn status_json(st: &Arc<AppState>) -> Value {
         },
         "index": index_epoch_stats(st),
         "gp": meta.gp,
-        "satcat": meta.satcat,
+        "satcat": satcat_meta(cfg),
         "overlay_count": load_overlay(cfg).len(),
         "job": JOB.lock().clone(),
         "spacetrack": {
@@ -773,7 +844,7 @@ async fn api_decay(State(st): State<Arc<AppState>>, Query(q): Query<HashMap<Stri
     }
     Json(json!({
         "rows": rows, "counts": counts, "stale_days": stale_days, "scope": scope,
-        "satcat": read_meta(cfg).satcat, "satcat_loaded": !sc.is_empty(),
+        "satcat": satcat_meta(cfg), "satcat_loaded": !sc.is_empty(),
     }))
     .into_response()
 }

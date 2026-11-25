@@ -286,6 +286,10 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 
 ## 版本紀錄
 
+### v0.1.22（2026-11-25）
+
+- SATCAT（DECAY 再入日期）改為跟著資料庫發布：每日管線 `scenario-advanced01/tools/update_satcat.py` 以 Space-Track 下載後寫入 DB 的 `satcat`／`satcat_meta` 表；單機版比較本機重抓的檔案與 DB 內的資料，取較新者（「衛星失能」不必再自行連 CelesTrak）
+
 ### v0.1.21（2026-11-25）
 
 客戶回饋 8 項（僅單機版；資料只存在本機 `user_private\`）
