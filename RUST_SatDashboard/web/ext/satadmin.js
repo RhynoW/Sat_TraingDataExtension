@@ -57,6 +57,7 @@
       if (b.dataset.t === 'users') loadUsers();
       if (b.dataset.t === 'audit') loadAudit();
       if (b.dataset.t === 'decay') decayTab();
+      if (b.dataset.t === 'changes' && !CH_LOADED) loadChanges();
       if (b.dataset.t === 'ephem') loadEphem();
     });
   });
@@ -382,6 +383,71 @@
     }).catch(function (e) { msg('dr-msg', e.message); });
   }
 
+  // ── SATCAT 每日異動 ──
+  var CH = [], CH_SHOWN = [], CH_LOADED = false;
+  var KIND_LABEL = { new: '新編目', named: '正式命名', renamed: '更名', decayed: '再入', decay_fix: '再入日期修正', type: '類型變更', other: '其他欄位' };
+  var KIND_CLS = { new: 'st-no_satcat', named: 'st-ok', renamed: 'st-stale', decayed: 'st-decayed', decay_fix: 'st-decayed', type: 'st-stale', other: 'st-no_satcat' };
+  var FIELD_LABEL = { catalog: '編目', name: '名稱', intl: '國際編號', owner: '國家', launch: '發射日', decay: 'DECAY', object_type: '類型' };
+  function chMine(r) { return !!r.custom || (r.groups || []).length > 0; }
+  function chNotes(r) {
+    var out = [], c = r.custom;
+    if (r.upgrade) out.push('可升級：已套用推論名稱「' + c.name + '」，Space-Track 已正式命名為 ' + r.current);
+    else if (c && (r.kind === 'named' || r.kind === 'renamed')) out.push('已自訂名稱「' + c.name + '」');
+    if (r.catalog_stale) out.push('TLE 目錄仍顯示 ' + r.catalog_name);
+    if (r.kind === 'decayed' && (r.groups || []).length) out.push('群組內衛星再入');
+    return out;
+  }
+  function changeText(r) {
+    if (r.field === 'catalog') return '新編目：' + (r.current || '—');
+    return (FIELD_LABEL[r.field] || r.field) + '：' + (r.previous || '（空）') + ' → ' + (r.current || '（空）');
+  }
+  function renderChanges() {
+    var k = $('ch-kind').value, mine = $('ch-mine').checked, q = $('ch-q').value.trim().toUpperCase();
+    CH_SHOWN = CH.filter(function (r) {
+      return (!k || r.kind === k) && (!mine || chMine(r)) &&
+        (!q || q === String(r.norad_id) || [r.name, r.intl, r.previous, r.current].some(function (s) { return (s || '').toUpperCase().indexOf(q) >= 0; }));
+    });
+    var lim = 2000;
+    document.querySelector('#ch tbody').innerHTML = CH_SHOWN.slice(0, lim).map(function (r) {
+      var c = r.custom, notes = chNotes(r);
+      return '<tr><td class="num">' + esc(r.change_made) + '</td><td class="num">' + r.norad_id + '</td><td>' + esc(r.name) +
+        (c ? '<div class="cust">✎ ' + esc(c.name) + '</div>' : '') + (r.groups || []).map(function (g) { return '<span class="tag">' + esc(g) + '</span>'; }).join('') +
+        '</td><td><span class="st ' + (KIND_CLS[r.kind] || '') + '">' + esc(KIND_LABEL[r.kind] || r.kind) + '</span></td><td>' + esc(changeText(r)) +
+        '</td><td>' + esc(r.intl || '—') + '</td><td class="muted">' + esc(r.source === 'spacetrack' ? 'Space-Track' : '快照比對') +
+        '</td><td style="white-space:normal;max-width:300px;color:#e3b341">' + esc(notes.join('；')) +
+        (r.kind === 'named' || r.kind === 'renamed' ? ' <button onclick="SA.chSuggest(' + r.norad_id + ')">建議名稱</button>' : '') + '</td></tr>';
+    }).join('') || '<tr><td colspan="8" class="muted">沒有符合的異動</td></tr>';
+    msg('ch-msg', '顯示 ' + Math.min(CH_SHOWN.length, lim) + ' / ' + CH_SHOWN.length + ' 筆' + (CH_SHOWN.length > lim ? '（請縮小範圍；CSV 含全部）' : ''), true);
+  }
+  function loadChanges() {
+    CH_LOADED = true;
+    msg('ch-msg', '載入中…', true);
+    api('GET', '/api/satadmin/changes?days=' + $('ch-days').value).then(function (j) {
+      CH = j.results;
+      var m = j.meta;
+      if (!m) { $('ch-sum').innerHTML = '<span style="color:#d29922">資料庫內尚無 SATCAT 異動資料（每日管線更新後才有）</span>'; }
+      else {
+        $('ch-sum').innerHTML = '近 ' + j.days + ' 天：' + Object.keys(KIND_LABEL).map(function (k) {
+          return '<a href="#" class="ch-k" data-k="' + k + '">' + KIND_LABEL[k] + ' <b>' + (j.counts[k] || 0) + '</b></a>';
+        }).join('・') + '　|　Space-Track satcat_change 取得於 ' + esc(fmtT(m.fetched_at)) + ' UTC（保留 ' + m.days + ' 天，共 ' + m.count.toLocaleString() + ' 筆）';
+        $('ch-sum').querySelectorAll('.ch-k').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); $('ch-kind').value = a.dataset.k; renderChanges(); }; });
+      }
+      renderChanges();
+    }).catch(function (e) { msg('ch-msg', e.message); });
+  }
+  function changesCsv() {
+    var q = function (s) { s = String(s == null ? '' : s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    var out = '\ufeffchange_made,norad_id,name,custom_name,kind,field,previous,current,intl,source,groups,notes\n' + CH_SHOWN.map(function (r) {
+      return [r.change_made, r.norad_id, q(r.name), q(r.custom ? r.custom.name : ''), KIND_LABEL[r.kind] || r.kind, FIELD_LABEL[r.field] || r.field, q(r.previous), q(r.current), q(r.intl),
+        r.source, q((r.groups || []).join(' | ')), q(chNotes(r).join('；'))].join(',');
+    }).join('\n') + '\n';
+    var d = new Date(), st = d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2) + '_' + ('0' + d.getHours()).slice(-2) + ('0' + d.getMinutes()).slice(-2);
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([out], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'satcat_change_' + st + '.csv'; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  function chSuggest(n) { document.querySelector('#tabs button[data-t="names"]').click(); loadSuggest([n]); }
+
   // ── 星歷資料 ──
   var EP_TIMER = null;
   function ago(iso) {
@@ -513,7 +579,10 @@
 
   $('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') lookup(); });
   $('sg-filter').addEventListener('change', renderSuggest);
-  window.SA = { loadSuggest: loadSuggest, sgCheck: sgCheck, applySuggest: applySuggest, lookup: lookup, rename: rename, unrename: unrename, loadDup: loadDup, loadNamed: loadNamed, importCsv: importCsv, newGroup: newGroup,
+  ['ch-kind', 'ch-mine'].forEach(function (id) { $(id).addEventListener('change', renderChanges); });
+  $('ch-days').addEventListener('change', loadChanges);
+  $('ch-q').addEventListener('keydown', function (e) { if (e.key === 'Enter') renderChanges(); });
+  window.SA = { loadChanges: loadChanges, changesCsv: changesCsv, chSuggest: chSuggest, loadSuggest: loadSuggest, sgCheck: sgCheck, applySuggest: applySuggest, lookup: lookup, rename: rename, unrename: unrename, loadDup: loadDup, loadNamed: loadNamed, importCsv: importCsv, newGroup: newGroup,
     saveGroup: saveGroup, delGroup: delGroup, addMembers: function () { addMembers(); }, removeChecked: removeChecked, addToGroup: addToGroup,
     setup: setup, addUser: addUser, toggleUser: toggleUser, resetPw: resetPw, delUser: delUser, showPw: showPw, logout: logout, loadAudit: loadAudit,
     loadDecay: loadDecay, loadRecent: loadRecent, refresh: refresh, saveCred: saveCred, delCred: delCred };

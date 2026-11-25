@@ -178,6 +178,7 @@ python scripts\publish_hf.py --local out\hf    # 只輸出到資料夾，搭配 
 
 - **更名**：依 NORAD ID 或名稱／國際編號查詢，輸入自訂名稱與備註；原 Space-Track 名稱保留，可隨時還原。「列出重複名稱」可找出 OBJECT A、TBA - TO BE ASSIGNED 等同名衛星（可排除碎片與火箭殘骸）。更名約 1 秒後重建索引，地球儀、搜尋與報表都會使用新名稱。
 - **建議名稱**：「建議名稱」辨識 OBJECT A/B/C：official（Space-Track 已正式命名）＞ inferred（GCAT 逐顆判讀或單一酬載發射）＞ group_inferred（只確認發射群組，命名為「XX 群組衛星（推論）」、不指派 A/B/C 個體）；conflict 標示來源矛盾或類型不一致（例如 Space-Track 已判定為碎片）。每筆附發射群組／候選任務／個體對應分層判讀與來源鏈，勾選後才套用，更名紀錄保存名稱狀態、可信度、證據連結（可加 SeeSat-L 等）與複核狀態；任務類型與用途不自動歸因。GCAT（McDowell, planet4589.org, CC BY 4.0）與 SATCAT 由每日管線寫入 DB。API：`/api/satadmin/suggest`、`POST /api/satadmin/names_batch`。
+- **SATCAT 每日異動**：「SATCAT 異動」頁籤列出每日異動：以 Space-Track `satcat_change` 為準（名稱、國際編號、國家、發射日、DECAY 的異動與異動時間，近 90 天），再以每日 SATCAT 快照比對補上物體類型變更；分為正式命名（OBJECT x → 正式名稱）、更名、再入、再入日期修正、新編目、類型變更、其他欄位，可只看已更名或群組內的衛星；已套用推論名稱而 Space-Track 已正式命名者標「可升級」，TLE 目錄仍是 OBJECT x 也會註明；可匯出 CSV。API：`/api/satadmin/changes?days=&kind=&mine=1`。
 - **群組**：可多層（例：PRC偵察衛星 → 光學／雷達／電子偵察），逐顆加入或移除 NORAD ID；每個群組可設顏色、感測器類型與預設偵照角度（子群組未設定時沿用上層），供過頂預報使用。
 - **CSV**：匯入欄位 `norad_id,name,group,note`（group 以「/」分層，沒有的群組自動建立）；匯出含原名與群組路徑（UTF-8 BOM，Excel 可直接開啟）。
 - **帳號**：尚未建立帳號時維持原本行為，不需登入；此時本機視為管理者，區網連線只能查詢。在「帳號管理」由本機建立第一個管理者之後，所有頁面與 API 都需要登入（session 12 小時，閒置會延長；同一帳號連續錯 5 次鎖 60 秒）。
@@ -274,6 +275,7 @@ src/
   auth.rs       帳號、角色權限、登入 session、權限中介層
   satadmin.rs   衛星更名、群組分類、CSV 匯入匯出、操作紀錄
   suggest.rs    建議名稱：Space-Track／GCAT 證據等級（official／inferred／group_inferred／conflict）
+  changes.rs    SATCAT 每日異動（DB 的 satcat_change 表）
   ephemeris.rs  星歷狀態、一鍵重抓（CelesTrak／Space-Track 覆蓋層）、SATCAT 與 DECAY 列表
   forecast.rs   過頂預報：多中心點、偵照角度、日照與日出日落、歷史 TLE 誤差估算、CSV
   api.rs        主頁 HTTP 路由；api_phase2.rs 台北／RPO／海纜路由
@@ -287,6 +289,12 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 ```
 
 ## 版本紀錄
+
+### v0.1.24（2026-11-26）
+
+- 衛星管理頁新增「SATCAT 異動」頁籤：以 Space-Track `satcat_change` 為準（名稱、國際編號、國家、發射日、DECAY 的異動與異動時間，近 90 天），再以每日 SATCAT 快照比對補上物體類型變更；分為正式命名（OBJECT x → 正式名稱）、更名、再入、再入日期修正、新編目、類型變更、其他欄位
+- 每筆附自訂名稱與所屬群組；可只看已更名或群組內的衛星；已套用推論名稱而 Space-Track 已正式命名者標「可升級」並可跳到建議名稱；TLE 目錄仍是 OBJECT x 也會註明；可匯出 CSV
+- 資料由每日管線寫入 DB 的 `satcat_change`／`satcat_change_meta` 表；API `/api/satadmin/changes?days=&kind=&norad=&q=&mine=1`
 
 ### v0.1.23（2026-11-26）
 

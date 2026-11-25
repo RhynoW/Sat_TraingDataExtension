@@ -31,6 +31,7 @@ mod story;
 mod rpo;
 mod satadmin;
 mod suggest;
+mod changes;
 mod state;
 mod tiles;
 mod update;
