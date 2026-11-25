@@ -5,3 +5,5 @@ __pycache__/
 /debris_cli/target
 # AIS 船舶追蹤金鑰（src/ais.rs 讀資料目錄的 aisstream_key.txt），不可提交
 aisstream_key.txt
+# 帳號與衛星管理私有資料（src/auth.rs、src/satadmin.rs 寫入資料目錄 user_private\），不可提交
+user_private/

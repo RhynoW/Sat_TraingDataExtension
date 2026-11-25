@@ -266,6 +266,7 @@ pub fn build_index_at(cfg: &Config, rules: &Rules, ts: DateTime<Utc>) -> anyhow:
         anyhow::bail!("歷史 TLE 查詢無結果（{ts}）");
     }
     let mut sats = rows_to_sats(cfg, rules, rows);
+    crate::satadmin::apply_names(cfg, &mut sats);
     init_props(&mut sats);
     tracing::info!("歷史 TLE 索引完成：{} 筆（{ts}）", sats.len());
     Ok(SatIndex {
@@ -288,7 +289,14 @@ pub fn build_index(cfg: &Config, rules: &Rules) -> SatIndex {
         tracing::info!("尚未有衛星資料庫（資料目錄：{}）；目前只有使用者自訂 TLE", cfg.home.display());
     }
 
+    // 一鍵重抓星歷的覆蓋層（user_private\ephemeris\gp_latest.tle）：只採用比 DB 新的曆元
+    let overlay = crate::ephemeris::load_overlay(cfg);
+    if !overlay.is_empty() {
+        let (upd, add) = merge_tles(rules, &mut sats, overlay, false);
+        tracing::info!("重抓星歷覆蓋層：更新 {upd} 顆、新增 {add} 顆");
+    }
     merge_user_defined(cfg, rules, &mut sats);
+    crate::satadmin::apply_names(cfg, &mut sats);
 
     // 平行初始化 SGP4 傳播器（3 萬顆約數十毫秒）
     init_props(&mut sats);
@@ -305,12 +313,19 @@ pub fn build_index(cfg: &Config, rules: &Rules) -> SatIndex {
     }
 }
 
-fn merge_user_defined(cfg: &Config, rules: &Rules, sats: &mut BTreeMap<u32, SatInfo>) {
-    for (nid, tle) in userdata::load_user_tles(&cfg.user_tle_dir()) {
+/// 併入 TLE：目錄沒有的衛星新增；已有的只在曆元較新時取代。回傳（更新數, 新增數）
+pub fn merge_tles(
+    rules: &Rules,
+    sats: &mut BTreeMap<u32, SatInfo>,
+    tles: BTreeMap<u32, userdata::UserTle>,
+    user_defined: bool,
+) -> (usize, usize) {
+    let (mut upd, mut add) = (0, 0);
+    for (nid, tle) in tles {
         match sats.get_mut(&nid) {
             None => {
                 let name = if tle.name.is_empty() {
-                    format!("USER-{nid}")
+                    format!("{}-{nid}", if user_defined { "USER" } else { "OBJECT" })
                 } else {
                     tle.name.clone()
                 };
@@ -328,31 +343,42 @@ fn merge_user_defined(cfg: &Config, rules: &Rules, sats: &mut BTreeMap<u32, SatI
                         name_zh: String::new(),
                         operator: String::new(),
                         notes: String::new(),
-                        user_defined: true,
+                        user_defined,
                         prop: None,
                     },
                 );
+                add += 1;
             }
             Some(e) => {
                 let (ep_db, ep_user) = (tle_epoch_key(&e.line1), tle_epoch_key(&tle.line1));
                 if let Some(db) = ep_db {
                     if ep_user.map_or(true, |u| u <= db) {
-                        tracing::warn!(
-                            "user TLE {} NORAD {nid} 曆元不比 DB 新，保留 DB TLE",
-                            tle.source_file
-                        );
+                        if user_defined {
+                            tracing::warn!(
+                                "user TLE {} NORAD {nid} 曆元不比 DB 新，保留 DB TLE",
+                                tle.source_file
+                            );
+                        }
                         continue;
                     }
                 }
                 e.line1 = tle.line1;
                 e.line2 = tle.line2;
-                if !tle.name.is_empty() {
-                    e.name = tle.name;
+                if user_defined {
+                    if !tle.name.is_empty() {
+                        e.name = tle.name;
+                    }
+                    e.user_defined = true;
                 }
-                e.user_defined = true;
+                upd += 1;
             }
         }
     }
+    (upd, add)
+}
+
+fn merge_user_defined(cfg: &Config, rules: &Rules, sats: &mut BTreeMap<u32, SatInfo>) {
+    merge_tles(rules, sats, userdata::load_user_tles(&cfg.user_tle_dir()), true);
 
     for (nid, row) in userdata::load_user_catalogue(&cfg.user_catalogue_dir()) {
         let Some(e) = sats.get_mut(&nid) else { continue };

@@ -76,7 +76,16 @@ def render_templates() -> None:
                 'title="地面站下行接收過頂預報（中大太遙中心 × Vantor，仰角 15°）">&#128752; 任務規劃</button>\n'
                 '  <button type="button" id="games-link" class="tbtn" onclick="window.open(\'/games\',\'_blank\')" '
                 'title="太空小遊戲：月球模擬（射月球）等，僅單機版">&#127918; 太空小遊戲</button>\n'
+                '  <button type="button" id="satadmin-link" class="tbtn" onclick="window.open(\'/satadmin\',\'_blank\')" '
+                'title="衛星更名（依 NORAD ID）、自訂群組分類、帳號權限；資料只存在本機">&#128450; 衛星管理</button>\n'
+                '  <button type="button" id="forecast-link" class="tbtn" onclick="window.open(\'/forecast\',\'_blank\')" '
+                'title="多中心點過頂預報（最長 62 天）：偵照角度、日照、歷史誤差估算，輸出 CSV">&#128197; 過頂預報</button>\n'
+                '  <span id="auth-badge" style="display:none;font-size:11.5px;color:#8b949e;white-space:nowrap"></span>\n'
                 '  <div id="lang-switcher">', 1)
+            # 帳號登入狀態（src/auth.rs、web/ext/auth_badge.js）
+            html = html.replace("</head>", '<script src="/ext/auth_badge.js?v=__BUILD__"></script>\n</head>', 1)
+            # 星歷最後更新時間與重新抓取連結（src/ephemeris.rs、web/ext/ephem_badge.js）
+            html = html.replace("</head>", '<script src="/ext/ephem_badge.js?v=__BUILD__"></script>\n</head>', 1)
         (out / name).write_text(html, encoding="utf-8", newline="\n")
         print("render", name)
 

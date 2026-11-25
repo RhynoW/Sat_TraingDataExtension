@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>過頂預報 — SatDashboard</title>
+<style>
+:root{color-scheme:dark;--bg:#0d1117;--pn:#161b22;--bd:#30363d;--bd2:#21262d;--tx:#c9d1d9;--tx2:#8b949e;--hi:#e6edf3;--ac:#58a6ff;--ok:#3fb950;--bad:#f85149}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'Segoe UI',Tahoma,'Microsoft JhengHei',sans-serif;font-size:13px}
+#hdr{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--pn);border-bottom:1px solid var(--bd2);flex-wrap:wrap}
+#hdr h1{font-size:16px;color:var(--hi);margin:0;font-weight:600}
+#hdr .sp{flex:1}
+a.btn,button{color:var(--ac);font-size:12px;text-decoration:none;border:1px solid var(--bd);border-radius:5px;padding:5px 10px;background:#21262d;cursor:pointer;font-family:inherit}
+button:hover,a.btn:hover{background:#30363d}
+button.pri{background:#238636;color:#fff;border-color:#2ea043}
+button.pri:hover{background:#2ea043}
+button.dan{color:var(--bad)}
+button:disabled{opacity:.5;cursor:default}
+main{padding:16px 18px 40px;max-width:1500px}
+.card{background:var(--pn);border:1px solid var(--bd2);border-radius:8px;padding:12px 14px;margin-bottom:14px}
+.card h2{font-size:14px;color:var(--hi);margin:0 0 10px;font-weight:600}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+input,select,textarea{background:var(--bg);color:var(--hi);border:1px solid var(--bd);border-radius:5px;padding:5px 8px;font-size:12.5px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ac)}
+input[type=number]{width:84px}
+textarea{width:100%;min-height:46px;resize:vertical}
+.muted{color:var(--tx2);font-size:12px}
+.msg{font-size:12.5px;margin-left:6px}.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:4px 7px;border-bottom:1px solid var(--bd2);text-align:left;white-space:nowrap}
+th{color:var(--tx2);font-weight:600;background:#11161d;position:sticky;top:0}
+td.num{font-variant-numeric:tabular-nums;text-align:right}
+.tw{max-height:520px;overflow:auto;border:1px solid var(--bd2);border-radius:6px}
+.grid{display:grid;grid-template-columns:minmax(280px,1fr) minmax(460px,1.6fr);gap:14px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.kv{grid-template-columns:1fr}}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:6px 10px;align-items:center}
+#groups label{display:block;padding:2px 0}
+.yes{color:var(--ok)}.no{color:var(--tx2)}
+.bar{height:8px;background:#21262d;border-radius:4px;overflow:hidden;margin:6px 0}
+.bar>div{height:100%;background:#2ea043;width:0}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <h1>🛰 過頂預報</h1>
+  <span class="muted">多中心點・偵照角度・日照・歷史誤差估算，輸出 CSV</span>
+  <span class="sp"></span>
+  <a class="btn" href="/satadmin" target="_blank">🗂 衛星管理</a>
+  <a class="btn" href="/">← 3D 地球儀</a>
+</div>
+<main>
+  <div class="card">
+    <h2>中心點與預報範圍</h2>
+    <div class="tw" style="max-height:260px"><table id="sites"><thead><tr><th>名稱</th><th>緯度</th><th>經度</th><th>高度 m</th><th>範圍半徑 km</th><th>備註</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="row" style="margin-top:8px">
+      <button onclick="FC.addSite()">＋ 新增中心點</button>
+      <button id="btn-save-sites" onclick="FC.saveSites()">儲存為常用中心點</button>
+      <span id="site-msg" class="msg"></span>
+    </div>
+    <div class="muted">半徑 0＝只看中心點（用中心點的實際仰角與離天底角判定）；半徑 &gt; 0＝衛星偵照範圍與該圓形區域有交集就算可偵照。</div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <h2>衛星</h2>
+      <div id="groups" class="muted">載入群組中…</div>
+      <div style="margin-top:8px" class="muted">另外指定 NORAD ID（逗號、空白或換行分隔）</div>
+      <textarea id="norads" placeholder="例：25544 48274"></textarea>
+    </div>
+    <div class="card">
+      <h2>時間與判定條件</h2>
+      <div class="kv">
+        <label>開始時間</label><div><input type="datetime-local" id="start"/> <span class="muted">（依下方時區；空白＝現在）</span></div>
+        <label>預報天數</label><div><input type="number" id="days" min="1" max="62" value="31"/> <span class="muted">最多 62 天</span></div>
+        <label>時區（CSV 顯示）</label><div><select id="tz"><option value="8">UTC+8（台灣）</option><option value="0">UTC</option><option value="9">UTC+9</option><option value="7">UTC+7</option></select></div>
+        <label>仰角門檻（°）</label><div><input type="number" id="mask" min="-5" max="89" step="1" value="10"/> <span class="muted">中心點看衛星的最低仰角</span></div>
+        <label>偵照角度（°）</label><div><input type="number" id="look" min="1" max="70" step="0.5" value="30"/>
+          <button onclick="FC.setLook(15)">15°</button><button onclick="FC.setLook(30)">30°</button>
+          <div class="muted"><label><input type="checkbox" id="look-ov"/> 所有衛星一律用此角度</label>（未勾選：群組有設定就用群組的，沒有才用此值）</div></div>
+        <label>只輸出可偵照</label><div><label><input type="checkbox" id="only-cov" checked/> 只列出偵照範圍涵蓋中心點／區域的過頂</label></div>
+        <label>日照篩選</label><div><select id="daylight"><option value="optical">光學衛星只保留日照時段</option><option value="none">不篩選（全部列出並標示）</option><option value="all">全部衛星只保留日照時段</option></select>
+          <div class="muted">太陽仰角 ≥ <input type="number" id="sunmin" min="-18" max="60" value="0" style="width:60px"/>° 視為日照</div></div>
+        <label>歷史誤差估算</label><div><label><input type="checkbox" id="err" checked/> 用近</label> <input type="number" id="hist" min="7" max="365" value="60" style="width:64px"/> 天的 TLE 估算預報誤差</div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="pri" id="run" onclick="FC.run()">開始計算</button><span id="run-msg" class="msg"></span></div>
+      <div class="bar"><div id="prog"></div></div>
+      <div id="stage" class="muted"></div>
+    </div>
+  </div>
+  <div class="card" id="result" style="display:none">
+    <h2>結果</h2>
+    <div id="sum" style="margin-bottom:10px"></div>
+    <div class="row">
+      <a class="btn" id="dl-passes" href="#">⬇ 過頂清單 CSV</a>
+      <a class="btn" id="dl-sun" href="#">⬇ 日出日落 CSV</a>
+      <a class="btn" id="dl-err" href="#">⬇ 歷史誤差 CSV</a>
+      <span class="muted">（表格只顯示前 300 筆，完整資料請下載 CSV）</span>
+    </div>
+    <div id="errbox"></div>
+    <div class="tw"><table id="pv"><thead><tr><th>中心點</th><th>NORAD</th><th>名稱</th><th>群組</th><th>開始</th><th>TCA</th><th>結束</th><th>最高仰角</th><th>最小離天底角</th><th>偵照角度</th><th>可偵照時段</th><th>日照</th><th>太陽仰角</th><th>預估誤差 s</th></tr></thead><tbody></tbody></table></div>
+  </div>
+</main>
+<script src="/ext/forecast.js?v=__BUILD__"></script>
+</body>
+</html>

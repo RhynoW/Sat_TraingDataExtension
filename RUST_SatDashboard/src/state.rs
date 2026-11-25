@@ -40,6 +40,10 @@ pub struct AppState {
     pub result_cache: Mutex<HashMap<String, Cached>>,
     pub rpo_cache: Mutex<SceneCache>,
     pub rpo_lock: Mutex<()>,
+    /// 帳號與登入（auth.rs）
+    pub auth: crate::auth::Auth,
+    /// 衛星更名與群組（satadmin.rs）
+    pub satadmin: crate::satadmin::Store,
 }
 
 fn load_cats(cfg: &Config) -> Vec<Cat> {
@@ -62,6 +66,8 @@ impl AppState {
     pub fn new(cfg: Config) -> Arc<Self> {
         let rules = Rules::load(&cfg.override_file("classification_rules.yaml"));
         let cats = load_cats(&cfg);
+        let auth = crate::auth::Auth::load(cfg.home.join("user_private").join("accounts.json"));
+        let satadmin = crate::satadmin::Store::load(crate::satadmin::data_file(&cfg));
         Arc::new(Self {
             cfg,
             rules: RwLock::new(Arc::new(rules)),
@@ -78,6 +84,8 @@ impl AppState {
             result_cache: Mutex::new(HashMap::new()),
             rpo_cache: Mutex::new(HashMap::new()),
             rpo_lock: Mutex::new(()),
+            auth,
+            satadmin,
         })
     }
 

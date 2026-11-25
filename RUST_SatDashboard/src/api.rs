@@ -76,7 +76,13 @@ pub fn router(state: Arc<AppState>) -> Router {
     let r = crate::starlink::extend(r);
     let r = crate::update::extend(r);
     let r = crate::ais::extend(r);
-    r.fallback(fallback).with_state(state)
+    let r = crate::auth::extend(r);
+    let r = crate::satadmin::extend(r);
+    let r = crate::ephemeris::extend(r);
+    let r = crate::forecast::extend(r);
+    r.fallback(fallback)
+        .layer(axum::middleware::from_fn_with_state(state.clone(), crate::auth::guard))
+        .with_state(state)
 }
 
 // ── 工具 ─────────────────────────────────────────────────────────────────────

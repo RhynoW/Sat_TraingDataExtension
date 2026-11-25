@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>衛星管理 — SatDashboard</title>
+<style>
+:root{color-scheme:dark;--bg:#0d1117;--pn:#161b22;--bd:#30363d;--bd2:#21262d;--tx:#c9d1d9;--tx2:#8b949e;--hi:#e6edf3;--ac:#58a6ff;--ok:#3fb950;--bad:#f85149;--warn:#d29922}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'Segoe UI',Tahoma,'Microsoft JhengHei',sans-serif;font-size:13px}
+#hdr{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--pn);border-bottom:1px solid var(--bd2);flex-wrap:wrap}
+#hdr h1{font-size:16px;color:var(--hi);margin:0;font-weight:600}
+#hdr .sp{flex:1}
+#who{font-size:12px;color:var(--tx2)}
+#who b{color:var(--hi)}
+a.btn,button{color:var(--ac);font-size:12px;text-decoration:none;border:1px solid var(--bd);border-radius:5px;padding:5px 10px;background:#21262d;cursor:pointer;font-family:inherit}
+button:hover,a.btn:hover{background:#30363d}
+button.pri{background:#238636;color:#fff;border-color:#2ea043}
+button.pri:hover{background:#2ea043}
+button.dan{color:var(--bad)}
+button:disabled{opacity:.5;cursor:default}
+#tabs{display:flex;gap:2px;padding:0 18px;background:var(--pn);border-bottom:1px solid var(--bd2)}
+#tabs button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;color:var(--tx2);padding:10px 14px;font-size:13px}
+#tabs button.on{color:var(--hi);border-bottom-color:#f78166}
+main{padding:16px 18px 40px;max-width:1400px}
+.tab{display:none}.tab.on{display:block}
+.card{background:var(--pn);border:1px solid var(--bd2);border-radius:8px;padding:12px 14px;margin-bottom:14px}
+.card h2{font-size:14px;color:var(--hi);margin:0 0 10px;font-weight:600}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+input,select,textarea{background:var(--bg);color:var(--hi);border:1px solid var(--bd);border-radius:5px;padding:5px 8px;font-size:12.5px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ac)}
+textarea{width:100%;min-height:60px;resize:vertical}
+.muted{color:var(--tx2);font-size:12px}
+.msg{font-size:12.5px;margin-left:6px}
+.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--bd2);text-align:left;vertical-align:top}
+th{color:var(--tx2);font-weight:600;background:#11161d;position:sticky;top:0}
+tr:hover td{background:#11161d}
+td.num{font-variant-numeric:tabular-nums}
+.tag{display:inline-block;padding:1px 6px;border-radius:9px;background:#1f2a37;color:#9cc5ff;font-size:11px;margin:1px 2px 1px 0}
+.cust{color:var(--warn)}
+.tw{max-height:520px;overflow:auto;border:1px solid var(--bd2);border-radius:6px}
+#gwrap{display:grid;grid-template-columns:320px 1fr;gap:14px}
+@media(max-width:860px){#gwrap{grid-template-columns:1fr}}
+#gtree .g{padding:5px 8px;border-radius:5px;cursor:pointer;display:flex;align-items:center;gap:6px}
+#gtree .g:hover{background:#1c2128}
+#gtree .g.on{background:#1f2a37}
+#gtree .dot{width:10px;height:10px;border-radius:50%;flex:none;border:1px solid #444}
+#gtree .cnt{margin-left:auto;color:var(--tx2);font-size:11px}
+.grid2{display:grid;grid-template-columns:110px 1fr;gap:6px 10px;align-items:center;max-width:620px}
+.dup{cursor:pointer;color:var(--ac)}
+.st{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11px;white-space:nowrap}
+.st-decayed{background:#4a1b1b;color:#ff8f87}.st-stale{background:#3d2e0a;color:#e3b341}.st-no_satcat{background:#262c36;color:#8b949e}.st-ok{background:#12301c;color:#56d364}
+.edit-only{}
+body.ro .edit-only{display:none!important}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <h1>🗂 衛星管理</h1>
+  <span class="muted">更名・群組分類・帳號權限（資料只存在本機，不上傳）</span>
+  <span class="sp"></span>
+  <span id="who"></span>
+  <button id="btn-pw" style="display:none" onclick="SA.showPw()">變更密碼</button>
+  <button id="btn-logout" style="display:none" onclick="SA.logout()">登出</button>
+  <a class="btn" href="/forecast" target="_blank">📅 過頂預報</a>
+  <a class="btn" href="/">← 3D 地球儀</a>
+</div>
+<div id="tabs">
+  <button data-t="names" class="on">衛星更名</button>
+  <button data-t="groups">群組分類</button>
+  <button data-t="decay">衛星失能（DECAY）</button>
+  <button data-t="ephem">星歷資料</button>
+  <button data-t="users">帳號管理</button>
+  <button data-t="audit">操作紀錄</button>
+</div>
+<main>
+  <!-- ── 衛星更名 ── -->
+  <section class="tab on" id="t-names">
+    <div class="card">
+      <h2>查詢衛星</h2>
+      <div class="row">
+        <input id="q" style="width:420px;max-width:100%" placeholder="NORAD ID（可多個，逗號或空白分隔），或名稱／國際編號關鍵字"/>
+        <button class="pri" onclick="SA.lookup()">查詢</button>
+        <button onclick="SA.loadDup()">列出重複名稱</button>
+        <label class="muted"><input type="checkbox" id="dup-nodeb" checked/> 排除碎片與火箭殘骸</label>
+        <button onclick="SA.loadNamed()">已自訂名稱</button>
+        <span id="q-msg" class="msg"></span>
+      </div>
+      <div id="dup" style="display:none" class="card"></div>
+      <div class="tw"><table id="res"><thead><tr><th>NORAD</th><th>目前名稱</th><th>Space-Track 原名</th><th>國際編號</th><th>TLE 曆元（UTC）</th><th>國別／用途</th><th>群組</th><th class="edit-only">操作</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card edit-only">
+      <h2>批次匯入／匯出（CSV）</h2>
+      <div class="muted" style="margin-bottom:8px">欄位：<code>norad_id,name,group,note</code>。name 空白＝不改名；group 以「/」分層（例：<code>PRC偵察衛星/光學</code>），沒有的群組會自動建立。Excel 請另存為「CSV UTF-8」。</div>
+      <div class="row">
+        <input type="file" id="csvfile" accept=".csv,text/csv"/>
+        <button class="pri" onclick="SA.importCsv()">匯入</button>
+        <a class="btn" href="/api/satadmin/export.csv">匯出目前資料</a>
+        <span id="csv-msg" class="msg"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 群組分類 ── -->
+  <section class="tab" id="t-groups">
+    <div id="gwrap">
+      <div class="card">
+        <h2>群組</h2>
+        <div class="row edit-only">
+          <input id="g-new" placeholder="新群組名稱" style="flex:1"/>
+          <button class="pri" onclick="SA.newGroup(false)">新增</button>
+          <button onclick="SA.newGroup(true)" title="在目前選取的群組底下新增">新增子群組</button>
+        </div>
+        <div id="g-new-msg" class="msg"></div>
+        <div id="gtree"></div>
+      </div>
+      <div class="card" id="gdetail"><div class="muted">選取左側群組以檢視與編輯。</div></div>
+    </div>
+  </section>
+
+  <!-- ── 衛星失能 ── -->
+  <section class="tab" id="t-decay">
+    <div class="card">
+      <h2>群組衛星狀態</h2>
+      <div class="row">
+        <label class="muted">範圍</label><select id="dc-group"></select>
+        <label class="muted">TLE 超過</label><input id="dc-stale" type="number" min="1" max="3650" value="30" style="width:70px"/><span class="muted">天未更新視為停更</span>
+        <label class="muted"><input type="checkbox" id="dc-all"/> 也列出正常</label>
+        <button class="pri" onclick="SA.loadDecay()">列出</button>
+        <a class="btn" id="dc-csv" href="#">匯出 CSV</a>
+        <span id="dc-msg" class="msg"></span>
+      </div>
+      <div id="dc-sum" class="muted" style="margin-bottom:8px"></div>
+      <div class="tw"><table id="dc"><thead><tr><th>NORAD</th><th>名稱</th><th>狀態</th><th>DECAY 日期</th><th>發射日期</th><th>在軌天數</th><th>最後 TLE 曆元（UTC）</th><th>TLE 天數</th><th>類型／擁有者</th><th>群組</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="card">
+      <h2>全目錄近期再入</h2>
+      <div class="row"><label class="muted">近</label><input id="dc-days" type="number" min="1" max="3650" value="30" style="width:70px"/><span class="muted">天</span>
+        <button onclick="SA.loadRecent()">列出</button><span id="dr-msg" class="msg"></span></div>
+      <div class="tw"><table id="dr"><thead><tr><th>NORAD</th><th>名稱</th><th>國際編號</th><th>DECAY 日期</th><th>發射日期</th><th>在軌天數</th><th>類型／擁有者</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- ── 星歷資料 ── -->
+  <section class="tab" id="t-ephem">
+    <div class="card"><h2>目前星歷資料</h2><div id="ep-status" class="muted">載入中…</div></div>
+    <div class="card">
+      <h2>一鍵重新抓取</h2>
+      <div class="muted" style="margin-bottom:8px">抓到的 TLE 存成本機覆蓋層，只採用比資料庫新的曆元，資料庫檔本身不變。SATCAT 提供 DECAY 再入日期，供「衛星失能」使用。依兩站使用規範：CelesTrak 每 2 小時、Space-Track 每 1 小時、SATCAT 每 12 小時各限一次。</div>
+      <div class="row">
+        <button class="pri" id="ep-btn-ct" onclick="SA.refresh('celestrak','both')">CelesTrak（免帳號）</button>
+        <button class="pri" id="ep-btn-st" onclick="SA.refresh('spacetrack','both')">Space-Track（全目錄）</button>
+        <button onclick="SA.refresh(document.getElementById('ep-src').value,'satcat')">只更新 SATCAT</button>
+        <select id="ep-src"><option value="celestrak">CelesTrak</option><option value="spacetrack">Space-Track</option></select>
+        <span id="ep-msg" class="msg"></span>
+      </div>
+      <div id="ep-job" class="muted" style="white-space:pre-wrap;font-family:Consolas,monospace;font-size:12px"></div>
+      <div class="muted" style="margin-top:6px">CelesTrak：active 群組（約 1.2 萬顆現役衛星），群組成員不在其中的另逐顆補抓（每次上限 30 顆）。Space-Track：全目錄未再入物體、30 天內曆元。只有管理者可以重抓。</div>
+    </div>
+    <div class="card" id="ep-cred-card">
+      <h2>Space-Track 帳號</h2>
+      <div id="ep-cred" class="muted"></div>
+      <div class="grid2" style="margin-top:8px"><label>帳號（Email）</label><input id="ep-id" autocomplete="off"/><label>密碼</label><input id="ep-pw" type="password" autocomplete="new-password"/></div>
+      <div class="row" style="margin-top:8px"><button class="pri" onclick="SA.saveCred()">儲存</button><button class="dan" onclick="SA.delCred()">刪除</button><span id="ep-cmsg" class="msg"></span></div>
+      <div class="muted">帳號存在本機 <code>user_private\spacetrack.json</code>（明文，請保護好這台電腦的資料目錄）；也可改用環境變數 SPACETRACK_USER／SPACETRACK_PASS（優先）。</div>
+    </div>
+  </section>
+
+  <!-- ── 帳號管理 ── -->
+  <section class="tab" id="t-users"><div id="users"></div></section>
+
+  <!-- ── 操作紀錄 ── -->
+  <section class="tab" id="t-audit">
+    <div class="card">
+      <h2>操作紀錄 <button onclick="SA.loadAudit()" style="margin-left:8px">重新整理</button></h2>
+      <div class="tw"><table id="audit"><thead><tr><th>時間</th><th>操作者</th><th>動作</th><th>內容</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+</main>
+<script src="/ext/satadmin.js?v=__BUILD__"></script>
+</body>
+</html>

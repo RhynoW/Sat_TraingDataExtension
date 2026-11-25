@@ -46,6 +46,8 @@ window.loadCesium=function(ok,fail){
 </script>
 <script src="/static/js/map_layers.js?v=__BUILD__"></script><script src="/ext/net_tiles.js?v=__BUILD__"></script>
 <script src="/ext/standalone_ext.js?v=__BUILD__"></script>
+<script src="/ext/auth_badge.js?v=__BUILD__"></script>
+<script src="/ext/ephem_badge.js?v=__BUILD__"></script>
 </head>
 <body>
 
@@ -72,6 +74,9 @@ window.loadCesium=function(ok,fail){
   <button type="button" id="manual-link" class="tbtn" onclick="window.open('/manual','_blank')" data-i18n-title="tip_manual" title="SatDashboard 操作手冊：安裝、主畫面、各分析頁與實驗室操作說明">&#128216; <span data-i18n="nav_manual">操作手冊</span></button>
   <button type="button" id="mission-link" class="tbtn" onclick="window.open('/mission','_blank')" title="地面站下行接收過頂預報（中大太遙中心 × Vantor，仰角 15°）">&#128752; 任務規劃</button>
   <button type="button" id="games-link" class="tbtn" onclick="window.open('/games','_blank')" title="太空小遊戲：月球模擬（射月球）等，僅單機版">&#127918; 太空小遊戲</button>
+  <button type="button" id="satadmin-link" class="tbtn" onclick="window.open('/satadmin','_blank')" title="衛星更名（依 NORAD ID）、自訂群組分類、帳號權限；資料只存在本機">&#128450; 衛星管理</button>
+  <button type="button" id="forecast-link" class="tbtn" onclick="window.open('/forecast','_blank')" title="多中心點過頂預報（最長 62 天）：偵照角度、日照、歷史誤差估算，輸出 CSV">&#128197; 過頂預報</button>
+  <span id="auth-badge" style="display:none;font-size:11.5px;color:#8b949e;white-space:nowrap"></span>
   <div id="lang-switcher">
     <button type="button" class="lang-btn" data-lang="zh" onclick="setLang('zh')">中</button>
     <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>

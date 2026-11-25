@@ -1,6 +1,6 @@
 [package]
 name = "sat_dashboard"
-version = "0.1.20"
+version = "0.1.21"
 edition = "2021"
 description = "ATRDC SatDashboard — Rust 單機版（Windows x86_64 / ARM64）"
 license = "Proprietary"
@@ -41,6 +41,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 ruzstd = "0.9.1"
 ed25519-dalek = "3.0.0"
 semver = "1.0.28"
+# 帳號密碼雜湊（src/auth.rs）
+argon2 = "0.5"
 sofars = "0.6.3"
 # AIS 船舶追蹤（src/ais.rs）：aisstream.io WebSocket，需 permessage-deflate（tungstenite 不支援壓縮）
 yawc = "0.5"

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>登入 — SatDashboard</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0d1117;color:#c9d1d9;
+  font-family:'Segoe UI',Tahoma,'Microsoft JhengHei',sans-serif;padding:16px}
+.box{width:100%;max-width:360px;padding:28px 26px;border:1px solid #30363d;border-radius:10px;background:#161b22}
+h1{font-size:18px;margin:0 0 4px;color:#e6edf3}
+.sub{font-size:12px;color:#8b949e;margin-bottom:18px}
+label{display:block;font-size:12px;color:#8b949e;margin:12px 0 4px}
+input{width:100%;padding:8px 10px;background:#0d1117;color:#e6edf3;border:1px solid #30363d;border-radius:6px;font-size:14px;font-family:inherit}
+input:focus{outline:none;border-color:#58a6ff}
+button{width:100%;margin-top:18px;padding:9px;background:#238636;color:#fff;border:0;border-radius:6px;font-size:14px;cursor:pointer;font-family:inherit}
+button:disabled{opacity:.6;cursor:default}
+#msg{min-height:18px;margin-top:12px;font-size:12.5px;color:#f85149}
+.hint{font-size:11.5px;color:#6e7681;margin-top:14px;line-height:1.6}
+</style>
+</head>
+<body>
+<form class="box" id="f" autocomplete="on">
+  <h1>🛰 SatDashboard 登入</h1>
+  <div class="sub">此單機版已啟用帳號權限</div>
+  <label for="u">帳號</label>
+  <input id="u" name="username" autocomplete="username" required autofocus/>
+  <label for="p">密碼</label>
+  <input id="p" name="password" type="password" autocomplete="current-password" required/>
+  <button id="b" type="submit">登入</button>
+  <div id="msg"></div>
+  <div class="hint">忘記密碼請洽管理者重設。管理者遺失密碼時，可關閉程式後刪除資料目錄 <code>user_private\accounts.json</code>，重新建立管理者（群組與更名資料保留）。</div>
+</form>
+<script>
+(function(){
+  var next = new URLSearchParams(location.search).get('next') || '/';
+  if (next.charAt(0) !== '/' || next.charAt(1) === '/') next = '/';
+  fetch('/api/auth/me').then(function(r){return r.json();}).then(function(m){
+    if (!m.auth_enabled || m.logged_in) location.replace(next);
+  }).catch(function(){});
+  document.getElementById('f').addEventListener('submit', function(e){
+    e.preventDefault();
+    var b = document.getElementById('b'), msg = document.getElementById('msg');
+    b.disabled = true; msg.textContent = '';
+    fetch('/api/auth/login', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({username: document.getElementById('u').value, password: document.getElementById('p').value})})
+      .then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+      .then(function(x){ if (x.ok) location.replace(next); else { msg.textContent = x.j.error || '登入失敗'; b.disabled = false; } })
+      .catch(function(){ msg.textContent = '無法連線到伺服器'; b.disabled = false; });
+  });
+})();
+</script>
+</body>
+</html>
