@@ -1,0 +1,323 @@
+{
+ "G2": {
+  "code": "G2",
+  "cat": "一般衛星",
+  "norad": 54754,
+  "name": "SWOT",
+  "d0": "2023-01-11",
+  "d1": "2023-09-30",
+  "desc": "發射後由校驗軌道升至科學軌道（累計約 +31 km）",
+  "n_tle": 450,
+  "alt_range_km": [
+   859.0787025631516,
+   893.3624063434327
+  ],
+  "net_alt_change_km": 31.227182941238425,
+  "events": {
+   "E3": 1,
+   "E2": 1,
+   "E1": 4,
+   "D": 0
+  },
+  "events_total": 6,
+  "low_conf_P1": 0,
+  "low_conf_P2": 8,
+  "detect_cap": {
+   "sigma_med_m": 1.0,
+   "n_months": 9,
+   "n_unflagged": 427,
+   "p95_90d_m": 1.744153506479051,
+   "p95_all": false,
+   "min_detect_m": 20.0,
+   "max_unlisted": {
+    "da": -0.5462091785475423,
+    "epoch": "2023-01-16 16:31:06.380256+00:00"
+   }
+  },
+  "largest_event_net_da_km": 23.824140483944575,
+  "smallest_event_net_da_km": 0.13698456716065266,
+  "truth": {
+   "type": "ids",
+   "n": 39,
+   "n_visible": 10,
+   "visible_hit_event": 7,
+   "visible_hit_event_or_lc": 7,
+   "hidden_hit_event": 3,
+   "da_abs_range_km": [
+    0.007369,
+    9.714658
+   ]
+  },
+  "events_near_truth": 4
+ },
+ "G1": {
+  "code": "G1",
+  "cat": "一般衛星",
+  "norad": 41240,
+  "name": "Jason-3",
+  "d0": "2025-01-01",
+  "d1": "2025-12-31",
+  "desc": "2025 年分段降軌，營運方紀錄 33 次點火（累計約 −26 km）",
+  "n_tle": 1007,
+  "alt_range_km": [
+   1310.9472985207876,
+   1353.617953207653
+  ],
+  "net_alt_change_km": -26.774117270342686,
+  "events": {
+   "E3": 3,
+   "E2": 2,
+   "E1": 0,
+   "D": 0
+  },
+  "events_total": 5,
+  "low_conf_P1": 0,
+  "low_conf_P2": 2,
+  "detect_cap": {
+   "sigma_med_m": 1.0,
+   "n_months": 12,
+   "n_unflagged": 980,
+   "p95_90d_m": 0.324850107426755,
+   "p95_all": false,
+   "min_detect_m": 20.0,
+   "max_unlisted": {
+    "da": -0.3522766348642108,
+    "epoch": "2025-06-17 11:56:48.981696+00:00"
+   }
+  },
+  "largest_event_net_da_km": 21.26334918926932,
+  "smallest_event_net_da_km": 3.9377786446057144,
+  "truth": {
+   "type": "ids",
+   "n": 33,
+   "n_visible": 20,
+   "visible_hit_event": 18,
+   "visible_hit_event_or_lc": 18,
+   "hidden_hit_event": 0,
+   "da_abs_range_km": [
+    0.005044,
+    3.998112
+   ]
+  },
+  "events_near_truth": 5
+ },
+ "G3": {
+  "code": "G3",
+  "cat": "一般衛星",
+  "norad": 54754,
+  "name": "SWOT",
+  "d0": "2025-01-01",
+  "d1": "2026-08-20",
+  "desc": "科學軌道之維持點火：單次淨變化 12–45 m；另有 4 組 ±0.15–0.36 km、方向相反之成對點火",
+  "n_tle": 1939,
+  "alt_range_km": [
+   893.1878592378062,
+   893.3598096123233
+  ],
+  "net_alt_change_km": -0.0019526338437572122,
+  "events": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "events_total": 0,
+  "low_conf_P1": 0,
+  "low_conf_P2": 0,
+  "detect_cap": {
+   "sigma_med_m": 1.0,
+   "n_months": 20,
+   "n_unflagged": 1938,
+   "p95_90d_m": 0.3881037396240571,
+   "p95_all": false,
+   "min_detect_m": 20.0,
+   "max_unlisted": {
+    "da": 0.15283604700834985,
+    "epoch": "2026-07-31 18:57:40.336416+00:00"
+   }
+  },
+  "largest_event_net_da_km": null,
+  "smallest_event_net_da_km": null,
+  "truth": {
+   "type": "ids",
+   "n": 26,
+   "n_visible": 4,
+   "visible_hit_event": 0,
+   "visible_hit_event_or_lc": 0,
+   "hidden_hit_event": 0,
+   "da_abs_range_km": [
+    0.011539,
+    0.364063
+   ]
+  },
+  "events_near_truth": 0
+ },
+ "S1": {
+  "code": "S1",
+  "cat": "Starlink",
+  "norad": 68802,
+  "name": "STARLINK-37471",
+  "d0": "2026-05-01",
+  "d1": "2026-08-31",
+  "desc": "2026-06-21 大型升軌（8.1 節案例）",
+  "n_tle": 330,
+  "alt_range_km": [
+   314.6051910056758,
+   465.74873650104473
+  ],
+  "net_alt_change_km": 150.93439229200794,
+  "events": {
+   "E3": 2,
+   "E2": 1,
+   "E1": 0,
+   "D": 0
+  },
+  "events_total": 3,
+  "low_conf_P1": 0,
+  "low_conf_P2": 2,
+  "detect_cap": {
+   "sigma_med_m": 53.82106575608286,
+   "n_months": 4,
+   "n_unflagged": 291,
+   "p95_90d_m": 146.84866644529387,
+   "p95_all": false,
+   "min_detect_m": 1076.421315121657,
+   "max_unlisted": {
+    "da": 3.64230205577951,
+    "epoch": "2026-05-04 04:00:01.998720+00:00"
+   }
+  },
+  "largest_event_net_da_km": 75.43779719659051,
+  "smallest_event_net_da_km": 9.105436303489114,
+  "truth": {
+   "type": "meme_segments",
+   "n": 7,
+   "seg_hit_event": 2,
+   "seg_hit_event_or_lc": 2,
+   "seg_days": [
+    43.0,
+    0.0,
+    17.1,
+    0.0,
+    35.1,
+    0.0,
+    0.0
+   ]
+  },
+  "events_near_truth": 3
+ },
+ "S2": {
+  "code": "S2",
+  "cat": "Starlink",
+  "norad": 53056,
+  "name": "STARLINK-4314",
+  "d0": "2026-03-31",
+  "d1": "2026-11-14",
+  "desc": "26 天累計 −83.8 km 之連續降軌（TASA 指定 15 顆之一）",
+  "n_tle": 564,
+  "alt_range_km": [
+   465.45796331431757,
+   550.5956218595802
+  ],
+  "net_alt_change_km": -83.97169883643528,
+  "events": {
+   "E3": 2,
+   "E2": 0,
+   "E1": 0,
+   "D": 1
+  },
+  "events_total": 3,
+  "low_conf_P1": 0,
+  "low_conf_P2": 2,
+  "detect_cap": {
+   "sigma_med_m": 26.067513391275497,
+   "n_months": 8,
+   "n_unflagged": 503,
+   "p95_90d_m": 864.4620299479354,
+   "p95_all": false,
+   "min_detect_m": 521.35026782551,
+   "max_unlisted": {
+    "da": -1.0463892161715194,
+    "epoch": "2026-08-25 07:04:42.380544+00:00"
+   }
+  },
+  "largest_event_net_da_km": 65.33640159429706,
+  "smallest_event_net_da_km": 0.10691545942063385
+ },
+ "E1": {
+  "code": "E1",
+  "cat": "非 Starlink 電推",
+  "norad": 67142,
+  "name": "KUIPER-00188",
+  "d0": "2026-04-01",
+  "d1": "2026-11-14",
+  "desc": "Amazon Kuiper：入軌後以霍爾推進器由約 450 km 逐步爬升至約 630 km 運作高度",
+  "n_tle": 483,
+  "alt_range_km": [
+   449.7595915104848,
+   640.7707892693261
+  ],
+  "net_alt_change_km": 179.81194279398278,
+  "events": {
+   "E3": 4,
+   "E2": 2,
+   "E1": 0,
+   "D": 0
+  },
+  "events_total": 6,
+  "low_conf_P1": 0,
+  "low_conf_P2": 2,
+  "detect_cap": {
+   "sigma_med_m": 13.208654691945185,
+   "n_months": 8,
+   "n_unflagged": 371,
+   "p95_90d_m": 58.63654279164621,
+   "p95_all": false,
+   "min_detect_m": 264.1730938389037,
+   "max_unlisted": {
+    "da": -1.327644399100791,
+    "epoch": "2026-04-05 20:00:03.000384+00:00"
+   }
+  },
+  "largest_event_net_da_km": 106.5111962719393,
+  "smallest_event_net_da_km": 1.1546178472572137
+ },
+ "E2": {
+  "code": "E2",
+  "cat": "非 Starlink 電推",
+  "norad": 61595,
+  "name": "ONEWEB-0687",
+  "d0": "2026-04-01",
+  "d1": "2026-11-14",
+  "desc": "OneWeb：約 1,200 km 運作高度，以霍爾推進器維持軌道",
+  "n_tle": 583,
+  "alt_range_km": [
+   1193.62661560169,
+   1193.802347015885
+  ],
+  "net_alt_change_km": 0.003252509304729756,
+  "events": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "events_total": 0,
+  "low_conf_P1": 0,
+  "low_conf_P2": 0,
+  "detect_cap": {
+   "sigma_med_m": 1.381615875510306,
+   "n_months": 8,
+   "n_unflagged": 582,
+   "p95_90d_m": 100.21942057574051,
+   "p95_all": false,
+   "min_detect_m": 27.63231751020612,
+   "max_unlisted": {
+    "da": 0.16074880377527734,
+    "epoch": "2026-11-04 00:00:02.000160+00:00"
+   }
+  },
+  "largest_event_net_da_km": null,
+  "smallest_event_net_da_km": null
+ }
+}

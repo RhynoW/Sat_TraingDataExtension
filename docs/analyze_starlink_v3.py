@@ -42,7 +42,7 @@ except Exception:
 RE = 6378.137
 STAGE_KM, OPER_KM = 314.0, 344.0
 PAD = pd.Timedelta(hours=24)
-GRADE_COL = {"E3": "#C62828", "E2": "#EF6C00", "E1": "#1565C0", "D": "#6A1B9A"}
+GRADE_COL = {"E3": "#B0127F", "E2": "#EF6C00", "E1": "#1565C0", "D": "#8A8984"}   # E3 紫紅、D 灰（2026-11-25 依使用者要求，與 E2 區隔）
 
 
 def parse_norads(s: str) -> list[int]:
@@ -157,6 +157,9 @@ def main():
         pd.DataFrame(E).to_csv(out / "events.csv", index=False, encoding="utf-8-sig")
         pd.DataFrame(L).to_csv(out / "lowconf.csv", index=False, encoding="utf-8-sig")
         Sd = pd.DataFrame(S)
+        for col in ("oper_obs_rate_m_d", "oper_model_rate_m_d", "oper_lc_drag", "oper_span_d", "oper_std_m", "days_to_oper", "dwell_stage_d"):
+            if col not in Sd:
+                Sd[col] = np.nan   # 新批次尚未抵達運作高度時無此欄
         fleet = dict(n=len(Sd), end=a.end, raan_now_min=float(Sd.raan_now.min()), raan_now_max=float(Sd.raan_now.max()),
                      raan_now_median=float(Sd.raan_now.median()), inc_median=float(Sd.inc.median()),
                      alt_first_range=[float(Sd.alt_first.min()), float(Sd.alt_first.max())],
@@ -179,31 +182,37 @@ def main():
             df = load(con, nid)
             if not df.empty:
                 series[nid] = phases(df)[1]
-    plot(series, out, a.pub)
+    plot(series, out, a.pub, a.tag)
 
 
 TXT = {
-    "zh": dict(title="Starlink V3 第一批（26 顆）入軌後高度與 R7 偵測結果",
+    "zh": dict(title="Starlink V3 {batch}（{n} 顆）入軌後高度與 R7 偵測結果",
                a="(a) 日中位高度", b="(b) 各星候選事件（實心，依證據等級著色）與低置信複核項（空心）",
-               ylab="平均高度（km）", lag="暫駐較久之 2 顆", others="其餘 24 顆",
-               stage="暫駐高度約 316 km", oper="運作高度約 345 km", lc="低置信複核項", ylab2="衛星（依抵達運作高度之日排序）"),
-    "en": dict(title="Starlink V3 batch 1 (26 satellites): post-insertion altitude and R7 detections",
+               ylab="平均高度（km）", lag="暫駐較久之 2 顆", others="其餘 {k} 顆",
+               stage="暫駐高度約 316 km", oper="運作高度約 345 km", lc="低置信複核項", ylab2="衛星（依抵達運作高度之日排序；未抵達者依編號）"),
+    "en": dict(title="Starlink V3 {batch} ({n} satellites): post-insertion altitude and R7 detections",
                a="(a) Daily median altitude", b="(b) Candidate events (filled, by evidence grade) and low-confidence review items (hollow)",
-               ylab="Mean altitude (km)", lag="2 satellites with longer staging", others="Other 24",
+               ylab="Mean altitude (km)", lag="2 satellites with longer staging", others="Other {k}",
                stage="Staging altitude ≈316 km", oper="Operational altitude ≈345 km", lc="Low-confidence item",
-               ylab2="Satellite (sorted by arrival at operational altitude)"),
+               ylab2="Satellite (by arrival at operational altitude; others by NORAD)"),
 }
 THEME = {"light": dict(bg="white", fg="black", grid="#D0D0D0", grey="#9E9E9E"),
          "dark": dict(bg="black", fg="white", grid="#444444", grey="#8A8A8A")}
 
 
-def draw(series, out, lang="zh", theme="light"):
-    t, th = TXT[lang], THEME[theme]
+BATCH = {"batch1": ("第一批", "batch 1"), "batch2": ("第二批", "batch 2")}
+
+
+def draw(series, out, lang="zh", theme="light", tag="batch1"):
+    t, th = dict(TXT[lang]), THEME[theme]
     font = ["Microsoft JhengHei", "Microsoft YaHei", "sans-serif"] if lang == "zh" else ["Arial", "DejaVu Sans"]
     S = pd.read_csv(out / "sats.csv")
     E = pd.read_csv(out / "events.csv", parse_dates=["t_start", "t_end"])
     L = pd.read_csv(out / "lowconf.csv", parse_dates=["epoch"])
     lag = set(S.loc[S.dwell_stage_d >= 14, "norad"])
+    bz, be = BATCH.get(tag, (tag, tag))
+    t["title"] = t["title"].format(batch=bz if lang == "zh" else be, n=len(S))
+    t["others"] = t["others"].format(k=len(series) - len(lag))
     plt.rcParams.update({"font.family": font, "axes.unicode_minus": False, "figure.facecolor": th["bg"],
                          "axes.facecolor": th["bg"], "savefig.facecolor": th["bg"], "text.color": th["fg"],
                          "axes.labelcolor": th["fg"], "xtick.color": th["fg"], "ytick.color": th["fg"],
@@ -243,24 +252,26 @@ def draw(series, out, lang="zh", theme="light"):
         ax2.grid(color=th["grid"], lw=0.5, axis="x")
         hs = [plt.Line2D([], [], color=GRADE_COL[g], lw=5, label=g) for g in ("E3", "E2", "E1", "D")]
         hs.append(plt.Line2D([], [], marker="o", ls="", mfc="none", mec=th["fg"], label=t["lc"]))
-        ax2.legend(handles=hs, loc="lower right", fontsize=8.5, ncol=5)
+        ax2.legend(handles=hs, loc="upper center", bbox_to_anchor=(0.5, -0.06), fontsize=8.5, ncol=5, frameon=False)
         ax2.xaxis.set_major_formatter(mdates.DateFormatter("%m-%d"))
         fig.suptitle(t["title"], fontsize=13.5, fontweight="bold")
         fig.tight_layout()
     return fig
 
 
-def plot(series, out, pub):
-    fig = draw(series, out)
-    fig.savefig(DOCS / "fig_starlink_v3_profile.png", dpi=200, bbox_inches="tight")
+def plot(series, out, pub, tag="batch1"):
+    # 第一批之檔名為期末報告圖 20 所用，其他批次另存，不覆蓋
+    stem0 = "fig_starlink_v3_profile" if tag == "batch1" else f"fig_starlink_v3_profile_{tag}"
+    fig = draw(series, out, tag=tag)
+    fig.savefig(DOCS / f"{stem0}.png", dpi=200, bbox_inches="tight")
     plt.close(fig)
     if pub:
-        pdir = DOCS / "figures_pub" / "fig_starlink_v3_profile"
+        pdir = DOCS / "figures_pub" / stem0
         pdir.mkdir(parents=True, exist_ok=True)
         for lang in ("zh", "en"):
             for theme in ("light", "dark"):
-                fig = draw(series, out, lang, theme)
-                stem = pdir / f"fig_starlink_v3_profile_{lang}_{theme}"
+                fig = draw(series, out, lang, theme, tag)
+                stem = pdir / f"{stem0}_{lang}_{theme}"
                 fig.savefig(stem.with_suffix(".png"), dpi=600, bbox_inches="tight")
                 fig.savefig(stem.with_suffix(".pdf"), bbox_inches="tight")
                 plt.close(fig)

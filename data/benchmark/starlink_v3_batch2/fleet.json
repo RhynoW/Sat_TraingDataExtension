@@ -1,0 +1,42 @@
+{
+  "n": 26,
+  "end": "2026-11-25",
+  "raan_now_min": 100.6909,
+  "raan_now_max": 101.9885,
+  "raan_now_median": 101.64255,
+  "inc_median": 30.501575000000003,
+  "alt_first_range": [
+    274.5657133151135,
+    304.65719746065406
+  ],
+  "days_to_oper_median": 5.0,
+  "days_to_oper_range": [
+    5.0,
+    5.0
+  ],
+  "dwell_stage_median": 4.0,
+  "dwell_stage_range": [
+    4.0,
+    4.0
+  ],
+  "oper_std_m_median": NaN,
+  "oper_obs_rate_m_d_median": NaN,
+  "oper_model_rate_m_d_median": NaN,
+  "oper_model_rate_m_d_range": [
+    NaN,
+    NaN
+  ],
+  "oper_lc_drag": 0,
+  "oper_sat_days": 0.0,
+  "n_ev": 30,
+  "grades": {
+    "E3": 20,
+    "E2": 10,
+    "E1": 0,
+    "D": 0
+  },
+  "n_lc": 4,
+  "n_lc_drag": 4,
+  "n_lc_l2": 0,
+  "n_lc_fus": 0
+}
