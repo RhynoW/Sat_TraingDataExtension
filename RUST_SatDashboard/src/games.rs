@@ -5,6 +5,9 @@
 //!   與真實目錄（SGP4）一起取多個時刻快照，以 KD-tree 篩出相距 d 以內的配對，
 //!   用氣體動力學關係「進入半徑 d 球的頻率 = 球內配對數 × 相對速度 ÷ (4d/3)」估計接近頻率，
 //!   再依通量與 d² 成正比換算到 1 km（避碰機動的代理門檻）與 10 m（碰撞）。
+//! - 百萬顆：假想星座總數上限 100 萬顆（FCC 2026-11-25 核准 SpaceX 軌道資料中心最多 100 萬顆）；
+//!   殼層縮放以 u64 與上限檢查計算（資安檢測 H-6：原本 u32 相乘可溢位繞過上限）。
+//!   長期風險與管控的統計模型見 games_mega.rs（背景族群）與 web/ext/games_mega.js（計算核心）。
 
 use std::sync::Arc;
 
@@ -31,6 +34,7 @@ pub fn extend(r: Router<Arc<AppState>>) -> Router<Arc<AppState>> {
         .route("/api/games/crowd/shells", get(crowd_shells))
         .route("/api/games/crowd/catalog", get(crowd_catalog))
         .route("/api/games/crowd", post(crowd))
+        .route("/api/games/mega/background", get(crate::games_mega::background_api))
         .route("/api/games/breakup", post(crate::games_debris::breakup_api))
         .route("/api/games/astro", post(crate::games_astro::astro_api))
         .route("/api/games/war/new", post(crate::games_war::war_new))
@@ -104,7 +108,26 @@ const GROUPS: &[Group] = &[
         ],
         note: "ITU 申報 GW-A59（6,080 顆）與 GW-2（6,912 顆），殼層近似",
     },
+    Group {
+        key: "starmind",
+        name: "SpaceX 軌道資料中心（Starmind）",
+        catalog: "Starmind",
+        color: "#f0f6fc",
+        // 六殼層 500–1,002 km（FCC 2026-11-25 核准；各殼層實際高度與傾角未公開，傾角為示意）
+        shells: &[
+            (500.0, 53.0, 360, 463), (600.0, 53.0, 360, 463), (700.0, 70.0, 360, 463),
+            (800.0, 97.6, 360, 463), (900.0, 53.0, 360, 463), (1002.0, 97.6, 360, 463),
+        ],
+        note: "FCC 2026-11-25 有條件核准最多 100 萬顆（2040-11 全數部署）；六殼層 500–1,002 km，各殼層高度與傾角未公開，此為示意配置",
+    },
 ];
+
+/// 假想衛星總數上限（全部群組合計）
+pub(crate) const MAX_SYNTHETIC: u64 = 1_000_000;
+/// 自訂殼層的軌道面數、每面顆數與殼層數上限
+const MAX_PLANES: u32 = 5000;
+const MAX_PER_PLANE: u32 = 5000;
+const MAX_SHELLS: usize = 64;
 
 fn group_by_key(k: &str) -> Option<(usize, &'static Group)> {
     GROUPS.iter().enumerate().find(|(_, g)| g.key == k)
@@ -116,13 +139,21 @@ fn scaled(g: &Group, total: u32) -> Vec<(usize, Shell)> {
 }
 
 fn scaled_from(shells: &[Shell], total: u32) -> Vec<(usize, Shell)> {
-    let n0: u32 = shells.iter().map(|s| s.2 * s.3).sum();
+    // H-6：以 u64 計算、略過不合理的殼層，避免 u32 相乘溢位讓總數失真
+    let shells: Vec<Shell> = shells
+        .iter()
+        .take(MAX_SHELLS)
+        .copied()
+        .filter(|&(h, i, p, s)| h.is_finite() && i.is_finite() && (100.0..=50000.0).contains(&h) && (1..=MAX_PLANES).contains(&p) && (1..=MAX_PER_PLANE).contains(&s))
+        .collect();
+    let total = (total as u64).min(MAX_SYNTHETIC);
+    let n0: u64 = shells.iter().map(|s| s.2 as u64 * s.3 as u64).sum();
     let k = total as f64 / n0.max(1) as f64;
     shells
         .iter()
         .enumerate()
         .filter_map(|(j, &(h, i, p, s))| {
-            let c = ((p * s) as f64 * k).round() as u32;
+            let c = ((p as u64 * s as u64) as f64 * k).round().min(MAX_SYNTHETIC as f64) as u32;
             if c == 0 {
                 return None;
             }
@@ -262,10 +293,15 @@ pub(crate) fn build_items<'a>(sats: &'a [&'a SatInfo], reqs: &[GroupReq]) -> (Ve
     let mut items: Vec<Item> = Vec::new();
     let mut shells_out = Vec::new();
     let mut shell_id: u32 = 0;
+    let mut syn_count: u64 = 0;
     for rq in reqs {
         let Some((gi, g)) = group_by_key(&rq.key) else { continue };
         if !rq.synthetic {
             continue;
+        }
+        // 所有群組合計不超過上限（同時保護共用 build_items 的天文夢魘，資安檢測 H-5）
+        if syn_count >= MAX_SYNTHETIC {
+            break;
         }
         replaced[gi] = true;
         let sh = match &rq.shells {
@@ -274,6 +310,10 @@ pub(crate) fn build_items<'a>(sats: &'a [&'a SatInfo], reqs: &[GroupReq]) -> (Ve
         };
         for (j, (h, inc, p, s)) in sh {
             let (raan0, u0) = shell_phase(gi, j, p, s);
+            if syn_count + p as u64 * s as u64 > MAX_SYNTHETIC + MAX_SYNTHETIC / 100 {
+                break; // 縮放取整的誤差容許 1%，超過就停止加入
+            }
+            syn_count += p as u64 * s as u64;
             for pi in 0..p {
                 for si in 0..s {
                     let raan = raan0 + std::f64::consts::TAU * pi as f64 / p as f64;
@@ -588,8 +628,11 @@ async fn crowd(State(st): State<Arc<AppState>>, Json(rq): Json<CrowdReq>) -> Res
     let d_km = rq.d_km.unwrap_or(20.0).clamp(2.0, 100.0);
     let skip = rq.skip.unwrap_or(1).min(2);
     let total: u64 = rq.groups.iter().filter(|g| g.synthetic).map(|g| g.total as u64).sum();
-    if total > 400_000 {
-        return bad("假想衛星總數上限 40 萬顆");
+    if total > MAX_SYNTHETIC {
+        return bad("假想衛星總數上限 100 萬顆");
+    }
+    if rq.groups.len() > 16 || rq.groups.iter().any(|g| g.shells.as_ref().is_some_and(|v| v.len() > MAX_SHELLS)) {
+        return bad("群組或自訂殼層數量過多");
     }
     tokio::task::spawn_blocking(move || {
         let t_start = std::time::Instant::now();
@@ -621,4 +664,30 @@ async fn crowd(State(st): State<Arc<AppState>>, Json(rq): Json<CrowdReq>) -> Res
     })
     .await
     .unwrap_or_else(|_| bad("計算失敗"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scaled_overflow_and_cap() {
+        // H-6：p·s 在 u32 會溢位的殼層（65536×65536）被濾掉，不會讓總數失真
+        let v = scaled_from(&[(550.0, 53.0, 65536, 65536), (550.0, 53.0, 10, 10)], 1000);
+        let n: u64 = v.iter().map(|(_, s)| s.2 as u64 * s.3 as u64).sum();
+        assert_eq!(n, 1000);
+        // 上限 100 萬
+        let v = scaled_from(&[(550.0, 53.0, 100, 100)], u32::MAX);
+        let n: u64 = v.iter().map(|(_, s)| s.2 as u64 * s.3 as u64).sum();
+        assert!(n <= MAX_SYNTHETIC + MAX_SYNTHETIC / 100, "{n}");
+        // Starmind 樣板約 100 萬顆
+        let g = group_by_key("starmind").unwrap().1;
+        let n: u64 = g.shells.iter().map(|s| s.2 as u64 * s.3 as u64).sum();
+        assert!((990_000..=1_010_000).contains(&n), "{n}");
+        // build_items：多群組合計不超過上限
+        let reqs: Vec<GroupReq> = ["starlink", "kuiper", "starmind"].iter()
+            .map(|k| GroupReq { key: k.to_string(), synthetic: true, total: 1_000_000, shells: None }).collect();
+        let (items, _) = build_items(&[], &reqs);
+        assert!(items.len() as u64 <= MAX_SYNTHETIC + MAX_SYNTHETIC / 100, "{}", items.len());
+    }
 }

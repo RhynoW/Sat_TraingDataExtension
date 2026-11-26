@@ -177,7 +177,7 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div class="hint">勾選「假想」後，該星座的真實衛星會被依公開申請殼層產生的假想 Walker 星座取代（顆數可自訂）；不勾選則用目錄中的真實衛星。</div>
     <table class="kv" id="cr-groups"></table>
     <div class="views" style="margin-top:6px">
-      <button data-preset="now">現況</button><button data-preset="plan">各家計畫全數</button><button data-preset="mega">10 萬 Starlink 情境</button>
+      <button data-preset="now">現況</button><button data-preset="plan">各家計畫全數</button><button data-preset="mega">10 萬 Starlink 情境</button><button data-preset="million">百萬顆（Starmind）</button>
     </div>
     <div class="row" style="margin-top:8px"><label>配對計算</label><select id="cr-skip">
       <option value="0">全部配對都計</option><option value="1" selected>同殼層不計（營運者協調）</option><option value="2">同星座不計（營運者完全協調）</option></select></div>
@@ -190,6 +190,8 @@ button.flash{animation:flash 1s ease-in-out 4}
     <h3>畫面</h3>
     <label class="chk"><input type="checkbox" id="cr-show" checked>3D 顯示所有物件（每秒更新 4 次）</label>
     <div class="hint" id="cr-legend"></div>
+    <h3>百萬顆長期風險與管控</h3>
+    <div id="mega-panel"></div>
     <div class="hint" style="margin-top:8px">方法：取多個時刻快照，用 KD-tree 找出相距 20 km 內的配對，依「進入半徑 d 球的頻率＝球內配對數×相對速度÷(4d/3)」（4d/3 為球的平均弦長）估計接近頻率，再依截面積與 d² 成正比換算到 1 km（幾何接近的代理門檻）與 10 m（兩顆大型衛星的合併半徑）。這是一階估計：篩選半徑太大時球體跨出殼層會低估（50 km 約少 30%）；真實星座有相位安排、避碰與軌道誤差，「理論碰撞率代理值」不是碰撞預測。假想星座以圓軌道加 J2 長期項傳播。<br>量級檢查：選「同星座不計」時，現況 Starlink 每顆每年約 18 次 < 1 km 幾何接近。SpaceX 2026-07-01 向 FCC 提交的半年報告：2025-12-01 至 2026-05-31 推進式避碰機動 Gen1 65,137 次、Gen2 142,015 次（每顆每年約 36 與 46 次），觸發門檻為碰撞機率高於 3×10⁻⁷，另加距離條件。兩者定義不同（幾何距離 vs 碰撞機率），只能檢查量級，不代表模型已驗證；選「同殼層不計」會把同一家不同殼層、以及真實星座內部的交會也算進去，可視為「協調失效」的上限。</div>
     </div>
     <div id="tab-balloon" hidden>
@@ -348,6 +350,7 @@ button.flash{animation:flash 1s ease-in-out 4}
 <div id="w-modal" hidden><div class="card"></div></div>
 <script src="/ext/games.js?v=__BUILD__"></script>
 <script src="/ext/games_crowd.js?v=__BUILD__"></script>
+<script src="/ext/games_mega.js?v=__BUILD__"></script>
 <script src="/ext/games_balloon.js?v=__BUILD__"></script>
 <script src="/ext/games_debris.js?v=__BUILD__"></script>
 <script src="/ext/games_debris_game.js?v=__BUILD__"></script>

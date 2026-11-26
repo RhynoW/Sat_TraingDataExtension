@@ -18,6 +18,7 @@ mod debris_engine;
 mod ephemeris;
 mod forecast;
 mod games_debris;
+mod games_mega;
 mod games_war;
 mod index;
 mod lab;

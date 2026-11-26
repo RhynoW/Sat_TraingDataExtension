@@ -9,13 +9,14 @@
   var SDG = window.SDG, viewer = SDG.viewer, scene = viewer.scene, fmt = SDG.fmt;
   var groups = null, inited = false, last = null;
   var MEGA = { starlink: 100000, kuiper: 20000, qianfan: 10000 };
+  var MAX_SHOW = 150000;   // 3D 假想星座最多顯示點數（百萬顆時抽樣，計算仍用全部）
 
   // ── 情境表 ──────────────────────────────────────────────────────────────
   function buildTable() {
     $("cr-groups").innerHTML = "<tr><td>星座</td><td>目錄現有</td><td>假想</td><td>顆數</td></tr>" + groups.map(function (g) {
       return "<tr><td><span style='color:" + g.color + "'>●</span> " + g.name + "</td><td>" + fmt(g.real) + "</td>" +
         "<td><input type='checkbox' id='cr-syn-" + g.key + "'></td>" +
-        "<td><input type='number' id='cr-n-" + g.key + "' min='0' max='200000' step='100' value='" + g.planned + "' style='width:84px'></td></tr>" +
+        "<td><input type='number' id='cr-n-" + g.key + "' min='0' max='1000000' step='100' value='" + g.planned + "' style='width:84px'></td></tr>" +
         "<tr><td colspan='4' class='hint' style='border:0;padding-top:0;white-space:normal'>" + g.note + "（計畫 " + fmt(g.planned) + " 顆）</td></tr>";
     }).join("");
     $("cr-legend").innerHTML = "灰點：其他物件（含碎片、火箭體）；" + groups.map(function (g) {
@@ -28,6 +29,8 @@
       if (kind === "now") { syn.checked = false; n.value = g.planned; }
       if (kind === "plan") { syn.checked = true; n.value = g.planned; }
       if (kind === "mega") { syn.checked = !!MEGA[g.key]; n.value = MEGA[g.key] || g.planned; }
+      if (kind === "million") { syn.checked = g.key === "starmind"; n.value = g.key === "starmind" ? 1000000 : g.planned; }
+      if (kind !== "million" && g.key === "starmind") syn.checked = false;   // 其他預設不含百萬顆
     });
   }
   document.querySelectorAll("[data-preset]").forEach(function (b) { b.onclick = function () { preset(b.dataset.preset); }; });
@@ -38,7 +41,9 @@
       groups: groups.map(function (g) { return { key: g.key, synthetic: $("cr-syn-" + g.key).checked, total: +$("cr-n-" + g.key).value || 0 }; }),
       hours: +$("cr-hours").value, step_s: 60, d_km: 20, skip: +$("cr-skip").value,
     };
-    btn.disabled = true; $("cr-res").textContent = "計算中…（快照 " + req.hours * 60 + " 個，十幾萬顆時約需數秒到數十秒）";
+    var nsyn = req.groups.reduce(function (a, g) { return a + (g.synthetic ? g.total : 0); }, 0);
+    if (nsyn > 1000000) { $("cr-res").textContent = "假想衛星合計上限 100 萬顆（目前 " + fmt(nsyn) + " 顆）"; return; }
+    btn.disabled = true; $("cr-res").textContent = "計算中…（快照 " + req.hours * 60 + " 個，十幾萬顆約需數秒到數十秒；百萬顆約需數分鐘，建議取樣 1 小時）";
     fetch("/api/games/crowd", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(req) })
       .then(function (r) { return r.json(); })
       .then(function (d) {
@@ -163,9 +168,11 @@
     if (!shells.length) return;
     var els = [], cols = [], cmap = {};
     groups.forEach(function (g) { cmap[g.key] = Cesium.Color.fromCssColorString(g.color); });
+    var nall = shells.reduce(function (a, sh) { return a + sh.planes * sh.per_plane; }, 0), stride = Math.max(1, Math.ceil(nall / MAX_SHOW)), cnt = 0;
     shells.forEach(function (sh) {
       var P = sh.planes, S = sh.per_plane, inc = sh.inc * Math.PI / 180, r0 = sh.raan0 || 0, u0 = sh.u0 || 0;  // 殼層相位偏移（後端 shell_phase）
       for (var p = 0; p < P; p++) for (var q = 0; q < S; q++) {
+        if ((cnt++) % stride) continue;   // 百萬顆時每 stride 顆取 1 顆顯示
         els.push(sh.alt, inc, r0 + 2 * Math.PI * p / P, u0 + 2 * Math.PI * (q / S + p / (P * S)));
         cols.push(cmap[sh.group]);
       }
@@ -176,6 +183,7 @@
     synW.t0 = Date.parse(last.t0);
     synW.onmessage = function (e) { busy.syn = false; apply(synPts, e.data.buf); };
     synW.postMessage({ type: "init", els: els });
+    if (stride > 1) SDG.status("假想星座 " + fmt(nall) + " 顆，3D 每 " + stride + " 顆顯示 1 顆（" + fmt(synPts.length) + " 點）");
     busy.syn = false;
   }
   function tick() {
