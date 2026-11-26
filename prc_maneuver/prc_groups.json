@@ -1,0 +1,90 @@
+{
+  "_說明": "PRC 衛星預設群組分類表（唯一來源）。build_prc_db.py 依此產生 CHM、Word/PDF 與 Rust 單機版預設群組。依衛星名稱第一個字（去掉 - _ 空白之後）比對 prefixes；比不到的歸 fallback。split_sensor=true 的系列依各衛星資料檔「任務類型」欄推定感測器（光學／雷達／電子偵察），屬推定（inferred）。rust=false 的大類不放進 Rust 預設群組（非中國營運或非酬載）。",
+  "version": "2026-11-26",
+  "root": "PRC 衛星",
+  "fallback": ["其他", "未分類"],
+  "categories": [
+    {"name": "情報偵察", "color": "#E74C3C", "series": [
+      {"name": "遙感 YaoGan", "prefixes": ["YAOGAN"], "split_sensor": true},
+      {"name": "尖兵 JB", "prefixes": ["JB"], "split_sensor": true},
+      {"name": "陸地勘查 LKW", "prefixes": ["LKW"], "split_sensor": true},
+      {"name": "GJZ 系列", "prefixes": ["GJZ"], "split_sensor": true},
+      {"name": "XJS 系列", "prefixes": ["XJS"], "split_sensor": true}
+    ]},
+    {"name": "對地觀測", "color": "#E67E22", "series": [
+      {"name": "高分 GaoFen", "prefixes": ["GAOFEN"], "split_sensor": true},
+      {"name": "吉林 JiLin", "prefixes": ["JILIN"], "split_sensor": true},
+      {"name": "超景 SuperView", "prefixes": ["SUPERVIEW"], "split_sensor": true},
+      {"name": "北京 BeiJing", "prefixes": ["BEIJING"], "split_sensor": true},
+      {"name": "珠海 ZhuHai", "prefixes": ["ZHUHAI"], "split_sensor": true},
+      {"name": "資源 ZY", "prefixes": ["ZY", "ZIYUAN", "CBERS"], "split_sensor": true},
+      {"name": "陸探 LT", "prefixes": ["LT", "LUDI"], "split_sensor": true},
+      {"name": "天繪 TianHui", "prefixes": ["TIANHUI"], "split_sensor": true},
+      {"name": "環境減災 HJ、HJS", "prefixes": ["HJ", "HJS"], "split_sensor": true},
+      {"name": "派思 PieSat", "prefixes": ["PIESAT"], "split_sensor": true},
+      {"name": "HEAD 商業衛星", "prefixes": ["HEAD"], "split_sensor": true},
+      {"name": "珞珈 LuoJia", "prefixes": ["LUOJIA"], "split_sensor": true},
+      {"name": "可持續發展 SDGSAT", "prefixes": ["SDGSAT"], "split_sensor": true},
+      {"name": "其他商業遙感", "prefixes": ["WEINA", "XINGCHI", "XINGSHIDAI", "XIAOXIANG", "XAIOXIANG", "LINGQIAO", "LING", "LQSAT", "PUJIANG", "ZHIHUI", "JIAOTONG", "YINHE", "ENSHI", "TAIJING"], "split_sensor": true}
+    ]},
+    {"name": "氣象海洋", "color": "#3498DB", "series": [
+      {"name": "風雲 FengYun", "prefixes": ["FENGYUN", "FENGYUNG"]},
+      {"name": "雲海 YunHai", "prefixes": ["YUNHAI"]},
+      {"name": "天目 TianMu", "prefixes": ["TIANMU"]},
+      {"name": "雲遙 YunYao", "prefixes": ["YUNYAO"]},
+      {"name": "海洋 HaiYang", "prefixes": ["HAIYANG", "HAIWANGXING", "CFOSAT"]},
+      {"name": "大氣 DaQi", "prefixes": ["DAQI"]}
+    ]},
+    {"name": "導航定位", "color": "#16A085", "series": [
+      {"name": "北斗 BeiDou", "prefixes": ["BEIDOU"]},
+      {"name": "CentiSpace 定位增強", "prefixes": ["CENTISPACE"]},
+      {"name": "寧夏 NingXia", "prefixes": ["NINGXIA"]}
+    ]},
+    {"name": "通信廣播", "color": "#8E44AD", "series": [
+      {"name": "中星 ChinaSat", "prefixes": ["CHINASAT", "SINOSAT", "HG"]},
+      {"name": "亞太 APSTAR", "prefixes": ["APSTAR"]},
+      {"name": "天通 TianTong", "prefixes": ["TIANTONG"]},
+      {"name": "東方紅 DFH、STTW", "prefixes": ["DFH", "STTW"]}
+    ]},
+    {"name": "中繼", "color": "#9B59B6", "series": [
+      {"name": "天鏈 TianLian", "prefixes": ["TIANLIAN"]}
+    ]},
+    {"name": "寬頻與物聯網星座", "color": "#2ECC71", "series": [
+      {"name": "國網 GuoWang（HULIANWANG）", "prefixes": ["HULIANWANG"]},
+      {"name": "千帆 QianFan", "prefixes": ["QIANFAN"]},
+      {"name": "天啟 TianQi", "prefixes": ["TIANQI"]},
+      {"name": "極星 GEESAT", "prefixes": ["GEESAT"]},
+      {"name": "行雲 XingYun", "prefixes": ["XINGYUN"]},
+      {"name": "鴻雁、虹雲試驗", "prefixes": ["HONGYAN", "HONGYUN", "HONGHU"]}
+    ]},
+    {"name": "載人與空間站", "color": "#F1C40F", "series": [
+      {"name": "中國空間站 CSS", "prefixes": ["CSS"]},
+      {"name": "神舟 SZ", "prefixes": ["SZ"]},
+      {"name": "天舟 TianZhou", "prefixes": ["TIANZHOU"]}
+    ]},
+    {"name": "技術試驗", "color": "#95A5A6", "series": [
+      {"name": "實踐 SJ", "prefixes": ["SJ", "SHIJIAN"]},
+      {"name": "試驗 ShiYan", "prefixes": ["SHIYAN", "SHIYUAN"]},
+      {"name": "通信技術試驗 TJS", "prefixes": ["TJS"]},
+      {"name": "創新 ChuangXin", "prefixes": ["CHUANG", "CHUANGXIN"]},
+      {"name": "PRC TEST SPACECRAFT", "prefixes": ["PRC"]},
+      {"name": "其他試驗", "prefixes": ["RSW", "TIANZHI", "TIANYI", "TIANYAN", "TIANPING", "TIANXING", "TIANTUO", "QIANKUN", "XPNAV", "KL", "YIJIAN", "XY", "TK", "TANSUO", "CTDRS", "DEAR", "DALIAN", "FENGNIAO", "HAISI", "ICECUBE", "JINZIJING", "KAIDUN", "KAITUO", "KX", "DUMMY", "PAYLOAD", "XJY", "YUANGUANG"]}
+    ]},
+    {"name": "科學與深空", "color": "#1ABC9C", "series": [
+      {"name": "科學衛星", "prefixes": ["DOUBLESTAR", "DAMPE", "EINSTEIN", "GECAM", "ASO", "QSS", "TANSAT", "HXMT", "ZHANGHENG"]},
+      {"name": "探月與深空", "prefixes": ["CHANGE", "QUEQIAO", "TIANDU", "TIANWEN", "DRO", "LONGJIANG"]}
+    ]},
+    {"name": "大學與業餘", "color": "#BDC3C7", "series": [
+      {"name": "業餘無線電與大學 CubeSat", "prefixes": ["XW", "CAS", "XIWANG", "BY70", "ZHEDA", "ZDPS", "BNU", "LILACSAT", "TSINGHUA", "TZINGHUA", "NAXING", "ZHOU", "QUANTUTONG", "CUBEBEL", "TAURUS"]}
+    ]},
+    {"name": "未識別", "color": "#7F8C8D", "series": [
+      {"name": "未命名物件（OBJECT）", "prefixes": ["OBJECT"]}
+    ]},
+    {"name": "中國代發的外國衛星", "color": "#566573", "rust": false, "series": [
+      {"name": "外國衛星", "prefixes": ["IRIDIUM", "VRSS", "PAKSAT", "PAKTES", "PALAPA", "PRSS", "MISRSAT", "SAUDISAT", "NIGCOMSAT", "BELINTERSAT", "ALCOMSAT", "LAOSAT", "VENESAT", "TUPAC", "GOKTURK", "HORUS", "ALSAT", "OL", "ION", "FREJA", "NUSAT", "GOMX4", "CUBEBUG", "FLORIPASAT", "SACI", "NEE", "TURKSAT", "BRITE", "KEPLER", "SPARK", "ECHOSTAR", "EUTE", "AMOS", "ASIASAT", "OPTUS", "ABS", "TELSTAR", "STARLINK", "FORMOSAT"]}
+    ]},
+    {"name": "火箭殘骸", "color": "#424949", "rust": false, "series": [
+      {"name": "火箭殘骸與遠地點發動機", "prefixes": ["CZ", "GRAVITY", "ZK"]}
+    ]}
+  ]
+}

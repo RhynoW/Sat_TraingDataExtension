@@ -97,6 +97,77 @@ pub struct Data {
     pub groups: Vec<Group>,
     #[serde(default)]
     pub audit: Vec<AuditRec>,
+    /// 已套用的預設群組版本（空白＝從未套用；套用過就不再自動建立，使用者刪光群組也不會重建）
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub preset: String,
+}
+
+/// PRC 衛星預設群組：由 prc_maneuver/build_prc_db.py 依 prc_groups.json 產生（與「PRC衛星基本資料」CHM／PDF 同一套分組）
+pub const PRC_PRESET_JSON: &str = include_str!("../config/prc_default_groups.json");
+
+#[derive(Deserialize)]
+struct PresetFile {
+    version: String,
+    #[serde(default)]
+    source: String,
+    groups: Vec<PresetGroup>,
+}
+#[derive(Deserialize)]
+struct PresetGroup {
+    path: Vec<String>,
+    #[serde(default)]
+    color: String,
+    #[serde(default)]
+    sensor: String,
+    #[serde(default)]
+    note: String,
+    #[serde(default)]
+    members: Vec<u32>,
+}
+
+/// 套用預設群組：只新增群組與成員，不改動、不刪除既有群組；新建群組才寫入顏色／感測器／備註。
+/// 回傳 (版本, 新建群組數, 新增成員數)
+pub fn apply_preset(d: &mut Data, json_text: &str, by: &str) -> Result<(String, usize, usize), String> {
+    let p: PresetFile = serde_json::from_str(json_text).map_err(|e| format!("預設群組檔格式錯誤：{e}"))?;
+    let (mut created, mut added) = (0usize, 0usize);
+    for g in &p.groups {
+        let mut parent: Option<String> = None;
+        for (i, name) in g.path.iter().enumerate() {
+            check_name(name, "群組名稱")?;
+            let found = d.groups.iter().find(|x| x.parent == parent && &x.name == name).map(|x| x.id.clone());
+            let id = match found {
+                Some(id) => id,
+                None => {
+                    let id = d.new_id();
+                    let last = i + 1 == g.path.len();
+                    d.groups.push(Group {
+                        id: id.clone(),
+                        name: name.clone(),
+                        parent: parent.clone(),
+                        color: if last { norm_color(&g.color) } else { String::new() },
+                        sensor: if last && SENSORS.contains(&g.sensor.as_str()) { g.sensor.clone() } else { String::new() },
+                        note: if last { g.note.clone() } else { String::new() },
+                        by: by.into(),
+                        at: now_iso(),
+                        ..Default::default()
+                    });
+                    created += 1;
+                    id
+                }
+            };
+            parent = Some(id);
+        }
+        let gid = parent.ok_or("預設群組路徑空白")?;
+        let grp = d.group_mut(&gid).unwrap();
+        for &n in &g.members {
+            if !grp.members.contains(&n) {
+                grp.members.push(n);
+                added += 1;
+            }
+        }
+    }
+    d.push_audit(by, "套用預設群組", &format!("{}（{}）：新建群組 {created} 個、加入成員 {added} 筆", p.source, p.version));
+    Ok((p.version, created, added))
 }
 
 impl Data {
@@ -287,7 +358,31 @@ impl Store {
         let exists = path.exists();
         let d = read_data(&path);
         let broken = exists && d.is_none();
-        Self { path, data: Mutex::new(d.unwrap_or_default()), broken, rebuild_pending: AtomicBool::new(false) }
+        let s = Self { path, data: Mutex::new(d.unwrap_or_default()), broken, rebuild_pending: AtomicBool::new(false) };
+        s.seed_preset();
+        s
+    }
+
+    /// 首次啟動（沒有任何群組、也從未套用過預設）時自動建立 PRC 預設群組
+    fn seed_preset(&self) {
+        if self.broken {
+            return;
+        }
+        {
+            let d = self.data.lock();
+            if !d.groups.is_empty() || !d.preset.is_empty() {
+                return;
+            }
+        }
+        let r = self.edit(|d| {
+            let (ver, c, a) = apply_preset(d, PRC_PRESET_JSON, "系統預設")?;
+            d.preset = ver;
+            Ok((c, a))
+        });
+        match r {
+            Ok((c, a)) => tracing::info!("已建立 PRC 預設群組：{c} 個群組、{a} 個成員"),
+            Err(e) => tracing::warn!("建立 PRC 預設群組失敗：{e}"),
+        }
     }
 
     pub fn snapshot(&self) -> Data {
@@ -1099,5 +1194,34 @@ mod tests {
         let s3 = Store::load(p.clone());
         assert!(s3.edit(|_| Ok(())).is_err(), "壞檔拒絕覆寫");
         assert_eq!(std::fs::read(&p).unwrap(), b"{broken");
+    }
+
+    #[test]
+    fn prc_preset_seed() {
+        // 內嵌預設群組可解析、可重複套用（第二次不新增）
+        let mut d = Data::default();
+        let (ver, c, a) = apply_preset(&mut d, PRC_PRESET_JSON, "t").unwrap();
+        assert!(!ver.is_empty() && c > 10 && a > 1000, "群組 {c}、成員 {a}");
+        let (_, c2, a2) = apply_preset(&mut d, PRC_PRESET_JSON, "t").unwrap();
+        assert_eq!((c2, a2), (0, 0));
+        let root = d.groups.iter().find(|g| g.parent.is_none()).unwrap().id.clone();
+        assert_eq!(d.all_members(&root).len(), a, "成員不重複");
+        assert!(d.groups.iter().all(|g| !g.name.contains(['/', '>', '／', '＞'])), "群組名稱不可含分層符號");
+        // 首次啟動自動建立；使用者刪光群組後不重建；已有自訂群組的舊資料檔不套用
+        let dir = std::env::temp_dir().join(format!("satadmin_preset_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let p = dir.join("sat_custom.json");
+        let s = Store::load(p.clone());
+        assert_eq!(s.snapshot().preset, ver);
+        assert!(!s.snapshot().groups.is_empty());
+        s.edit(|d| { d.groups.clear(); Ok(()) }).unwrap();
+        assert!(Store::load(p.clone()).snapshot().groups.is_empty());
+        let mut old = Data::default();
+        old.ensure_path("我的群組", "u").unwrap();
+        std::fs::write(&p, serde_json::to_vec(&old).unwrap()).unwrap();
+        let s3 = Store::load(p.clone());
+        assert_eq!(s3.snapshot().groups.len(), 1);
+        assert!(s3.snapshot().preset.is_empty());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }
