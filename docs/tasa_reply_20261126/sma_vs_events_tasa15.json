@@ -1,0 +1,422 @@
+[
+ {
+  "norad": 64199,
+  "name": "SJ-26",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 1263,
+  "sigma_m": 7.9,
+  "sigma5_m": 39,
+  "sigma20_m": 157,
+  "l1_thr_median_m": 1505,
+  "n_gt_5sigma": 91,
+  "n_gt_20sigma": 10,
+  "n_l1_flagged": 19,
+  "n_events": 4,
+  "grades": {
+   "E3": 1,
+   "E2": 3,
+   "E1": 0,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 1,
+   "E2": 3,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": true
+ },
+ {
+  "norad": 62190,
+  "name": "HAISHAO 1",
+  "d0": "2024-01-01",
+  "d1": "2026-11-13",
+  "n_transitions": 1789,
+  "sigma_m": 42.3,
+  "sigma5_m": 211,
+  "sigma20_m": 846,
+  "l1_thr_median_m": 2890,
+  "n_gt_5sigma": 323,
+  "n_gt_20sigma": 61,
+  "n_l1_flagged": 19,
+  "n_events": 8,
+  "grades": {
+   "E3": 1,
+   "E2": 4,
+   "E1": 3,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 1,
+   "E2": 4,
+   "E1": 3,
+   "D": 0
+  },
+  "match_delivery": true
+ },
+ {
+  "norad": 58651,
+  "name": "SHIYAN 24C 02",
+  "d0": "2024-01-01",
+  "d1": "2026-10-15",
+  "n_transitions": 1947,
+  "sigma_m": 5.4,
+  "sigma5_m": 27,
+  "sigma20_m": 108,
+  "l1_thr_median_m": 1090,
+  "n_gt_5sigma": 152,
+  "n_gt_20sigma": 49,
+  "n_l1_flagged": 23,
+  "n_events": 4,
+  "grades": {
+   "E3": 1,
+   "E2": 2,
+   "E1": 1,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 1,
+   "E2": 2,
+   "E1": 1,
+   "D": 0
+  },
+  "match_delivery": true
+ },
+ {
+  "norad": 53056,
+  "name": "STARLINK-4314",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 2414,
+  "sigma_m": 11.6,
+  "sigma5_m": 58,
+  "sigma20_m": 233,
+  "l1_thr_median_m": 1174,
+  "n_gt_5sigma": 350,
+  "n_gt_20sigma": 126,
+  "n_l1_flagged": 63,
+  "n_events": 4,
+  "grades": {
+   "E3": 3,
+   "E2": 0,
+   "E1": 0,
+   "D": 1
+  },
+  "grades_delivery": {
+   "E3": 2,
+   "E2": 0,
+   "E1": 0,
+   "D": 1
+  },
+  "match_delivery": false
+ },
+ {
+  "norad": 59711,
+  "name": "STARLINK-11082",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 1644,
+  "sigma_m": 39.7,
+  "sigma5_m": 198,
+  "sigma20_m": 793,
+  "l1_thr_median_m": 3059,
+  "n_gt_5sigma": 85,
+  "n_gt_20sigma": 25,
+  "n_l1_flagged": 8,
+  "n_events": 2,
+  "grades": {
+   "E3": 2,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": false
+ },
+ {
+  "norad": 69018,
+  "name": "PELICAN-8 300F",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 425,
+  "sigma_m": 37.1,
+  "sigma5_m": 185,
+  "sigma20_m": 742,
+  "l1_thr_median_m": 1488,
+  "n_gt_5sigma": 84,
+  "n_gt_20sigma": 8,
+  "n_l1_flagged": 4,
+  "n_events": 2,
+  "grades": {
+   "E3": 0,
+   "E2": 2,
+   "E1": 0,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 2,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": true
+ },
+ {
+  "norad": 60548,
+  "name": "ICEYE-X33",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 1747,
+  "sigma_m": 8.6,
+  "sigma5_m": 43,
+  "sigma20_m": 172,
+  "l1_thr_median_m": 1011,
+  "n_gt_5sigma": 172,
+  "n_gt_20sigma": 6,
+  "n_l1_flagged": 0,
+  "n_events": 0,
+  "grades": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 1,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": false
+ },
+ {
+  "norad": 41634,
+  "name": "SJ 16-02",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 4394,
+  "sigma_m": 2.5,
+  "sigma5_m": 13,
+  "sigma20_m": 51,
+  "l1_thr_median_m": 830,
+  "n_gt_5sigma": 148,
+  "n_gt_20sigma": 10,
+  "n_l1_flagged": 0,
+  "n_events": 0,
+  "grades": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": true
+ },
+ {
+  "norad": 68831,
+  "name": "HJS-9A",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 368,
+  "sigma_m": 13.3,
+  "sigma5_m": 66,
+  "sigma20_m": 265,
+  "l1_thr_median_m": 1161,
+  "n_gt_5sigma": 44,
+  "n_gt_20sigma": 11,
+  "n_l1_flagged": 3,
+  "n_events": 1,
+  "grades": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 1
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 1
+  },
+  "match_delivery": true
+ },
+ {
+  "norad": 61871,
+  "name": "OBJECT C",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 2672,
+  "sigma_m": 10.9,
+  "sigma5_m": 54,
+  "sigma20_m": 218,
+  "l1_thr_median_m": 1543,
+  "n_gt_5sigma": 159,
+  "n_gt_20sigma": 18,
+  "n_l1_flagged": 0,
+  "n_events": 0,
+  "grades": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": true
+ },
+ {
+  "norad": 43081,
+  "name": "YAOGAN-30 G",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 3443,
+  "sigma_m": 5.5,
+  "sigma5_m": 28,
+  "sigma20_m": 110,
+  "l1_thr_median_m": 885,
+  "n_gt_5sigma": 138,
+  "n_gt_20sigma": 14,
+  "n_l1_flagged": 0,
+  "n_events": 0,
+  "grades": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": true
+ },
+ {
+  "norad": 43797,
+  "name": "SKYSAT C12",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 2256,
+  "sigma_m": 25.4,
+  "sigma5_m": 127,
+  "sigma20_m": 508,
+  "l1_thr_median_m": 2283,
+  "n_gt_5sigma": 71,
+  "n_gt_20sigma": 6,
+  "n_l1_flagged": 4,
+  "n_events": 1,
+  "grades": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 1
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": false
+ },
+ {
+  "norad": 56193,
+  "name": "HAWK-7B",
+  "d0": "2024-01-01",
+  "d1": "2026-11-14",
+  "n_transitions": 2385,
+  "sigma_m": 16.2,
+  "sigma5_m": 81,
+  "sigma20_m": 324,
+  "l1_thr_median_m": 1747,
+  "n_gt_5sigma": 139,
+  "n_gt_20sigma": 7,
+  "n_l1_flagged": 0,
+  "n_events": 0,
+  "grades": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": true
+ },
+ {
+  "norad": 60507,
+  "name": "TANAGER-1",
+  "d0": "2024-01-01",
+  "d1": "2026-11-13",
+  "n_transitions": 1388,
+  "sigma_m": 107.3,
+  "sigma5_m": 537,
+  "sigma20_m": 2147,
+  "l1_thr_median_m": 2280,
+  "n_gt_5sigma": 52,
+  "n_gt_20sigma": 8,
+  "n_l1_flagged": 23,
+  "n_events": 9,
+  "grades": {
+   "E3": 1,
+   "E2": 6,
+   "E1": 2,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": false
+ },
+ {
+  "norad": 65316,
+  "name": "PELICAN-4 300B",
+  "d0": "2024-01-01",
+  "d1": "2026-11-10",
+  "n_transitions": 674,
+  "sigma_m": 23.0,
+  "sigma5_m": 115,
+  "sigma20_m": 460,
+  "l1_thr_median_m": 2053,
+  "n_gt_5sigma": 142,
+  "n_gt_20sigma": 17,
+  "n_l1_flagged": 6,
+  "n_events": 2,
+  "grades": {
+   "E3": 0,
+   "E2": 1,
+   "E1": 1,
+   "D": 0
+  },
+  "grades_delivery": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  },
+  "match_delivery": false
+ }
+]
