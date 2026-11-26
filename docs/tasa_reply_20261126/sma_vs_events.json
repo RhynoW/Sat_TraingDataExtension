@@ -10,6 +10,9 @@
   "n_gt_5sigma": 19,
   "n_gt_20sigma": 1,
   "n_l1_flagged": 0,
+  "n_flag_thr": 0,
+  "n_flag_di_de": 0,
+  "n_flag_p4": 0,
   "n_suppressed": 148,
   "n_events": 0,
   "grades": {
@@ -30,6 +33,9 @@
   "n_gt_5sigma": 19,
   "n_gt_20sigma": 6,
   "n_l1_flagged": 8,
+  "n_flag_thr": 3,
+  "n_flag_di_de": 0,
+  "n_flag_p4": 5,
   "n_suppressed": 112,
   "n_events": 2,
   "grades": {

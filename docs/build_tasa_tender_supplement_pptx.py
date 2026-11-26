@@ -232,16 +232,24 @@ def build():
 
     # 5b 半長軸變化與候選事件之關係
     s = frame(prs, "工作內容三：半長軸變化與候選事件之關係", 0)
-    pic(s, "tasa_reply_20261126/fig_sma_vs_events.png", 0.45, 0.92, 12.45, 5.78)
+    pic(s, "tasa_reply_20261126/fig_sma_vs_events_orig.png", 0.45, 0.92, 12.45, 5.78)
     note(s, "ICEYE-X33 之 6 次維持抬升（86–189 m）皆超過 5σ、最大一次超過 20σ，但未達 L1 有效門檻（約 1 km），不產生候選事件；"
             "KUIPER-00188 之降軌單步超過門檻，合併為 2 件 E2，其後維持期 0 件。同期 2026-05-18 至 08-16。", y=6.78)
+    # 前後對照：同一張圖，紅點依 L1 標記來源區分
+    fix_head, fix_pages = F._sma_fix_notes()
+    s = frame(prs, "同一張圖，紅點依標記來源區分：不能只看 Δa", 0)
+    pic(s, "tasa_reply_20261126/fig_sma_vs_events.png", 0.45, 0.92, 12.45, 5.78)
+    note(s, fix_head, y=6.78)
 
     # 5c TASA 指定 15 顆衛星：半長軸變化與候選事件（2024-01-01 起，4 頁）
     for k in range(1, 5):
         s = frame(prs, f"TASA 指定 15 顆衛星：半長軸變化與候選事件（{k}／4）", 0)
-        pic(s, f"tasa_reply_20261126/fig_sma_vs_events_tasa15_p{k}.png", 0.4, 0.9, 12.55, 5.95)
+        pic(s, f"tasa_reply_20261126/fig_sma_vs_events_tasa15_p{k}_orig.png", 0.4, 0.9, 12.55, 5.95)
         note(s, "期間：2024-01-01（或首筆 TLE）至交付迄日；2026-11-26 已自 Space-Track 補齊 2024-01-01 起之 TLE。"
                 "超過 5σ、20σ 之單步不一定成為候選事件，須超過 L1 有效門檻（黑線）。", y=6.88)
+        s = frame(prs, f"TASA 指定 15 顆衛星（{k}／4）：紅點依標記來源區分", 0)
+        pic(s, f"tasa_reply_20261126/fig_sma_vs_events_tasa15_p{k}.png", 0.4, 0.9, 12.55, 5.95)
+        note(s, fix_pages[k - 1], y=6.88)
 
     # 6 工作內容三：測試基準
     s = frame(prs, "工作內容三：測試基準與效能評估", 0)

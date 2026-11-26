@@ -6,7 +6,8 @@
   KUIPER-00188（非 Starlink 電推，約 630 km）：5/20–5/27 降軌之單步超過 L1 門檻 → 2 件；其後維持期 0 件
 上排：TLE 平均半長軸高度與 R7 候選事件（依證據等級著色）
 下排：相鄰 TLE 之 |Δa|（對數刻度），標示 5σ、20σ 與 L1 有效門檻（P2 高度門檻 × P5 太陽活動 × P6 族群倍率）；
-      L1 標記點（超過有效門檻且未被 P1／P3 抑制）合併為候選事件
+      L1 標記點分三種來源：①|Δa| 超過有效門檻、②Δi／Δe 超過門檻、③P4 相鄰補標（①②之後 2 筆，不論大小）；
+      扣除 P1 抑制後合併為候選事件。③可位於門檻甚至 5σ 線以下，但不會單獨產生事件
 R7：maneuver_report_builder.build_report_data()；L1 有效門檻由 maneuver_strategies_july.apply_strategies() 取得（同一函式）。
 輸出：docs/tasa_reply_20261126/fig_sma_vs_events.png、sma_vs_events.json
 --tasa15：TASA 指定 15 顆衛星（期間同交付 r15.json），輸出 fig_sma_vs_events_tasa15_p1–p4.png、sma_vs_events_tasa15.json
@@ -54,6 +55,31 @@ def style(ax):
     ax.tick_params(colors=INK2, labelsize=8)
 
 
+PINK = "#f0a19c"
+
+
+def flag_sources(tr, res, flag):
+    """L1 最終標記之三種來源：①Δa 超過有效門檻、②只有 Δi／Δe 超過門檻、③ P4 相鄰補標（觸發點之後 2 筆）。"""
+    thr = np.asarray(res["thr_da"], float)
+    main = flag & (np.abs(tr["da_km"].to_numpy(float)) > thr)
+    oth = flag & ~main & ((np.abs(tr["di_deg"].to_numpy(float)) > ms.THR_DI) | (np.abs(tr["de"].to_numpy(float)) > ms.THR_DE))
+    p4 = flag & ~main & ~oth
+    return main, oth, p4
+
+
+def scatter_flags(bx, te, ad, da_m, main, oth, p4, s_main, s_p4):
+    for m, mk in ((da_m >= 0, "^"), (da_m < 0, "v")):
+        bx.scatter(te[p4 & m], np.maximum(ad[p4 & m], 0.3), marker=mk, s=s_p4, color=PINK, edgecolors="white", lw=0.3, zorder=3)
+        bx.scatter(te[oth & m], np.maximum(ad[oth & m], 0.3), marker=mk, s=s_main, facecolors="white", edgecolors=RED, lw=1.0, zorder=4)
+        bx.scatter(te[main & m], ad[main & m], marker=mk, s=s_main, color=RED, edgecolors="white", lw=0.4, zorder=5)
+
+
+def flag_handles(ms_main, ms_p4):
+    return [Line2D([], [], marker="^", ls="", color=RED, ms=ms_main, label="紅色實心：Δa 超過 L1 有效門檻"),
+            Line2D([], [], marker="^", ls="", mfc="white", mec=RED, mew=1.0, ms=ms_main, label="紅色空心：Δi／Δe 超過門檻"),
+            Line2D([], [], marker="^", ls="", color=PINK, ms=ms_p4, label="淡紅色：P4 延伸（觸發點之後 2 筆，不論大小）")]
+
+
 def run(norad):
     r = rb.build_report_data(norad, D0, D1, lang="zh", with_ai=False, with_external=False)
     tr = r["tr_df"]
@@ -91,10 +117,12 @@ def main():
         ax.set_title(f"{name}（NORAD {norad}，約 {r['alt_km_avg']:.0f} km）\n{sub}", fontsize=10, color=INK, loc="left")
         # 下排：|Δa| 與三條門檻
         other = ~flag & ~sup
+        res = ms.apply_strategies(tr, r["orbit_class"], lang="zh")
+        fm, fo, fp = flag_sources(tr, res, flag)
         for m, mk, lab in ((da_m >= 0, "^", "上升"), (da_m < 0, "v", "下降")):
             bx.scatter(te[other & m], np.maximum(ad[other & m], 0.3), marker=mk, s=11, color=BLUE, lw=0, alpha=0.8)
             bx.scatter(te[sup & m], np.maximum(ad[sup & m], 0.3), marker=mk, s=11, color=GRAY, lw=0)
-            bx.scatter(te[flag & m], ad[flag & m], marker=mk, s=34, color=RED, edgecolors="white", lw=0.4, zorder=4)
+        scatter_flags(bx, te, ad, da_m, fm, fo, fp, 34, 20)
         bx.step(te, thr * 1000, where="post", color=INK, lw=1.4)
         bx.axhline(s20, color=INK2, lw=1.0, ls="--")
         bx.axhline(s5, color=INK2, lw=1.0, ls=":")
@@ -111,21 +139,24 @@ def main():
         s = {"norad": norad, "name": name, "n_transitions": int(len(tr)), "sigma_m": round(sig, 1),
              "sigma5_m": round(s5), "sigma20_m": round(s20), "l1_thr_median_m": round(float(np.median(thr)) * 1000),
              "n_gt_5sigma": int((ad > s5).sum()), "n_gt_20sigma": int((ad > s20).sum()),
-             "n_l1_flagged": int(flag.sum()), "n_suppressed": int(sup.sum()), "n_events": len(ev), "grades": n_g}
+             "n_l1_flagged": int(flag.sum()), "n_flag_thr": int(fm.sum()), "n_flag_di_de": int(fo.sum()), "n_flag_p4": int(fp.sum()),
+             "n_suppressed": int(sup.sum()), "n_events": len(ev), "grades": n_g}
         summary.append(s)
         box = (f"轉換 {s['n_transitions']} 筆｜超過 5σ {s['n_gt_5sigma']}｜超過 20σ {s['n_gt_20sigma']}\n"
-               f"L1 標記 {s['n_l1_flagged']} 筆 → 候選事件 {len(ev)} 件" + (f"（{evtxt}）" if ev else ""))
+               f"L1 標記 {s['n_l1_flagged']} 筆（實心 {s['n_flag_thr']}、空心 {s['n_flag_di_de']}、延伸 {s['n_flag_p4']}）→ 候選事件 {len(ev)} 件" + (f"（{evtxt}）" if ev else ""))
         bx.text(0.985, 0.97, box, transform=bx.transAxes, va="top", ha="right", fontsize=7.8, color=INK,
                 bbox=dict(boxstyle="round,pad=0.35", fc="white", ec="#c9c8c3", lw=0.8))
         print(json.dumps(s, ensure_ascii=False))
-    handles = [Line2D([], [], marker="^", ls="", color=RED, ms=6, label="L1 標記（Δa 超過有效門檻，或傾角／離心率規則）→ 合併為候選事件"),
-               Line2D([], [], marker="^", ls="", color=BLUE, ms=5, label="未達 L1 門檻（▲上升／▼下降）"),
+    handles = flag_handles(6, 5) + [
+               Line2D([], [], marker="^", ls="", color=BLUE, ms=5, label="未標記（▲上升／▼下降）"),
                Line2D([], [], marker="v", ls="", color=GRAY, ms=5, label="P1 判為阻力衰減而抑制"),
                Line2D([], [], color=INK, lw=1.4, label="L1 有效門檻（高度×太陽活動×族群）"),
                Line2D([], [], color=INK2, lw=1.0, ls="--", label="20σ 高顯著下限"),
                Line2D([], [], color=INK2, lw=1.0, ls=":", label="5σ 候選下限"),
                Patch(color=GRADE_COL["E2"], alpha=0.35, label="候選事件期間（E2）")]
     fig.legend(handles=handles, loc="lower center", ncol=4, fontsize=7.8, frameon=False, bbox_to_anchor=(0.5, -0.005))
+    fig.text(0.012, 0.945, "三種紅點皆為 L1 標記，合併為候選事件；淡紅色（P4 延伸）本身不需超過門檻，故可位於黑線甚至 5σ 線以下，且不會單獨產生事件。",
+             fontsize=8.5, color=INK2, ha="left")
     fig.suptitle("半長軸變化與候選事件之關係：單步 |Δa| 須超過 L1 門檻（或多筆同向累積成連續機動段）才產生候選事件；5σ、20σ 只用於顯著性分級",
                  fontsize=10.5, color=INK, x=0.012, ha="left", y=0.995)
     fig.subplots_adjust(left=0.055, right=0.99, top=0.86, bottom=0.17)
@@ -163,10 +194,11 @@ def _cell(fig, sub, norad, rdel, since=None):
     ax.plot(tt, alt, color=BLUE, lw=0.8)
     ax.ticklabel_format(axis="y", useOffset=False, style="plain")
     other = ~flag & ~sup
+    fm, fo, fp = flag_sources(tr, res, flag)
     for m, mk in ((da_m >= 0, "^"), (da_m < 0, "v")):
         bx.scatter(te[sup & m], np.maximum(ad[sup & m], 0.3), marker=mk, s=4, color=GRAY, lw=0, rasterized=True)
         bx.scatter(te[other & m], np.maximum(ad[other & m], 0.3), marker=mk, s=5, color=BLUE, lw=0, alpha=0.85, rasterized=True)
-        bx.scatter(te[flag & m], ad[flag & m], marker=mk, s=16, color=RED, edgecolors="white", lw=0.3, zorder=4)
+    scatter_flags(bx, te, ad, da_m, fm, fo, fp, 18, 11)
     bx.step(te, thr * 1000, where="post", color=INK, lw=1.0)
     bx.axhline(s20, color=INK2, lw=0.8, ls="--"); bx.axhline(s5, color=INK2, lw=0.8, ls=":")
     bx.set_yscale("log"); bx.set_ylim(0.3, max(ad.max(), thr.max() * 1000) * 4)
@@ -181,12 +213,14 @@ def _cell(fig, sub, norad, rdel, since=None):
     evtxt = "、".join(f"{g} {k}" for g, k in n_g.items() if k)
     name = rdel["name"].replace(" 4001", "")
     d0_txt = f"首筆 {pd.Timestamp(d_first).date()}" if since is not None and pd.Timestamp(d_first).date() > d0 else f"{d0}"
-    stat = (f"L1 門檻 {np.median(thr)*1000:.0f}／20σ {s20:.0f}／5σ {s5:.0f} m｜超過 5σ {int((ad > s5).sum())}、20σ {int((ad > s20).sum())} 筆｜"
-            f"L1 標記 {int(flag.sum())} 筆 → 事件 {len(ev)} 件" + (f"（{evtxt}）" if ev else ""))
+    stat = (f"L1 門檻 {np.median(thr)*1000:.0f}／20σ {s20:.0f}／5σ {s5:.0f} m｜超過 5σ {int((ad > s5).sum())}、20σ {int((ad > s20).sum())} 筆\n"
+            f"L1 標記 {int(flag.sum())}（實心{int(fm.sum())}／空心{int(fo.sum())}／延伸{int(fp.sum())}）→ 事件 {len(ev)} 件" + (f"（{evtxt}）" if ev else ""))
     ax.set_title(f"{name}（{norad}，{r['alt_km_avg']:.0f} km）　{d0_txt}～{d1}\n{stat}", fontsize=7.6, color=INK, loc="left", pad=2)
     s = {"norad": norad, "name": name, "d0": str(d0), "d1": str(d1), "n_transitions": int(len(tr)), "sigma_m": round(sig, 1),
          "sigma5_m": round(s5), "sigma20_m": round(s20), "l1_thr_median_m": round(float(np.median(thr)) * 1000),
          "n_gt_5sigma": int((ad > s5).sum()), "n_gt_20sigma": int((ad > s20).sum()), "n_l1_flagged": int(flag.sum()),
+         "n_flag_thr": int(fm.sum()), "n_flag_di_de": int(fo.sum()), "n_flag_p4": int(fp.sum()),
+         "n_flag_below_thr": int((flag & (ad < thr * 1000)).sum()), "n_flag_below_5sigma": int((flag & (ad < s5)).sum()),
          "n_events": len(ev), "grades": n_g, "grades_delivery": rdel["counts"]["grades"],
          "match_delivery": n_g == {g: rdel["counts"]["grades"].get(g, 0) for g in GRADE_COL}}
     print(json.dumps(s, ensure_ascii=False))
@@ -197,26 +231,28 @@ def tasa15(since=None, check_only=False):
     R = {int(k): v for k, v in json.loads((ROOT / "data/benchmark/tasa15_r7_delivery/r15.json").read_text(encoding="utf-8")).items()}
     pages = [TASA15_ORDER[i:i + 4] for i in range(0, 15, 4)]
     summary = []
-    handles = [Line2D([], [], marker="^", ls="", color=RED, ms=5, label="L1 標記 → 合併為候選事件"),
-               Line2D([], [], marker="^", ls="", color=BLUE, ms=4, label="未達 L1 門檻（▲上升／▼下降）"),
+    handles = flag_handles(5, 4) + [
+               Line2D([], [], marker="^", ls="", color=BLUE, ms=4, label="未標記（▲上升／▼下降）"),
                Line2D([], [], marker="v", ls="", color=GRAY, ms=4, label="P1 判為阻力衰減而抑制"),
                Line2D([], [], color=INK, lw=1.0, label="L1 有效門檻"),
                Line2D([], [], color=INK2, lw=0.8, ls="--", label="20σ"), Line2D([], [], color=INK2, lw=0.8, ls=":", label="5σ")] + \
               [Patch(color=c, alpha=0.4, label=f"候選事件 {g}") for g, c in GRADE_COL.items()]
     for k, page in enumerate(pages, 1):
         fig = plt.figure(figsize=(13.0, 6.6), dpi=200)
-        gs = fig.add_gridspec(2, 2, hspace=0.42, wspace=0.12, left=0.045, right=0.99, top=0.88, bottom=0.11)
+        gs = fig.add_gridspec(2, 2, hspace=0.52, wspace=0.12, left=0.045, right=0.99, top=0.86, bottom=0.11)
         for i, n in enumerate(page):
             summary.append(_cell(fig, gs[i // 2, i % 2], n, R[n], since))
         fig.suptitle(f"TASA 指定 15 顆衛星：半長軸變化與候選事件，2024-01-01 起（{k}／{len(pages)}）　上：半長軸高度（km）；下：相鄰 TLE 之 |Δa|（m，對數）",
                      fontsize=10, color=INK, x=0.012, ha="left", y=0.985)
-        fig.legend(handles=handles, loc="lower center", ncol=10, fontsize=7, frameon=False, bbox_to_anchor=(0.5, 0.0))
+        fig.legend(handles=handles, loc="lower center", ncol=7, fontsize=7, frameon=False, bbox_to_anchor=(0.5, 0.0))
         if check_only:
             plt.close(fig); continue
         fig.savefig(OUT / f"fig_sma_vs_events_tasa15_p{k}.png"); plt.close(fig)
     if check_only:
         print("交付期間一致", sum(s["match_delivery"] for s in summary), "／", len(summary)); return
     (OUT / "sma_vs_events_tasa15.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1), encoding="utf-8")
+    tot = {k: sum(x[k] for x in summary) for k in ("n_l1_flagged", "n_flag_thr", "n_flag_di_de", "n_flag_p4", "n_flag_below_thr", "n_flag_below_5sigma")}
+    print("L1 標記來源合計", tot)
     print("一致", sum(s["match_delivery"] for s in summary), "／", len(summary))
 
 
