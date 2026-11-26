@@ -11,8 +11,8 @@ body{margin:0;background:var(--bg);color:var(--tx);font-family:'Segoe UI',Tahoma
 #hdr{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--pn);border-bottom:1px solid var(--bd2);flex-wrap:wrap}
 #hdr h1{font-size:16px;color:var(--hi);margin:0;font-weight:600}
 #hdr .sp{flex:1}
-a.btn,button{color:var(--ac);font-size:12px;text-decoration:none;border:1px solid var(--bd);border-radius:5px;padding:5px 10px;background:#21262d;cursor:pointer;font-family:inherit}
-button:hover,a.btn:hover{background:#30363d}
+a.btn,label.btn,button{color:var(--ac);font-size:12px;text-decoration:none;border:1px solid var(--bd);border-radius:5px;padding:5px 10px;background:#21262d;cursor:pointer;font-family:inherit}
+button:hover,a.btn:hover,label.btn:hover{background:#30363d}
 button.pri{background:#238636;color:#fff;border-color:#2ea043}
 button.pri:hover{background:#2ea043}
 button.dan{color:var(--bad)}
@@ -61,6 +61,19 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
     </div>
     <div class="muted">半徑 0＝只看中心點（用中心點的實際仰角與離天底角判定）；半徑 &gt; 0＝衛星偵照範圍與該圓形區域有交集就算可偵照。</div>
   </div>
+  <details class="card" id="attr-card">
+    <summary style="cursor:pointer;font-size:14px;font-weight:600;color:var(--hi)">衛星屬性（簡要版輸出用：衛星隸屬、解析度）<span id="attr-count" class="muted"></span></summary>
+    <div class="muted" style="margin:8px 0">簡要版檔案 A 的「衛星隸屬」「解析度」取自此表；隸屬空白＝依 SATCAT 國別（中國顯示為「中共」）。「國際名稱」用目前顯示名稱，可到「衛星管理」更名。
+      CSV 欄位：NORAD,名稱,衛星隸屬,解析度,備註（匯入時依 NORAD 合併，名稱欄忽略）。存在本機資料目錄（user_private），不上傳。</div>
+    <div class="tw" style="max-height:300px"><table id="attrs"><thead><tr><th>NORAD</th><th>名稱</th><th>衛星隸屬</th><th>解析度</th><th>備註</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="row" style="margin-top:8px">
+      <button onclick="FC.addAttr()">＋ 新增</button>
+      <label class="btn">匯入 CSV<input type="file" accept=".csv,text/csv" style="display:none" onchange="FC.importAttrs(this)"/></label>
+      <button onclick="FC.exportAttrs()">匯出 CSV</button>
+      <button id="btn-save-attrs" class="pri" onclick="FC.saveAttrs()">儲存屬性表</button>
+      <span id="attr-msg" class="msg"></span>
+    </div>
+  </details>
   <div class="grid">
     <div class="card">
       <h2>衛星</h2>
@@ -95,6 +108,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
       <a class="btn" id="dl-passes" href="#">⬇ 過頂清單 CSV</a>
       <a class="btn" id="dl-sun" href="#">⬇ 日出日落 CSV</a>
       <a class="btn" id="dl-err" href="#">⬇ 歷史誤差 CSV</a>
+      <a class="btn" id="dl-brief-a" href="#" title="經過日期、衛星隸屬、衛星種類、國際名稱、解析度、開始／結束時間（可偵照時段）">⬇ 簡要版 A CSV</a>
+      <a class="btn" id="dl-brief-b" href="#" title="經過日期、國際名稱、過頂時間 HHMM-HHMM、種類">⬇ 簡要版 B CSV</a>
       <span class="muted">（表格只顯示前 300 筆，完整資料請下載 CSV）</span>
     </div>
     <div id="errbox"></div>

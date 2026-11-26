@@ -282,7 +282,7 @@ src/
   obs.rs        觀測資料模型：地面 POI／觀測／軌道解／身分主張、交叉驗證、複核
   launch.rs     一箭多星軌道驗證：分群與沿軌排序、升軌偵測、SupGP 比對與編號互換偵測
   ephemeris.rs  星歷狀態、一鍵重抓（CelesTrak／Space-Track 覆蓋層）、SATCAT 與 DECAY 列表
-  forecast.rs   過頂預報：多中心點、偵照角度、日照與日出日落、歷史 TLE 誤差估算、CSV
+  forecast.rs   過頂預報：多中心點、偵照角度、日照與日出日落、歷史 TLE 誤差估算、CSV（含簡要版 A／B）、衛星屬性表
   api.rs        主頁 HTTP 路由；api_phase2.rs 台北／RPO／海纜路由
   assets.rs     內嵌前端資產
 web/templates/  由 sync_web.py 以 Jinja 預先渲染之頁面
@@ -294,6 +294,13 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 ```
 
 ## 版本紀錄
+
+### v0.1.28（2026-11-26）
+
+- 過頂預報新增簡要版 CSV（依客戶樣本格式）：`/api/forecast/jobs/{id}/brief_a.csv`（經過日期、衛星隸屬、衛星種類、國際名稱、解析度、可偵照開始／結束）、`brief_b.csv`（M月D日、國際名稱、HHMM-HHMM、種類），只列可偵照的過頂
+- 新增衛星屬性表 `GET/PUT /api/forecast/attrs`（`user_private\sat_attrs.json`，PUT 需編輯者）：逐顆衛星隸屬與解析度，頁面可匯入匯出 CSV；隸屬空白時依系統國別（中國→中共），國別為其他／不明時改用 SATCAT 擁有者代碼
+- 與線上版同一組測試字串；端到端兩版簡要版 B 逐字一致
+- 操作手冊 v0.1.28：第七節加入衛星屬性與簡要版
 
 ### v0.1.27（2026-11-26）
 

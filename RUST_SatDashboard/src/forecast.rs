@@ -85,6 +85,82 @@ fn check_site(s: &Site) -> Result<(), String> {
     Ok(())
 }
 
+// ── 衛星屬性（簡要版輸出用：衛星隸屬、解析度）──────────────────────────────
+
+/// 每顆衛星的補充屬性；存在 user_private\sat_attrs.json（不上傳）。隸屬空白＝依 SATCAT 國別
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct SatAttr {
+    pub norad: u32,
+    #[serde(default)]
+    pub owner: String,
+    #[serde(default)]
+    pub resolution: String,
+    #[serde(default)]
+    pub note: String,
+}
+
+const MAX_ATTRS: usize = 5000;
+
+fn attrs_file(cfg: &Config) -> std::path::PathBuf {
+    cfg.home.join("user_private").join("sat_attrs.json")
+}
+
+pub fn load_attrs(cfg: &Config) -> Vec<SatAttr> {
+    std::fs::read(attrs_file(cfg)).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default()
+}
+
+fn check_attrs(v: &[SatAttr]) -> Result<(), String> {
+    if v.len() > MAX_ATTRS {
+        return Err(format!("衛星屬性最多 {MAX_ATTRS} 筆"));
+    }
+    let mut seen = std::collections::HashSet::new();
+    for a in v {
+        if a.norad == 0 || a.norad > 999_999_999 {
+            return Err(format!("NORAD {} 不正確", a.norad));
+        }
+        if !seen.insert(a.norad) {
+            return Err(format!("NORAD {} 重複", a.norad));
+        }
+        if a.owner.chars().count() > 32 || a.resolution.chars().count() > 64 || a.note.chars().count() > 200 {
+            return Err(format!("NORAD {}：隸屬最多 32 字、解析度 64 字、備註 200 字", a.norad));
+        }
+    }
+    Ok(())
+}
+
+/// 衛星隸屬預設值：先用系統國別分類（中國→中共）；分類為其他／不明（例如新發射、尚未收錄）時改用 SATCAT 擁有者代碼
+pub fn owner_label(country: &str, satcat_owner: &str) -> String {
+    match country.trim() {
+        "中國" => return "中共".into(),
+        "" | "不明" | "—" | "其他" => {}
+        c => return c.to_string(),
+    }
+    match satcat_owner.trim() {
+        "PRC" => "中共".into(),
+        "US" => "美國".into(),
+        "CIS" => "俄羅斯".into(),
+        "FR" => "法國".into(),
+        "JPN" => "日本".into(),
+        "IND" => "印度".into(),
+        "UK" => "英國".into(),
+        "ESA" => "歐洲太空總署".into(),
+        "GER" => "德國".into(),
+        "IT" => "義大利".into(),
+        "CA" => "加拿大".into(),
+        "SPN" => "西班牙".into(),
+        "SKOR" => "南韓".into(),
+        "NKOR" => "北韓".into(),
+        "ROC" => "台灣".into(),
+        "ISRA" => "以色列".into(),
+        "TURK" => "土耳其".into(),
+        "AUS" => "澳洲".into(),
+        "IRAN" => "伊朗".into(),
+        "PAKI" => "巴基斯坦".into(),
+        "" | "TBD" | "UNK" => String::new(),
+        c => c.to_string(),
+    }
+}
+
 struct Target {
     site: Site,
     obs: Observer,
@@ -503,6 +579,8 @@ pub struct Result_ {
     pub errors: Vec<(u32, String, ErrStat)>,
     pub summary: Value,
     pub tz: FixedOffset,
+    /// 簡要版輸出用：NORAD →（衛星隸屬, 解析度）
+    pub brief: HashMap<u32, (String, String)>,
 }
 
 #[derive(Clone)]
@@ -833,7 +911,20 @@ fn run(st: Arc<AppState>, req: Req, job: Job) -> anyhow::Result<Result_> {
         "fleet_error": fleet_curve,
         "look_values": look_values,
     });
-    Ok(Result_ { passes, sun, errors, summary, tz })
+    let attrs: HashMap<u32, SatAttr> = load_attrs(&st.cfg).into_iter().map(|a| (a.norad, a)).collect();
+    let idx = st.index();
+    let sc = crate::ephemeris::satcat(&st.cfg);
+    let owner_of = |n: u32| owner_label(idx.sats.get(&n).map(|i| i.country.as_str()).unwrap_or(""), sc.get(&n).map(|r| r.owner.as_str()).unwrap_or(""));
+    let brief = sats
+        .iter()
+        .map(|s| {
+            let a = attrs.get(&s.norad);
+            let own = a.map(|a| a.owner.trim().to_string()).filter(|x| !x.is_empty())
+                .unwrap_or_else(|| owner_of(s.norad));
+            (s.norad, (own, a.map(|a| a.resolution.trim().to_string()).unwrap_or_default()))
+        })
+        .collect();
+    Ok(Result_ { passes, sun, errors, summary, tz, brief })
 }
 
 // ── CSV ──────────────────────────────────────────────────────────────────────
@@ -884,6 +975,60 @@ pub fn passes_csv(res: &Result_) -> String {
     out
 }
 
+/// 簡要版排序用：電子偵察 → 光學 → 雷達 → 其他 → 未設定（依客戶樣本）
+fn sensor_rank(s: &str) -> u8 {
+    match s {
+        "電子偵察" => 0,
+        "光學" => 1,
+        "雷達" => 2,
+        "其他" => 3,
+        _ => 4,
+    }
+}
+
+/// 可偵照的過頂（簡要版只列有可偵照時段者）
+fn brief_rows(res: &Result_) -> Vec<(&PassRow, DateTime<Utc>, DateTime<Utc>)> {
+    res.passes.iter().filter(|p| p.coverable).filter_map(|p| Some((p, p.img_start?, p.img_end?))).collect()
+}
+
+/// 簡要版檔案 A：經過日期、衛星隸屬、衛星種類、國際名稱、解析度、開始／結束時間（可偵照時段，CSV 時區）
+pub fn brief_a_csv(res: &Result_) -> String {
+    let tz = res.tz;
+    let mut rows = brief_rows(res);
+    let day = |t: &DateTime<Utc>| t.with_timezone(&tz).format("%Y-%m-%d").to_string();
+    rows.sort_by(|a, b| {
+        a.0.site.cmp(&b.0.site).then(day(&a.1).cmp(&day(&b.1))).then(sensor_rank(&a.0.sensor).cmp(&sensor_rank(&b.0.sensor)))
+            .then(a.1.cmp(&b.1)).then(a.0.norad_id.cmp(&b.0.norad_id))
+    });
+    let mut out = String::from("\u{FEFF}經過日期,衛星隸屬,衛星種類,國際名稱,解析度,開始時間,結束時間,NORAD,中心點\n");
+    let empty = (String::new(), String::new());
+    for (p, a, b) in rows {
+        let (own, reso) = res.brief.get(&p.norad_id).unwrap_or(&empty);
+        let cols = [day(&a), esc(own), p.sensor.clone(), esc(&p.name), esc(reso),
+            a.with_timezone(&tz).format("%H:%M:%S").to_string(), b.with_timezone(&tz).format("%H:%M:%S").to_string(),
+            p.norad_id.to_string(), esc(&p.site)];
+        out.push_str(&cols.join(","));
+        out.push('\n');
+    }
+    out
+}
+
+/// 簡要版檔案 B：經過日期（M月D日）、國際名稱、過頂時間（HHMM-HHMM）、種類，依時間排序
+pub fn brief_b_csv(res: &Result_) -> String {
+    let tz = res.tz;
+    let mut rows = brief_rows(res);
+    rows.sort_by(|a, b| a.0.site.cmp(&b.0.site).then(a.1.cmp(&b.1)).then(a.0.norad_id.cmp(&b.0.norad_id)));
+    let mut out = String::from("\u{FEFF}經過日期,國際名稱,過頂時間,種類,NORAD,中心點\n");
+    for (p, a, b) in rows {
+        let (la, lb) = (a.with_timezone(&tz), b.with_timezone(&tz));
+        let cols = [la.format("%-m月%-d日").to_string(), esc(&p.name), format!("{}-{}", la.format("%H%M"), lb.format("%H%M")),
+            p.sensor.clone(), p.norad_id.to_string(), esc(&p.site)];
+        out.push_str(&cols.join(","));
+        out.push('\n');
+    }
+    out
+}
+
 pub fn sun_csv(res: &Result_) -> String {
     let tz = res.tz;
     let off = tz.local_minus_utc() as f64 / 3600.0;
@@ -918,6 +1063,7 @@ fn jerr(s: StatusCode, m: impl Into<String>) -> Response {
 pub fn extend(r: Router<Arc<AppState>>) -> Router<Arc<AppState>> {
     r.route("/forecast", get(page))
         .route("/api/forecast/sites", get(api_sites).put(api_sites_put))
+        .route("/api/forecast/attrs", get(api_attrs).put(api_attrs_put))
         .route("/api/forecast/run", post(api_run))
         .route("/api/forecast/jobs", get(api_jobs))
         .route("/api/forecast/jobs/{id}", get(api_job))
@@ -963,6 +1109,49 @@ async fn api_sites_put(State(st): St, Extension(c): Extension<Caller>, Json(b): 
         }
         Err(e) => jerr(StatusCode::BAD_REQUEST, e),
     }
+}
+
+/// 衛星屬性表（附目前名稱與 SATCAT 預設隸屬，供頁面顯示）
+async fn api_attrs(State(st): St) -> Json<Value> {
+    let idx = st.index();
+    let sc = crate::ephemeris::satcat(&st.cfg);
+    let rows: Vec<Value> = load_attrs(&st.cfg)
+        .into_iter()
+        .map(|a| {
+            let i = idx.sats.get(&a.norad);
+            let dflt = owner_label(i.map(|i| i.country.as_str()).unwrap_or(""), sc.get(&a.norad).map(|r| r.owner.as_str()).unwrap_or(""));
+            json!({"norad": a.norad, "owner": a.owner, "resolution": a.resolution, "note": a.note,
+                   "name": i.map(|i| i.name.clone()).unwrap_or_default(), "default_owner": dflt})
+        })
+        .collect();
+    Json(json!({"attrs": rows}))
+}
+
+/// 整份取代衛星屬性表（編輯者以上）
+async fn api_attrs_put(State(st): St, Extension(c): Extension<Caller>, Json(mut b): Json<Vec<SatAttr>>) -> Response {
+    if !c.can_edit() {
+        return jerr(StatusCode::FORBIDDEN, "需要編輯者以上權限");
+    }
+    for a in b.iter_mut() {
+        a.owner = a.owner.trim().to_string();
+        a.resolution = a.resolution.trim().to_string();
+        a.note = a.note.trim().to_string();
+    }
+    b.retain(|a| !(a.owner.is_empty() && a.resolution.is_empty() && a.note.is_empty()));
+    if let Err(e) = check_attrs(&b) {
+        return jerr(StatusCode::BAD_REQUEST, e);
+    }
+    b.sort_by_key(|a| a.norad);
+    let path = attrs_file(&st.cfg);
+    if let Some(d) = path.parent() {
+        let _ = std::fs::create_dir_all(d);
+    }
+    let data = serde_json::to_vec_pretty(&b).unwrap_or_default();
+    if let Err(e) = crate::auth::atomic_write(&path, &data) {
+        return jerr(StatusCode::INTERNAL_SERVER_ERROR, format!("寫入失敗：{e}"));
+    }
+    st.satadmin.audit(&c.name(), "衛星屬性", &format!("儲存 {} 筆（隸屬／解析度）", b.len()));
+    Json(json!({"ok": true, "count": b.len()})).into_response()
 }
 
 fn validate(req: &Req) -> Result<(), String> {
@@ -1095,13 +1284,62 @@ async fn api_job_file(Path((id, file)): Path<(String, String)>) -> Response {
         "passes.csv" => csv_resp(passes_csv(&r), &format!("passes_{stamp}.csv")),
         "sun.csv" => csv_resp(sun_csv(&r), &format!("sun_{stamp}.csv")),
         "errors.csv" => csv_resp(errors_csv(&r), &format!("tle_error_{stamp}.csv")),
-        _ => jerr(StatusCode::NOT_FOUND, "檔案需為 passes.csv／sun.csv／errors.csv"),
+        "brief_a.csv" => csv_resp(brief_a_csv(&r), &format!("brief_A_{stamp}.csv")),
+        "brief_b.csv" => csv_resp(brief_b_csv(&r), &format!("brief_B_{stamp}.csv")),
+        _ => jerr(StatusCode::NOT_FOUND, "檔案需為 passes.csv／sun.csv／errors.csv／brief_a.csv／brief_b.csv"),
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn brief_fixture() -> Result_ {
+        let t = |s: &str| DateTime::parse_from_rfc3339(s).unwrap().with_timezone(&Utc);
+        let mk = |n: u32, name: &str, sensor: &str, a: &str, b: &str, cov: bool| PassRow {
+            norad_id: n, name: name.into(), orig_name: String::new(), group: String::new(), sensor: sensor.into(), site: "台北".into(),
+            start: t(a), end: t(b), duration_s: 0.0, tca: t(a), max_el_deg: 0.0, az_tca_deg: 0.0, range_km: 0.0, min_off_nadir_deg: 0.0,
+            ground_dist_km: 0.0, sub_lat: 0.0, sub_lon: 0.0, alt_km: 0.0, direction: "升軌", look_deg: 30.0, look_from: "預設",
+            swath_radius_km: 0.0, coverable: cov, img_start: if cov { Some(t(a)) } else { None }, img_end: if cov { Some(t(b)) } else { None },
+            img_duration_s: 0.0, sun_el_deg: 0.0, sunlit: true, tle_epoch: None, lead_days: f64::NAN, est_err_s: None,
+        };
+        let mut brief = HashMap::new();
+        brief.insert(1, ("中共".to_string(), "判優於1公尺".to_string()));
+        brief.insert(2, ("中共".to_string(), String::new()));
+        Result_ {
+            passes: vec![
+                mk(1, "四維高景2號02星", "光學", "2026-11-30T22:27:30Z", "2026-11-30T22:30:34Z", true),
+                mk(2, "遙感32號2B星", "電子偵察", "2026-11-30T18:26:30Z", "2026-11-30T18:27:05Z", true),
+                mk(3, "X, \"Y\"", "雷達", "2026-11-30T16:27:49Z", "2026-11-30T16:31:43Z", true),
+                mk(4, "不可偵照", "光學", "2026-11-30T17:00:00Z", "2026-11-30T17:05:00Z", false),
+            ],
+            sun: vec![], errors: vec![], summary: json!({}), tz: FixedOffset::east_opt(8 * 3600).unwrap(), brief,
+        }
+    }
+
+    #[test]
+    fn brief_csvs() {
+        let r = brief_fixture();
+        let a = brief_a_csv(&r);
+        let lines: Vec<&str> = a.trim_start_matches('\u{FEFF}').lines().collect();
+        assert_eq!(lines[0], "經過日期,衛星隸屬,衛星種類,國際名稱,解析度,開始時間,結束時間,NORAD,中心點");
+        assert_eq!(lines[1], "2026-12-01,中共,電子偵察,遙感32號2B星,,02:26:30,02:27:05,2,台北");
+        assert_eq!(lines[2], "2026-12-01,中共,光學,四維高景2號02星,判優於1公尺,06:27:30,06:30:34,1,台北");
+        assert_eq!(lines[3], "2026-12-01,,雷達,\"X, \"\"Y\"\"\",,00:27:49,00:31:43,3,台北");
+        assert_eq!(lines.len(), 4, "不可偵照的不列");
+        let b = brief_b_csv(&r);
+        let lines: Vec<&str> = b.trim_start_matches('\u{FEFF}').lines().collect();
+        assert_eq!(lines[0], "經過日期,國際名稱,過頂時間,種類,NORAD,中心點");
+        assert_eq!(lines[1], "12月1日,\"X, \"\"Y\"\"\",0027-0031,雷達,3,台北");
+        assert_eq!(lines[3], "12月1日,四維高景2號02星,0627-0630,光學,1,台北");
+        assert_eq!(owner_label("中國", "CIS"), "中共");
+        assert_eq!(owner_label("不明", ""), "");
+        assert_eq!(owner_label("美國", "CIS"), "美國", "系統分類優先");
+        assert_eq!(owner_label("其他", "PRC"), "中共", "未收錄的新物體用 SATCAT 代碼");
+        assert_eq!(owner_label("其他", "TBD"), "");
+        assert_eq!(owner_label("", "ORB"), "ORB");
+        assert!(check_attrs(&vec![SatAttr { norad: 5, owner: String::new(), resolution: String::new(), note: String::new() }; 2]).is_err(), "重複 NORAD");
+    }
 
     #[test]
     fn footprint_geometry() {

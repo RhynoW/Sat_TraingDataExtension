@@ -81,6 +81,107 @@
     }).catch(function (e) { $('groups').textContent = e.message; });
   }
 
+
+  // 衛星屬性存在本機資料目錄 user_private\sat_attrs.json（伺服器端讀取，不上傳）
+  var ATTRB = {
+    load: function () { return api('GET', '/api/forecast/attrs').then(function (j) { return j.attrs || []; }); },
+    save: function (rows) { return api('PUT', '/api/forecast/attrs', rows).then(function (j) { return j.count; }); }
+  };
+
+  // ── 衛星屬性（簡要版輸出用：衛星隸屬、解析度；兩版共用，儲存方式見 ATTRB）──
+  function attrRow(a) {
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><input class="a-norad" type="number" min="1" style="width:90px"/></td><td class="a-name muted"></td>' +
+      '<td><input class="a-own" style="width:100px"/></td><td><input class="a-res" style="width:140px"/></td><td><input class="a-note" style="width:200px"/></td>' +
+      '<td><button class="dan">刪除</button></td>';
+    tr.querySelector('.a-norad').value = a.norad || '';
+    tr.querySelector('.a-name').textContent = a.name || '';
+    tr.querySelector('.a-own').value = a.owner || '';
+    tr.querySelector('.a-own').placeholder = a.default_owner || '依 SATCAT';
+    tr.querySelector('.a-res').value = a.resolution || '';
+    tr.querySelector('.a-note').value = a.note || '';
+    tr.querySelector('button').onclick = function () { tr.remove(); };
+    document.querySelector('#attrs tbody').appendChild(tr);
+  }
+  function attrsFromTable() {
+    return Array.prototype.map.call(document.querySelectorAll('#attrs tbody tr'), function (tr) {
+      var g = function (c) { return tr.querySelector(c).value.trim(); };
+      return { norad: parseInt(g('.a-norad'), 10) || 0, owner: g('.a-own'), resolution: g('.a-res'), note: g('.a-note'), name: tr.querySelector('.a-name').textContent };
+    }).filter(function (a) { return a.norad > 0 && (a.owner || a.resolution || a.note); });
+  }
+  var ATTRS = [];
+  function loadAttrs() {
+    return ATTRB.load().then(function (rows) {
+      ATTRS = rows || [];
+      document.querySelector('#attrs tbody').innerHTML = '';
+      ATTRS.forEach(attrRow);
+      $('attr-count').textContent = ATTRS.length ? '（' + ATTRS.length + ' 筆）' : '';
+    }).catch(function (e) { msg('attr-msg', e.message); });
+  }
+  function saveAttrs() {
+    var rows = attrsFromTable(), seen = {}, dup = [];
+    rows.forEach(function (a) { if (seen[a.norad]) dup.push(a.norad); seen[a.norad] = 1; });
+    if (dup.length) { msg('attr-msg', 'NORAD 重複：' + dup.join(', ')); return; }
+    ATTRB.save(rows.map(function (a) { return { norad: a.norad, owner: a.owner, resolution: a.resolution, note: a.note }; }))
+      .then(function (n) { msg('attr-msg', '已儲存 ' + n + ' 筆', true); return loadAttrs(); })
+      .catch(function (e) { msg('attr-msg', e.message); });
+  }
+  function addAttr() { attrRow({}); }
+  function parseCsv(text) {
+    var rows = [], row = [], f = '', q = false, i, c;
+    text = text.replace(/^\uFEFF/, '');
+    for (i = 0; i < text.length; i++) {
+      c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true;
+      else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(f); rows.push(row); row = []; f = ''; }
+      else f += c;
+    }
+    if (f || row.length) { row.push(f); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (x) { return x.trim(); }); });
+  }
+  function importAttrs(inp) {
+    var file = inp.files && inp.files[0]; if (!file) return;
+    file.text().then(function (text) {
+      var rows = parseCsv(text); inp.value = '';
+      if (!rows.length) { msg('attr-msg', '檔案是空的'); return; }
+      var h = rows[0].map(function (x) { return x.trim().toUpperCase(); });
+      var col = function (keys) { return h.findIndex(function (x) { return keys.some(function (k) { return x.indexOf(k) >= 0; }); }); };
+      var cn = col(['NORAD']), co = col(['隸屬']), cr = col(['解析度', 'RESOLUTION']), ce = col(['備註', 'NOTE']);
+      if (cn < 0) { msg('attr-msg', '找不到 NORAD 欄（第一列需為欄名：NORAD,名稱,衛星隸屬,解析度,備註）'); return; }
+      var cur = {}, upd = 0, add = 0, bad = 0;
+      document.querySelectorAll('#attrs tbody tr').forEach(function (tr) { var n = parseInt(tr.querySelector('.a-norad').value, 10); if (n) cur[n] = tr; });
+      rows.slice(1).forEach(function (r) {
+        var n = parseInt(String(r[cn] || '').trim(), 10);
+        if (!(n > 0)) { bad++; return; }
+        var v = { owner: co >= 0 ? (r[co] || '').trim() : null, resolution: cr >= 0 ? (r[cr] || '').trim() : null, note: ce >= 0 ? (r[ce] || '').trim() : null };
+        var tr = cur[n];
+        if (tr) {
+          if (v.owner !== null) tr.querySelector('.a-own').value = v.owner;
+          if (v.resolution !== null) tr.querySelector('.a-res').value = v.resolution;
+          if (v.note !== null) tr.querySelector('.a-note').value = v.note;
+          upd++;
+        } else {
+          attrRow({ norad: n, owner: v.owner || '', resolution: v.resolution || '', note: v.note || '' });
+          cur[n] = document.querySelector('#attrs tbody tr:last-child'); add++;
+        }
+      });
+      $('attr-card').open = true;
+      msg('attr-msg', '已匯入：更新 ' + upd + ' 筆、新增 ' + add + ' 筆' + (bad ? '、略過 ' + bad + ' 列（NORAD 不正確）' : '') + '；請按「儲存屬性表」', true);
+    });
+  }
+  function exportAttrs() {
+    var q = function (s) { s = String(s == null ? '' : s); return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    var lines = ['NORAD,名稱,衛星隸屬,解析度,備註'].concat(attrsFromTable().map(function (a) { return [a.norad, a.name, a.owner, a.resolution, a.note].map(q).join(','); }));
+    var url = URL.createObjectURL(new Blob(['\uFEFF' + lines.join('\n') + '\n'], { type: 'text/csv;charset=utf-8' }));
+    var el = document.createElement('a'); el.href = url; el.download = 'sat_attrs.csv'; document.body.appendChild(el); el.click(); el.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+  function attrsBody() {
+    var o = {}; ATTRS.forEach(function (a) { o[a.norad] = { owner: a.owner || '', resolution: a.resolution || '' }; }); return o;
+  }
+
   // ── 執行 ──
   function setLook(v) { $('look').value = v; }
   function run() {
@@ -96,7 +197,7 @@
     }
     var body = { sites: s, groups: groups, norads: norads, start: start, days: parseFloat($('days').value), mask_deg: parseFloat($('mask').value),
       look_deg: parseFloat($('look').value), look_override: $('look-ov').checked, only_coverable: $('only-cov').checked, daylight: $('daylight').value,
-      sun_min_deg: parseFloat($('sunmin').value) || 0, tz_hours: tzh(), error_estimate: $('err').checked, history_days: parseFloat($('hist').value) || 60 };
+      sun_min_deg: parseFloat($('sunmin').value) || 0, tz_hours: tzh(), error_estimate: $('err').checked, history_days: parseFloat($('hist').value) || 60 , attrs: attrsBody() };
     $('run').disabled = true; msg('run-msg', '已送出…', true); $('prog').style.width = '0';
     api('POST', '/api/forecast/run', body).then(function (j) { JOB = j.job_id; poll(); })
       .catch(function (e) { msg('run-msg', e.message); $('run').disabled = false; });
@@ -118,6 +219,7 @@
     $('result').style.display = '';
     var base = '/api/forecast/jobs/' + j.id + '/';
     $('dl-passes').href = base + 'passes.csv'; $('dl-sun').href = base + 'sun.csv'; $('dl-err').href = base + 'errors.csv';
+    $('dl-brief-a').href = base + 'brief_a.csv'; $('dl-brief-b').href = base + 'brief_b.csv';
     $('sum').innerHTML = '期間 ' + esc(fmt(s.start)) + ' ～ ' + esc(fmt(s.end)) + '（' + s.days + ' 天）・' + s.sats + ' 顆衛星・' + s.sites + ' 個中心點・共 <b>' + s.passes.toLocaleString() + '</b> 筆過頂' +
       (s.not_in_catalog.length ? '<div class="muted">不在目前目錄、未計算：' + s.not_in_catalog.join(', ') + '</div>' : '') +
       '<table style="width:auto;margin-top:8px"><thead><tr><th>中心點</th><th>過頂</th><th>可偵照</th><th>日照</th></tr></thead><tbody>' +
@@ -134,10 +236,12 @@
     }).join('') || '<tr><td colspan="14" class="muted">期間內沒有符合條件的過頂</td></tr>';
   }
 
-  window.FC = { addPoi: addPoi, addSite: addSite, saveSites: saveSites, run: run, setLook: setLook };
+  window.FC = { addPoi: addPoi, addSite: addSite, saveSites: saveSites, run: run, setLook: setLook,
+    addAttr: addAttr, saveAttrs: saveAttrs, importAttrs: importAttrs, exportAttrs: exportAttrs };
+  loadAttrs();
   api('GET', '/api/auth/me').then(function (m) {
     ME = m;
-    if (!(m.perms || []).includes('modify')) $('btn-save-sites').style.display = 'none';
+    if (!(m.perms || []).includes('modify')) { $('btn-save-sites').style.display = 'none'; $('btn-save-attrs').style.display = 'none'; }
   });
   api('GET', '/api/forecast/sites').then(function (j) { j.sites.forEach(siteRow); POIS = j.pois || []; fillPoiSel(); });
   loadGroups();
