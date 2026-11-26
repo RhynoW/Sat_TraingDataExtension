@@ -27,7 +27,7 @@ use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-use crate::auth::{atomic_write, Caller};
+use crate::auth::Caller;
 use crate::config::{Config, RAW_TABLE};
 use crate::physics::{eci_to_llh, gmst_rad, teme_to_ecef, Observer, Propagator};
 use crate::satadmin::tle_epoch;
@@ -59,13 +59,15 @@ fn sites_file(cfg: &Config) -> std::path::PathBuf {
     cfg.home.join("user_private").join("forecast_sites.json")
 }
 
+/// 舊版常用中心點檔（v0.1.25 起併入地面 POI，見 obs.rs）；沒有檔案回傳 None
+pub fn legacy_sites(cfg: &Config) -> Option<Vec<Site>> {
+    serde_json::from_slice(&std::fs::read(sites_file(cfg)).ok()?).ok()
+}
+
 fn default_sites() -> Vec<Site> {
     vec![Site { name: "台北".into(), lat: 25.0330, lon: 121.5654, alt_m: 10.0, radius_km: 0.0, note: String::new() }]
 }
 
-fn load_sites(cfg: &Config) -> Vec<Site> {
-    std::fs::read(sites_file(cfg)).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_else(default_sites)
-}
 
 fn check_site(s: &Site) -> Result<(), String> {
     if s.name.trim().is_empty() || s.name.chars().count() > 64 {
@@ -927,8 +929,18 @@ async fn page() -> Html<String> {
     Html(String::from_utf8_lossy(&raw).replace("__BUILD__", env!("CARGO_PKG_VERSION")))
 }
 
+/// 中心點：地面 POI 中的「關注地點」預先帶入；全部 POI 供「從地面 POI 加入」選單
 async fn api_sites(State(st): St) -> Json<Value> {
-    Json(json!({"sites": load_sites(&st.cfg)}))
+    let pois = crate::obs::pois(&st.cfg);
+    let as_site = |p: &serde_json::Map<String, Value>| {
+        json!({"name": p.get("name"), "lat": p.get("lat"), "lon": p.get("lon"), "alt_m": p.get("alt_m").cloned().unwrap_or(json!(0)),
+               "radius_km": p.get("radius_km").cloned().unwrap_or(json!(0)), "note": p.get("note").cloned().unwrap_or(json!("")), "kind": p.get("kind")})
+    };
+    let mut sites: Vec<Value> = pois.iter().filter(|p| p.get("kind").and_then(Value::as_str) == Some("site")).map(as_site).collect();
+    if sites.is_empty() {
+        sites = default_sites().iter().map(|s| json!(s)).collect();
+    }
+    Json(json!({"sites": sites, "pois": pois.iter().map(as_site).collect::<Vec<_>>()}))
 }
 
 async fn api_sites_put(State(st): St, Extension(c): Extension<Caller>, Json(b): Json<Vec<Site>>) -> Response {
@@ -943,12 +955,13 @@ async fn api_sites_put(State(st): St, Extension(c): Extension<Caller>, Json(b): 
             return jerr(StatusCode::BAD_REQUEST, e);
         }
     }
-    match serde_json::to_vec_pretty(&b).map_err(|e| e.to_string()).and_then(|d| atomic_write(&sites_file(&st.cfg), &d).map_err(|e| e.to_string())) {
-        Ok(()) => {
-            st.satadmin.audit(&c.name(), "常用中心點", &format!("儲存 {} 個", b.len()));
-            Json(json!({"ok": true})).into_response()
+    let vals: Vec<Value> = b.iter().map(|s| json!(s)).collect();
+    match crate::obs::upsert_sites(&st.cfg, &c.name(), &vals) {
+        Ok((upd, add)) => {
+            st.satadmin.audit(&c.name(), "常用中心點", &format!("寫入地面 POI：更新 {upd} 個、新增 {add} 個"));
+            Json(json!({"ok": true, "updated": upd, "added": add})).into_response()
         }
-        Err(e) => jerr(StatusCode::INTERNAL_SERVER_ERROR, e),
+        Err(e) => jerr(StatusCode::BAD_REQUEST, e),
     }
 }
 

@@ -23,7 +23,7 @@ const GLOBE_I18N = {
     btn_back: '返回',
     loading_text: '正在初始化地球...',
     sec_basemap: '底圖', sec_layers: '向量圖層',
-    chk_borders: '全球國界', chk_ssn: 'SSN 地面觀測站',
+    chk_borders: '全球國界', chk_ssn: 'SSN 地面觀測站', chk_pois: '地面 POI',
     btn_orbit6: '軌道六參數', tip_orbit6: '互動調整克卜勒軌道六參數，即時看軌道形狀變化（仿 AGI Orbit Tuner）',
     o6_title: '軌道六參數調整器',
     o6_presets: '預設案例',
@@ -65,7 +65,7 @@ const GLOBE_I18N = {
     btn_back: 'Back',
     loading_text: 'Initializing globe...',
     sec_basemap: 'Basemap', sec_layers: 'Vector Layers',
-    chk_borders: 'Global Borders', chk_ssn: 'SSN Ground Stations',
+    chk_borders: 'Global Borders', chk_ssn: 'SSN Ground Stations', chk_pois: 'Ground POIs',
     btn_orbit6: 'Orbit Tuner', tip_orbit6: 'Interactively adjust the six classical Keplerian elements and see the orbit shape change in real time (inspired by AGI Orbit Tuner)',
     o6_title: 'Classical Orbital Elements Tuner',
     o6_presets: 'Presets',
@@ -107,7 +107,7 @@ const GLOBE_I18N = {
     btn_back: '戻る',
     loading_text: '地球を初期化中...',
     sec_basemap: 'ベースマップ', sec_layers: 'ベクターレイヤー',
-    chk_borders: '世界の国境', chk_ssn: 'SSN地上観測局',
+    chk_borders: '世界の国境', chk_ssn: 'SSN地上観測局', chk_pois: '地上 POI',
     btn_orbit6: '軌道六要素', tip_orbit6: '古典軌道六要素をインタラクティブに調整し、軌道形状の変化をリアルタイムに確認（AGI Orbit Tuner ライク）',
     o6_title: '軌道六要素チューナー',
     o6_presets: 'プリセット',
@@ -1108,7 +1108,64 @@ function flyToSat(s){
   _startSelRefresh([s.norad_id]);
 }
 
+// 地面 POI 圖層：觀測站與關注地點（與觀測頁、過頂預報中心點共用）。單機版取 /api/obs/data，線上版取瀏覽器 localStorage
+let poiDs=null;
+const POI_COLORS={station:'#26C6DA',site:'#FFA726'};
+async function _poiData(){
+  try{
+    const r=await fetch('/api/obs/data');
+    if(r.ok){ const d=await r.json(); if(d&&Array.isArray(d.pois)) return d.pois; }
+  }catch(e){}
+  try{ const d=JSON.parse(localStorage.getItem('atrdc_obs_v1')||'null'); return (d&&Array.isArray(d.pois))?d.pois:[]; }catch(e){ return []; }
+}
+function _poiDesc(p){
+  const kind=p.kind==='site'?'關注地點':'觀測站';
+  const row=(k,v)=>'<tr><td style="padding:2px 10px 2px 0;color:#555">'+k+'</td><td>'+v+'</td></tr>';
+  return '<style>body{background:#fff;color:#212121;margin:0}</style>'
+    +'<div style="font-family:Tahoma,sans-serif;font-size:13px;padding:6px">'
+    +'<p style="color:'+(p.kind==='site'?'#e65100':'#00838f')+';font-weight:bold;margin-bottom:6px">📍 '+_esc(p.name)+'</p>'
+    +'<table style="border-collapse:collapse;color:#333;font-size:12px">'
+    +row('類型',kind)+row('緯度',Number(p.lat).toFixed(4)+'°')+row('經度',Number(p.lon).toFixed(4)+'°')
+    +row('高度',(p.alt_m||0)+' m')+(p.radius_km>0?row('範圍半徑',p.radius_km+' km（過頂預報）'):'')
+    +(p.note?row('備註',_esc(p.note)):'')
+    +'</table>'
+    +'<a data-newtab href="/obs" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px;padding:4px 10px;border-radius:5px;background:#00838f;color:#fff;text-decoration:none;font-size:12px">🔭 觀測與身分驗證</a>'
+    +'<a data-newtab href="/forecast" target="_blank" rel="noopener" style="display:inline-block;margin:8px 0 0 6px;padding:4px 10px;border-radius:5px;background:#e65100;color:#fff;text-decoration:none;font-size:12px">📅 過頂預報</a>'
+    +'</div>';
+}
+async function loadPoiLayer(){
+  const pois=await _poiData();
+  if(poiDs){ viewer.dataSources.remove(poiDs,true); poiDs=null; }
+  poiDs=new Cesium.CustomDataSource('pois');
+  pois.forEach(p=>{
+    const lat=Number(p.lat), lon=Number(p.lon);
+    if(!isFinite(lat)||!isFinite(lon)) return;
+    const col=Cesium.Color.fromCssColorString(POI_COLORS[p.kind]||POI_COLORS.station);
+    const e={
+      id:'poi_'+(p.id||p.name), name:'📍 '+p.name,
+      position:Cesium.Cartesian3.fromDegrees(lon,lat,Number(p.alt_m)||0),
+      point:{pixelSize:9,color:col,outlineColor:Cesium.Color.BLACK,outlineWidth:1.5,heightReference:Cesium.HeightReference.CLAMP_TO_GROUND,disableDepthTestDistance:Number.POSITIVE_INFINITY},
+      label:{text:p.name,font:'12px "Segoe UI","Microsoft JhengHei",sans-serif',fillColor:col,outlineColor:Cesium.Color.BLACK,outlineWidth:2,
+        style:Cesium.LabelStyle.FILL_AND_OUTLINE,pixelOffset:new Cesium.Cartesian2(0,-16),heightReference:Cesium.HeightReference.CLAMP_TO_GROUND,
+        distanceDisplayCondition:new Cesium.DistanceDisplayCondition(0,1.2e7),disableDepthTestDistance:Number.POSITIVE_INFINITY},
+      description:new Cesium.ConstantProperty(_poiDesc(p)),
+    };
+    const r=Number(p.radius_km)||0;
+    if(r>0) e.ellipse={semiMajorAxis:r*1000,semiMinorAxis:r*1000,material:col.withAlpha(0.12),outline:true,outlineColor:col.withAlpha(0.8),height:0};
+    poiDs.entities.add(e);
+  });
+  await viewer.dataSources.add(poiDs);
+  const st=document.getElementById('poi-status');
+  if(st) st.textContent=pois.length?('共 '+pois.length+' 個（觀測站 '+pois.filter(p=>p.kind!=='site').length+'、關注地點 '+pois.filter(p=>p.kind==='site').length+'）'):'尚無地面 POI，請到「觀測與身分驗證」或過頂預報新增';
+}
+
 async function toggleLayer(type,cb){
+  if(type==='pois'){
+    const st=document.getElementById('poi-status');
+    if(cb.checked){ await loadPoiLayer(); if(st) st.style.display=''; }
+    else{ if(poiDs){ viewer.dataSources.remove(poiDs,true); poiDs=null; } if(st) st.style.display='none'; }
+    return;
+  }
   if(type==='borders'){
     if(borderDs){ borderDs.show=cb.checked; return; }
     if(cb.checked) await loadBordersLayer();

@@ -35,7 +35,7 @@
   // ── 各種紀錄的表格 ──
   var COLS = {
     pois: [['名稱', function (r) { return esc(r.name); }], ['緯度', function (r) { return r.lat; }], ['經度', function (r) { return r.lon; }], ['高度 m', function (r) { return r.alt_m; }],
-      ['類型', function (r) { return esc(M.POI_KIND[r.kind] || r.kind); }], ['使用中', function (r) { var n = D.observations.filter(function (o) { return String(o.station).toUpperCase() === String(r.name).toUpperCase(); }).length; return n ? n + ' 筆觀測' : '—'; }],
+      ['類型', function (r) { return esc(M.POI_KIND[r.kind] || r.kind); }], ['半徑 km', function (r) { return r.radius_km ? r.radius_km : '—'; }], ['使用中', function (r) { var n = D.observations.filter(function (o) { return String(o.station).toUpperCase() === String(r.name).toUpperCase(); }).length; return n ? n + ' 筆觀測' : '—'; }],
       ['備註', function (r) { return esc(r.note); }]],
     observations: [['NORAD', function (r) { return r.norad == null ? '—' : r.norad; }], ['觀測站', function (r) { return esc(r.station); }], ['時間（UTC）', function (r) { return esc(r.time); }],
       ['方向', function (r) { return r.ra_deg != null && r.dec_deg != null ? 'RA ' + r.ra_deg + '° / Dec ' + r.dec_deg + '°' : 'Az ' + r.az_deg + '° / El ' + r.el_deg + '°'; }],

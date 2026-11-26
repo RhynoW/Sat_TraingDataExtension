@@ -55,7 +55,8 @@ td.num{font-variant-numeric:tabular-nums;text-align:right}
     <div class="tw" style="max-height:260px"><table id="sites"><thead><tr><th>名稱</th><th>緯度</th><th>經度</th><th>高度 m</th><th>範圍半徑 km</th><th>備註</th><th></th></tr></thead><tbody></tbody></table></div>
     <div class="row" style="margin-top:8px">
       <button onclick="FC.addSite()">＋ 新增中心點</button>
-      <button id="btn-save-sites" onclick="FC.saveSites()">儲存為常用中心點</button>
+      <select id="poi-sel" style="max-width:260px"></select><button onclick="FC.addPoi()">從地面 POI 加入</button>
+      <button id="btn-save-sites" onclick="FC.saveSites()" title="依名稱寫回地面 POI：同名更新、新名稱新增為關注地點">儲存為常用中心點（寫入地面 POI）</button>
       <span id="site-msg" class="msg"></span>
     </div>
     <div class="muted">半徑 0＝只看中心點（用中心點的實際仰角與離天底角判定）；半徑 &gt; 0＝衛星偵照範圍與該圓形區域有交集就算可偵照。</div>

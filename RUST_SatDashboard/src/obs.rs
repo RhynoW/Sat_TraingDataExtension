@@ -97,6 +97,7 @@ fn fields(kind: &str) -> Vec<F> {
             num("lon", "經度（°）", -180.0, 360.0, true, false, None),
             num("alt_m", "高度（m）", -500.0, 9000.0, false, false, Some(0.0)),
             sel("kind", "類型", &["station", "site"], "station"),
+            num("radius_km", "範圍半徑（km，過頂預報用）", 0.0, 3000.0, false, false, Some(0.0)),
             txt("note", "備註", 500, false),
         ],
         "observations" => vec![
@@ -351,6 +352,9 @@ pub struct Data {
     pub orbits: Vec<Map<String, Value>>,
     #[serde(default)]
     pub claims: Vec<Map<String, Value>>,
+    /// 舊版過頂預報常用中心點（forecast_sites.json）已併入地面 POI
+    #[serde(default)]
+    pub sites_migrated: bool,
 }
 
 impl Data {
@@ -388,7 +392,89 @@ fn store(cfg: &Config) -> &'static Store {
                 None
             }
         });
-        Store { broken: exists && d.is_none(), data: Mutex::new(d.unwrap_or_default()), path }
+        let st = Store { broken: exists && d.is_none(), data: Mutex::new(d.unwrap_or_default()), path };
+        migrate_sites(cfg, &st);
+        st
+    })
+}
+
+/// 舊版過頂預報常用中心點 → 地面 POI（關注地點；同名略過）。只做一次
+fn migrate_sites(cfg: &Config, st: &Store) {
+    if st.broken || st.data.lock().sites_migrated {
+        return;
+    }
+    let Some(sites) = crate::forecast::legacy_sites(cfg) else {
+        st.data.lock().sites_migrated = true;
+        return;
+    };
+    let r = st.edit(|d| {
+        let mut n = 0;
+        for s in &sites {
+            let rec = json!({"name": s.name, "lat": s.lat, "lon": s.lon, "alt_m": s.alt_m, "radius_km": s.radius_km, "kind": "site", "note": s.note});
+            if let Ok(mut m) = validate("pois", &rec, d, None) {
+                d.next_id += 1;
+                let mut o = Map::new();
+                o.insert("id".into(), json!(format!("o{}", d.next_id)));
+                o.insert("by".into(), json!("（由過頂預報常用中心點轉入）"));
+                o.insert("at".into(), json!(now_iso()));
+                o.append(&mut m);
+                d.pois.push(o);
+                n += 1;
+            }
+        }
+        d.sites_migrated = true;
+        Ok(n)
+    });
+    match r {
+        Ok(n) => tracing::info!("過頂預報常用中心點併入地面 POI：{n} 個"),
+        Err(e) => tracing::warn!("過頂預報常用中心點併入地面 POI 失敗：{e}"),
+    }
+}
+
+/// 全部地面 POI（過頂預報中心點選單用）
+pub fn pois(cfg: &Config) -> Vec<Map<String, Value>> {
+    store(cfg).snapshot().pois
+}
+
+/// 過頂預報「儲存為常用中心點」：依名稱寫回地面 POI（同名更新座標／半徑／備註並保留類型，新名稱新增為關注地點）
+pub fn upsert_sites(cfg: &Config, by: &str, sites: &[Value]) -> Result<(usize, usize), String> {
+    store(cfg).edit(|d| {
+        let (mut upd, mut add) = (0, 0);
+        for s in sites {
+            let name = as_text(s.get("name"));
+            let idx = d.pois.iter().position(|p| sget(p, "name").to_uppercase() == name.to_uppercase());
+            match idx {
+                Some(i) => {
+                    let mut rec = Value::Object(d.pois[i].clone());
+                    for k in ["lat", "lon", "alt_m", "radius_km", "note"] {
+                        rec[k] = s.get(k).cloned().unwrap_or(Value::Null);
+                    }
+                    rec["name"] = json!(name);
+                    let id = sget(&d.pois[i], "id");
+                    let m = validate("pois", &rec, d, Some(&id)).map_err(|e| format!("「{name}」：{}", e.join("；")))?;
+                    let p = &mut d.pois[i];
+                    for (k, v) in m {
+                        p.insert(k, v);
+                    }
+                    p.insert("at".into(), json!(now_iso()));
+                    upd += 1;
+                }
+                None => {
+                    let mut rec = s.clone();
+                    rec["kind"] = json!("site");
+                    let mut m = validate("pois", &rec, d, None).map_err(|e| format!("「{name}」：{}", e.join("；")))?;
+                    d.next_id += 1;
+                    let mut o = Map::new();
+                    o.insert("id".into(), json!(format!("o{}", d.next_id)));
+                    o.insert("by".into(), json!(by));
+                    o.insert("at".into(), json!(now_iso()));
+                    o.append(&mut m);
+                    d.pois.push(o);
+                    add += 1;
+                }
+            }
+        }
+        Ok((upd, add))
     })
 }
 

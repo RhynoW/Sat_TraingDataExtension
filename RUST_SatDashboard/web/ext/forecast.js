@@ -46,8 +46,26 @@
   function saveSites() {
     var s = sites();
     if (s.some(function (x) { return !x.name || isNaN(x.lat) || isNaN(x.lon); })) { msg('site-msg', '每個中心點都需要名稱與經緯度'); return; }
-    api('PUT', '/api/forecast/sites', s).then(function () { msg('site-msg', '已儲存 ' + s.length + ' 個常用中心點', true); }).catch(function (e) { msg('site-msg', e.message); });
+    api('PUT', '/api/forecast/sites', s).then(function (j) {
+      msg('site-msg', '已寫入地面 POI：更新 ' + j.updated + ' 個、新增 ' + j.added + ' 個（觀測與身分驗證頁同步可見）', true);
+      return api('GET', '/api/forecast/sites').then(function (k) { POIS = k.pois || []; fillPoiSel(); });
+    }).catch(function (e) { msg('site-msg', e.message); });
   }
+
+  // ── 從地面 POI 加入（與「觀測與身分驗證」共用同一份 POI 清單）──
+  var POIS = [];
+  function fillPoiSel() {
+    var sel = $('poi-sel'); if (!sel) return;
+    sel.innerHTML = POIS.length ? POIS.map(function (p, i) { return '<option value="' + i + '">' + esc(p.name) + '（' + (p.kind === 'site' ? '關注地點' : '觀測站') + (p.radius_km ? '・' + p.radius_km + ' km' : '') + '）</option>'; }).join('')
+      : '<option value="">（尚無地面 POI）</option>';
+  }
+  function addPoi() {
+    var p = POIS[+$('poi-sel').value]; if (!p) return;
+    var dup = sites().some(function (s) { return s.name.toUpperCase() === String(p.name).toUpperCase(); });
+    if (dup) { msg('site-msg', '「' + p.name + '」已在中心點清單中'); return; }
+    siteRow({ name: p.name, lat: p.lat, lon: p.lon, alt_m: p.alt_m || 0, radius_km: p.radius_km || 0, note: p.note || '' });
+  }
+
 
   // ── 群組 ──
   var SENS = { optical: '光學', radar: '雷達', sigint: '電子偵察', other: '其他' };
@@ -116,11 +134,11 @@
     }).join('') || '<tr><td colspan="14" class="muted">期間內沒有符合條件的過頂</td></tr>';
   }
 
-  window.FC = { addSite: addSite, saveSites: saveSites, run: run, setLook: setLook };
+  window.FC = { addPoi: addPoi, addSite: addSite, saveSites: saveSites, run: run, setLook: setLook };
   api('GET', '/api/auth/me').then(function (m) {
     ME = m;
     if (!(m.perms || []).includes('modify')) $('btn-save-sites').style.display = 'none';
   });
-  api('GET', '/api/forecast/sites').then(function (j) { j.sites.forEach(siteRow); });
+  api('GET', '/api/forecast/sites').then(function (j) { j.sites.forEach(siteRow); POIS = j.pois || []; fillPoiSel(); });
   loadGroups();
 })();

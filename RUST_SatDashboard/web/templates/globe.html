@@ -139,6 +139,12 @@ window.loadCesium=function(ok,fail){
           <span style="width:9px;height:9px;border-radius:50%;background:#00E5FF;display:inline-block;flex-shrink:0"></span>
           <span data-i18n="chk_ssn">SSN 地面觀測站</span>
         </label>
+        <label title="觀測站與關注地點（與觀測與身分驗證、過頂預報中心點共用）">
+          <input type="checkbox" id="chk-pois" onchange="toggleLayer('pois',this)"/>
+          <span style="width:9px;height:9px;border-radius:50%;background:#FFA726;display:inline-block;flex-shrink:0"></span>
+          <span>&#128205; <span data-i18n="chk_pois">地面 POI</span></span>
+        </label>
+        <div id="poi-status" style="display:none;font-size:10.5px;color:#8b949e;padding:0 0 4px 22px"></div>
         <label>
           <input type="checkbox" id="chk-ais" onchange="window.AIS&&AIS.toggle(this)"/>
           <span style="width:9px;height:9px;border-radius:50%;background:#4FC3F7;display:inline-block;flex-shrink:0"></span>

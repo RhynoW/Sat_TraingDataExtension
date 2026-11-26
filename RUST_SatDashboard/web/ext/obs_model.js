@@ -21,7 +21,8 @@
     pois: {
       label: '地面 POI', unit: '個',
       fields: [txt('name', '名稱', 64, { req: true }), num('lat', '緯度（°）', -90, 90, { req: true }), num('lon', '經度（°）', -180, 360, { req: true }),
-        num('alt_m', '高度（m）', -500, 9000, { def: 0 }), sel('kind', '類型', POI_KIND, 'station'), NOTE_F]
+        num('alt_m', '高度（m）', -500, 9000, { def: 0 }), sel('kind', '類型', POI_KIND, 'station'),
+        num('radius_km', '範圍半徑（km，過頂預報用）', 0, 3000, { def: 0 }), NOTE_F]
     },
     observations: {
       label: '觀測紀錄', unit: '筆',
@@ -156,7 +157,7 @@
   }
   function template(kind) {
     var ex = {
-      pois: 'name,lat,lon,alt_m,kind,note\n台北觀測站,25.0330,121.5654,10,station,\n',
+      pois: 'name,lat,lon,alt_m,kind,radius_km,note\n台北觀測站,25.0330,121.5654,10,station,0,\n台北市,25.0330,121.5654,10,site,20,過頂預報範圍\n',
       observations: 'norad,station,time,ra_deg,dec_deg,az_deg,el_deg,mag,observer,source,source_url,note\n25544,台北觀測站,2026-11-25 11:02:30,215.123,32.456,,,2.5,王小明,own,,\n',
       orbits: 'norad,line1,line2,source,source_name,source_url,note\n,"1 25544U 98067A   26329.50000000  .00016717  00000-0  10270-3 0  9994","2 25544  51.6400 208.9163 0006317  69.9862 290.2104 15.50000000000017",amateur,classfd,,\n',
       claims: 'norad,name,source_type,source_url,confidence,note\n101415,SJ-24,news,https://example.org/news,,\n'
