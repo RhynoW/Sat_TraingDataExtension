@@ -26,7 +26,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import zstandard
@@ -217,8 +217,12 @@ def main() -> int:
     ap.add_argument("--local", help="只輸出到此資料夾（manifest 的下載網址改用相對路徑），不上傳")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--no-squash", action="store_true", help="不壓縮 dataset 歷史")
+    ap.add_argument("--expires-days", type=int, default=30,
+                    help="manifest 有效天數（1–90，預設 30）。客戶端拒絕過期的 manifest（防凍結攻擊）；每日 DB 排程會重簽延長")
     a = ap.parse_args()
 
+    if not 1 <= a.expires_days <= 90:
+        raise SystemExit("--expires-days 需介於 1–90（客戶端拒絕有效期超過 90 天的 manifest）")
     key = signer()
     old = None if a.local else remote_manifest(a.repo)
     now = datetime.now(timezone.utc)
@@ -233,6 +237,7 @@ def main() -> int:
     src = (lambda p: p) if a.local else (lambda p: url_of(a.repo, p))
     uploads: list[str] = []
     manifest = {"schema": 1, "generated": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "expires": (now + timedelta(days=a.expires_days)).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "db": old.get("db") if old else None, "app": old.get("app") if old else None,
                 "contact": "https://www.linkedin.com/in/rhyno-wu-6b766771/"}
     try:

@@ -10,6 +10,9 @@
 //! 資料庫：下載 `.zst`（中斷可續傳）→ 驗壓縮檔 sha256 → 解壓並驗原檔 sha256 → 舊檔改名 `.bak` → 新檔就位 → 重建索引。
 //! 執行檔：下載本機架構的 exe → 驗 sha256 → 執行中的 exe 改名 `.old`（Windows 允許）→ 新檔就位 → 使用者按「重新啟動」。
 //!
+//! 防凍結（複測 R-2）：manifest 簽章內含 `expires`，過期或缺少 `expires` 的 manifest 一律拒絕——攻擊者重放「最後一份合法
+//! manifest」讓客戶端看不到後續安全更新的時間，最多只有一個有效期（發布端預設 30 天，每日 DB 排程會重簽延長）。
+//!
 //! 防降版／重放（資安檢測 M-2）：資料目錄 `user_private\update_state.json` 記下最後接受的 manifest `generated`，
 //! 之後比它舊的 manifest 一律拒絕（即使簽章正確）；執行檔只接受比目前版本新的版本。
 
@@ -85,6 +88,9 @@ pub struct AppEntry {
 pub struct Manifest {
     pub schema: u32,
     pub generated: String,
+    /// 到期時間（RFC 3339）；在簽章範圍內，過期或缺少就拒絕整份 manifest
+    #[serde(default)]
+    pub expires: Option<String>,
     pub db: Option<DbEntry>,
     pub app: Option<AppEntry>,
 }
@@ -255,6 +261,23 @@ fn accept_generated_at(home: &Path, generated: &str, now: chrono::DateTime<chron
     crate::auth::atomic_write(&state_file(home), &data)
 }
 
+/// 有效期上限：簽章者也不能簽出超過此長度的 manifest（防誤設成永久有效，讓 R-2 失效）
+const MAX_LIFETIME: chrono::Duration = chrono::Duration::days(90);
+
+/// 檢查 manifest 有效期：必須有 expires、晚於 generated、有效期不超過 90 天、且尚未過期
+fn check_expiry(generated: &str, expires: Option<&str>, now: chrono::DateTime<chrono::Utc>) -> anyhow::Result<()> {
+    let e_raw = expires.ok_or_else(|| anyhow::anyhow!("manifest 沒有到期時間（expires），已拒絕：可能是舊版更新資訊被重放"))?;
+    let e = parse_utc(e_raw).ok_or_else(|| anyhow::anyhow!("manifest 到期時間格式錯誤：{e_raw}"))?;
+    let g = parse_utc(generated).ok_or_else(|| anyhow::anyhow!("manifest 時間格式錯誤：{generated}"))?;
+    if e <= g || e - g > MAX_LIFETIME {
+        anyhow::bail!("manifest 有效期異常（{generated} ～ {e_raw}），已拒絕");
+    }
+    if now > e {
+        anyhow::bail!("更新資訊已於 {e_raw} 到期，已拒絕：可能是更新來源遭凍結或發布中斷，也可能是本機時鐘偏快；請確認電腦時間，或聯絡發布者");
+    }
+    Ok(())
+}
+
 fn arch_key() -> &'static str {
     std::env::consts::ARCH
 }
@@ -280,6 +303,7 @@ pub async fn check(st: Arc<AppState>) -> Value {
         if m.schema != 1 {
             anyhow::bail!("manifest schema {} 不支援（請更新程式）", m.schema);
         }
+        check_expiry(&m.generated, m.expires.as_deref(), chrono::Utc::now())?;
         accept_generated(&st.cfg.home, &m.generated)?;
         Ok(m)
     }
@@ -782,6 +806,19 @@ mod tests {
     fn bad_signature_rejected() {
         assert!(verify_sig(b"{}", &"00".repeat(64)).is_err());
         assert!(hex("é0").is_err() && hex("ab\u{4e2d}").is_err(), "多位元組字元不可 panic");
+    }
+
+    #[test]
+    fn expiry_enforced() {
+        let now = parse_utc("2026-11-26T12:00:00Z").unwrap();
+        let g = "2026-11-26T04:00:00Z";
+        assert!(check_expiry(g, Some("2026-12-26T04:00:00Z"), now).is_ok());
+        assert!(check_expiry(g, None, now).is_err(), "缺少 expires 拒絕（舊格式 manifest 重放）");
+        assert!(check_expiry(g, Some("2026-11-26T11:59:59Z"), now).is_err(), "已過期拒絕");
+        assert!(check_expiry(g, Some("2026-11-26T20:00:00+08:00"), now).is_ok(), "時區寫法以時間比較");
+        assert!(check_expiry(g, Some("2026-11-26T03:00:00Z"), now).is_err(), "到期早於 generated");
+        assert!(check_expiry(g, Some("2027-06-01T00:00:00Z"), now).is_err(), "有效期超過 90 天");
+        assert!(check_expiry(g, Some("not-a-date"), now).is_err());
     }
 
     #[test]

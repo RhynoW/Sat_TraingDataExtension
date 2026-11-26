@@ -118,9 +118,9 @@ hr{display:none}
 </div>
 </nav>
 <main>
-<h1 id="atrdc-satdashboard-v0131">ATRDC SatDashboard 操作手冊（v0.1.31）</h1>
+<h1 id="atrdc-satdashboard-v0132">ATRDC SatDashboard 操作手冊（v0.1.32）</h1>
 <blockquote>
-<p>適用版本：Rust 單機版 v0.1.31（2026-11-26）與線上網頁版。
+<p>適用版本：Rust 單機版 v0.1.32（2026-11-26）與線上網頁版。
 對象：第一次使用本系統的分析人員；不需要寫程式。</p>
 </blockquote>
 <hr />
@@ -1086,6 +1086,10 @@ SmartScreen 擋下時按「其他資訊」→「仍要執行」。公司電腦�
 不一定。可能是觀測時間或方向有誤、標錯 NORAD（看「同次發射比對」是否有更符合的物體）、目錄 TLE 太舊，或衛星做過機動。請對照提示與原始觀測紀錄再判斷。</p>
 <p><strong>Q11. Space-Track 帳號安全嗎？</strong>
 在頁面輸入的帳號以明文存在 <code>user_private\spacetrack.json</code>。共用電腦上建議改用環境變數 <code>SPACETRACK_USER</code>／<code>SPACETRACK_PASS</code>，並限制該資料夾的存取權限。</p>
+<p><strong>Q12. 檢查更新時出現「更新資訊已於…到期」或「沒有到期時間」？</strong>
+更新資訊（manifest）帶有發布者簽章的到期時間（約 30 天，每天自動延長），過期的一律不採用，以防有人一直提供舊的更新資訊、讓您收不到新版。出現這個訊息時：
+1. 先確認電腦的日期與時間正確（時鐘快太多也會被判定為過期）。
+2. 時間正確仍出現，表示更新來源一段時間沒有發布，或被替換成舊檔；程式仍可正常使用，只是暫時無法更新，請聯絡發布者。</p>
 <hr />
 <h2 id="_16">版本紀錄</h2>
 <table>
@@ -1097,6 +1101,11 @@ SmartScreen 擋下時按「其他資訊」→「仍要執行」。公司電腦�
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>v0.1.32</td>
+<td>2026-11-26</td>
+<td>資安強化：線上更新資訊加上到期時間，過期或沒有到期時間的一律拒絕（防止更新被凍結）；新增常見問題 Q12</td>
+</tr>
 <tr>
 <td>v0.1.31</td>
 <td>2026-11-26</td>

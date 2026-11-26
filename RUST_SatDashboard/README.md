@@ -295,6 +295,14 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 
 ## 版本紀錄
 
+### v0.1.32（2026-11-26）
+
+資安強化（複測報告 v0.1.29 的殘餘風險 R-2，防凍結攻擊）：
+- manifest 新增 `expires`（簽章範圍內）；`publish_hf.py --expires-days`（1–90，預設 30），每日 DB 排程重簽延長
+- `update.rs` `check_expiry()`：缺少 `expires`、已過期、到期早於 generated、有效期超過 90 天一律拒絕
+- v0.1.31 以前的客戶端忽略 `expires`，照常更新
+- 操作手冊 v0.1.32（常見問題 Q12）
+
 ### v0.1.31（2026-11-26）
 
 資安強化（複測報告 v0.1.29 的殘餘風險 R-3、R-4）：
