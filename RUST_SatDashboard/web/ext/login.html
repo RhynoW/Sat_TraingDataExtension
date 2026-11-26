@@ -36,7 +36,12 @@ button:disabled{opacity:.6;cursor:default}
 <script>
 (function(){
   var next = new URLSearchParams(location.search).get('next') || '/';
-  if (next.charAt(0) !== '/' || next.charAt(1) === '/') next = '/';
+  // 資安檢測 M-9：以瀏覽器的 URL 解析判斷是否同源（字元檢查可被 /\evil.com、/%09/evil.com 繞過），只保留路徑部分
+  try {
+    var u = new URL(next, location.origin);
+    next = (u.origin === location.origin && (u.protocol === 'http:' || u.protocol === 'https:')) ? (u.pathname + u.search + u.hash) : '/';
+  } catch (e) { next = '/'; }
+  if (next.charAt(0) !== '/' || next.charAt(1) === '/' || next.charAt(1) === '\\') next = '/';
   fetch('/api/auth/me').then(function(r){return r.json();}).then(function(m){
     if (!m.auth_enabled || m.logged_in) location.replace(next);
   }).catch(function(){});

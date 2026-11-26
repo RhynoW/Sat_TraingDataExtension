@@ -295,6 +295,13 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 
 ## 版本紀錄
 
+### v0.1.33（2026-11-26）
+
+資安強化（源碼檢測報告 v1 的 M-1、M-9）：
+- `tiles.rs`：`host_allowed()` 改用 WHATWG URL 解析（`reqwest::Url`），只允許 https、預設埠、無帳密、網域名稱（拒絕所有 IP 位址，含十進位／十六進位寫法）且在圖資目錄允許清單內；使用者圖磚改用 `TILE_CLIENT`，每次轉址重新檢查、最多 5 次
+- `web/ext/login.html`：`next=` 以 `new URL()` 判斷同源、只保留路徑，擋 `/\`、`/%09/`、`//`、`javascript:` 等繞過
+- 操作手冊 v0.1.33
+
 ### v0.1.32（2026-11-26）
 
 資安強化（複測報告 v0.1.29 的殘餘風險 R-2，防凍結攻擊）：

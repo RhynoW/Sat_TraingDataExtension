@@ -88,6 +88,26 @@ static CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
         .expect("reqwest client")
 });
 
+/// 代理使用者提供的圖磚網址專用（資安檢測 M-1）：每一次轉址都重新檢查允許清單，最多 5 次
+static TILE_CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
+    reqwest::Client::builder()
+        .timeout(Duration::from_secs(20))
+        .redirect(reqwest::redirect::Policy::custom(|a| {
+            if a.previous().len() >= 5 || !host_allowed(a.url().as_str()) {
+                a.stop()
+            } else {
+                a.follow()
+            }
+        }))
+        .user_agent(concat!(
+            "SatDashboard-Rust/",
+            env!("CARGO_PKG_VERSION"),
+            " (standalone tile viewer)"
+        ))
+        .build()
+        .expect("reqwest client")
+});
+
 static LIMIT: Lazy<Semaphore> = Lazy::new(|| Semaphore::new(UPSTREAM_CONCURRENCY));
 
 pub fn cache_dir() -> PathBuf {
@@ -232,21 +252,19 @@ fn decode_template(q: &HashMap<String, String>) -> Option<String> {
     String::from_utf8(raw).ok()
 }
 
+/// 圖磚網址是否放行（資安檢測 M-1）：用與 reqwest 相同的 WHATWG URL 解析器取主機，避免 `\`、`@` 等解析差異；
+/// 只允許 https、預設埠、不帶帳密、主機為網域名稱（不接受 IP 位址）且在圖資目錄允許清單內
 fn host_allowed(url: &str) -> bool {
-    let rest = url
-        .strip_prefix("https://")
-        .or_else(|| url.strip_prefix("http://"));
-    let Some(rest) = rest else { return false };
-    let host = rest.split(['/', '?', '#']).next().unwrap_or("");
-    let host = host
-        .rsplit('@')
-        .next()
-        .unwrap_or("")
-        .split(':')
-        .next()
-        .unwrap_or("")
-        .to_ascii_lowercase();
-    ALLOWED_HOSTS.contains(&host)
+    let Ok(u) = reqwest::Url::parse(url) else { return false };
+    if u.scheme() != "https" || u.port().is_some() || !u.username().is_empty() || u.password().is_some() {
+        return false;
+    }
+    let Some(h) = u.host_str() else { return false };
+    // IPv4／IPv6 位址（含 127.0.0.1、169.254.169.254、內網；WHATWG 會把 2130706433、0x7f.1 等寫法正規化為 IPv4）一律拒絕
+    if h.starts_with('[') || h.parse::<std::net::IpAddr>().is_ok() {
+        return false;
+    }
+    ALLOWED_HOSTS.contains(&h.trim_end_matches('.').to_ascii_lowercase())
 }
 
 fn png_blank() -> Resp {
@@ -326,7 +344,7 @@ async fn fetch_tile(url: String) -> Resp {
     }
     let upstream = async {
         let _permit = LIMIT.acquire().await.ok()?;
-        let resp = CLIENT.get(&url).send().await.ok()?;
+        let resp = TILE_CLIENT.get(&url).send().await.ok()?;
         let status = resp.status();
         let ct = resp
             .headers()
@@ -509,6 +527,18 @@ mod tests {
         assert!(!host_allowed("https://evil.example.com/x.png"));
         assert!(!host_allowed("https://wmts.nlsc.gov.tw.evil.com/x"));
         assert!(!host_allowed("file:///c:/windows"));
+        // M-1：解析差異與內網
+        assert!(!host_allowed("http://127.0.0.1:8080\\@wmts.nlsc.gov.tw/x"), "反斜線繞過");
+        assert!(!host_allowed("https://127.0.0.1:8080\\@wmts.nlsc.gov.tw/x"), "反斜線繞過（https）");
+        assert!(!host_allowed("https://wmts.nlsc.gov.tw@127.0.0.1/x"), "帳密欄偽裝");
+        assert!(!host_allowed("https://user:pw@wmts.nlsc.gov.tw/x"), "不接受帶帳密");
+        assert!(!host_allowed("http://wmts.nlsc.gov.tw/x"), "只允許 https");
+        assert!(!host_allowed("https://wmts.nlsc.gov.tw:8443/x"), "只允許預設埠");
+        assert!(!host_allowed("https://169.254.169.254/latest/meta-data"), "雲端中繼資料位址");
+        assert!(!host_allowed("https://[::1]/x") && !host_allowed("https://10.0.0.1/x"), "IP 位址");
+        assert!(host_allowed("https://WMTS.NLSC.GOV.TW./wmts/x"), "大小寫與結尾點正規化");
+        assert!(host_allowed("https://wmts.nlsc.gov.tw:443/wmts/x"), "明寫 443 等同預設埠");
+        assert!(!host_allowed("https://2130706433/x") && !host_allowed("https://0x7f.1/x"), "十進位／十六進位 IPv4 寫法");
     }
 
     #[test]
