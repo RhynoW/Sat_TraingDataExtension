@@ -167,14 +167,14 @@
   ],
   "net_alt_change_km": 150.93439229200794,
   "events": {
-   "E3": 2,
-   "E2": 1,
+   "E3": 3,
+   "E2": 0,
    "E1": 0,
    "D": 0
   },
   "events_total": 3,
   "low_conf_P1": 0,
-  "low_conf_P2": 2,
+  "low_conf_P2": 11,
   "detect_cap": {
    "sigma_med_m": 53.82106575608286,
    "n_months": 4,
@@ -193,7 +193,7 @@
    "type": "meme_segments",
    "n": 7,
    "seg_hit_event": 2,
-   "seg_hit_event_or_lc": 2,
+   "seg_hit_event_or_lc": 5,
    "seg_days": [
     43.0,
     0.0,
@@ -228,7 +228,7 @@
   },
   "events_total": 3,
   "low_conf_P1": 0,
-  "low_conf_P2": 2,
+  "low_conf_P2": 16,
   "detect_cap": {
    "sigma_med_m": 26.067513391275497,
    "n_months": 8,
