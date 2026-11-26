@@ -32,6 +32,7 @@ mod rpo;
 mod satadmin;
 mod suggest;
 mod changes;
+mod obs;
 mod state;
 mod tiles;
 mod update;

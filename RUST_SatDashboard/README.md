@@ -46,7 +46,7 @@ dist\SatDashboard-arm64.exe      ← Snapdragon 等 ARM64
 | `/starlink` | Starlink 分析（v0.1.6）：可見性／RTT／遮蔽、星系普查、殼層、離軌名單與離軌預測（NRLMSISE-00 完整移植） |
 | `/story`、`/story/{sid}` | StoryMap 故事頁（v0.1.6）：群組統計、ISR 解析度、雷達評估、重訪、軌跡 |
 | `/orbit-tuner` | Orbit Tuner 介紹頁（v0.1.6） |
-| `/manual` | 操作手冊（v0.1.9；原稿 `scenario-advanced01/docs/SatDashboard_操作手冊_v*.md`，`tools/build_manual.py` 產生頁面） |
+| `/manual` | 操作手冊（v0.1.25；原稿 `scenario-advanced01/docs/SatDashboard_操作手冊_v*.md`，`tools/build_manual.py` 產生頁面） |
 | `/lab` | **會合與機動實驗室**（v0.1.6，第二階段 Sprint 0–3）：批次會合分析、場景 JSON、避碰決策、RPO 控制模擬；v0.1.7 起主選單「🧪 機動實驗室」可直接進入，見下方說明 |
 | 版本與聯絡 | 主控台啟動訊息、`/api/about`、地球儀右下角與任務規劃頁頂列顯示版本、版本日期（台灣時間，重新建置時由 `build.rs` 產生，可用環境變數 `SATDASH_BUILD_DATE` 指定）與聯絡資訊（[Rhyno Wu，LinkedIn](https://www.linkedin.com/in/rhyno-wu-6b766771/)） |
 | 底圖 | 所有 3D 頁面預設「地形+海底地形 5.4K」（NASA Blue Marble 地形＋海底地形，內嵌於 exe），地球儀左側的底圖選單已隱藏。同步自 Python 版的頁面用 Viewer 的 `imageryProvider` 選項指定底圖，CesiumJS 1.104 起已移除（內附 1.114，原本會顯示一片藍）；`web/ext/standalone_ext.js` 把 Cesium 的預設底圖換成這張 |
@@ -179,6 +179,7 @@ python scripts\publish_hf.py --local out\hf    # 只輸出到資料夾，搭配 
 - **更名**：依 NORAD ID 或名稱／國際編號查詢，輸入自訂名稱與備註；原 Space-Track 名稱保留，可隨時還原。「列出重複名稱」可找出 OBJECT A、TBA - TO BE ASSIGNED 等同名衛星（可排除碎片與火箭殘骸）。更名約 1 秒後重建索引，地球儀、搜尋與報表都會使用新名稱。
 - **建議名稱**：「建議名稱」辨識 OBJECT A/B/C：official（Space-Track 已正式命名）＞ inferred（GCAT 逐顆判讀或單一酬載發射）＞ group_inferred（只確認發射群組，命名為「XX 群組衛星（推論）」、不指派 A/B/C 個體）；conflict 標示來源矛盾或類型不一致（例如 Space-Track 已判定為碎片）。每筆附發射群組／候選任務／個體對應分層判讀與來源鏈，勾選後才套用，更名紀錄保存名稱狀態、可信度、證據連結（可加 SeeSat-L 等）與複核狀態；任務類型與用途不自動歸因。GCAT（McDowell, planet4589.org, CC BY 4.0）與 SATCAT 由每日管線寫入 DB。API：`/api/satadmin/suggest`、`POST /api/satadmin/names_batch`。
 - **SATCAT 每日異動**：「SATCAT 異動」頁籤列出每日異動：以 Space-Track `satcat_change` 為準（名稱、國際編號、國家、發射日、DECAY 的異動與異動時間，近 90 天），再以每日 SATCAT 快照比對補上物體類型變更；分為正式命名（OBJECT x → 正式名稱）、更名、再入、再入日期修正、新編目、類型變更、其他欄位，可只看已更名或群組內的衛星；已套用推論名稱而 Space-Track 已正式命名者標「可升級」，TLE 目錄仍是 OBJECT x 也會註明；可匯出 CSV。API：`/api/satadmin/changes?days=&kind=&mine=1`。
+- **觀測與身分驗證**（`/obs`，衛星管理頁頂端進入）：四種紀錄：地面 POI（觀測站與關注地點）、觀測紀錄（RA/Dec J2000 或方位／仰角）、軌道解（TLE，支援 Alpha-5 編號）、身分主張（名稱＋來源類型＋可信度），每筆附複核狀態（未複核／已接受／有爭議／已否決），內容修改後自動退回未複核；以 CSV 匯入匯出（依標題列自動判斷種類）。交叉驗證：① 觀測殘差——目錄 TLE 與使用者軌道解 SGP4 傳播到觀測時間，比較觀測站看到的方向（IAU 1976 歲差轉 J2000，與 skyfield 差 < 0.004°），≤ 0.5° 符合、≤ 2° 勉強符合，並比對同次發射所有物體找最符合者；② 軌道比對——軌道解與目錄 TLE 在曆元 ±12 小時的最大位置差，≤ 10 km 一致、≤ 50 km 接近，並找同次發射中軌道最接近者（協助判斷 OBJECT A/B/C）；③ 身分主張與 Space-Track 正式名稱、其他主張比對。每顆衛星輸出 identity／orbit／observation 狀態與分層判讀（發射群組→候選任務→個體）；任務類型與能力一律為未知，不自動歸因。業餘觀測屬中等可信度來源，需人工複核。資料存在本機 `user_private\observations.json`（保留上一版 .bak）；檢視者可查看與執行交叉驗證，編輯者可新增／修改／刪除／匯入，管理者可複核。API：`/api/obs/data`、`/api/obs/check`（GET 用已存資料、POST 傳入資料）、`POST /api/obs/{kind}`、`PUT|DELETE /api/obs/{kind}/{id}`、`POST /api/obs/{kind}/{id}/review`。
 - **群組**：可多層（例：PRC偵察衛星 → 光學／雷達／電子偵察），逐顆加入或移除 NORAD ID；每個群組可設顏色、感測器類型與預設偵照角度（子群組未設定時沿用上層），供過頂預報使用。
 - **CSV**：匯入欄位 `norad_id,name,group,note`（group 以「/」分層，沒有的群組自動建立）；匯出含原名與群組路徑（UTF-8 BOM，Excel 可直接開啟）。
 - **帳號**：尚未建立帳號時維持原本行為，不需登入；此時本機視為管理者，區網連線只能查詢。在「帳號管理」由本機建立第一個管理者之後，所有頁面與 API 都需要登入（session 12 小時，閒置會延長；同一帳號連續錯 5 次鎖 60 秒）。
@@ -276,6 +277,7 @@ src/
   satadmin.rs   衛星更名、群組分類、CSV 匯入匯出、操作紀錄
   suggest.rs    建議名稱：Space-Track／GCAT 證據等級（official／inferred／group_inferred／conflict）
   changes.rs    SATCAT 每日異動（DB 的 satcat_change 表）
+  obs.rs        觀測資料模型：地面 POI／觀測／軌道解／身分主張、交叉驗證、複核
   ephemeris.rs  星歷狀態、一鍵重抓（CelesTrak／Space-Track 覆蓋層）、SATCAT 與 DECAY 列表
   forecast.rs   過頂預報：多中心點、偵照角度、日照與日出日落、歷史 TLE 誤差估算、CSV
   api.rs        主頁 HTTP 路由；api_phase2.rs 台北／RPO／海纜路由
@@ -289,6 +291,13 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 ```
 
 ## 版本紀錄
+
+### v0.1.25（2026-11-26）
+
+- 新增「觀測與身分驗證」頁 `/obs`（衛星管理頁頂端進入）：地面 POI、觀測紀錄、軌道解、身分主張四種紀錄與複核（管理者），CSV 匯入匯出；交叉驗證觀測殘差（IAU 1976 歲差轉 J2000，與 skyfield 差 < 0.004°）、軌道比對與同次發射最接近物體、身分主張比對；每顆衛星輸出身分／軌道／觀測狀態與分層判讀。資料存在 `user_private\observations.json`。與線上版逐筆一致，前端 `obs_model.js`、`obs.js` 兩版共用
+- TLE Alpha-5 編號（NORAD ≥ 100000，例如 A1419＝101419）解碼
+- 地球儀資訊卡新增「名稱查詢」：目錄仍為 OBJECT x 或另有新資訊時，列出 Space-Track 正式名稱、建議名稱（證據等級與可信度）、自訂名稱、發射群組與注意事項
+- 操作手冊更新至 v0.1.25（補齊 v0.1.20 起的 AIS、衛星管理、帳號權限、過頂預報、建議名稱、SATCAT 異動、觀測與身分驗證）
 
 ### v0.1.24（2026-11-26）
 

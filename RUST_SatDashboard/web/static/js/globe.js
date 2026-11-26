@@ -275,6 +275,7 @@ async function initCesium(){
     }catch(e){}
     showOrbitArc(nid,hexColor);
     fetchSatDetail(nid);
+    _nameLookup(ent,nid);
   });
 
   document.getElementById('loading').style.display='none';
@@ -772,6 +773,48 @@ function _buildDesc(s){
     +(s.constellation&&s.constellation!=='—'?'<tr><td style="padding:2px 10px 2px 0;color:#555">星座</td><td>'+_esc(s.constellation)+'</td></tr>':'')
     +'<tr><td style="padding:2px 10px 2px 0;color:#555">高度</td><td><b>'+(s.alt_km!=null?s.alt_km:'—')+' km</b></td></tr>'
     +'</table>'+_orbitLink([s.norad_id])+_trackLink(s.norad_id)+'</div>';
+}
+
+// 名稱查詢：選取衛星後查 /api/satadmin/suggest，有新資訊（目錄仍是 OBJECT x、Space-Track 已改名、建議名稱、自訂名稱）才加到資訊卡
+const _NL_ST={official:'official 已正式命名',inferred:'inferred 推論',group_inferred:'group_inferred 群組推論',conflict:'conflict 來源矛盾',unresolved:'unresolved 無可靠來源'};
+const _NL_CF={high:'高',medium:'中',low:'低'};
+function _nlLocalCustom(nid){   // 線上版：自訂名稱存在瀏覽器（衛星管理頁 satadmin_store.js）
+  try{ const d=JSON.parse(localStorage.getItem('atrdc_satadmin_v1')||'null'); return (d&&d.names&&d.names[nid])||null; }catch(e){ return null; }
+}
+async function _nameLookup(ent,nid){
+  let r=null;
+  try{
+    const resp=await fetch('/api/satadmin/suggest?norad='+nid);
+    if(!resp.ok) return;
+    const j=await resp.json();
+    r=j.results&&j.results[0];
+  }catch(e){ return; }
+  if(!r||viewer.selectedEntity!==ent) return;
+  const cust=r.custom||_nlLocalCustom(nid);
+  const cur=String(r.current_name||ent.name||'').trim();
+  const noname=/^(OBJECT [A-Z]{1,3}|TBA.*|UNKNOWN)$/i.test(cur);
+  const off=r.official_name||'';
+  const row=(k,v,col)=>'<tr><td style="padding:2px 10px 2px 0;color:#555">'+k+'</td><td'+(col?' style="color:'+col+'"':'')+'>'+v+'</td></tr>';
+  const rows=[];
+  if(off&&off.toUpperCase()!==cur.toUpperCase()) rows.push(row('正式名稱','<b>'+_esc(off)+'</b>（Space-Track）','#2e7d32'));
+  else if(noname&&!off) rows.push(row('正式名稱','Space-Track 尚未命名'));
+  if(r.suggest&&r.name_status!=='official'&&r.suggest!==cur)
+    rows.push(row('建議名稱',_esc(r.suggest)+' <span style="color:#777">['+_esc(_NL_ST[r.name_status]||r.name_status)+(r.confidence?'，可信度'+(_NL_CF[r.confidence]||r.confidence):'')+']</span>','#e65100'));
+  if(cust&&cust.name&&cust.name!==cur)
+    rows.push(row('自訂名稱',_esc(cust.name)+(cust.status&&cust.status!=='manual'?' <span style="color:#777">['+_esc(cust.status)+']</span>':''),'#6a1b9a'));
+  if(!rows.length&&!noname) return;
+  const lg=(r.layers||{}).launch_group;
+  if(lg&&lg.value) rows.push(row('發射群組',_esc(lg.value)));
+  (r.warnings||[]).slice(0,2).forEach(w=>rows.push(row('注意',_esc(w),'#b26a00')));
+  let html='';
+  try{ html=ent.description.getValue(Cesium.JulianDate.now())||''; }catch(e){ return; }
+  if(html.indexOf('data-namelookup')>=0||html.indexOf('</table>')<0) return;
+  const block='<tr data-namelookup><td colspan="2" style="padding:8px 0 2px;color:#1565c0;font-weight:bold;border-top:1px solid #ddd">名稱查詢</td></tr>'+rows.join('');
+  const link='<a data-newtab href="/satadmin" target="_blank" rel="noopener" style="display:inline-block;margin:8px 0 0 6px;padding:4px 10px;border-radius:5px;background:#6a1b9a;color:#fff;text-decoration:none;font-size:12px">🗂 衛星管理</a>';
+  html=html.replace('</table>',block+'</table>');
+  const k=html.lastIndexOf('</div>');
+  if(k>=0) html=html.slice(0,k)+link+html.slice(k);
+  ent.description=new Cesium.ConstantProperty(html);
 }
 
 async function loadConjunctions(){
