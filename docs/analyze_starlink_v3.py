@@ -56,9 +56,14 @@ def parse_norads(s: str) -> list[int]:
     return out
 
 
-def load(con, nid):
-    df = con.execute("SELECT epoch_utc AS epoch, object_name, sma_km, inclination_deg AS inc, raan_deg AS raan "
-                     "FROM raw_tle_archive WHERE norad_id=? ORDER BY epoch_utc", [nid]).fetchdf()
+def load(con, nid, end=None):
+    """end：分析截止日（含當日）。2026-11-26 補：原未截斷，資料續增後 raan_now、運作期星日數等會用到截止日以後之 TLE。"""
+    q = "SELECT epoch_utc AS epoch, object_name, sma_km, inclination_deg AS inc, raan_deg AS raan FROM raw_tle_archive WHERE norad_id=?"
+    args = [nid]
+    if end is not None:
+        q += " AND epoch_utc < ?"
+        args.append((pd.Timestamp(end) + pd.Timedelta(days=1)).to_pydatetime())
+    df = con.execute(q + " ORDER BY epoch_utc", args).fetchdf()
     df["epoch"] = pd.to_datetime(df.epoch, utc=True)
     df = df.drop_duplicates("epoch").reset_index(drop=True)
     df["alt"] = df.sma_km - RE
@@ -103,7 +108,7 @@ def main():
     if not a.plot_only:
         S, E, L = [], [], []
         for k, nid in enumerate(norads, 1):
-            df = load(con, nid)
+            df = load(con, nid, end)
             if df.empty:
                 print("無 TLE", nid)
                 continue
@@ -179,7 +184,7 @@ def main():
         print(json.dumps(fleet, ensure_ascii=False, indent=2))
     else:
         for nid in norads:
-            df = load(con, nid)
+            df = load(con, nid, end)
             if not df.empty:
                 series[nid] = phases(df)[1]
     plot(series, out, a.pub, a.tag)

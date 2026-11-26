@@ -134,12 +134,17 @@ def satellite_name(norad_id: int) -> str | None:
     """從 catalog／sat_n2yo_metadata 查衛星名稱；查不到回傳 None（呼叫端自行決定顯示方式）。"""
     con = duckdb.connect(DB_PATH, read_only=True)
     try:
-        for table, col in (("sat_n2yo_metadata", "name"), ("catalog", "name")):
+        # sat_n2yo_metadata 之名稱欄為 name_en（2026-11-26 發現：原只查 name 欄，全數回傳 None，
+        # 離線執行時 Starlink 被當成非 Starlink，ML／融合通道受限）；舊版 name 欄保留相容
+        # 新編目衛星不在 sat_n2yo_metadata：改取 raw_tle_archive 最新一筆之 3LE 名稱（略過「TBA」暫名）
+        queries = [f"SELECT {col} FROM {table} WHERE norad_id=? LIMIT 1"
+                   for table, col in (("sat_n2yo_metadata", "name_en"), ("sat_n2yo_metadata", "name"), ("catalog", "name"))]
+        queries.append("SELECT object_name FROM raw_tle_archive WHERE norad_id=? AND object_name IS NOT NULL "
+                       "AND object_name NOT ILIKE '%TBA%' ORDER BY epoch_jd DESC LIMIT 1")
+        for q in queries:
             try:
-                r = con.execute(
-                    f"SELECT {col} FROM {table} WHERE norad_id=? LIMIT 1", [int(norad_id)]
-                ).fetchone()
-                if r and r[0]:
+                r = con.execute(q, [int(norad_id)]).fetchone()
+                if r and r[0] and str(r[0]).strip():
                     name = str(r[0]).strip()
                     # 部分來源（如新編目衛星）name 欄位直接沿用 3LE 原始格式，
                     # 帶有「0 」line-0 前綴（3LE：第 0 行＝"0 <名稱>"），需去除。
