@@ -811,9 +811,10 @@ async function _nameLookup(ent,nid){
   if(html.indexOf('data-namelookup')>=0||html.indexOf('</table>')<0) return;
   const block='<tr data-namelookup><td colspan="2" style="padding:8px 0 2px;color:#1565c0;font-weight:bold;border-top:1px solid #ddd">名稱查詢</td></tr>'+rows.join('');
   const link='<a data-newtab href="/satadmin" target="_blank" rel="noopener" style="display:inline-block;margin:8px 0 0 6px;padding:4px 10px;border-radius:5px;background:#6a1b9a;color:#fff;text-decoration:none;font-size:12px">🗂 衛星管理</a>';
+  const link2=(lg&&lg.value)?'<a data-newtab href="/launch?norad='+nid+'" target="_blank" rel="noopener" style="display:inline-block;margin:8px 0 0 6px;padding:4px 10px;border-radius:5px;background:#e65100;color:#fff;text-decoration:none;font-size:12px">🚀 一箭多星</a>':'';
   html=html.replace('</table>',block+'</table>');
   const k=html.lastIndexOf('</div>');
-  if(k>=0) html=html.slice(0,k)+link+html.slice(k);
+  if(k>=0) html=html.slice(0,k)+link+link2+html.slice(k);
   ent.description=new Cesium.ConstantProperty(html);
 }
 

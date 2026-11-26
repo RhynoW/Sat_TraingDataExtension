@@ -83,6 +83,7 @@ pub fn router(state: Arc<AppState>) -> Router {
     let r = crate::suggest::extend(r);
     let r = crate::changes::extend(r);
     let r = crate::obs::extend(r);
+    let r = crate::launch::extend(r);
     r.fallback(fallback)
         .layer(axum::middleware::from_fn_with_state(state.clone(), crate::auth::guard))
         .with_state(state)

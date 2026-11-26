@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>一箭多星軌道驗證 — SatDashboard</title>
+<style>
+:root{color-scheme:dark;--bg:#0d1117;--pn:#161b22;--bd:#30363d;--bd2:#21262d;--tx:#c9d1d9;--tx2:#8b949e;--hi:#e6edf3;--ac:#58a6ff;--ok:#3fb950;--bad:#f85149;--warn:#d29922}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:'Segoe UI',Tahoma,'Microsoft JhengHei',sans-serif;font-size:13px}
+#hdr{display:flex;align-items:center;gap:12px;padding:10px 18px;background:var(--pn);border-bottom:1px solid var(--bd2);flex-wrap:wrap}
+#hdr h1{font-size:16px;color:var(--hi);margin:0;font-weight:600}
+#hdr .sp{flex:1}
+a.btn,button{color:var(--ac);font-size:12px;text-decoration:none;border:1px solid var(--bd);border-radius:5px;padding:5px 10px;background:#21262d;cursor:pointer;font-family:inherit}
+button.pri{background:#238636;color:#fff;border-color:#2ea043}
+main{padding:16px 18px 40px;max-width:1500px}
+.card{background:var(--pn);border:1px solid var(--bd2);border-radius:8px;padding:12px 14px;margin-bottom:14px}
+.card h2{font-size:14px;color:var(--hi);margin:0 0 10px;font-weight:600}
+.card h3{font-size:13px;color:var(--hi);margin:12px 0 6px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+input,select{background:var(--bg);color:var(--hi);border:1px solid var(--bd);border-radius:5px;padding:5px 8px;font-size:12.5px;font-family:inherit}
+.muted{color:var(--tx2);font-size:12px}
+.msg{font-size:12.5px;margin-left:6px}.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}
+.warn{color:#e3b341;font-size:12px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:5px 8px;border-bottom:1px solid var(--bd2);text-align:left;vertical-align:top}
+th{color:var(--tx2);font-weight:600;background:#11161d;position:sticky;top:0}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.ghead td{background:#1c2330;color:var(--hi)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
+.tw{max-height:640px;overflow:auto;border:1px solid var(--bd2);border-radius:6px}
+.chip{display:inline-block;padding:3px 9px;margin:2px 4px 2px 0;border:1px solid var(--bd);border-radius:12px;background:#11161d;cursor:pointer;font-size:12px}
+.chip:hover{border-color:var(--ac)}
+.st{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11px;white-space:nowrap}
+.st-ok{background:#12301c;color:#56d364}.st-warn{background:#3d2e0a;color:#e3b341}.st-na{background:#262c36;color:#8b949e}
+</style>
+</head>
+<body>
+<div id="hdr">
+  <h1>🚀 一箭多星軌道驗證</h1>
+  <span class="muted">同次發射物體的軌道分群、沿軌排序、升軌偵測與 SupGP 身分比對</span>
+  <span class="sp"></span>
+  <a class="btn" href="/satadmin">🗂 衛星管理</a>
+  <a class="btn" href="/">← 3D 地球儀</a>
+</div>
+<main>
+  <div class="card">
+    <div class="row">
+      <input id="q" style="width:260px" placeholder="國際編號（例如 2026-260）或 NORAD 編號"/>
+      <button class="pri" onclick="LA.run()">分析</button><span id="msg" class="msg"></span>
+    </div>
+    <div class="row"><span class="muted">近期多物體發射：近</span><select id="days"><option value="30">30</option><option value="60" selected>60</option><option value="120">120</option><option value="365">365</option></select><span class="muted">天</span></div>
+    <div id="recent" style="max-height:120px;overflow:auto"></div>
+    <div id="supmeta" class="muted" style="margin-top:6px"></div>
+  </div>
+  <div id="result" style="display:none">
+    <div class="card"><div id="sum"></div></div>
+    <div class="card">
+      <h2>軌道群與沿軌排序</h2>
+      <div class="muted" style="margin-bottom:8px">依目錄 TLE 的傾角（差 ≤ 0.5°）、升交點赤經（差 ≤ 2°）、平均高度（差 ≤ 50 km）分群。共同曆元時，群內以參考星（最小 NORAD）為基準算緯度幅角差 Δu：正值在前方。漂移＝相對平均運動差，正值表示逐漸往前拉開。SupGP 為營運商自行公布的星曆，位置差 ≤ 25 km 為吻合、≤ 100 km 為可能；只涵蓋有公布的業者（Starlink、OneWeb、Planet、Kuiper 等），例如福衛系列沒有 SupGP，會顯示「無對應 SupGP」。<b>任務類型與能力不自動歸因；分群與排序是判斷 A/B/C 對應的線索，不等於身分確認。</b></div>
+      <div class="tw"><table><thead><tr><th>順序</th><th>NORAD</th><th>名稱</th><th>類型</th><th>近地／遠地 km</th><th>傾角°</th><th>Δu°</th><th>距參考 km</th><th>漂移 °/日</th><th>B*</th><th>歷史演化</th><th>SupGP</th></tr></thead><tbody id="groups"></tbody></table></div>
+      <div id="gone" style="margin-top:8px"></div>
+    </div>
+    <div class="card">
+      <h2>高度歷史</h2>
+      <div class="muted" style="margin-bottom:8px">資料庫保留最近約 16 天的完整歷史 TLE；較早發射的批次只能看到這段期間。相鄰兩筆 TLE 間隔 ≤ 5 天且半長軸增加 &gt; 1 km 判為升軌機動（大氣阻力只會讓軌道降低）。</div>
+      <div id="chart"></div>
+    </div>
+  </div>
+</main>
+<script src="/ext/launch.js?v=__BUILD__"></script>
+</body>
+</html>

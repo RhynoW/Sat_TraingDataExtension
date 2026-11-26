@@ -56,7 +56,7 @@ fn src_conf(s: &str) -> &'static str {
 }
 
 /// 四捨五入（遠離零），與 Python obs.rnd 相同
-fn rnd(x: f64, d: i32) -> f64 {
+pub(crate) fn rnd(x: f64, d: i32) -> f64 {
     let f = 10f64.powi(d);
     (x.abs() * f + 0.5).floor() / f * x.signum()
 }
@@ -188,7 +188,7 @@ pub fn parse_time(s: &str) -> Option<(String, DateTime<Utc>)> {
 }
 
 /// TLE 第 3–7 欄的 NORAD 編號（支援 Alpha-5：A=10 … Z=33，不用 I、O；例如 A1419＝101419）
-fn tle_norad(l: &str) -> Option<u32> {
+pub(crate) fn tle_norad(l: &str) -> Option<u32> {
     const ALPHA5: &str = "ABCDEFGHJKLMNPQRSTUVWXYZ";
     let s = l.get(2..7)?;
     let first = s.chars().next()?;
@@ -575,7 +575,7 @@ fn sep_deg(u: &[f64; 3], v: &[f64; 3]) -> f64 {
     (cx * cx + cy * cy + cz * cz).sqrt().atan2(u[0] * v[0] + u[1] * v[1] + u[2] * v[2]).to_degrees()
 }
 
-fn make_prop(l1: &str, l2: &str) -> Option<Propagator> {
+pub(crate) fn make_prop(l1: &str, l2: &str) -> Option<Propagator> {
     let (a, b) = (l1.trim_end(), l2.trim_end());
     if a.len() < 60 || b.len() < 60 || !a.starts_with("1 ") || !b.starts_with("2 ") {
         return None;

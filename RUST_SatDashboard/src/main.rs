@@ -33,6 +33,7 @@ mod satadmin;
 mod suggest;
 mod changes;
 mod obs;
+mod launch;
 mod state;
 mod tiles;
 mod update;

@@ -174,7 +174,7 @@
         '<div class="muted">' + esc(r.intl_code || '') + '</div></td><td>' + esc(r.current_name) + (c ? '<div class="cust">✎ ' + esc(c.name) + '</div>' : '') + '</td><td>' +
         (r.suggest ? '<input class="sg-name" style="width:240px" maxlength="64" value="' + esc(r.suggest) + '"/>' + (r.raw_name && r.raw_name !== r.suggest ? '<div class="muted">原始：' + esc(r.raw_name) + '</div>' : '') : '<span class="muted">（無可靠來源，維持原名）</span>') +
         '</td><td><span class="st ' + (stc[r.name_status] || '') + '">' + esc(r.name_status) + '</span>' + (r.confidence ? ' <span class="muted">可信度' + CONF_LABEL[r.confidence] + '</span>' : '') +
-        '</td><td title="' + esc(mates) + '">' + esc((L.launch_group || {}).value || '—') + '<div class="muted">同次發射 ' + (r.mates || []).length + ' 個物體（游標停留看清單）</div></td><td>' +
+        '</td><td title="' + esc(mates) + '">' + esc((L.launch_group || {}).value || '—') + (r.launch_tag ? ' <a href="/launch?tag=' + encodeURIComponent(r.launch_tag) + '" target="_blank" title="一箭多星軌道驗證">🚀</a>' : '') + '<div class="muted">同次發射 ' + (r.mates || []).length + ' 個物體（游標停留看清單）</div></td><td>' +
         esc((L.candidate_mission || {}).value || '—') + '</td><td>' + esc(IND_LABEL[(L.individual || {}).status] || '—') + '</td><td style="white-space:normal;max-width:280px;color:#e3b341">' +
         esc(warn.join('；')) + '</td></tr>';
     }).join('') || '<tr><td colspan="9" class="muted">沒有符合的項目</td></tr>';

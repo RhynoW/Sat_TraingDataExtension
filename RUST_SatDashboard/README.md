@@ -46,7 +46,7 @@ dist\SatDashboard-arm64.exe      ← Snapdragon 等 ARM64
 | `/starlink` | Starlink 分析（v0.1.6）：可見性／RTT／遮蔽、星系普查、殼層、離軌名單與離軌預測（NRLMSISE-00 完整移植） |
 | `/story`、`/story/{sid}` | StoryMap 故事頁（v0.1.6）：群組統計、ISR 解析度、雷達評估、重訪、軌跡 |
 | `/orbit-tuner` | Orbit Tuner 介紹頁（v0.1.6） |
-| `/manual` | 操作手冊（v0.1.26；原稿 `scenario-advanced01/docs/SatDashboard_操作手冊_v*.md`，`tools/build_manual.py` 產生頁面） |
+| `/manual` | 操作手冊（v0.1.27；原稿 `scenario-advanced01/docs/SatDashboard_操作手冊_v*.md`，`tools/build_manual.py` 產生頁面） |
 | `/lab` | **會合與機動實驗室**（v0.1.6，第二階段 Sprint 0–3）：批次會合分析、場景 JSON、避碰決策、RPO 控制模擬；v0.1.7 起主選單「🧪 機動實驗室」可直接進入，見下方說明 |
 | 版本與聯絡 | 主控台啟動訊息、`/api/about`、地球儀右下角與任務規劃頁頂列顯示版本、版本日期（台灣時間，重新建置時由 `build.rs` 產生，可用環境變數 `SATDASH_BUILD_DATE` 指定）與聯絡資訊（[Rhyno Wu，LinkedIn](https://www.linkedin.com/in/rhyno-wu-6b766771/)） |
 | 底圖 | 所有 3D 頁面預設「地形+海底地形 5.4K」（NASA Blue Marble 地形＋海底地形，內嵌於 exe），地球儀左側的底圖選單已隱藏。同步自 Python 版的頁面用 Viewer 的 `imageryProvider` 選項指定底圖，CesiumJS 1.104 起已移除（內附 1.114，原本會顯示一片藍）；`web/ext/standalone_ext.js` 把 Cesium 的預設底圖換成這張 |
@@ -181,6 +181,7 @@ python scripts\publish_hf.py --local out\hf    # 只輸出到資料夾，搭配 
 - **SATCAT 每日異動**：「SATCAT 異動」頁籤列出每日異動：以 Space-Track `satcat_change` 為準（名稱、國際編號、國家、發射日、DECAY 的異動與異動時間，近 90 天），再以每日 SATCAT 快照比對補上物體類型變更；分為正式命名（OBJECT x → 正式名稱）、更名、再入、再入日期修正、新編目、類型變更、其他欄位，可只看已更名或群組內的衛星；已套用推論名稱而 Space-Track 已正式命名者標「可升級」，TLE 目錄仍是 OBJECT x 也會註明；可匯出 CSV。API：`/api/satadmin/changes?days=&kind=&mine=1`。
 - **觀測與身分驗證**（`/obs`，衛星管理頁頂端進入）：四種紀錄：地面 POI（觀測站與關注地點）、觀測紀錄（RA/Dec J2000 或方位／仰角）、軌道解（TLE，支援 Alpha-5 編號）、身分主張（名稱＋來源類型＋可信度），每筆附複核狀態（未複核／已接受／有爭議／已否決），內容修改後自動退回未複核；以 CSV 匯入匯出（依標題列自動判斷種類）。交叉驗證：① 觀測殘差——目錄 TLE 與使用者軌道解 SGP4 傳播到觀測時間，比較觀測站看到的方向（IAU 1976 歲差轉 J2000，與 skyfield 差 < 0.004°），≤ 0.5° 符合、≤ 2° 勉強符合，並比對同次發射所有物體找最符合者；② 軌道比對——軌道解與目錄 TLE 在曆元 ±12 小時的最大位置差，≤ 10 km 一致、≤ 50 km 接近，並找同次發射中軌道最接近者（協助判斷 OBJECT A/B/C）；③ 身分主張與 Space-Track 正式名稱、其他主張比對。每顆衛星輸出 identity／orbit／observation 狀態與分層判讀（發射群組→候選任務→個體）；任務類型與能力一律為未知，不自動歸因。業餘觀測屬中等可信度來源，需人工複核。資料存在本機 `user_private\observations.json`（保留上一版 .bak）；檢視者可查看與執行交叉驗證，編輯者可新增／修改／刪除／匯入，管理者可複核。API：`/api/obs/data`、`/api/obs/check`（GET 用已存資料、POST 傳入資料）、`POST /api/obs/{kind}`、`PUT|DELETE /api/obs/{kind}/{id}`、`POST /api/obs/{kind}/{id}/review`。
 - **地面 POI 共用**：觀測頁的地面 POI 就是過頂預報的中心點清單（開頁帶入關注地點、可從選單加入觀測站，儲存時依名稱寫回 POI），也可在地球儀「📍 地面 POI」圖層顯示。
+- **一箭多星軌道驗證**（`/launch`，衛星管理頁頂端、建議名稱 🚀、地球儀資訊卡進入）：同次發射物體依傾角／升交點／高度分群，共同曆元以 SGP4 緯度幅角排沿軌順序與相對漂移；歷史 TLE（120 天）偵測升軌（半長軸 5 天內增加 > 1 km）、降軌與衰減，畫高度歷史；SupGP（CelesTrak 營運商補充星曆，每日管線寫入 `supgp` 表）位置比對 ≤ 25 km 吻合，並偵測目錄編號互換（cross-tag）。與線上版逐筆一致（76 批發射 0 差異）。API：`/api/launch?tag=|norad=`、`/api/launch/recent?days=`。
 - **群組**：可多層（例：PRC偵察衛星 → 光學／雷達／電子偵察），逐顆加入或移除 NORAD ID；每個群組可設顏色、感測器類型與預設偵照角度（子群組未設定時沿用上層），供過頂預報使用。
 - **CSV**：匯入欄位 `norad_id,name,group,note`（group 以「/」分層，沒有的群組自動建立）；匯出含原名與群組路徑（UTF-8 BOM，Excel 可直接開啟）。
 - **帳號**：尚未建立帳號時維持原本行為，不需登入；此時本機視為管理者，區網連線只能查詢。在「帳號管理」由本機建立第一個管理者之後，所有頁面與 API 都需要登入（session 12 小時，閒置會延長；同一帳號連續錯 5 次鎖 60 秒）。
@@ -279,6 +280,7 @@ src/
   suggest.rs    建議名稱：Space-Track／GCAT 證據等級（official／inferred／group_inferred／conflict）
   changes.rs    SATCAT 每日異動（DB 的 satcat_change 表）
   obs.rs        觀測資料模型：地面 POI／觀測／軌道解／身分主張、交叉驗證、複核
+  launch.rs     一箭多星軌道驗證：分群與沿軌排序、升軌偵測、SupGP 比對與編號互換偵測
   ephemeris.rs  星歷狀態、一鍵重抓（CelesTrak／Space-Track 覆蓋層）、SATCAT 與 DECAY 列表
   forecast.rs   過頂預報：多中心點、偵照角度、日照與日出日落、歷史 TLE 誤差估算、CSV
   api.rs        主頁 HTTP 路由；api_phase2.rs 台北／RPO／海纜路由
@@ -292,6 +294,13 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 ```
 
 ## 版本紀錄
+
+### v0.1.27（2026-11-26）
+
+- 新增「一箭多星軌道驗證」頁 `/launch`（`src/launch.rs`）：同次發射物體依傾角／升交點／高度分群，共同曆元 SGP4 緯度幅角排沿軌順序、相對漂移；歷史 TLE（120 天）偵測升軌（半長軸 5 天內增加 > 1 km）、降軌與自然衰減並畫高度歷史；SupGP（CelesTrak 營運商補充星曆，DB `supgp`／`supgp_meta` 表）位置比對 ≤ 25 km 吻合、≤ 100 km 可能，並偵測目錄編號互換（cross-tag）；近期多物體發射清單 `/api/launch/recent`
+- 與線上版逐筆一致（76 批發射 0 差異）；前端 `web/ext/launch.js` 兩版共用
+- 入口：衛星管理頁頂端、建議名稱清單發射群組欄 🚀、地球儀資訊卡「🚀 一箭多星」
+- 操作手冊 v0.1.27：新增第九節「一箭多星軌道驗證」
 
 ### v0.1.26（2026-11-26）
 
