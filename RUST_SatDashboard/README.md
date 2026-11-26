@@ -295,6 +295,14 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 
 ## 版本紀錄
 
+### v0.1.31（2026-11-26）
+
+資安強化（複測報告 v0.1.29 的殘餘風險 R-3、R-4）：
+- `update.rs`：manifest `generated` 改以解析後的 UTC 時間比較（RFC 3339 各種寫法皆正確），保存正規化為 UTC 秒；拒絕超過「現在＋2 天」的 manifest，避免誤簽未來時間鎖死更新
+- `publish_hf.py`：線上 manifest 時間晚於本機現在時中止（時鐘錯誤時新 manifest 會被客戶端拒絕）
+- `--allow-host`／`SATDASH_ALLOWED_HOSTS` 與 Host 用同一套正規化（去埠號、方括號、結尾點、不分大小寫）；未加方括號的 IPv6 Host 也接受
+- 操作手冊 v0.1.31
+
 ### v0.1.30（2026-11-26）
 
 資安強化（源碼檢測報告 v1 的 H-3、M-7，以及 L-13 的一部分）：前端寫入 innerHTML 的衛星名稱、備註、中繼資料與 Space-Track 欄位一律跳脫

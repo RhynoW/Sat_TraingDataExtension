@@ -118,9 +118,9 @@ hr{display:none}
 </div>
 </nav>
 <main>
-<h1 id="atrdc-satdashboard-v0130">ATRDC SatDashboard 操作手冊（v0.1.30）</h1>
+<h1 id="atrdc-satdashboard-v0131">ATRDC SatDashboard 操作手冊（v0.1.31）</h1>
 <blockquote>
-<p>適用版本：Rust 單機版 v0.1.30（2026-11-26）與線上網頁版。
+<p>適用版本：Rust 單機版 v0.1.31（2026-11-26）與線上網頁版。
 對象：第一次使用本系統的分析人員；不需要寫程式。</p>
 </blockquote>
 <hr />
@@ -195,7 +195,7 @@ hr{display:none}
 </tr>
 <tr>
 <td><code>--allow-host &lt;電腦名稱&gt;</code></td>
-<td>區網要用電腦名稱（例：<code>http://my-pc:5013/</code>）連線時加入；可重複。為防止惡意網站冒用，只接受 localhost、IP 位址與這裡列出的名稱</td>
+<td>區網要用電腦名稱（例：<code>http://my-pc:5013/</code>）連線時加入，填名稱即可（例：<code>--allow-host my-pc</code>；寫成 <code>my-pc:5013</code> 也會自動去掉埠號、不分大小寫）；可重複。為防止惡意網站冒用，只接受 localhost、IP 位址與這裡列出的名稱</td>
 </tr>
 <tr>
 <td><code>--no-browser</code></td>
@@ -1097,6 +1097,11 @@ SmartScreen 擋下時按「其他資訊」→「仍要執行」。公司電腦�
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>v0.1.31</td>
+<td>2026-11-26</td>
+<td>資安強化：線上更新以實際時間判斷新舊並拒絕時間異常的更新資訊；<code>--allow-host</code> 寫了埠號也能使用</td>
+</tr>
 <tr>
 <td>v0.1.30</td>
 <td>2026-11-26</td>

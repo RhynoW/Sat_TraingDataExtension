@@ -54,7 +54,8 @@ SatDashboard（Rust 單機版）
   --no-browser      啟動後不自動開啟瀏覽器
   --no-update       不自動檢查新版資料庫與程式（頁面上仍可手動檢查）
   --update-manifest <網址或檔案>  更新來源 manifest（預設 HuggingFace RhynoWu/Rust_SatDashboard）
-  --allow-host <名稱>  區網以電腦名稱連線時加入允許的主機名稱（可重複；localhost 與 IP 位址一律允許）
+  --allow-host <名稱>  區網以電腦名稱連線時加入允許的主機名稱（例：my-pc；可重複；寫了埠號會自動去掉；
+                       localhost 與 IP 位址一律允許）
   --version         顯示版本（JSON）後結束
   -h, --help        顯示說明
 
@@ -73,7 +74,7 @@ impl Config {
         let mut update_auto = env::var_os("SATDASH_NO_UPDATE").is_none();
         let mut restart_wait: Option<u32> = None;
         let mut allowed_hosts: Vec<String> = env::var("SATDASH_ALLOWED_HOSTS")
-            .map(|v| v.split(',').map(|x| x.trim().to_ascii_lowercase()).filter(|x| !x.is_empty()).collect())
+            .map(|v| v.split(',').map(crate::auth::host_name).filter(|x| !x.is_empty()).collect())
             .unwrap_or_default();
 
         let mut args = env::args().skip(1);
@@ -94,7 +95,12 @@ impl Config {
                 "--restart-wait" => restart_wait = args.next().and_then(|v| v.parse().ok()),
                 "--allow-host" => {
                     let h = args.next().ok_or_else(|| anyhow::anyhow!("--allow-host 需要主機名稱"))?;
-                    allowed_hosts.push(h.trim().to_ascii_lowercase());
+                    // 去掉埠號、方括號與結尾的點（複測 R-4）
+                    let h = crate::auth::host_name(&h);
+                    if h.is_empty() {
+                        anyhow::bail!("--allow-host 主機名稱不正確");
+                    }
+                    allowed_hosts.push(h);
                 }
                 "--version" => {
                     println!("{}", crate::about::json());

@@ -464,8 +464,12 @@ fn json_err(status: StatusCode, msg: &str) -> Response {
 }
 
 /// Host 名稱（去掉埠與 IPv6 方括號，小寫）
-fn host_name(host: &str) -> String {
+/// 也用來正規化 --allow-host 的值（複測 R-4：使用者填 my-pc:5013 也能比對）
+pub fn host_name(host: &str) -> String {
     let h = host.trim();
+    if h.parse::<std::net::IpAddr>().is_ok() {
+        return h.to_ascii_lowercase(); // 未加方括號的 IPv6（例：::1），不可當成「名稱:埠」切開
+    }
     let name = if let Some(rest) = h.strip_prefix('[') {
         rest.split(']').next().unwrap_or("")
     } else {
@@ -868,6 +872,10 @@ mod tests {
             assert!(!host_ok(&hm(&[("host", bad)]), &none), "{bad}");
         }
         assert!(host_ok(&hm(&[("host", "my-pc:5013")]), &["my-pc".to_string()]));
+        assert!(host_ok(&hm(&[("host", "::1")]), &none), "未加方括號的 IPv6");
+        assert_eq!(host_name("My-PC:5013"), "my-pc", "允許清單寫了埠號也能正規化（R-4）");
+        assert_eq!(host_name("[::1]:5013"), "::1");
+        assert_eq!(host_name("my-pc."), "my-pc");
         assert!(host_ok(&hm(&[]), &none), "沒有 Host 放行");
     }
 

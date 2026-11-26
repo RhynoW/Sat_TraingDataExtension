@@ -222,19 +222,36 @@ fn last_generated(home: &Path) -> Option<String> {
 }
 
 /// manifest 的 generated（ISO 8601 UTC，固定格式可直接比字串）不得早於上次接受的；通過就記下來
+/// 允許發布端與本機時鐘的誤差；manifest 時間超過「現在＋此值」視為異常（避免誤簽未來時間後鎖死更新）
+const FUTURE_SKEW: chrono::Duration = chrono::Duration::days(2);
+
+fn parse_utc(s: &str) -> Option<chrono::DateTime<chrono::Utc>> {
+    chrono::DateTime::parse_from_rfc3339(s.trim()).ok().map(|t| t.with_timezone(&chrono::Utc))
+}
+
+/// 以解析後的 UTC 時間比較（複測 R-3：RFC 3339 的 +08:00、小數秒等寫法也正確），不早於上次接受的才通過並記下
 fn accept_generated(home: &Path, generated: &str) -> anyhow::Result<()> {
-    if chrono::DateTime::parse_from_rfc3339(generated).is_err() {
-        anyhow::bail!("manifest 時間格式錯誤：{generated}");
+    accept_generated_at(home, generated, chrono::Utc::now())
+}
+
+fn accept_generated_at(home: &Path, generated: &str, now: chrono::DateTime<chrono::Utc>) -> anyhow::Result<()> {
+    let g = parse_utc(generated).ok_or_else(|| anyhow::anyhow!("manifest 時間格式錯誤：{generated}"))?;
+    if g > now + FUTURE_SKEW {
+        anyhow::bail!("manifest 時間 {generated} 遠在未來（本機時鐘或發布端異常），已拒絕；請確認電腦時間");
     }
     if let Some(last) = last_generated(home) {
-        if generated < last.as_str() {
-            anyhow::bail!("manifest 時間 {generated} 早於上次接受的 {last}（可能是舊版重放或降版攻擊），已拒絕");
-        }
-        if generated == last {
-            return Ok(());
+        // 舊紀錄無法解析（手動改壞）時視同沒有紀錄
+        if let Some(l) = parse_utc(&last) {
+            if g < l {
+                anyhow::bail!("manifest 時間 {generated} 早於上次接受的 {last}（可能是舊版重放或降版攻擊），已拒絕");
+            }
+            if g == l {
+                return Ok(());
+            }
         }
     }
-    let data = serde_json::to_vec_pretty(&json!({"last_generated": generated}))?;
+    let norm = g.to_rfc3339_opts(chrono::SecondsFormat::Secs, true);
+    let data = serde_json::to_vec_pretty(&json!({"last_generated": norm}))?;
     crate::auth::atomic_write(&state_file(home), &data)
 }
 
@@ -777,5 +794,14 @@ mod tests {
         assert!(accept_generated(&home, "2026-11-26T02:00:00Z").is_err(), "較舊的 manifest 拒絕");
         assert!(accept_generated(&home, "not-a-date").is_err());
         assert_eq!(last_generated(&home).as_deref(), Some("2026-11-27T00:00:00Z"));
+        // R-3：不同寫法以時間比較——同一時刻的 +08:00 寫法視為相同，早一秒的拒絕
+        accept_generated(&home, "2026-11-27T08:00:00+08:00").unwrap();
+        assert!(accept_generated(&home, "2026-11-27T07:59:59.500+08:00").is_err(), "字串比較會誤判為較新");
+        accept_generated(&home, "2026-11-27T00:00:00.250Z").unwrap();
+        assert_eq!(last_generated(&home).as_deref(), Some("2026-11-27T00:00:00Z"), "以 UTC 秒精度正規化保存");
+        // 遠在未來的 manifest 拒絕，不寫入紀錄
+        let now = parse_utc("2026-11-28T00:00:00Z").unwrap();
+        assert!(accept_generated_at(&home, "2026-12-31T00:00:00Z", now).is_err());
+        assert!(accept_generated_at(&home, "2026-11-29T12:00:00Z", now).is_ok(), "2 天內的時鐘誤差可接受");
     }
 }

@@ -221,11 +221,18 @@ def main() -> int:
 
     key = signer()
     old = None if a.local else remote_manifest(a.repo)
+    now = datetime.now(timezone.utc)
+    if old and old.get("generated"):
+        # 複測 R-3：客戶端拒絕比上次接受的更舊的 manifest；線上那份若在未來（時鐘錯誤時誤簽），新發布會被所有客戶端拒絕
+        prev = datetime.fromisoformat(str(old["generated"]).replace("Z", "+00:00"))
+        if prev > now:
+            raise SystemExit(f"線上 manifest 時間 {old['generated']} 晚於本機現在 {now:%Y-%m-%dT%H:%M:%SZ}：請先確認本機時鐘，"
+                             "新 manifest 若早於它會被所有客戶端拒絕")
     stage = Path(a.local) if a.local else Path(tempfile.mkdtemp(prefix="satdash_hf_"))
     stage.mkdir(parents=True, exist_ok=True)
     src = (lambda p: p) if a.local else (lambda p: url_of(a.repo, p))
     uploads: list[str] = []
-    manifest = {"schema": 1, "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    manifest = {"schema": 1, "generated": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "db": old.get("db") if old else None, "app": old.get("app") if old else None,
                 "contact": "https://www.linkedin.com/in/rhyno-wu-6b766771/"}
     try:
