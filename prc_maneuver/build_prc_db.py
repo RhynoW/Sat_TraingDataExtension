@@ -270,14 +270,67 @@ def count(node) -> int:
 
 # ── CHM ──────────────────────────────────────────────────────────────────────
 HHC_PATHS = [r"C:\Program Files (x86)\HTML Help Workshop\hhc.exe", r"C:\Program Files\HTML Help Workshop\hhc.exe"]
+# Sat_Dashboard 線上版（HF Space）：地球儀 /?sat=N1,N2…、地面軌跡 /track?norad=N、軌道要素歷史 /orbit?norad=N
+ONLINE = "https://rhynowu-atrdc-satdashboard.hf.space"
+GLOBE_CHUNK = 50  # 地球儀逐顆查詢位置，一次太多會很慢，分批連結
+EXTRA_CSS = """
+.online{margin:8px 0 14px;padding:8px 12px;background:#eef6ee;border:1px solid #b9d8b9;border-radius:4px;font-size:13.5px}
+.online b{color:#1e6b2e}
+.online a{display:inline-block;margin:2px 10px 2px 0;color:#145a32;font-weight:600}
+.online .muted{color:#777;font-weight:normal}
+"""
+
+
+def ext(url: str, text: str) -> str:
+    """外部網址加 target=_blank：由系統預設瀏覽器開啟（CHM 檢視器的舊引擎跑不動 3D 地球儀）"""
+    return f'<a href="{he(url)}" target="_blank">{text}</a>'
+
+
+def globe_links(norads: list[int]) -> str:
+    if not norads:
+        return '<span class="muted">（沒有在軌衛星可在線上版顯示）</span>'
+    chunks = [norads[i:i + GLOBE_CHUNK] for i in range(0, len(norads), GLOBE_CHUNK)]
+    if len(chunks) == 1:
+        return ext(f"{ONLINE}/?sat={','.join(map(str, norads))}", f"3D 地球儀顯示在軌 {len(norads)} 顆")
+    return "3D 地球儀分批顯示：" + "".join(
+        ext(f"{ONLINE}/?sat={','.join(map(str, c))}", f"第 {i * GLOBE_CHUNK + 1}–{i * GLOBE_CHUNK + len(c)} 顆")
+        for i, c in enumerate(chunks))
+
+
+def online_box(inner: str) -> str:
+    return f'<div class="online"><b>Sat_Dashboard 線上版</b>（在預設瀏覽器開啟）：{inner}</div>'
+
+
+def sat_online(s: Sat) -> str:
+    n = s.norad
+    if not s.onorbit:
+        return online_box(f'<span class="muted">{he(s.status)}，線上版沒有即時位置；</span>'
+                          + ext(f"{ONLINE}/orbit?norad={n}", "軌道要素歷史"))
+    return online_box(ext(f"{ONLINE}/?sat={n}", "3D 地球儀定位") + ext(f"{ONLINE}/track?norad={n}", "地面軌跡")
+                      + ext(f"{ONLINE}/orbit?norad={n}", "軌道要素歷史"))
 
 
 def sat_table_html(items: list[Sat], prefix: str = "") -> str:
+    def links(s: Sat) -> str:
+        if not s.onorbit:
+            return "—"
+        return ext(f"{ONLINE}/?sat={s.norad}", "地球儀") + " " + ext(f"{ONLINE}/track?norad={s.norad}", "軌跡")
+
     rows = "".join(
         f"<tr><td>{s.norad}</td><td><a href=\"{prefix}{s.stem}.html\">{he(s.name)}</a></td><td>{he(s.cospar)}</td>"
-        f"<td>{he(s.launch)}</td><td>{he(s.orbit)}</td><td>{he(s.status)}</td></tr>" for s in items)
+        f"<td>{he(s.launch)}</td><td>{he(s.orbit)}</td><td>{he(s.status)}</td><td>{links(s)}</td></tr>" for s in items)
     return ("<table><thead><tr><th>NORAD</th><th>名稱</th><th>COSPAR</th><th>發射日期</th><th>軌道</th><th>狀態</th>"
-            f"</tr></thead><tbody>{rows}</tbody></table>")
+            f"<th>線上版</th></tr></thead><tbody>{rows}</tbody></table>")
+
+
+def sitemap(name: str, href: str, depth: int, folder: bool = False) -> list[str]:
+    """HHC／HHK 項目。<param> 必須各佔一行：寫在同一行時，CHM 檢視器的「內容」窗格會整個空白。"""
+    ind = "  " * depth
+    return [f'{ind}<LI> <OBJECT type="text/sitemap">',
+            f'{ind}  <param name="Name" value="{he(name)}">',
+            f'{ind}  <param name="Local" value="{href}">',
+            *([f'{ind}  <param name="ImageNumber" value="1">'] if folder else []),
+            f"{ind}  </OBJECT>"]
 
 
 def build_chm(t, sats: list[Sat], tax: Taxonomy, today: str, src: str, out: Path) -> bool:
@@ -287,55 +340,66 @@ def build_chm(t, sats: list[Sat], tax: Taxonomy, today: str, src: str, out: Path
     if CHM_DIR.exists():
         shutil.rmtree(CHM_DIR)
     (CHM_DIR / "_groups").mkdir(parents=True)
-    (CHM_DIR / "style.css").write_text(CSS, encoding="utf-8")
+    (CHM_DIR / "style.css").write_text(CSS + EXTRA_CSS, encoding="utf-8")
+
+    # 先配好大類／系列頁檔名，衛星頁的導覽列才能連回去
+    href_cat, href_ser, k = {}, {}, 0
+    for cat, ser in t:
+        k += 1
+        href_cat[cat] = f"_groups/g{k:03d}.html"
+        for sname, _ in ser:
+            k += 1
+            href_ser[(cat, sname)] = f"_groups/g{k:03d}.html"
+
     for s in sats:
-        nav = (f'<p class="nav"><a href="home.html">首頁</a> › {he(s.cat)} › {he(s.series)}'
+        nav = (f'<p class="nav"><a href="home.html">首頁</a> › <a href="{href_cat[s.cat]}">{he(s.cat)}</a> › '
+               f'<a href="{href_ser[(s.cat, s.series)]}">{he(s.series)}</a>'
                + (f" › {he(s.leaf)}" if s.leaf else "") + "</p>\n")
-        (CHM_DIR / f"{s.stem}.html").write_text(html_page(f"{s.name} ({s.norad})", nav + md2html(s.md)), encoding="utf-8")
+        (CHM_DIR / f"{s.stem}.html").write_text(
+            html_page(f"{s.name} ({s.norad})", nav + sat_online(s) + md2html(s.md)), encoding="utf-8")
 
-    files, toc, rows = [], [], []
-    gid = 0
-
-    def page(title: str, body: str) -> str:
-        nonlocal gid
-        gid += 1
-        rel = f"_groups/g{gid:03d}.html"
+    def write_group(rel: str, title: str, body: str) -> None:
         (CHM_DIR / rel).write_text(html_page(title, '<p class="nav"><a href="../home.html">首頁</a></p>\n' + body,
                                              css_rel="../style.css"), encoding="utf-8")
-        files.append(rel)
-        return rel
 
-    def node(name: str, href: str, depth: int) -> None:
-        ind = "  " * depth
-        toc.append(f'{ind}<LI><OBJECT type="text/sitemap"><param name="Name" value="{he(name)}">'
-                   f'<param name="Local" value="{href}"></OBJECT>')
-
+    toc = sitemap(f"{TITLE}（首頁）", "home.html", 1)
+    rows, idx_groups = [], []
     for cat, ser in t:
         n_cat = count(ser)
-        summary = "".join(f"<li>{he(sn)}（{count(lv)}）</li>" for sn, lv in ser)
-        node(f"{cat}（{n_cat}）", page(cat, f"<h1>{he(cat)}</h1><p>共 {n_cat} 筆</p><ul>{summary}</ul>"), 1)
-        toc.append("  <UL>")
-        rows.append(f'<tr><td rowspan="{len(ser)}"><b>{he(cat)}</b></td>')
+        cat_on = [s.norad for _, lv in ser for _, lst in lv for s in lst if s.onorbit]
+        trs = "".join(
+            f'<tr><td><a href="../{href_ser[(cat, sn)]}">{he(sn)}</a></td><td>{count(lv)}</td><td>'
+            + globe_links([s.norad for _, lst in lv for s in lst if s.onorbit]) + "</td></tr>" for sn, lv in ser)
+        write_group(href_cat[cat], cat,
+                    f"<h1>{he(cat)}</h1><p>共 {n_cat} 筆（在軌 {len(cat_on)}）</p>"
+                    + online_box("下表每個系列都可一鍵在 3D 地球儀顯示該系列的在軌衛星")
+                    + f"<table><thead><tr><th>系列</th><th>筆數</th><th>線上版</th></tr></thead><tbody>{trs}</tbody></table>")
+        toc += sitemap(f"{cat}（{n_cat}）", href_cat[cat], 1, True) + ["  <UL>"]
+        idx_groups.append((cat, href_cat[cat]))
+        rows.append(f'<tr><td rowspan="{len(ser)}"><a href="{href_cat[cat]}"><b>{he(cat)}</b></a></td>')
         for i, (sname, leaves) in enumerate(ser):
+            href = href_ser[(cat, sname)]
             n_ser = count(leaves)
-            items = [s for _, lst in leaves for s in lst]
-            body = f"<h1>{he(sname)}</h1><p>{he(cat)}｜共 {n_ser} 筆</p>"
+            on = [s.norad for _, lst in leaves for s in lst if s.onorbit]
+            body = (f'<h1>{he(sname)}</h1><p><a href="../{href_cat[cat]}">{he(cat)}</a>｜共 {n_ser} 筆（在軌 {len(on)}）</p>'
+                    + online_box(globe_links(on)))
             for lf, lst in leaves:
                 if lf:
-                    body += f"<h2>{he(lf)}（{len(lst)}）</h2>"
+                    body += (f"<h2>{he(lf)}（{len(lst)}）</h2>"
+                             + online_box(globe_links([s.norad for s in lst if s.onorbit])))
                 body += sat_table_html(lst, "../")
-            href = page(sname, body)
-            node(f"{sname}（{n_ser}）", href, 2)
-            rows.append(("" if i == 0 else "<tr>") + f'<td><a href="{href}">{he(sname)}</a></td><td>{n_ser}</td></tr>')
-            toc.append("    <UL>")
+            write_group(href, sname, body)
+            toc += sitemap(f"{sname}（{n_ser}）", href, 2, True) + ["    <UL>"]
+            idx_groups.append((f"{sname}（{cat}）", href))
+            rows.append(("" if i == 0 else "<tr>") + f'<td><a href="{href}">{he(sname)}</a></td><td>{n_ser}</td>'
+                        f"<td>{len(on)}</td></tr>")
             for lf, lst in leaves:
                 depth = 3
                 if lf:
-                    node(f"{lf}（{len(lst)}）", href, 3)
-                    toc.append("      <UL>")
+                    toc += sitemap(f"{lf}（{len(lst)}）", href, 3, True) + ["      <UL>"]
                     depth = 4
                 for s in lst:
-                    node(f"{s.name} ({s.norad})", f"{s.stem}.html", depth)
+                    toc += sitemap(f"{s.norad}  {s.name}", f"{s.stem}.html", depth)
                 if lf:
                     toc.append("      </UL>")
             toc.append("    </UL>")
@@ -344,27 +408,32 @@ def build_chm(t, sats: list[Sat], tax: Taxonomy, today: str, src: str, out: Path
     q = Counter(s.quality or "（未標示）" for s in sats)
     home = (f"<h1>{TITLE}</h1><p>產生日期：{today}｜共 {len(sats)} 筆（在軌 {sum(s.onorbit for s in sats)}）｜"
             f"分類表版本 {tax.version}</p>"
-            "<p>分組與 Rust 單機版「衛星管理 → 群組分類」的預設群組相同（大類 → 系列 →〔感測器〕）。"
+            + online_box(ext(ONLINE + "/", "開啟首頁（3D 地球儀）")
+                         + '<span class="muted">大類、系列頁可一鍵在地球儀顯示整組在軌衛星；'
+                           "每顆衛星頁有地球儀定位、地面軌跡、軌道要素歷史連結。</span>")
+            + "<p>左側「內容」依大類 → 系列 →〔感測器〕→ NORAD 編號展開；「索引」可輸入衛星名稱、NORAD 編號、"
+            "大類或系列名稱查詢。分組與 Rust 單機版「衛星管理 → 群組分類」的預設群組相同。"
             "感測器子層依各筆「任務類型」欄推定，屬推定資料。</p>"
             f"<p>編目資料：{he(src)}；GCAT（planet4589.org，CC-BY）。資料品質："
             + "、".join(f"{he(k)} {v}" for k, v in q.most_common()) + "。</p>"
-            "<table><thead><tr><th>大類</th><th>系列</th><th>筆數</th></tr></thead><tbody>"
+            "<table><thead><tr><th>大類</th><th>系列</th><th>筆數</th><th>在軌</th></tr></thead><tbody>"
             + "".join(rows) + "</tbody></table>")
     (CHM_DIR / "home.html").write_text(html_page(TITLE, home), encoding="utf-8")
 
-    hhc = ['<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">', "<HTML><HEAD></HEAD><BODY>",
-           '<OBJECT type="text/site properties"><param name="ImageType" value="Folder"></OBJECT>', "<UL>",
-           f'  <LI><OBJECT type="text/sitemap"><param name="Name" value="{TITLE}（首頁）"><param name="Local" value="home.html"></OBJECT>',
-           *toc, "</UL>", "</BODY></HTML>"]
-    hhk = ['<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">', "<HTML><HEAD></HEAD><BODY>", "<UL>"]
-    for s in sorted(sats, key=lambda x: x.name):
-        for key in (s.name, str(s.norad)):
-            hhk.append(f'  <LI><OBJECT type="text/sitemap"><param name="Name" value="{he(key)}">'
-                       f'<param name="Local" value="{s.stem}.html"></OBJECT>')
-    hhk += ["</UL>", "</BODY></HTML>"]
+    head = ['<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">', "<HTML>", "<HEAD>", "</HEAD>", "<BODY>"]
+    hhc = head + ['<OBJECT type="text/site properties">', '  <param name="Auto Generated" value="No">',
+                  '  <param name="ImageType" value="Folder">', "</OBJECT>", "<UL>", *toc, "</UL>", "</BODY>", "</HTML>"]
+    entries = list(idx_groups)
+    for s in sats:
+        entries += [(s.name, f"{s.stem}.html"), (str(s.norad), f"{s.stem}.html")]
+    hhk = head + ["<UL>"]
+    for key, href in sorted(entries, key=lambda x: x[0]):
+        hhk += sitemap(key, href, 1)
+    hhk += ["</UL>", "</BODY>", "</HTML>"]
     # hhc.exe 以系統 ANSI（cp950）讀 HHC／HHK
     (CHM_DIR / "toc.hhc").write_text("\n".join(hhc), encoding="cp950", errors="replace")
     (CHM_DIR / "index.hhk").write_text("\n".join(hhk), encoding="cp950", errors="replace")
+    files = sorted(set(href_cat.values()) | set(href_ser.values()))
     filelist = "\n".join(["style.css", "home.html"] + files + [f"{s.stem}.html" for s in sats])
     (CHM_DIR / "prc_satellites.hhp").write_text(
         "[OPTIONS]\nCompiled file=prc_satellites.chm\nContents file=toc.hhc\nDefault Window=main\n"
