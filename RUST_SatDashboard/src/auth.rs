@@ -6,6 +6,12 @@
 //! - 角色：viewer 檢視者（查詢）／editor 編輯者（查詢＋輸入、新增、修改）／admin 管理者（再加帳號管理、
 //!   重抓星歷、重載設定、程式更新）。
 //! - 忘記管理者密碼：關閉程式後刪除 accounts.json 即回到未設帳號狀態（群組與更名資料不受影響）。
+//! - 跨站防護（資安檢測 H-1、H-2、M-3、M-8）：
+//!   · Host 必須是 localhost、IP 位址或 --allow-host 指定的名稱，擋 DNS rebinding；
+//!   · 變更類請求（非 GET/HEAD/OPTIONS）的 Origin 必須與 Host 相同（沒有 Origin 時看 Sec-Fetch-Site），
+//!     /api/ 的跨站 GET 一律拒絕；不設 CORS（前端與 API 同源）；
+//!   · 建立第一個管理者需輸入啟動時印在主控台的一次性代碼；
+//!   · 回應加 X-Content-Type-Options、X-Frame-Options、Referrer-Policy、CSP frame-ancestors。
 
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -117,6 +123,23 @@ pub struct Auth {
     users: Mutex<Vec<User>>,
     sessions: Mutex<HashMap<String, Session>>,
     fails: Mutex<HashMap<String, (u32, Instant)>>,
+    /// 建立第一個管理者的一次性代碼（啟動時產生、印在主控台；輸錯 10 次換新）與錯誤次數
+    setup_code: Mutex<(String, u32)>,
+}
+
+const SETUP_ALPHABET: &[u8] = b"ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const SETUP_MAX_FAILS: u32 = 10;
+
+/// 一次性代碼：10 碼（約 50 bits），顯示為 XXXXX-XXXXX
+fn new_setup_code() -> String {
+    let mut b = [0u8; 10];
+    OsRng.fill_bytes(&mut b);
+    let s: String = b.iter().map(|x| SETUP_ALPHABET[*x as usize % SETUP_ALPHABET.len()] as char).collect();
+    format!("{}-{}", &s[..5], &s[5..])
+}
+
+fn norm_code(s: &str) -> String {
+    s.chars().filter(|c| c.is_ascii_alphanumeric()).map(|c| c.to_ascii_uppercase()).collect()
 }
 
 fn now_iso() -> String {
@@ -191,7 +214,28 @@ impl Auth {
             users: Mutex::new(users),
             sessions: Mutex::new(HashMap::new()),
             fails: Mutex::new(HashMap::new()),
+            setup_code: Mutex::new((new_setup_code(), 0)),
         }
+    }
+
+    /// 目前的一次性設定代碼（主控台顯示用）
+    pub fn setup_code(&self) -> String {
+        self.setup_code.lock().0.clone()
+    }
+
+    /// 驗證一次性設定代碼；連續錯 SETUP_MAX_FAILS 次就換新代碼（新代碼印在主控台）
+    fn check_setup_code(&self, given: &str) -> bool {
+        let mut g = self.setup_code.lock();
+        if !g.0.is_empty() && norm_code(given) == norm_code(&g.0) {
+            g.1 = 0;
+            return true;
+        }
+        g.1 += 1;
+        if g.1 >= SETUP_MAX_FAILS {
+            *g = (new_setup_code(), 0);
+            tracing::warn!("建立管理者的一次性代碼輸錯 {SETUP_MAX_FAILS} 次，已換新代碼：{}", g.0);
+        }
+        false
     }
 
     pub fn enabled(&self) -> bool {
@@ -419,7 +463,69 @@ fn json_err(status: StatusCode, msg: &str) -> Response {
     (status, Json(json!({"error": msg}))).into_response()
 }
 
-pub async fn guard(State(st): State<Arc<AppState>>, mut req: Request, next: Next) -> Response {
+/// Host 名稱（去掉埠與 IPv6 方括號，小寫）
+fn host_name(host: &str) -> String {
+    let h = host.trim();
+    let name = if let Some(rest) = h.strip_prefix('[') {
+        rest.split(']').next().unwrap_or("")
+    } else {
+        h.rsplit_once(':').filter(|(_, p)| p.chars().all(|c| c.is_ascii_digit())).map(|(n, _)| n).unwrap_or(h)
+    };
+    name.trim_end_matches('.').to_ascii_lowercase()
+}
+
+/// 防 DNS rebinding：Host 只接受 localhost、IP 位址或 --allow-host 指定的名稱；沒有 Host（非瀏覽器的舊客戶端）放行
+pub fn host_ok(headers: &axum::http::HeaderMap, allowed: &[String]) -> bool {
+    let Some(h) = headers.get(header::HOST) else { return true };
+    let Ok(h) = h.to_str() else { return false };
+    let name = host_name(h);
+    name == "localhost" || name.parse::<std::net::IpAddr>().is_ok() || allowed.iter().any(|a| a == &name)
+}
+
+/// 跨站請求判斷：Origin 與 Host 不同，或（沒有 Origin 時）Sec-Fetch-Site 不是 same-origin／none
+fn cross_site(headers: &axum::http::HeaderMap) -> bool {
+    let host = headers.get(header::HOST).and_then(|v| v.to_str().ok()).map(|h| h.trim().to_ascii_lowercase());
+    if let Some(o) = headers.get(header::ORIGIN) {
+        let o = o.to_str().unwrap_or("null").trim().to_ascii_lowercase();
+        let o_host = o.split_once("://").map(|(_, r)| r.trim_end_matches('/').to_string());
+        return match (o_host, host) {
+            (Some(oh), Some(h)) => oh != h,
+            _ => true, // Origin: null 或格式不對、或沒有 Host
+        };
+    }
+    match headers.get("sec-fetch-site").and_then(|v| v.to_str().ok()) {
+        Some(s) => !matches!(s.trim(), "same-origin" | "none"),
+        None => false, // 非瀏覽器客戶端（curl 等）不帶這兩個標頭
+    }
+}
+
+/// 是否拒絕這個跨站請求：變更類方法一律檢查；/api/ 的 GET 也不允許跨站讀取或嵌入
+fn reject_cross_site(method: &Method, path: &str, headers: &axum::http::HeaderMap) -> bool {
+    let safe = matches!(*method, Method::GET | Method::HEAD | Method::OPTIONS);
+    (!safe || path.starts_with("/api/")) && cross_site(headers)
+}
+
+fn add_security_headers(r: &mut Response) {
+    let h = r.headers_mut();
+    h.insert("x-content-type-options", HeaderValue::from_static("nosniff"));
+    h.insert("x-frame-options", HeaderValue::from_static("SAMEORIGIN"));
+    h.insert("referrer-policy", HeaderValue::from_static("same-origin"));
+    h.entry("content-security-policy").or_insert(HeaderValue::from_static("frame-ancestors 'self'"));
+}
+
+pub async fn guard(State(st): State<Arc<AppState>>, req: Request, next: Next) -> Response {
+    let mut r = guard_inner(st, req, next).await;
+    add_security_headers(&mut r);
+    r
+}
+
+async fn guard_inner(st: Arc<AppState>, mut req: Request, next: Next) -> Response {
+    if !host_ok(req.headers(), &st.cfg.allowed_hosts) {
+        return json_err(StatusCode::MISDIRECTED_REQUEST, "不允許的主機名稱（Host）。區網以電腦名稱連線時請以 --allow-host 加入");
+    }
+    if reject_cross_site(req.method(), req.uri().path(), req.headers()) {
+        return json_err(StatusCode::FORBIDDEN, "拒絕跨站請求");
+    }
     let loopback = req
         .extensions()
         .get::<ConnectInfo<SocketAddr>>()
@@ -496,7 +602,7 @@ async fn api_me(State(st): St, ConnectInfo(a): ConnectInfo<SocketAddr>, req: Req
         return Json(json!({
             "auth_enabled": false, "logged_in": false, "user": null,
             "role": role, "role_label": role.label(), "perms": role.perms(),
-            "can_setup": loopback,
+            "can_setup": loopback, "setup_code_required": true,
         }))
         .into_response();
     }
@@ -548,6 +654,9 @@ struct SetupReq {
     password: String,
     #[serde(default)]
     display: String,
+    /// 啟動時印在主控台的一次性代碼
+    #[serde(default)]
+    setup_code: String,
 }
 
 /// 建立第一個管理者（僅限尚無帳號且由本機操作）
@@ -557,6 +666,9 @@ async fn api_setup(State(st): St, ConnectInfo(a): ConnectInfo<SocketAddr>, Json(
     }
     if st.auth.enabled() {
         return json_err(StatusCode::CONFLICT, "已有帳號，請登入後由管理者新增");
+    }
+    if !st.auth.check_setup_code(&b.setup_code) {
+        return json_err(StatusCode::FORBIDDEN, "一次性代碼不正確（請看執行程式的主控台視窗）");
     }
     let st2 = st.clone();
     let u = b.username.trim().to_string();
@@ -736,6 +848,61 @@ mod tests {
         let a = Auth::load(p);
         assert!(a.enabled(), "壞檔不可退回免登入");
         assert!(a.list().is_empty());
+    }
+
+    fn hm(pairs: &[(&'static str, &'static str)]) -> axum::http::HeaderMap {
+        let mut h = axum::http::HeaderMap::new();
+        for (k, v) in pairs {
+            h.insert(*k, HeaderValue::from_static(v));
+        }
+        h
+    }
+
+    #[test]
+    fn host_allowlist_blocks_rebinding() {
+        let none: Vec<String> = vec![];
+        for ok in ["127.0.0.1:5013", "localhost:5013", "LOCALHOST", "[::1]:5013", "192.168.1.20:5013", "10.0.0.5"] {
+            assert!(host_ok(&hm(&[("host", ok)]), &none), "{ok}");
+        }
+        for bad in ["attacker.com:5013", "evil.localhost.attacker.com", "127.0.0.1.nip.io:5013", "localhost.evil:5013"] {
+            assert!(!host_ok(&hm(&[("host", bad)]), &none), "{bad}");
+        }
+        assert!(host_ok(&hm(&[("host", "my-pc:5013")]), &["my-pc".to_string()]));
+        assert!(host_ok(&hm(&[]), &none), "沒有 Host 放行");
+    }
+
+    #[test]
+    fn cross_site_rules() {
+        let same = hm(&[("host", "127.0.0.1:5013"), ("origin", "http://127.0.0.1:5013")]);
+        let other_port = hm(&[("host", "127.0.0.1:5013"), ("origin", "http://127.0.0.1:8080")]);
+        let evil = hm(&[("host", "127.0.0.1:5013"), ("origin", "https://evil.example.com")]);
+        let null = hm(&[("host", "127.0.0.1:5013"), ("origin", "null")]);
+        let sfs_cross = hm(&[("host", "127.0.0.1:5013"), ("sec-fetch-site", "cross-site")]);
+        let sfs_same = hm(&[("host", "127.0.0.1:5013"), ("sec-fetch-site", "same-origin")]);
+        let curl = hm(&[("host", "127.0.0.1:5013")]);
+        assert!(!reject_cross_site(&Method::POST, "/api/satadmin/import", &same));
+        assert!(reject_cross_site(&Method::POST, "/api/satadmin/import", &other_port), "同站不同埠也算跨來源");
+        assert!(reject_cross_site(&Method::POST, "/api/update/app", &evil));
+        assert!(reject_cross_site(&Method::POST, "/api/update/app", &null));
+        assert!(reject_cross_site(&Method::POST, "/api/update/restart", &sfs_cross), "無 body 的 POST 也擋");
+        assert!(!reject_cross_site(&Method::POST, "/api/update/restart", &sfs_same));
+        assert!(!reject_cross_site(&Method::POST, "/api/update/restart", &curl), "非瀏覽器客戶端放行");
+        assert!(reject_cross_site(&Method::GET, "/api/satadmin/names", &sfs_cross), "API 不允許跨站讀取");
+        assert!(!reject_cross_site(&Method::GET, "/satadmin", &sfs_cross), "從外站連結開啟頁面可以");
+    }
+
+    #[test]
+    fn setup_code_one_time() {
+        let a = Auth::load(tmp("setup"));
+        let code = a.setup_code();
+        assert_eq!(code.len(), 11);
+        assert!(!a.check_setup_code("WRONG-CODE0"));
+        assert!(a.check_setup_code(&code.to_lowercase().replace('-', " ")), "不分大小寫、忽略分隔符");
+        for _ in 0..SETUP_MAX_FAILS {
+            a.check_setup_code("x");
+        }
+        assert!(!a.check_setup_code(&code), "輸錯 10 次後換新代碼");
+        assert_ne!(a.setup_code(), code);
     }
 
     #[test]

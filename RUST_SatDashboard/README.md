@@ -295,6 +295,16 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 
 ## 版本紀錄
 
+### v0.1.29（2026-11-26）
+
+資安強化（依源碼檢測報告 v1 的 H-1、H-2、H-4、M-2、M-3、M-8、L-1）：
+- `auth::guard`：Host 只接受 localhost、IP 位址或 `--allow-host`／`SATDASH_ALLOWED_HOSTS` 指定的名稱（防 DNS rebinding，回 421）；變更類請求的 Origin 必須與 Host 相同（無 Origin 時看 `Sec-Fetch-Site`），`/api/` 的跨站 GET 一律拒絕（403）；回應加 `X-Content-Type-Options`、`X-Frame-Options: SAMEORIGIN`、`Referrer-Policy`、`CSP frame-ancestors 'self'`
+- 移除 `CorsLayer::allow_origin(Any)`（前端與 API 同源）
+- 建立第一個管理者需輸入啟動時印在主控台的一次性代碼（10 碼，輸錯 10 次換新）
+- 線上更新：`user_private\update_state.json` 記錄最後接受的 manifest `generated`，較舊者拒絕（防重放／降版）；執行檔只接受較新版本；簽章 hex 解析遇多位元組字元不再 panic
+- `scripts/publish_hf.py`：沿用線上 manifest 前先以本機公鑰驗 ed25519 簽章，失敗即中止（防簽章洗白）；只有 404 才視為第一次發布
+- 操作手冊 v0.1.29
+
 ### v0.1.28（2026-11-26）
 
 - 過頂預報新增簡要版 CSV（依客戶樣本格式）：`/api/forecast/jobs/{id}/brief_a.csv`（經過日期、衛星隸屬、衛星種類、國際名稱、解析度、可偵照開始／結束）、`brief_b.csv`（M月D日、國際名稱、HHMM-HHMM、種類），只列可偵照的過頂

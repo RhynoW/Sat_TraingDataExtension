@@ -9,6 +9,9 @@
 //!
 //! 資料庫：下載 `.zst`（中斷可續傳）→ 驗壓縮檔 sha256 → 解壓並驗原檔 sha256 → 舊檔改名 `.bak` → 新檔就位 → 重建索引。
 //! 執行檔：下載本機架構的 exe → 驗 sha256 → 執行中的 exe 改名 `.old`（Windows 允許）→ 新檔就位 → 使用者按「重新啟動」。
+//!
+//! 防降版／重放（資安檢測 M-2）：資料目錄 `user_private\update_state.json` 記下最後接受的 manifest `generated`，
+//! 之後比它舊的 manifest 一律拒絕（即使簽章正確）；執行檔只接受比目前版本新的版本。
 
 use std::collections::HashMap;
 use std::io::{Read, Write};
@@ -162,7 +165,7 @@ fn verify_sig(manifest: &[u8], sig_hex: &str) -> anyhow::Result<()> {
 }
 
 fn hex(s: &str) -> anyhow::Result<Vec<u8>> {
-    if s.len() % 2 != 0 {
+    if !s.is_ascii() || s.len() % 2 != 0 {
         anyhow::bail!("十六進位字串長度錯誤");
     }
     (0..s.len()).step_by(2).map(|i| Ok(u8::from_str_radix(&s[i..i + 2], 16)?)).collect()
@@ -207,6 +210,34 @@ fn app_is_newer(a: &AppEntry) -> bool {
     }
 }
 
+// ── 防降版：最後接受的 manifest 時間 ─────────────────────────────────────────
+
+fn state_file(home: &Path) -> PathBuf {
+    home.join("user_private").join("update_state.json")
+}
+
+fn last_generated(home: &Path) -> Option<String> {
+    let v: Value = serde_json::from_slice(&std::fs::read(state_file(home)).ok()?).ok()?;
+    v["last_generated"].as_str().map(str::to_string)
+}
+
+/// manifest 的 generated（ISO 8601 UTC，固定格式可直接比字串）不得早於上次接受的；通過就記下來
+fn accept_generated(home: &Path, generated: &str) -> anyhow::Result<()> {
+    if chrono::DateTime::parse_from_rfc3339(generated).is_err() {
+        anyhow::bail!("manifest 時間格式錯誤：{generated}");
+    }
+    if let Some(last) = last_generated(home) {
+        if generated < last.as_str() {
+            anyhow::bail!("manifest 時間 {generated} 早於上次接受的 {last}（可能是舊版重放或降版攻擊），已拒絕");
+        }
+        if generated == last {
+            return Ok(());
+        }
+    }
+    let data = serde_json::to_vec_pretty(&json!({"last_generated": generated}))?;
+    crate::auth::atomic_write(&state_file(home), &data)
+}
+
 fn arch_key() -> &'static str {
     std::env::consts::ARCH
 }
@@ -232,6 +263,7 @@ pub async fn check(st: Arc<AppState>) -> Value {
         if m.schema != 1 {
             anyhow::bail!("manifest schema {} 不支援（請更新程式）", m.schema);
         }
+        accept_generated(&st.cfg.home, &m.generated)?;
         Ok(m)
     }
     .await;
@@ -556,6 +588,9 @@ async fn run_app() -> anyhow::Result<String> {
         (s.manifest.clone(), s.manifest_url.clone())
     };
     let app = m.and_then(|m| m.app).ok_or_else(|| anyhow::anyhow!("尚未取得 manifest，請先「檢查更新」"))?;
+    if !app_is_newer(&app) {
+        anyhow::bail!("manifest 的程式版本 v{} 不比目前的 v{} 新，不更新", app.version, about::VERSION);
+    }
     let asset = app.assets.get(arch_key()).cloned().ok_or_else(|| anyhow::anyhow!("manifest 沒有 {} 版執行檔", arch_key()))?;
     let exe = std::env::current_exe()?;
     let newf = with_suffix(&exe, ".new");
@@ -729,5 +764,18 @@ mod tests {
     #[test]
     fn bad_signature_rejected() {
         assert!(verify_sig(b"{}", &"00".repeat(64)).is_err());
+        assert!(hex("é0").is_err() && hex("ab\u{4e2d}").is_err(), "多位元組字元不可 panic");
+    }
+
+    #[test]
+    fn rollback_rejected() {
+        let home = std::env::temp_dir().join(format!("sd_upd_{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&home);
+        accept_generated(&home, "2026-11-26T02:00:00Z").unwrap();
+        accept_generated(&home, "2026-11-26T02:00:00Z").unwrap();
+        accept_generated(&home, "2026-11-27T00:00:00Z").unwrap();
+        assert!(accept_generated(&home, "2026-11-26T02:00:00Z").is_err(), "較舊的 manifest 拒絕");
+        assert!(accept_generated(&home, "not-a-date").is_err());
+        assert_eq!(last_generated(&home).as_deref(), Some("2026-11-27T00:00:00Z"));
     }
 }

@@ -54,12 +54,33 @@ def url_of(repo: str, path: str) -> str:
 
 
 def remote_manifest(repo: str) -> dict | None:
+    """線上 manifest（沿用沒有變更的 db／app 區塊）。必須通過 ed25519 驗章才採用（資安檢測 H-4）：
+    否則取得 HF 寫入權限、但沒有私鑰的攻擊者可以竄改 manifest，再由本腳本以真私鑰重新簽章洗白。
+    只有線上確實沒有 manifest（404，第一次發布）才回傳 None；網路錯誤、缺簽章或驗章失敗一律中止。"""
+    import urllib.error
     import urllib.request
+    from cryptography.exceptions import InvalidSignature
+    from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+    def get(path: str) -> bytes:
+        with urllib.request.urlopen(url_of(repo, path), timeout=30) as r:
+            return r.read()
     try:
-        with urllib.request.urlopen(url_of(repo, "manifest.json"), timeout=30) as r:
-            return json.loads(r.read())
-    except Exception:  # noqa: BLE001  第一次發布時還沒有
-        return None
+        body = get("manifest.json")
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise SystemExit(f"無法取得線上 manifest（HTTP {e.code}），中止發布")
+    except Exception as e:  # noqa: BLE001
+        raise SystemExit(f"無法取得線上 manifest：{e}，中止發布")
+    try:
+        sig = bytes.fromhex(get("manifest.json.sig").decode("ascii").strip())
+        Ed25519PublicKey.from_public_bytes(bytes.fromhex(PUB.read_text(encoding="ascii").strip())).verify(sig, body)
+    except InvalidSignature:
+        raise SystemExit("線上 manifest 簽章驗證失敗：可能遭竄改。請先檢查 HF dataset，不可沿用，中止發布")
+    except Exception as e:  # noqa: BLE001
+        raise SystemExit(f"線上 manifest 簽章無法驗證（{e}），中止發布")
+    return json.loads(body)
 
 
 def latest_manual() -> Path | None:

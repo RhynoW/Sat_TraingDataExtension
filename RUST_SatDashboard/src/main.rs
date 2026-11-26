@@ -41,7 +41,6 @@ mod userdata;
 
 use std::net::SocketAddr;
 
-use tower_http::cors::{Any, CorsLayer};
 use tracing_subscriber::EnvFilter;
 
 #[tokio::main]
@@ -82,7 +81,9 @@ async fn main() -> anyhow::Result<()> {
 
     update::spawn_first_run(state.clone());
     update::spawn_auto_check(state.clone());
-    let app = api::router(state).layer(CorsLayer::new().allow_origin(Any));
+    // 前端與 API 同源，不設 CORS（資安檢測 H-2）
+    let setup_code = (!state.auth.enabled()).then(|| state.auth.setup_code());
+    let app = api::router(state);
 
     // 埠被占用時往後找
     let host: std::net::IpAddr = cfg.host.parse()?;
@@ -116,6 +117,9 @@ async fn main() -> anyhow::Result<()> {
     };
     let url = format!("http://{shown}:{}/", addr.port());
     println!("\n  ▶ 儀表板網址：{url}");
+    if let Some(code) = setup_code {
+        println!("  尚未建立帳號。在「衛星管理 → 帳號管理」建立第一個管理者時，請輸入一次性代碼：{code}");
+    }
     println!("  （關閉此視窗或按 Ctrl+C 結束）\n");
     if cfg.open_browser {
         if let Err(e) = open::that_detached(&url) {

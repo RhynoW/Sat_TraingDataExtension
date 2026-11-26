@@ -27,6 +27,8 @@ pub struct Config {
     pub update_auto: bool,
     /// 重新啟動時由舊程式傳入：等舊程式（PID）結束、釋出原埠再綁定
     pub restart_wait: Option<u32>,
+    /// 額外允許的 Host 名稱（小寫，不含埠）；localhost 與 IP 位址一律允許（防 DNS rebinding，見 auth::host_ok）
+    pub allowed_hosts: Vec<String>,
 }
 
 pub const RAW_TABLE: &str = "raw_tle_archive";
@@ -52,10 +54,11 @@ SatDashboard（Rust 單機版）
   --no-browser      啟動後不自動開啟瀏覽器
   --no-update       不自動檢查新版資料庫與程式（頁面上仍可手動檢查）
   --update-manifest <網址或檔案>  更新來源 manifest（預設 HuggingFace RhynoWu/Rust_SatDashboard）
+  --allow-host <名稱>  區網以電腦名稱連線時加入允許的主機名稱（可重複；localhost 與 IP 位址一律允許）
   --version         顯示版本（JSON）後結束
   -h, --help        顯示說明
 
-環境變數：SATDASH_DATA、DB_PATH、PORT、SATDASH_UPDATE_MANIFEST、SATDASH_NO_UPDATE、CONJ_THRESHOLD_KM、CONJ_TTL、SIGMA_R_KM、SIGMA_T_KM、
+環境變數：SATDASH_DATA、DB_PATH、PORT、SATDASH_UPDATE_MANIFEST、SATDASH_NO_UPDATE、SATDASH_ALLOWED_HOSTS（逗號分隔）、CONJ_THRESHOLD_KM、CONJ_TTL、SIGMA_R_KM、SIGMA_T_KM、
           AISSTREAM_API_KEY（AIS 船舶圖層；也可在地球儀圖層面板輸入）、AIS_BBOX、AIS_MPB（0＝關閉航港局來源）、AIS_IDLE_SEC
 ";
 
@@ -69,6 +72,9 @@ impl Config {
         let mut update_manifest: Option<String> = env::var("SATDASH_UPDATE_MANIFEST").ok().filter(|s| !s.is_empty());
         let mut update_auto = env::var_os("SATDASH_NO_UPDATE").is_none();
         let mut restart_wait: Option<u32> = None;
+        let mut allowed_hosts: Vec<String> = env::var("SATDASH_ALLOWED_HOSTS")
+            .map(|v| v.split(',').map(|x| x.trim().to_ascii_lowercase()).filter(|x| !x.is_empty()).collect())
+            .unwrap_or_default();
 
         let mut args = env::args().skip(1);
         while let Some(a) = args.next() {
@@ -86,6 +92,10 @@ impl Config {
                 "--no-update" => update_auto = false,
                 "--update-manifest" => update_manifest = args.next(),
                 "--restart-wait" => restart_wait = args.next().and_then(|v| v.parse().ok()),
+                "--allow-host" => {
+                    let h = args.next().ok_or_else(|| anyhow::anyhow!("--allow-host 需要主機名稱"))?;
+                    allowed_hosts.push(h.trim().to_ascii_lowercase());
+                }
                 "--version" => {
                     println!("{}", crate::about::json());
                     std::process::exit(0);
@@ -119,6 +129,7 @@ impl Config {
             update_manifest,
             update_auto,
             restart_wait,
+            allowed_hosts,
         })
     }
 

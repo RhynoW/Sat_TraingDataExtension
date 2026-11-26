@@ -504,7 +504,8 @@
     if (!ME.auth_enabled) {
       if (ME.can_setup) {
         box.innerHTML = '<div class="card"><h2>建立第一個管理者帳號</h2><div class="muted" style="margin-bottom:10px">建立後，所有頁面與 API 都需要登入；之後可新增「檢視者」「編輯者」「管理者」帳號。帳號存在本機 <code>user_private\\accounts.json</code>（密碼以 Argon2 雜湊）。</div>' +
-          '<div class="grid2"><label>帳號</label><input id="su-u" autocomplete="username"/><label>顯示名稱</label><input id="su-d" placeholder="可空白"/>' +
+          '<div class="grid2"><label>一次性代碼</label><input id="su-c" placeholder="執行程式的主控台視窗顯示的 XXXXX-XXXXX" autocomplete="off"/>' +
+          '<label>帳號</label><input id="su-u" autocomplete="username"/><label>顯示名稱</label><input id="su-d" placeholder="可空白"/>' +
           '<label>密碼</label><input id="su-p" type="password" autocomplete="new-password" placeholder="至少 8 字元"/><label>確認密碼</label><input id="su-p2" type="password" autocomplete="new-password"/></div>' +
           '<div class="row" style="margin-top:10px"><button class="pri" onclick="SA.setup()">建立並登入</button><span id="su-msg" class="msg"></span></div></div>';
       } else {
@@ -539,7 +540,7 @@
   function setup() {
     var p = $('su-p').value;
     if (p !== $('su-p2').value) { msg('su-msg', '兩次密碼不一致'); return; }
-    api('POST', '/api/auth/setup', { username: $('su-u').value.trim(), password: p, display: $('su-d').value })
+    api('POST', '/api/auth/setup', { setup_code: $('su-c').value.trim(), username: $('su-u').value.trim(), password: p, display: $('su-d').value })
       .then(function () { location.reload(); }).catch(function (e) { msg('su-msg', e.message); });
   }
   function addUser() {
