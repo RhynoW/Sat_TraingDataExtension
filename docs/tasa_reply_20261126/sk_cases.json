@@ -125,7 +125,7 @@
   "fusion_suppressed_non_starlink": 0,
   "l2_counts": {
    "cusum": 10,
-   "bocpd": 3,
+   "bocpd": 4,
    "ssa": 9,
    "mad3sig": 17
   },

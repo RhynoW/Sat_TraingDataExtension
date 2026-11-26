@@ -1,0 +1,42 @@
+[
+ {
+  "norad": 60548,
+  "name": "ICEYE-X33",
+  "n_transitions": 171,
+  "sigma_m": 8.1,
+  "sigma5_m": 41,
+  "sigma20_m": 163,
+  "l1_thr_median_m": 979,
+  "n_gt_5sigma": 19,
+  "n_gt_20sigma": 1,
+  "n_l1_flagged": 0,
+  "n_suppressed": 148,
+  "n_events": 0,
+  "grades": {
+   "E3": 0,
+   "E2": 0,
+   "E1": 0,
+   "D": 0
+  }
+ },
+ {
+  "norad": 67142,
+  "name": "KUIPER-00188",
+  "n_transitions": 156,
+  "sigma_m": 11.4,
+  "sigma5_m": 57,
+  "sigma20_m": 227,
+  "l1_thr_median_m": 623,
+  "n_gt_5sigma": 19,
+  "n_gt_20sigma": 6,
+  "n_l1_flagged": 8,
+  "n_suppressed": 112,
+  "n_events": 2,
+  "grades": {
+   "E3": 0,
+   "E2": 2,
+   "E1": 0,
+   "D": 0
+  }
+ }
+]

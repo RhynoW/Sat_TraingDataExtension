@@ -121,7 +121,7 @@ def main():
             s_max = f"期間最大單步 {s['max_step_km']*1000:.0f} m"
         lc = f"、低置信複核項 {s['n_low_conf']} 項" if s["n_low_conf"] else "、低置信複核項 0"
         ax.set_title(f"{name}（NORAD {norad}）｜{note}｜約 {s['alt_km']:.0f} km\n"
-                     f"R7 候選事件 {s['n_events']} 件{lc}｜L1 單步門檻約 {s['l1_thr_km']:.2f} km｜"
+                     f"R7 候選事件 {s['n_events']} 件{lc}｜L1 高度門檻約 {s['l1_thr_km']:.2f} km｜"
                      f"σ {s['sigma_m']:.1f} m（5σ {s['sigma5_m']:.0f} m、20σ {s['sigma20_m']:.0f} m）｜{s_max}",
                      fontsize=9, color=INK, loc="left")
         if ax.get_legend_handles_labels()[0]:
