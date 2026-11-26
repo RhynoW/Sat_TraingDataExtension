@@ -10,6 +10,8 @@
   var SDG = window.SDG, viewer = SDG.viewer, fmt = SDG.fmt, tw = SDG.tw;
   var JD = Cesium.JulianDate, MU = 398600.4418, RE = 6378.137, OMEGA = 7.2921159e-5, BO_ALT = 40;
   var satrec = null, satName = "", norad = 25544, opps = [], sel = null, ents = [];
+  /* 衛星名稱等外部字串插入 HTML 前一律跳脫（資安檢測 H-3） */
+  function _escH(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
   function norm(a) { return Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]); }
   function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
@@ -129,8 +131,8 @@
 
   function renderOpps() {
     var v = +$("a-v").value;
-    if (!opps.length) { $("a-res").innerHTML = "未來 12 小時 " + satName + " 沒有經過發射點附近（星下點 2,500 km 內、高度 2,500 km 以下）。換一顆低軌衛星試試。"; return; }
-    var h = "<div>" + satName + "：未來 12 小時有 " + opps.length + " 次交會機會（點選一列）</div><table class='kv'><tr><td>交會時刻</td><td>高度</td><td>所需速度</td><td>飛行</td></tr>";
+    if (!opps.length) { $("a-res").innerHTML = "未來 12 小時 " + _escH(satName) + " 沒有經過發射點附近（星下點 2,500 km 內、高度 2,500 km 以下）。換一顆低軌衛星試試。"; return; }
+    var h = "<div>" + _escH(satName) + "：未來 12 小時有 " + opps.length + " 次交會機會（點選一列）</div><table class='kv'><tr><td>交會時刻</td><td>高度</td><td>所需速度</td><td>飛行</td></tr>";
     opps.forEach(function (o, i) {
       var ok = v >= o.speed;
       h += "<tr data-i='" + i + "' style='cursor:pointer" + (o === sel ? ";background:#1f2d3d" : "") + "'><td>" + tw(new Date(o.ms), true).slice(5) +

@@ -1,4 +1,6 @@
 'use strict';
+/* 衛星名稱、備註等外部字串插入 HTML 前一律跳脫（資安檢測 H-3） */
+function _escH(v){ return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 /* 軌道要素歷史頁：
    - Spiral Polar ×3（inclination / raan / argp）：角度=要素值、半徑=時間螺旋、顏色=時間
      （仿 maneuver_STEM 之 prepare_spiral_polar_data：r = a + b·days）
@@ -133,12 +135,12 @@ function renderLoadedStatus(){
   let s;
   if(SATS.length === 1){
     const d = SATS[0].data;
-    s = tpl('status_loaded', {name: d.name, norad: d.norad, start: d.start, end: d.end, n: d.n_days});
-    if(d.note) s += '　<span style="color:#d29922">' + d.note + '</span>';
+    s = tpl('status_loaded', {name: _escH(d.name), norad: d.norad, start: d.start, end: d.end, n: d.n_days});
+    if(d.note) s += '　<span style="color:#d29922">' + _escH(d.note) + '</span>';
   }else{
     s = tpl('status_compare', {start: UDATES[0], end: UDATES[UDATES.length - 1]});
     SATS.forEach(o => {
-      s += '　<span class="lg"><i style="background:' + o.color + '"></i><b>' + o.data.name +
+      s += '　<span class="lg"><i style="background:' + o.color + '"></i><b>' + _escH(o.data.name) +
            '</b>（NORAD ' + o.norad + '，' + tpl('compare_days', {n: o.data.n_days}) + '）</span>';
     });
     s += '　<span style="color:#8b949e">' + t('compare_time') + '</span>';
@@ -438,13 +440,13 @@ function satInfoCard(o){
     [t('info_period'), period.toFixed(1) + ' ' + t('unit_min')],
   ].filter(r => r[1] !== '' && r[1] != null);
   const alt = (inf.name_zh && inf.name_en && inf.name_zh !== inf.name_en)
-    ? '<span>' + inf.name_en + '</span>' : '';
+    ? '<span>' + _escH(inf.name_en) + '</span>' : '';
   const sw = SATS.length > 1 ? '<i class="sw" style="background:' + o.color + '"></i>' : '';
-  return '<div class="ttl">' + sw + (inf.name || d.name) + alt + '</div>' +
+  return '<div class="ttl">' + sw + _escH(inf.name || d.name) + alt + '</div>' +
     '<div class="grid">' +
-    rows.map(r => '<div><b>' + r[0] + '</b>' + r[1] + '</div>').join('') +
+    rows.map(r => '<div><b>' + r[0] + '</b>' + _escH(r[1]) + '</div>').join('') +
     '</div>' +
-    (inf.notes ? '<div class="notes">' + inf.notes + '</div>' : '');
+    (inf.notes ? '<div class="notes">' + _escH(inf.notes) + '</div>' : '');
 }
 
 function renderSatInfo(){
@@ -546,8 +548,8 @@ function bindSearch(){
         (d.results || []).forEach(m => {
           const it = document.createElement('div');
           it.className = 'it';
-          it.innerHTML = '<b>' + m.name + '</b><span>NORAD ' + m.norad_id +
-                         ' · ' + (m.constellation || '—') + '</span>';
+          it.innerHTML = '<b>' + _escH(m.name) + '</b><span>NORAD ' + m.norad_id +
+                         ' · ' + _escH(m.constellation || '—') + '</span>';
           it.onclick = () => {
             SELS = [{norad: m.norad_id, name: m.name}];
             q.value = m.name;

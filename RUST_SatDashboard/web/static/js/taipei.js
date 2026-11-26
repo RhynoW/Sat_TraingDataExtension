@@ -1,4 +1,6 @@
 'use strict';
+/* 衛星名稱、備註等外部字串插入 HTML 前一律跳脫（資安檢測 H-3） */
+function _escH(v){ return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    三語字典（繁中／英文／日文）— 台北衛星覆蓋時間軸頁
@@ -459,7 +461,7 @@ function renderPasses(){
       const dm=Math.floor(p.duration_s/60), ds_=p.duration_s%60;
       const ts=new Date(rT.getTime()+8*3600*1000).toISOString().replace('T',' ').slice(5,16);
       item.innerHTML=
-        "<div class='pass-name'>"+p.name+"</div>"
+        "<div class='pass-name'>"+_escH(p.name)+"</div>"
         +"<div class='pass-row'>"
         +"<span class='pass-time'>&#8599; "+ts+" CST</span>"
         +"<span class='pass-el' style='color:"+elCol+"'>Max "+p.max_el_deg+"&deg;</span>"

@@ -1,4 +1,6 @@
 'use strict';
+/* 衛星名稱、備註等外部字串插入 HTML 前一律跳脫（資安檢測 H-3） */
+function _escH(v){ return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    台北上空衛星過頂：天球視角 + 地面軌跡（半徑 2000 km）＋日月行星／一等星＋動畫輸出
@@ -666,7 +668,7 @@ function lunarDetail(){
   const e = lunarSel(S.simMs);
   if(!LUNAR.data){ el.textContent = st('sel_hint'); return; }
   if(!e){ el.textContent = st('ln_none_sel'); return; }
-  el.innerHTML = '<b style="color:' + e.color + '">' + e.name + '</b> · ' + st('norad') + ' ' + e.norad_id +
+  el.innerHTML = '<b style="color:' + e.color + '">' + _escH(e.name) + '</b> · ' + st('norad') + ' ' + e.norad_id +
     ' · <b>' + st(e.kind === 'transit' ? 'lk_transit' : 'lk_near') + '</b><br>' + cstDT(e.tms) + ' CST · ' +
     st('ln_sep') + ' ' + e.sep_deg.toFixed(3) + '°' + (e.kind === 'transit' ? ' · ' + st('ln_chord') + ' ' + e.chord_s.toFixed(2) + ' ' + st('sec') : '');
 }
@@ -675,7 +677,7 @@ function buildLunarList(){
   LUNAR.events.forEach(e => {
     const d = document.createElement('div'); d.className = 'sk-pass'; d.dataset.key = e.key;
     d.innerHTML = '<span class="sk-dot" style="background:' + e.color + '"></span><span class="sk-pt tm">' + cstDT(e.tms).slice(0, 14) +
-      '</span><span class="sk-pn">' + e.name + '</span><span class="sk-bd ' + e.kind + '">' + st(e.kind === 'transit' ? 'lk_transit' : 'lk_near') +
+      '</span><span class="sk-pn">' + _escH(e.name) + '</span><span class="sk-bd ' + e.kind + '">' + st(e.kind === 'transit' ? 'lk_transit' : 'lk_near') +
       '</span><span class="sk-pe">' + e.sep_deg.toFixed(2) + '°</span>';
     d.addEventListener('click', () => selectLunar(e, true));
     box.appendChild(d);
@@ -1033,7 +1035,7 @@ function showDetail(){
   const el = $('#sk-detail'), p = S.passes.find(x => x.key === S.selKey);
   if(!p){ el.textContent = st('sel_hint'); return; }
   const m = Math.floor(p.duration_s / 60), s = p.duration_s % 60;
-  el.innerHTML = '<b style="color:' + p.color + '">' + p.name + '</b> · ' + st('norad') + ' ' + p.norad_id + '<br>' +
+  el.innerHTML = '<b style="color:' + p.color + '">' + _escH(p.name) + '</b> · ' + st('norad') + ' ' + p.norad_id + '<br>' +
     (p.stationary ? st('geo') : st('rise') + ' ' + cst(p.tr0) + ' · ' + st('peak') + ' ' + cst(Date.parse(p.t_max_utc)) + ' · ' + st('set') + ' ' + cst(p.tr1) +
       '<br>' + st('max_el') + ' ' + p.max_el_deg + '° · ' + st('dur') + ' ' + m + ' ' + st('min') + ' ' + s + ' ' + st('sec') +
       (p.clipped_start || p.clipped_end ? ' *' : ''));
@@ -1042,7 +1044,7 @@ function buildList(){
   const box = $('#sk-list'); box.innerHTML = '';
   S.passes.forEach(p => {
     const d = document.createElement('div'); d.className = 'sk-pass'; d.dataset.key = p.key;
-    d.innerHTML = '<span class="sk-dot" style="background:' + p.color + '"></span><span class="sk-pn">' + p.name +
+    d.innerHTML = '<span class="sk-dot" style="background:' + p.color + '"></span><span class="sk-pn">' + _escH(p.name) +
       '</span><span class="sk-pt">' + (p.stationary ? st('geo') : cst(p.tr0)) + '</span><span class="sk-pe">' + p.max_el_deg + '°</span>';
     d.addEventListener('click', () => select(p, true));
     box.appendChild(d);

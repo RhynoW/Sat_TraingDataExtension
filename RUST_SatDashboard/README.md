@@ -295,6 +295,14 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 
 ## 版本紀錄
 
+### v0.1.30（2026-11-26）
+
+資安強化（源碼檢測報告 v1 的 H-3、M-7，以及 L-13 的一部分）：前端寫入 innerHTML 的衛星名稱、備註、中繼資料與 Space-Track 欄位一律跳脫
+- `web/static/js`：orbit.js（狀態列、比較圖例、資訊欄、搜尋建議）、globe.js（會合清單與資訊框、統計標籤、SATCAT 類型、CDM TCA／對方名稱、追蹤清單）、taipei.js、taipei_sky.js、rpo3d.js；`web/ext/games_asat.js`
+- 以 ISS 改名為 `<img onerror>` 實測：修補前雙星比較頁會執行，修補後不執行、以文字顯示
+- 尚未處理：lab.js 兩處（另一工作中）、伺服器端 `check_name` 拒絕 HTML 字元（多一層防護）
+- 操作手冊 v0.1.30
+
 ### v0.1.29（2026-11-26）
 
 資安強化（依源碼檢測報告 v1 的 H-1、H-2、H-4、M-2、M-3、M-8、L-1）：

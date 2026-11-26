@@ -852,9 +852,11 @@
     });
   }
 
+  /* 衛星名稱等外部字串插入 HTML 前一律跳脫（資安檢測 H-3） */
+  function _escH(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function optionLabel(p) {
     var mp = fmtRange(p.miss_km);
-    return (p.primary_name || p.primary_norad) + " × " + (p.secondary_name || p.secondary_norad)
+    return _escH(p.primary_name || p.primary_norad) + " × " + _escH(p.secondary_name || p.secondary_norad)
       + "  ·  " + mp + " km  ·  Pc " + (p.Pc_str || "—");
   }
 

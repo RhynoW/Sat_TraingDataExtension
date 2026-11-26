@@ -875,10 +875,10 @@ function renderConjList(){
     row.innerHTML=
       '<div style="display:flex;align-items:center;gap:6px">'
       +'<span class="conj-km">'+p.miss_km.toFixed(2)+' km</span>'
-      +'<span class="conj-names" title="'+p.primary_name+' + '+p.secondary_name+'">'
-      +'<span style="color:'+purposeColor+'">●</span> '+p.primary_name
+      +'<span class="conj-names" title="'+_esc(p.primary_name)+' + '+_esc(p.secondary_name)+'">'
+      +'<span style="color:'+purposeColor+'">●</span> '+_esc(p.primary_name)
       +' <span style="color:#484f58">+</span>'
-      +' <span style="color:'+sPurposeColor+'">●</span> '+p.secondary_name
+      +' <span style="color:'+sPurposeColor+'">●</span> '+_esc(p.secondary_name)
       +'</span></div>'
       +'<div style="display:flex;align-items:center;gap:8px;margin-top:3px">'
       +'<span style="font-size:9px;color:#484f58">'+p.primary_alt_km+' km / '+p.secondary_alt_km+' km</span>'
@@ -908,7 +908,7 @@ function flyToPair(pair){
     point:{pixelSize:10,color:colA,outlineColor:Cesium.Color.WHITE,outlineWidth:2},
     description:new Cesium.ConstantProperty(
       '<div style="font-family:Tahoma;padding:8px;font-size:13px;background:#1e1e1e;color:#e8e8e8">'
-      +'<b style="color:#FF6B6B">'+pair.primary_name+'</b>'
+      +'<b style="color:#FF6B6B">'+_esc(pair.primary_name)+'</b>'
       +'<br>NORAD '+pair.primary_norad
       +'<br>高度 '+pair.primary_alt_km+' km'
       +'<br>位置 '+pair.primary_lat.toFixed(2)+'°, '+pair.primary_lon.toFixed(2)+'°'
@@ -918,7 +918,7 @@ function flyToPair(pair){
     point:{pixelSize:10,color:colB,outlineColor:Cesium.Color.WHITE,outlineWidth:2},
     description:new Cesium.ConstantProperty(
       '<div style="font-family:Tahoma;padding:8px;font-size:13px;background:#1e1e1e;color:#e8e8e8">'
-      +'<b style="color:#FFB86C">'+pair.secondary_name+'</b>'
+      +'<b style="color:#FFB86C">'+_esc(pair.secondary_name)+'</b>'
       +'<br>NORAD '+pair.secondary_norad
       +'<br>高度 '+pair.secondary_alt_km+' km'
       +'<br>位置 '+pair.secondary_lat.toFixed(2)+'°, '+pair.secondary_lon.toFixed(2)+'°'
@@ -975,7 +975,7 @@ function showSearchResults(results){
     row.className='stat-row';
     row.innerHTML=
       '<span class="stat-dot" style="background:'+color+'"></span>'
-      +'<span class="stat-label" title="'+s.name+'">'+s.name+'</span>'
+      +'<span class="stat-label" title="'+_esc(s.name)+'">'+_esc(s.name)+'</span>'
       +'<span style="font-size:10px;color:#484f58;min-width:54px;text-align:right">'+s.norad_id+'</span>';
     row.addEventListener('click',()=>flyToSat(s));
     body.appendChild(row);
@@ -1038,7 +1038,7 @@ async function fetchSatDetail(nid){
   if(satcatR.status==='fulfilled'&&!satcatR.value.error&&!satcatR.value.message){
     const s=satcatR.value;
     const parts=[];
-    if(s.object_type) parts.push('<span style="color:#484f58">類型 </span><b>'+s.object_type+'</b>');
+    if(s.object_type) parts.push('<span style="color:#484f58">類型 </span><b>'+_esc(s.object_type)+'</b>');
     if(s.apogee_km)   parts.push('<span style="color:#484f58">遠地 </span>'+Math.round(s.apogee_km)+' km');
     if(s.perigee_km)  parts.push('<span style="color:#484f58">近地 </span>'+Math.round(s.perigee_km)+' km');
     if(s.inclination) parts.push('<span style="color:#484f58">傾角 </span>'+parseFloat(s.inclination).toFixed(1)+'°');
@@ -1054,14 +1054,14 @@ async function fetchSatDetail(nid){
         const pc=parseFloat(ev.pc||0);
         const hi=pc>1e-4;
         html+='<div class="cdm-ev">'
-          +'<div style="font-size:10px;color:#c9d1d9">TCA: '+(ev.tca||'—')+'</div>'
+          +'<div style="font-size:10px;color:#c9d1d9">TCA: '+_esc(ev.tca||'—')+'</div>'
           +'<div style="display:flex;gap:8px;margin-top:2px">'
           +'<span style="color:'+(hi?'#FF5252':'#8b949e');
         html+=hi?';font-weight:bold':'';
         html+='">Pc '+pc.toExponential(2)+(hi?' ⚠':'')+'</span>'
           +'<span style="color:#8b949e">Miss '+parseFloat(ev.min_rng_km||0).toFixed(1)+' km</span>'
           +'</div>'
-          +(ev.sat2_name?'<div style="font-size:10px;color:#484f58">vs '+ev.sat2_name+'</div>':'')
+          +(ev.sat2_name?'<div style="font-size:10px;color:#484f58">vs '+_esc(ev.sat2_name)+'</div>':'')
           +'</div>';
       });
     } else {
@@ -1661,9 +1661,9 @@ function renderTrackPanel(){
     }else if(pos&&!pos.ok){
       posLine='⚠ '+(pos.error||'無位置資料');
     }
-    info.innerHTML='<div class="track-alias">'+alias+'</div>'
-      +'<div class="track-sub">'+sub+'</div>'
-      +(posLine?'<div class="track-pos">'+posLine+'</div>':'');
+    info.innerHTML='<div class="track-alias">'+_esc(alias)+'</div>'
+      +'<div class="track-sub">'+_esc(sub)+'</div>'
+      +(posLine?'<div class="track-pos">'+_esc(posLine)+'</div>':'');
 
     row.appendChild(cb); row.appendChild(dot); row.appendChild(info);
 
