@@ -30,6 +30,25 @@ H = {"bold": True, "color": NAVY}
 L, C = PP_ALIGN.LEFT, PP_ALIGN.CENTER
 
 
+def _sma_fix_notes():
+    """修正圖頁之圖註：由 gen_fig_sma_vs_events.py 輸出之 json 讀取各頁 L1 標記來源筆數。"""
+    import json as _json
+    d = Path(__file__).resolve().parent / "tasa_reply_20261126"
+    one = {x["name"]: x for x in _json.loads((d / "sma_vs_events.json").read_text(encoding="utf-8"))}
+    k = one["KUIPER-00188"]
+    head = (f"KUIPER-00188 之 {k['n_l1_flagged']} 個 L1 標記中，Δa 超過門檻 {k['n_flag_thr']} 個（實心）、P4 延伸 {k['n_flag_p4']} 個（淡紅）；"
+            "淡紅點位於黑線以下，仍屬同一件事件。P4 延伸為觸發點之後 2 筆，不論大小一併標記，以納入同一次機動之殘餘變化，不會單獨形成事件。")
+    rows = _json.loads((d / "sma_vs_events_tasa15.json").read_text(encoding="utf-8"))
+    pages = []
+    for i in range(0, len(rows), 4):
+        g = rows[i:i + 4]
+        t = {f: sum(x[f] for x in g) for f in ("n_l1_flagged", "n_flag_thr", "n_flag_di_de", "n_flag_p4", "n_flag_below_thr", "n_flag_below_5sigma")}
+        pages.append(f"本頁 L1 標記 {t['n_l1_flagged']} 筆：實心（Δa 超過門檻）{t['n_flag_thr']}、空心（Δi／Δe 超標）{t['n_flag_di_de']}、"
+                     f"淡紅（P4 延伸）{t['n_flag_p4']}；其中 {t['n_flag_below_thr']} 筆低於黑線、{t['n_flag_below_5sigma']} 筆低於 5σ。"
+                     "P4 延伸為觸發點之後 2 筆，不論大小一併標記；每件事件皆由實心或空心點觸發，不能只看 Δa。")
+    return head, pages
+
+
 def pic(s, name, x, y, w, h):
     """等比例縮放置入 (x, y, w, h) 方框內並置中。"""
     f = DOCS / name
@@ -354,16 +373,24 @@ def build():
 
     # 18a 半長軸變化與候選事件之關係
     s = frame(prs, "半長軸變化與候選事件之關係：5σ、20σ 不是事件門檻", 0)
-    pic(s, "tasa_reply_20261126/fig_sma_vs_events.png", 0.45, 0.92, 12.45, 5.78)
+    pic(s, "tasa_reply_20261126/fig_sma_vs_events_orig.png", 0.45, 0.92, 12.45, 5.78)
     note(s, "ICEYE-X33 之 6 次維持抬升（86–189 m）皆超過 5σ、最大一次超過 20σ，但未達 L1 有效門檻（約 1 km），不產生候選事件；"
             "KUIPER-00188 之降軌單步超過門檻，合併為 2 件 E2，其後維持期 0 件。同期 2026-05-18 至 08-16。", y=6.78)
+    # 前後對照：同一張圖，紅點依 L1 標記來源區分
+    fix_head, fix_pages = _sma_fix_notes()
+    s = frame(prs, "同一張圖，紅點依標記來源區分：不能只看 Δa", 0)
+    pic(s, "tasa_reply_20261126/fig_sma_vs_events.png", 0.45, 0.92, 12.45, 5.78)
+    note(s, fix_head, y=6.78)
 
     # 18a2 TASA 指定 15 顆衛星：半長軸變化與候選事件（2024-01-01 起，4 頁）
     for k in range(1, 5):
         s = frame(prs, f"TASA 指定 15 顆衛星：半長軸變化與候選事件（{k}／4）", 0)
-        pic(s, f"tasa_reply_20261126/fig_sma_vs_events_tasa15_p{k}.png", 0.4, 0.9, 12.55, 5.95)
+        pic(s, f"tasa_reply_20261126/fig_sma_vs_events_tasa15_p{k}_orig.png", 0.4, 0.9, 12.55, 5.95)
         note(s, "期間：2024-01-01（或首筆 TLE）至交付迄日；2026-11-26 已自 Space-Track 補齊 2024-01-01 起之 TLE。"
                 "超過 5σ、20σ 之單步不一定成為候選事件，須超過 L1 有效門檻（黑線）。", y=6.88)
+        s = frame(prs, f"TASA 指定 15 顆衛星（{k}／4）：紅點依標記來源區分", 0)
+        pic(s, f"tasa_reply_20261126/fig_sma_vs_events_tasa15_p{k}.png", 0.4, 0.9, 12.55, 5.95)
+        note(s, fix_pages[k - 1], y=6.88)
 
     # 18b App 重現一致性
     s = frame(prs, "App 逐顆查詢與交付報表之一致性", 0)

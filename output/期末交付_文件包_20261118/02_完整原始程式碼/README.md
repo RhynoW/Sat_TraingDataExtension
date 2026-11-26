@@ -4,6 +4,8 @@
 
 Written for: 承辦審查人員與後續維護工程師（需能在本包內重現測試與主要訓練流程）。
 
+> **2026-11-26 更新。** ① `maneuver_report_builder.satellite_name()` 修正：名稱欄改讀 `sat_n2yo_metadata.name_en`，並以 `raw_tle_archive` 最新 3LE 名稱補新編目衛星（原只查 `name` 欄而全數回傳 None，離線執行時 Starlink 被當成非 Starlink，ML／融合通道受限；線上 App 以 N2YO 名稱補上，不受影響）。② `maneuver_app_2026November.py` 同步 2026-11-19 之 StoryMap Case 1 更新（依期末報告 R7 流程）。③ 新增 TASA 指定 15 顆衛星之測試資料：`data/benchmark/tasa15_backfill/`（Space-Track gp_history 2024-01-01 至 2026-04-30 之 3LE，補齊本機缺漏）、`data/benchmark/tasa15_r7_delivery/r15.json`（原交付結果，2026-11-15）、`data/benchmark/tasa15_r7_backfill_20261126/r15.json`（補齊 TLE 後重產，期末報告 8.6 節）。偵測規則與模型未變動。
+>
 > **2026-11-18 更新為 R7 版。** 程式依報表版本 R7（2026-11-15）更新，與線上儀表板（HuggingFace Space `RhynoWu/maneuver-detection-i18n`）一致。R7 的主要變更：L1 改以 P2×P5×P6 有效門檻判定，P5 倍率上限 1.8；P3 停用；ΔΩ 標記移除；非 Starlink 衛星僅靠 ML 輔助達 E3 者改列 E2；低置信複核項合併為案件並新增 L2 統計變點補漏。訓練與測試資料集維持 2026-10-07 版未更動。
 
 ## 1. 內容
@@ -27,6 +29,7 @@ Written for: 承辦審查人員與後續維護工程師（需能在本包內重�
 | `models_plan_b/`、`models_fusion/`、`Orbital_Maneuver_V2/models/`、`Orbital_Maneuver_V2/models_meme*/` | 訓練完成之模型權重與門檻、特徵名稱（`l3_starlink.pkl` 為 2026-10-21 加入 B* 偏離特徵之重訓版） |
 | `f107_cache.csv` | F10.7 太陽通量快取，P5 門檻倍率使用 |
 | `data/benchmark/`、`data/meme_truth/`、`data/maneuvers/`、`data/tle_parquet/` 等 | 測試與訓練資料集（已篩選，見 MANIFEST.csv） |
+| `data/benchmark/tasa15_*` | TASA 指定 15 顆衛星：補齊之歷史 TLE（3LE）、原交付與補齊後重產之 R7 結果（r15.json，`maneuver_report_builder.build_report_data()` 輸出） |
 | `space_weather_ap.csv` | 太空天氣（Celestrak SW 格式），大氣阻力模組必需 |
 | `requirements*.txt` | Python 相依套件 |
 | `MANIFEST.csv` | 全部檔案清單、大小與 SHA-256 |
