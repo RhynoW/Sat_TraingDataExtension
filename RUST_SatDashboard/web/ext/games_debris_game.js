@@ -133,14 +133,14 @@
         var why = gens < 3 ? "<br>" + T("原因：初始碎片太少或模擬年數太短，碰撞還來不及一代接一代發生。增加碎片數、年數，或改用 ×10,000。") : "";
         return { ok: gens >= 3, stars: req.n_frag <= 100 ? 3 : req.n_frag <= 300 ? 2 : 1, msg: T("最多到第 <b>{0}</b> 代；初始碎片 {1} 個", gens, req.n_frag) + why };
       } },
-    m3: { name: "任務 3：守護者", goal: "Envisat 在<b>寫實 ×1</b> 下爆炸。用緩解決策卡（預算 3 點），讓 10 年的<b>第一代碎片近似風險降到不採取決策的對照組 81% 以下</b>（79% 兩星、77% 三星）。寫實模式下幾乎沒有連鎖，決策效果才量得準。以 5 個連續種子的中位數判定（每個種子都跑決策組與對照組，約需 1 分鐘）。",
+    m3: { name: "任務 3：守護者", goal: "Envisat 在<b>寫實 ×1</b> 下爆炸。用緩解決策卡（預算 3 點），讓 10 年的<b>第一代碎片期望碰撞降到不採取決策的對照組 81% 以下</b>（79% 兩星、77% 三星）。寫實模式下幾乎沒有連鎖，決策效果才量得準。以 5 個連續種子的中位數判定（每個種子都跑決策組與對照組，約需 1 分鐘）。",
       setup: function () { applyTpl("envisat"); $("d-acc").value = "1"; $("d-y").value = "10"; },
       judge: function (d, req, base) {
         if (!req.actions || !req.actions.length) return { ok: false, msg: T("至少要選一張決策卡。") };
         if (req.norad !== 27386 || req.orbit || req.n_frag < 1000) return { ok: false, msg: T("任務條件固定為 Envisat、1,000 個碎片（碎片越少，清理的 50 個佔比越大，比較就不公平）。重新選一次任務 3 會自動帶入。") };
         if (req.accel !== 1) return { ok: false, msg: T("需要寫實 ×1：誇張模式下連鎖是混沌的，一次擲骰不同就會讓整條連鎖改變，單次比較不可靠。") };
         if (!base || !base.ratios) return { pending: true };
-        // 判定：M3_SEEDS 個連續種子的共同隨機數比較（決策組與對照組同種子、同解體時刻、同取樣時刻），取第一代碎片近似風險比值的中位數
+        // 判定：M3_SEEDS 個連續種子的共同隨機數比較（決策組與對照組同種子、同解體時刻、同取樣時刻），取第一代碎片期望碰撞比值的中位數
         var rs = base.ratios.slice().sort(function (x, y) { return x - y; }), r = rs[Math.floor(rs.length / 2)];
         var why = "";
         if (r > 0.81) {
@@ -154,7 +154,7 @@
             "只靠一種措施效果有限，可以換個搭配試試。");
         }
         return { ok: r <= 0.81, stars: r <= 0.77 ? 3 : r <= 0.79 ? 2 : 1,
-          msg: T("第一代碎片近似風險為對照組的 <b>{0}%</b>（{1} 個種子 {2}–{3} 的中位數，範圍 {4}–{5}%）。", Math.round(r * 100), rs.length, req.seed, req.seed + rs.length - 1,
+          msg: T("第一代碎片期望碰撞為對照組的 <b>{0}%</b>（{1} 個種子 {2}–{3} 的中位數，範圍 {4}–{5}%）。", Math.round(r * 100), rs.length, req.seed, req.seed + rs.length - 1,
             Math.round(rs[0] * 100), Math.round(rs[rs.length - 1] * 100)) + "<span class='hint'>" + T("教學判定：種子數仍少，屬初步結果，不是統計結論。") + "</span>" + why + bestTip(req) +
             "<br>" + T("💡 即使三張卡都用上，通常也只能減少兩到三成：碎片一旦產生就很難收回，<b>預防解體（任務後處置、鈍化電池與殘餘推進劑）比事後清除有效得多</b>。") };
       } },  };
@@ -180,7 +180,7 @@
   // ── 成就（存在瀏覽器；無法存取時只在本頁有效）──────────────────────────
   var ACH = [
     ["gen2", "二次碰撞", "首次看到第 2 代碎片"], ["gen3", "連鎖反應", "觸發第 3 代碎片"], ["runaway", "失控增長", "模擬後段碎片仍淨增長：碰撞產生的碎片多於大氣清除"],
-    ["clean", "大氣清道夫", "期末碎片全數再入"], ["guard", "守護者", "寫實模式下，決策讓第一代碎片近似風險降到對照組 85% 以下（單一種子）"], ["history", "歷史學家", "試過全部 3 個歷史案例"],
+    ["clean", "大氣清道夫", "期末碎片全數再入"], ["guard", "守護者", "寫實模式下，決策讓第一代碎片期望碰撞降到對照組 85% 以下（單一種子）"], ["history", "歷史學家", "試過全部 3 個歷史案例"],
     ["m1", "任務 1", "完成自然清除"], ["m2", "任務 2", "完成連鎖觸發者"], ["m3", "任務 3", "完成守護者"],
   ];
   var got = {};
@@ -203,9 +203,9 @@
   var GEN_C = ["#8b949e", "#ffa657", "#ff7b72", "#f778ba", "#bc8cff", "#79c0ff", "#ffffff", "#ffffff"];
   function dash(d) {
     var R = 6378.137, s = d.summary, h = "";
-    // 1. 風險最高的目錄物件
+    // 1. 期望碰撞最高的目錄物件
     if (d.risk_top && d.risk_top.length) {
-      h += "<div style='margin-top:2px'>" + T("<b>風險最高的目錄物件</b>（被所有碎片撞上的累計期望次數，已除回誇張倍率）") + "</div><table class='kv'>" +
+      h += "<div style='margin-top:2px'>" + T("<b>期望碰撞最高的目錄物件</b>（被所有碎片撞上的累計期望次數，已除回誇張倍率）") + "</div><table class='kv'>" +
         d.risk_top.map(function (r) { return "<tr><td>" + (r.name || "—") + "</td><td>" + T("{0}，{1} km，{2} 次", T(r.kind), fmt(r.alt_km), r.expected_real < 0.001 ? r.expected_real.toExponential(1) : r.expected_real.toFixed(3)) + "</td></tr>"; }).join("") + "</table>";
     }
     // 2. 碰撞熱區高度帶（50 km 一帶）
@@ -306,12 +306,12 @@
           var ex = x.summary.expected_collisions;
           return "<tr><td>" + name + "</td><td>" + (ex < 10 ? ex.toFixed(2) : fmt(ex)) + "</td><td>" + T("{0} 次", x.summary.collisions) + "</td><td>" + fmt(x.summary.fragments_total) + "</td><td>" + fmt(x.summary.alive_end) + "</td><td>" + (g1 < 0.01 ? g1.toExponential(1) : g1.toFixed(2)) + "</td></tr>";
         };
-        // 比較指標：第一代碎片近似風險（只計第一代碎片與目錄物件），排除寫實模式偶發擲中產生的後代碎片雜訊
+        // 比較指標：第一代碎片期望碰撞（只計第一代碎片與目錄物件），排除寫實模式偶發擲中產生的後代碎片雜訊
         var r = d.summary.expected_gen1_real / Math.max(1e-12, b.summary.expected_gen1_real);
         var rt = d.summary.expected_collisions / Math.max(1e-12, b.summary.expected_collisions);
-        $("d-compare").innerHTML = "<div style='margin-top:6px'><b>" + T("🃏 決策效果（與對照組比較）") + "</b></div><table class='kv'><tr><td></td><td>" + T("累計期望碰撞") + "</td><td>" + T("擲中") + "</td><td>" + T("碎片總數") + "</td><td>" + T("期末在軌") + "</td><td>" + T("第一代近似風險") + "</td></tr>" +
-          row(T("採取決策"), d) + row(T("對照組"), b) + "</table><div>" + T("第一代碎片近似風險為對照組的 <b>{0}%</b>（累計期望碰撞為對照組的 {1}%）。", Math.round(r * 100), Math.round(rt * 100)) +
-          T("判斷效果用第一代近似風險：它是期望值、對亂數較不敏感，也不受偶發碰撞產生的後代碎片影響；擲中次數受運氣影響，換幾個種子再比較更可靠。") + "</div>";
+        $("d-compare").innerHTML = "<div style='margin-top:6px'><b>" + T("🃏 決策效果（與對照組比較）") + "</b></div><table class='kv'><tr><td></td><td>" + T("累計期望碰撞") + "</td><td>" + T("擲中") + "</td><td>" + T("碎片總數") + "</td><td>" + T("期末在軌") + "</td><td>" + T("第一代期望碰撞") + "</td></tr>" +
+          row(T("採取決策"), d) + row(T("對照組"), b) + "</table><div>" + T("第一代碎片期望碰撞為對照組的 <b>{0}%</b>（累計期望碰撞為對照組的 {1}%）。", Math.round(r * 100), Math.round(rt * 100)) +
+          T("判斷效果用第一代期望碰撞：它是期望值、對亂數較不敏感，也不受偶發碰撞產生的後代碎片影響；擲中次數受運氣影響，換幾個種子再比較更可靠。") + "</div>";
         if (req.accel === 1 && r <= 0.85 && b.summary.expected_collisions > 0) { if (unlock("guard")) fresh.push("守護者"); }
         if (mk !== "m3") { finish(b); return; }
         // 任務 3：再跑其餘種子（決策組＋對照組），以比值中位數判定

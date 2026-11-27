@@ -306,16 +306,24 @@ fn area(l: f64) -> f64 {
 
 struct Frag { l: f64, am: f64, mass: f64, dv: V3 }
 
+/// SBM 的最小特徵長度 Lc 與碎片數：給碎片數時反推 Lc；否則由上限 cap 反推（不小於 10 cm）。
 /// collision=false：爆炸（N=6·Lc^−1.6）；true：碰撞（N=0.1·M^0.75·Lc^−1.71，M 為參考質量）
-/// dv_k：碰撞模型 log₁₀Δv 常態分布的截斷點（μ + kσ 以上重抽）；INFINITY = 原始 SBM。爆炸模型一律不截斷
-fn breakup(rng: &mut Rng, n_target: Option<usize>, collision: bool, m_ref: f64, m_total: f64, l_max: f64, cap: f64, dv_k: f64) -> Vec<Frag> {
+fn breakup_size(n_target: Option<usize>, collision: bool, m_ref: f64, cap: f64) -> (f64, usize) {
     let (k, b) = if collision { (0.1 * m_ref.powf(0.75), 1.71) } else { (6.0, 1.6) };
-    let dv_k = if collision { dv_k } else { f64::INFINITY };
     let lc = match n_target {
         Some(n) => (n as f64 / k).powf(-1.0 / b),
         None => (cap / k).powf(-1.0 / b).max(0.1),
     };
-    let n = (k * lc.powf(-b)).round().clamp(1.0, cap.max(1.0)) as usize;
+    (lc, (k * lc.powf(-b)).round().clamp(1.0, cap.max(1.0)) as usize)
+}
+
+/// dv_k：碰撞模型 log₁₀Δv 常態分布的截斷點（μ + kσ 以上重抽）；INFINITY = 原始 SBM。爆炸模型一律不截斷。
+/// 抽 n 個尺寸 ≥ lc 的碎片。rescale = true 時把質量縮放到 m_total（預設；A/M 依面積重算），
+/// false 時保留 SBM 抽樣的質量與 A/M（驗證用，量化質量縮放對 A/M 與衰減的影響）。兩者都扣掉質量加權平均 Δv（動量守恆）
+#[allow(clippy::too_many_arguments)]
+fn sample_frags(rng: &mut Rng, n: usize, lc: f64, collision: bool, m_total: f64, l_max: f64, dv_k: f64, rescale: bool) -> Vec<Frag> {
+    let b = if collision { 1.71 } else { 1.6 };
+    let dv_k = if collision { dv_k } else { f64::INFINITY };
     let lmax = l_max.max(lc * 1.01);
     let pmin = (lmax / lc).powf(-b);
     let mut fr: Vec<Frag> = (0..n)
@@ -339,11 +347,16 @@ fn breakup(rng: &mut Rng, n_target: Option<usize>, collision: bool, m_ref: f64, 
         .collect();
     // 質量守恆：縮放到總和 = 母體質量（A/M 跟著改，保持面積）；動量守恆：扣掉質量加權平均 Δv
     let ms: f64 = fr.iter().map(|f| f.mass).sum();
-    let s = m_total / ms.max(1e-9);
-    for f in fr.iter_mut() {
-        f.mass *= s;
-        f.am = area(f.l) / f.mass;
-    }
+    let m_sum = if rescale {
+        let s = m_total / ms.max(1e-9);
+        for f in fr.iter_mut() {
+            f.mass *= s;
+            f.am = area(f.l) / f.mass;
+        }
+        m_total
+    } else {
+        ms.max(1e-9)
+    };
     let mut p = [0.0; 3];
     for f in &fr {
         for k in 0..3 {
@@ -352,7 +365,7 @@ fn breakup(rng: &mut Rng, n_target: Option<usize>, collision: bool, m_ref: f64, 
     }
     for f in fr.iter_mut() {
         for k in 0..3 {
-            f.dv[k] -= p[k] / m_total;
+            f.dv[k] -= p[k] / m_sum;
         }
     }
     fr
@@ -371,6 +384,7 @@ struct Obj {
     name: Option<String>,
     fail_t: f64,  // 有效載荷失效時刻（秒；INFINITY = 一直維持軌道）：之後依 am_eol 衰減、不再避碰
     am_eol: f64,
+    norad: u32,   // 目錄物件的 NORAD 編號（碎片為 0；診斷輸出用）
 }
 
 fn cat_props(purpose: &str) -> (f64, f64, u8) {
@@ -450,6 +464,51 @@ pub struct BreakupReq {
     pub rho_scale: Option<f64>,
     /// 驗證用：固定 Ap（不隨月份變化；v0.1.18 以前為 15）
     pub ap_fixed: Option<f64>,
+    /// 驗證用（v0.1.20，S1 審查）：每步快照數（未給為 3；1–50）
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub snaps: Option<usize>,
+    /// 驗證用：篩選半徑 d（km；未給為 50；5–200）
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub screen_km: Option<f64>,
+    /// 驗證用：時間步倍率（前 30 天每天、之後 5／10／30 天都乘上此值；未給為 1；0.25–4）
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dt_scale: Option<f64>,
+    /// 驗證用：無回饋基線——只累加 λ，不擲骰（沒有碰撞、不刪除物件、不產生後代）
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub no_feedback: bool,
+    /// 驗證用：碰撞擲骰改用「種子＋時間步＋快照＋配對」決定的亂數，決策移除物件不會改變其他配對的擲骰（預設沿用主亂數流）
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub rng_keyed: bool,
+    /// 驗證用：輸出診斷（各目錄物件與第一代碎片之間的累計 λ）
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub diag: bool,
+    /// 驗證用：計算時間上限（秒；未給為 90；最多 3600）。超過時提前結束，summary.timed_out = true
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub max_s: Option<f64>,
+    /// 碰撞碎片的速度基準（外部審查 2.1）："parent"（預設）＝各母體的碎片沿用各自母體速度；
+    /// "cm"＝完全解體時全部碎片沿用兩者的質心速度（v0.1.35 以前的作法）
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub frame: Option<String>,
+    /// 非完全解體的拋出質量（外部審查 2.3；都不是 SBM 標準）："edu"（預設）＝min(m小·v²/100, m大/2)；
+    /// "fraction"＝目標質量 × ejecta_frac；"none"＝不產生碎片，只移除撞擊物、目標標記受損
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ejecta: Option<String>,
+    /// ejecta = "fraction" 時的比例（0–0.5；未給為 0.01）
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ejecta_frac: Option<f64>,
+    /// 驗證用（外部審查 3.1）：false 時不把碎片質量縮放到母體質量，保留 SBM 抽樣的 A/M
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mass_rescale: Option<bool>,
+}
+
+/// 依（種子、時間步、快照、配對）決定的均勻亂數（rng_keyed 用）
+fn keyed_u(seed: u64, step: u64, k: usize, a: usize, b: usize) -> f64 {
+    let mut r = Rng(seed ^ 0xA076_1D64_78BD_642F);
+    for x in [step, k as u64, a as u64, b as u64] {
+        r.0 ^= x.wrapping_mul(0xD1B5_4A32_D192_ED03);
+        r.next();
+    }
+    r.next()
 }
 
 /// 快取鍵的模型版本：程式版本＋太陽活動與密度表內容的雜湊（更新資料或重新建置後，舊結果不會再命中）
@@ -542,6 +601,15 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
     };
     let rho_scale = rq.rho_scale.unwrap_or(1.0).clamp(0.25, 4.0);
     let dv_k = rq.dv_sigma_max.map(|k| k.clamp(0.5, 10.0)).unwrap_or(DV_SIGMA_MAX);
+    let frame_cm = rq.frame.as_deref() == Some("cm");
+    let ejecta = match rq.ejecta.as_deref() { Some("none") => "none", Some("fraction") => "fraction", _ => "edu" };
+    let ejecta_frac = rq.ejecta_frac.unwrap_or(0.01).clamp(0.0, 0.5);
+    let rescale = rq.mass_rescale.unwrap_or(true);
+    let ks = rq.snaps.unwrap_or(3).clamp(1, 50);
+    let screen_d = rq.screen_km.unwrap_or(SCREEN_D).clamp(5.0, 200.0);
+    let dt_scale = rq.dt_scale.unwrap_or(1.0).clamp(0.25, 4.0);
+    let max_s = rq.max_s.unwrap_or(90.0).clamp(1.0, 3600.0);
+    let mut timed_out = false;
     let mut knots: Vec<Value> = Vec::new();
     let mut knot_a: Vec<(f64, usize)> = Vec::new();   // 每個碎片上一筆節點的半長軸與節點數
     let mut payload_failed = 0usize;
@@ -574,7 +642,7 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
                 }
                 _ => (f64::INFINITY, 0.0),
             };
-            Some(Obj { el, r_km: rk, mass: m, am, gen: 0, kind, alive: true, death: -1.0, name: Some(s.name.clone()), fail_t, am_eol })
+            Some(Obj { el, r_km: rk, mass: m, am, gen: 0, kind, alive: true, death: -1.0, name: Some(s.name.clone()), fail_t, am_eol, norad: s.norad })
         })
         .collect();
     let mut objs: Vec<Obj> = cat_objs.into_iter().flatten().collect();
@@ -598,7 +666,7 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
             let id = objs.len() - n_cat;
             frag_out.push(json!([id, t, gen, f.l, f.am, el.a, el.e, el.i, el.raan, el.argp, el.m0, el.raan_dot, el.argp_dot, el.m_dot]));
             objs.push(Obj { el, r_km: f.l / 2000.0, mass: f.mass, am: f.am, gen, kind: 2, alive: !reentered, death: if reentered { t } else { -1.0 }, name: None,
-                fail_t: f64::INFINITY, am_eol: 0.0 });
+                fail_t: f64::INFINITY, am_eol: 0.0, norad: 0 });
             n += 1;
         }
         n
@@ -606,7 +674,10 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
 
     // 第一次解體
     let l_max = (mass / 100.0).cbrt().clamp(0.5, 10.0);
-    let fr = breakup(&mut rng, Some(rq.n_frag), rq.collision, mass, mass, l_max, 2000.0, dv_k);
+    let fr = {
+        let (lc, n) = breakup_size(Some(rq.n_frag), rq.collision, mass, 2000.0);
+        sample_frags(&mut rng, n, lc, rq.collision, mass, l_max, dv_k, rescale)
+    };
     let n0 = spawn(&mut objs, &mut frag_out, fr, pr, pv, 0.0, 1, &mut capped);
     events.push(json!({"t": 0.0, "kind": if rq.collision { "collision" } else { "explosion" }, "a": pname, "b": null,
         "n_new": n0, "pos": pr, "catastrophic": true, "gen": 1}));
@@ -622,16 +693,20 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
 
     // 時間步：前 30 天每天、之後依總年數 5／10／30 天；每步 3 個快照（隨機時刻）
     let total_s = years * 365.25 * 86400.0;
-    let late_dt: f64 = (if years <= 5.0 { 5.0 } else if years <= 15.0 { 10.0 } else { 30.0 }) * 86400.0;
+    let late_dt: f64 = (if years <= 5.0 { 5.0 } else if years <= 15.0 { 10.0 } else { 30.0 }) * 86400.0 * dt_scale;
     let mut t = 0.0;
     let mut series: Vec<Value> = Vec::new();
     let mut expected = 0.0;
-    let mut expected_g1 = 0.0; // 只計第一代碎片與目錄物件之間（不含加速產生的後代）
+    let mut expected_g1 = 0.0; // 兩端都是第 0、1 代（目錄物件或第一代碎片）的配對：第一代×目錄＋第一代×第一代
+    let (mut exp_g1_cat, mut exp_g1_g1) = (0.0, 0.0); // 上式的兩個分量
+    let mut cat_g1: HashMap<usize, f64> = HashMap::new(); // 診斷：各目錄物件與第一代碎片之間的累計 λ
+    let mut n_pair_terms = 0usize;
+    let mut step: u64 = 0;
     let mut n_coll = 0usize;
     let mut risk: HashMap<usize, f64> = HashMap::new(); // 目錄物件累計期望碰撞
     let mut frag_risk: HashMap<usize, f64> = HashMap::new(); // 碎片累計期望碰撞（清理任務排序用）
-    let d2 = SCREEN_D * SCREEN_D;
-    let chord = 4.0 * SCREEN_D / 3.0;
+    let d2 = screen_d * screen_d;
+    let chord = 4.0 * screen_d / 3.0;
     let alive_counts = |objs: &Vec<Obj>| -> Vec<usize> {
         let mut g = vec![0usize; 8];
         for o in objs.iter().skip(n_cat).filter(|o| o.alive) {
@@ -684,13 +759,15 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
                     let cand = idx.len();
                     let took: Vec<usize> = idx.into_iter().take(n).map(|x| x.0).collect();
                     for &i in &took { objs[i].alive = false; objs[i].death = t; }
+                    let removed_norad: Vec<u32> = took.iter().map(|&i| objs[i].norad).collect();
+                    let removed_mass: f64 = took.iter().map(|&i| objs[i].mass).sum();
                     let msg = if took.len() < n {
                         format!("移除廢棄火箭體（教學簡化）：與母體軌道面相近、高度 ±100 km 內只找到 {} 個候選，全部移除", took.len())
                     } else {
                         format!("移除廢棄火箭體（教學簡化）：在 {} 個符合條件的候選中，移除最接近的 {} 個", cand, took.len())
                     };
                     events.push(json!({"t": t, "kind": "derelict", "a": msg, "b": null, "candidates": cand,
-                        "n_new": 0, "removed": took.len(), "pos": pr, "catastrophic": false, "gen": 0}));
+                        "n_new": 0, "removed": took.len(), "removed_norad": removed_norad, "mass_kg": removed_mass, "pos": pr, "catastrophic": false, "gen": 0}));
                 }
                 "avoid" => {
                     avoid_from = avoid_from.min(t);
@@ -706,11 +783,10 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
                 _ => {}
             }
         }
-        let dt: f64 = (if t < 30.0 * 86400.0 { 86400.0 } else { late_dt }).min(total_s - t);
-        let ks = 3;
+        let dt: f64 = (if t < 30.0 * 86400.0 { 86400.0 * dt_scale } else { late_dt }).min(total_s - t);
         let avoid_on = t >= avoid_from;
-        let mut cand: Vec<(usize, usize, f64, f64)> = Vec::new(); // (i, j, λ, 相對速度)
-        for _ in 0..ks {
+        let mut cand: Vec<(usize, usize, f64, f64, usize)> = Vec::new(); // (i, j, λ, 相對速度, 快照序號)
+        for kk in 0..ks {
             let ts = t + rng_snap.next() * dt;
             let states: Vec<Option<(V3, V3)>> = objs.par_iter().map(|o| o.alive.then(|| o.el.rv(ts))).collect();
             let mut pts = Vec::with_capacity(objs.len());
@@ -726,7 +802,7 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
             }
             let tree: ImmutableKdTree<f64, u64, 3, 32> = ImmutableKdTree::new_from_slice(&pts);
             let q: Vec<usize> = (0..pts.len()).filter(|&k| map[k] >= n_cat).collect();
-            let found: Vec<(usize, usize, f64, f64)> = q
+            let found: Vec<(usize, usize, f64, f64, usize)> = q
                 .par_iter()
                 .flat_map_iter(|&ka| {
                     let a = map[ka];
@@ -747,17 +823,25 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
                         if avoid_on && b < n_cat && objs[b].kind == 0 && objs[b].fail_t > ts && objs[a].r_km * 2000.0 >= 0.1 {
                             lam *= avoid_k;
                         }
-                        Some((a, b, lam, vr))
+                        Some((a, b, lam, vr, kk))
                     })
                 })
                 .collect();
             cand.extend(found);
         }
-        cand.sort_by(|x, y| (x.0, x.1).cmp(&(y.0, y.1)));
-        for (a, b, lam, vr) in cand {
+        // 同一配對在不同快照各成一項、各自擲骰（快照序號遞增，與 v0.1.19 的穩定排序順序相同）
+        cand.sort_by(|x, y| (x.0, x.1, x.4).cmp(&(y.0, y.1, y.4)));
+        n_pair_terms += cand.len();
+        for (a, b, lam, vr, kk) in cand {
             expected += lam;
             if objs[a].gen <= 1 && objs[b].gen <= 1 {
                 expected_g1 += lam;
+                if b < n_cat {
+                    exp_g1_cat += lam;
+                    if rq.diag { *cat_g1.entry(b).or_insert(0.0) += lam; }
+                } else {
+                    exp_g1_g1 += lam;
+                }
             }
             if b < n_cat {
                 *risk.entry(b).or_insert(0.0) += lam;
@@ -765,7 +849,11 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
                 *frag_risk.entry(b).or_insert(0.0) += lam;
             }
             *frag_risk.entry(a).or_insert(0.0) += lam;
-            if !objs[a].alive || !objs[b].alive || rng.next() >= 1.0 - (-lam).exp() {
+            if rq.no_feedback || !objs[a].alive || !objs[b].alive {
+                continue;
+            }
+            let u = if rq.rng_keyed { keyed_u(seed, step, kk, a, b) } else { rng.next() };
+            if u >= 1.0 - (-lam).exp() {
                 continue;
             }
             // 碰撞：以較重者為目標，能量質量比 > 40 J/g 為完全解體
@@ -777,28 +865,66 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
             let (rb, vb) = objs[big].el.rv(tc);
             let (_, vs) = objs[small].el.rv(tc);
             let m_ref = if cat { mb + ms } else { ms * vr * vr };
-            let m_tot = if cat { mb + ms } else { ms + (m_ref / 100.0).min(mb * 0.5) };
-            let vcm = if cat {
-                [(mb * vb[0] + ms * vs[0]) / (mb + ms), (mb * vb[1] + ms * vs[1]) / (mb + ms), (mb * vb[2] + ms * vs[2]) / (mb + ms)]
+            // 拋出質量（目標被打掉的部分）：完全解體＝整個目標；非完全解體依 ejecta 設定（都不是 SBM 標準，見外部審查 2.3）
+            let m_ej = if cat {
+                mb
             } else {
-                vb
+                match ejecta { "none" => 0.0, "fraction" => mb * ejecta_frac, _ => (m_ref / 100.0).min(mb * 0.5) }
             };
+            let m_tot = ms + m_ej;
             let gen = objs[a].gen.max(objs[b].gen) + 1;
             let lmax = (m_tot / 100.0).cbrt().clamp(0.1, 10.0);
-            let fr = breakup(&mut rng, None, true, m_ref, m_tot, lmax, PER_EVENT_MAX, dv_k);
+            // (碎片, 基準速度) 各部分：
+            //  cm：完全解體以質心速度、非完全解體以目標速度，一次產生（v0.1.35 以前的作法，亂數序列相同）
+            //  parent：撞擊物的碎片沿用撞擊物速度、目標（或其被打掉的部分）沿用目標速度；碎片數依質量比例分配，Lc 相同
+            let parts: Vec<(Vec<Frag>, V3)> = if !cat && ejecta == "none" {
+                vec![]
+            } else if frame_cm {
+                let vcm = if cat {
+                    [(mb * vb[0] + ms * vs[0]) / (mb + ms), (mb * vb[1] + ms * vs[1]) / (mb + ms), (mb * vb[2] + ms * vs[2]) / (mb + ms)]
+                } else {
+                    vb
+                };
+                let (lc, n) = breakup_size(None, true, m_ref, PER_EVENT_MAX);
+                vec![(sample_frags(&mut rng, n, lc, true, m_tot, lmax, dv_k, rescale), vcm)]
+            } else {
+                let (lc, n) = breakup_size(None, true, m_ref, PER_EVENT_MAX);
+                let n_s = ((n as f64) * ms / m_tot).round() as usize;
+                let n_b = n.saturating_sub(n_s);
+                let mut v = Vec::new();
+                if n_b > 0 && m_ej > 0.0 {
+                    v.push((sample_frags(&mut rng, n_b, lc, true, m_ej, (m_ej / 100.0).cbrt().clamp(0.1, 10.0), dv_k, rescale), vb));
+                }
+                if n_s > 0 {
+                    v.push((sample_frags(&mut rng, n_s, lc, true, ms, (ms / 100.0).cbrt().clamp(0.1, 10.0), dv_k, rescale), vs));
+                }
+                v
+            };
             objs[small].alive = false;
             objs[small].death = tc;
             if cat {
                 objs[big].alive = false;
                 objs[big].death = tc;
             } else {
-                objs[big].mass -= m_tot - ms;
+                objs[big].mass -= m_ej;
             }
             let nm = |o: &Obj| o.name.clone().unwrap_or_else(|| format!("第 {} 代碎片", o.gen));
-            let n_new = spawn(&mut objs, &mut frag_out, fr, rb, vcm, tc, gen, &mut capped);
+            let mut n_new = 0;
+            for (fr, v0) in parts {
+                n_new += spawn(&mut objs, &mut frag_out, fr, rb, v0, tc, gen, &mut capped);
+            }
             n_coll += 1;
+            let reason = if cat {
+                format!("EMR {emr:.0} J/g > 40：完全解體，兩者都毀")
+            } else if ejecta == "none" {
+                format!("EMR {emr:.1} J/g ≤ 40：非完全解體；撞擊物毀、目標標記受損（拋出質量設定：不產生碎片）")
+            } else {
+                format!("EMR {emr:.1} J/g ≤ 40：非完全解體；撞擊物毀、目標被打掉 {m_ej:.2} kg（拋出質量為教學假設，非 SBM 標準）")
+            };
             events.push(json!({"t": tc, "kind": "collision", "a": nm(&objs[big]), "b": nm(&objs[small]),
-                "v_rel": vr, "emr": emr, "catastrophic": cat, "n_new": n_new, "pos": rb, "gen": gen}));
+                "v_rel": vr, "emr": emr, "catastrophic": cat, "n_new": n_new, "pos": rb, "gen": gen,
+                "m_proj": ms, "m_target": mb, "m_eject": m_ej, "m_target_after": if cat { 0.0 } else { mb - m_ej },
+                "frame": if frame_cm { "cm" } else { "parent" }, "reason": reason}));
         }
         // 阻力衰減與再入：碎片依 A/M，目錄物件依 TLE 的 B*（am = 0 者不衰減）；密度依時間步中點的 F10.7
         let t_end = t + dt;
@@ -828,8 +954,10 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
         let pl_failed = objs.iter().take(n_cat).filter(|o| o.kind == 0 && o.fail_t <= t_end).count();
         if pl_failed > 0 { payload_failed = pl_failed; }
         t = t_end;
+        step += 1;
         series.push(json!({"t": t, "alive": alive_counts(&objs), "expected": expected, "collisions": n_coll, "cat_gone": cat_gone(&objs), "f107": fstep.map(|x| x.0), "ap": fstep.map(|x| x.1)}));
-        if t_start.elapsed().as_secs() > 90 {
+        if t_start.elapsed().as_secs_f64() > max_s {
+            timed_out = t < total_s;
             break;
         }
     }
@@ -859,7 +987,19 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
                     // 只計第一代碎片與目錄物件：較接近「沒有加速」的寫實期望碰撞
                     "expected_gen1_real": expected_g1 / accel,
                     "cat_reentered": cat_gone(&objs), "capped": capped,
-                    "payload_life": payload_life, "payload_failed": payload_failed},
+                    "payload_life": payload_life, "payload_failed": payload_failed,
+                    // v0.1.20：第一代近似風險的兩個分量（第一代×目錄、第一代×第一代），與驗證設定
+                    "expected_g1_cat_real": exp_g1_cat / accel, "expected_g1_g1_real": exp_g1_g1 / accel,
+                    "pair_terms": n_pair_terms, "timed_out": timed_out,
+                    "snaps": ks, "screen_km": screen_d, "dt_scale": dt_scale, "no_feedback": rq.no_feedback, "rng_keyed": rq.rng_keyed,
+                    // 外部審查 8.2：本次使用的模型設定（介面以此標示信心標籤）
+                    "model": {"frame": if frame_cm { "cm" } else { "parent" }, "dv_sigma_max": dv_k, "dv_truncated": dv_k < 5.0,
+                              "ejecta": ejecta, "ejecta_frac": ejecta_frac, "mass_rescale": rescale}},
+        "diag": if rq.diag {
+            let mut v: Vec<(usize, f64)> = cat_g1.into_iter().collect();
+            v.sort_by(|x, y| y.1.partial_cmp(&x.1).unwrap_or(std::cmp::Ordering::Equal));
+            json!({"cat_g1": v.iter().map(|&(i, l)| json!([objs[i].norad, objs[i].kind, l / accel])).collect::<Vec<_>>()})
+        } else { Value::Null },
         "knots": knots,
         "solar": {
             "mode": mode, "epoch": epoch.format("%Y-%m-%d").to_string(),
@@ -873,4 +1013,41 @@ pub fn run(rq: &BreakupReq, years: f64, accel: f64, mass: f64, t0: DateTime<Utc>
         },
         "elapsed_s": elapsed, "cached": false, "model_version": model_version(),
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sample_conservation() {
+        // 質量縮放（預設）：總質量等於母體、動量守恆；不縮放：保留抽樣質量，動量仍守恆
+        for rescale in [true, false] {
+            let mut rng = Rng(7);
+            let (lc, n) = breakup_size(None, true, 1460.0, 600.0);
+            let fr = sample_frags(&mut rng, n, lc, true, 560.0, 1.0, DV_SIGMA_MAX, rescale);
+            assert_eq!(fr.len(), n);
+            let m: f64 = fr.iter().map(|f| f.mass).sum();
+            if rescale { assert!((m - 560.0).abs() < 1e-6, "{m}"); }
+            for k in 0..3 {
+                let p: f64 = fr.iter().map(|f| f.mass * f.dv[k]).sum();
+                assert!(p.abs() < 1e-9 * m.max(1.0), "{p}");
+            }
+            assert!(fr.iter().all(|f| f.l >= lc && f.am > 0.0 && f.am.is_finite()));
+        }
+        // 不縮放時 A/M 依 SBM 分布，縮放後（質量變大）A/M 變小
+        let am = |rescale| { let mut r = Rng(7); let (lc, n) = breakup_size(None, true, 1460.0, 600.0);
+            let f = sample_frags(&mut r, n, lc, true, 1460.0, 1.0, DV_SIGMA_MAX, rescale);
+            f.iter().map(|x| x.am.ln()).sum::<f64>() / f.len() as f64 };
+        assert!(am(true) < am(false));
+    }
+
+    #[test]
+    fn size_from_cap() {
+        // 由上限反推的 Lc 不小於 10 cm；給碎片數時碎片數正確
+        let (lc, n) = breakup_size(None, true, 1.0, 600.0);
+        assert!(lc >= 0.1 && n >= 1);
+        let (_, n) = breakup_size(Some(1647), true, 2200.0, 2000.0);
+        assert_eq!(n, 1647);
+    }
 }

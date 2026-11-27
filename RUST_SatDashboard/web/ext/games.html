@@ -215,9 +215,10 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div id="tab-debris" hidden>
     <h3>💥 衛星解體與碎片連鎖</h3>
     <div class="hint">選一顆衛星讓它爆炸（或被撞），碎片依 NASA 標準解體模型產生，再看這些碎片會不會撞上其他物件、引發下一代碎片（凱斯勒效應）。</div>
+    <div class="hint" id="d-disclaimer" style="color:#d29922">⚠ 本模擬為教學與情境探索用的碎片產生與連鎖模型：輸出反映模型假設、參數與亂數抽樣，不是對真實太空碎片環境的預測；未完成跨事件驗證與不確定性量化前，不應用於碰撞機率、任務風險、保險、法規遵循或營運決策。</div>
     <div class="row"><label>任務</label><select id="d-mission">
       <option value="">自由實驗</option><option value="m1">任務 1：自然清除（5 年內碎片減半）</option>
-      <option value="m2">任務 2：連鎖觸發者（觸發第 3 代碎片）</option><option value="m3">任務 3：守護者（用決策降低碰撞風險）</option></select></div>
+      <option value="m2">任務 2：連鎖觸發者（觸發第 3 代碎片）</option><option value="m3">任務 3：守護者（用決策降低期望碰撞）</option></select></div>
     <div id="d-mission-card" class="coach" hidden></div>
     <div class="row"><label>情境</label><select id="d-tpl">
       <option value="">自訂（選目錄中的衛星）</option><option value="envisat">Envisat 電池爆炸（假想，770 km）</option>
@@ -244,6 +245,11 @@ button.flash{animation:flash 1s ease-in-out 4}
     <div class="row"><label title="有效載荷（在軌衛星）任務結束後是否失效、開始受大氣拖曳">在軌衛星</label><select id="d-plife"><option value="" selected>維持軌道（保守假設）</option>
       <option value="5">平均 5 年後陸續失效</option><option value="10">平均 10 年後陸續失效</option></select></div>
     <div class="hint" id="d-plife-note">保守假設：在軌衛星一直維持軌道、持續避碰。選「陸續失效」時，每顆衛星在 0 到 2 倍平均壽命之間的某個時刻失效，之後依 TLE 阻力項衰減、也不再避碰（未計任務後主動離軌）。</div>
+    <details style="margin:6px 0"><summary style="cursor:pointer">⚙ 進階模型選項（外部審查建議的可選假設）</summary>
+    <div class="row"><label title="每塊碎片的速度以哪個速度為基準">碎片速度基準</label><select id="d-frame"><option value="parent" selected>各自母體（符合 Iridium–Cosmos 觀測）</option><option value="cm">共同質心（理想化，v0.1.35 以前的作法）</option></select></div>
+    <div class="row"><label title="碰撞模型的 Δv 分布">Δv 分布</label><select id="d-dvm"><option value="10" selected>SBM 原始（不截斷）</option><option value="1">Cosmos 1408 校準（截斷 μ+1σ 以上）</option></select></div>
+    <div class="row"><label title="能量質量比 ≤ 40 J/g 的碰撞，目標被打掉多少質量">非完全解體拋出質量</label><select id="d-ejecta"><option value="edu" selected>教學假設 min(m小·v²/100, m大/2)</option><option value="fraction">固定比例：目標質量的 1%</option><option value="none">不產生碎片（只標記受損）</option></select></div>
+    <div class="hint">三項都會影響碎片的軌道、壽命與連鎖結果。Δv 截斷只用 Cosmos 1408 單一事件校準；非完全解體的拋出質量都不是 NASA 標準解體模型的定義。結果摘要會標示本次使用的設定。</div></details>
     <h3>🃏 緩解決策（選用，預算 3 點）</h3>
     <div id="d-cards"></div>
     <div class="row act"><label>亂數種子</label><input id="d-seed" type="number" value="7" min="1" step="1"><button class="go" id="d-run">引爆</button></div>
@@ -254,15 +260,15 @@ button.flash{animation:flash 1s ease-in-out 4}
     <h3>碎片數與碰撞次數（對數）</h3>
     <canvas id="d-chart" width="760" height="300" style="width:100%;background:#0b1622;border:1px solid var(--line);border-radius:6px"></canvas>
     <div class="hint" id="d-legend" style="font-size:12px;line-height:1.9"></div>
-    <h3>📊 風險儀表板</h3>
-    <div id="d-dash" class="hint">引爆後顯示：風險最高的目錄物件、碰撞熱區高度帶、各代碎片比例、累計再入。</div>
+    <h3>📊 碰撞指標儀表板</h3>
+    <div id="d-dash" class="hint">引爆後顯示：期望碰撞最高的目錄物件、碰撞熱區高度帶、各代碎片比例、累計再入。</div>
     <h3>事件（碰撞與決策）</h3>
     <div id="d-ev" class="hint"></div>
     <h3>🏅 成就</h3>
     <div id="d-ach" class="hint"></div>
     <label class="chk"><input type="checkbox" id="d-bg">顯示目錄背景（灰點，瀏覽器端 SGP4）</label>
     <details id="collide-wrap" style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px"><summary style="cursor:pointer;font-weight:600">💫 兩顆衛星相撞：接近角與碎片軌道分布</summary><div id="collide-panel"></div></details>
-    <div class="hint" style="margin-top:8px">模型：NASA 標準解體模型（碎片數由尺寸冪律反推最小尺寸；面積質量比、Δv 依模型分布抽樣；質量與動量守恆）。傳播用克卜勒根數＋J2 長期項；碎片依面積質量比、目錄中的火箭體與碎片依 TLE 阻力項 B* 換算的面積質量比，以 Vallado 指數大氣衰減，近地點低於 120 km 視為再入（有效載荷假設會維持軌道，不衰減）。碰撞以 KD-tree 快照估計：配對碰撞率＝相對速度÷(4d/3)×(R₁+R₂)²/d²；能量質量比 > 40 J/g 為完全解體。目錄物件的尺寸與質量依類別取代表值。<b>碰撞誇張倍率</b>只放大碰撞截面；判讀真實風險請看「第一代碎片近似風險」。清理、移除火箭體、避碰三張決策卡都是教學簡化；歷史案例為教學近似，不是事件重演。參考：Kessler &amp; Cour-Palais（1978，碰撞率）、Johnson et al.（2001，NASA 標準解體模型）、Vallado（大氣與 SGP4）、King-Hele（阻力衰減）。</div>
+    <div class="hint" style="margin-top:8px">模型：NASA 標準解體模型（碎片數由尺寸冪律反推最小尺寸；面積質量比、Δv 依模型分布抽樣；質量與動量守恆）。傳播用克卜勒根數＋J2 長期項；碎片依面積質量比、目錄中的火箭體與碎片依 TLE 阻力項 B* 換算的面積質量比，以 Vallado 指數大氣衰減，近地點低於 120 km 視為再入（有效載荷假設會維持軌道，不衰減）。碰撞以 KD-tree 快照估計：配對碰撞率＝相對速度÷(4d/3)×(R₁+R₂)²/d²；能量質量比 > 40 J/g 為完全解體。目錄物件的尺寸與質量依類別取代表值。<b>碰撞誇張倍率</b>只放大碰撞截面；情境比較請看「第一代碎片期望碰撞」（情境內的相對比較指標，不是實際碰撞機率）。清理、移除火箭體、避碰三張決策卡都是教學簡化；歷史案例為教學近似，不是事件重演。參考：Kessler &amp; Cour-Palais（1978，碰撞率）、Johnson et al.（2001，NASA 標準解體模型）、Vallado（大氣與 SGP4）、King-Hele（阻力衰減）。</div>
     </div>
     <div id="tab-asat" hidden>
     <h3>🎯 更強的火箭打得到衛星嗎？</h3>

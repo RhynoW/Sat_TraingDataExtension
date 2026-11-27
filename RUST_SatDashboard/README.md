@@ -295,6 +295,20 @@ config/         內建預設：classification_rules.yaml、ssn_stations.geojson�
 
 ## 版本紀錄
 
+### v0.1.36（2026-11-27）
+
+依 2026-11-27 外部審查意見修訂碎片產生模型（處理對照見 `docs/衛星殘骸產生_系統架構_外部審查版.md` 第 0 節）：
+
+- `debris_engine.rs`
+  - `frame`：碰撞碎片速度基準，預設 `parent`（各母體碎片沿用各自速度），`cm` 為 v0.1.35 以前的作法（輸出逐位元相同）
+  - `ejecta`／`ejecta_frac`：非完全解體拋出質量 `edu`（預設）、`fraction`、`none`；碰撞事件加記 `m_proj`、`m_target`、`m_eject`、`m_target_after`、`frame`、`reason`
+  - `mass_rescale`（驗證用）：不把碎片質量縮放到母體質量；`breakup()` 拆成 `breakup_size()` 與 `sample_frags()`
+  - `summary.model`：本次使用的模型設定
+- 碎片連鎖介面：「第一代碎片近似風險」→「第一代碎片期望碰撞」並加註非實際碰撞機率；「風險儀表板」→「碰撞指標儀表板」；模型定位聲明；進階模型選項（速度基準、Δv 分布預設 SBM 原始、拋出質量）；結果摘要的模型設定標籤
+- 兩顆衛星相撞：每個接近角預設 30 個種子，比例欄顯示中位數與 5–95% 區間；Δv 與拋出質量選項；Iridium–Cosmos 改稱量級檢查
+- 審查文件 Revision 2（含 Cosmos 1408 質量縮放 × Δv 截斷雙因子測試）；開發文件更新 API
+- 操作手冊 v0.1.36
+
 ### v0.1.35（2026-11-27）
 
 - 碎片連鎖新增「兩顆衛星相撞：接近角與碎片軌道分布」（`web/ext/games_collide.js`，兩版共用、瀏覽器端）

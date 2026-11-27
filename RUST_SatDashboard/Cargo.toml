@@ -1,6 +1,6 @@
 [package]
 name = "sat_dashboard"
-version = "0.1.35"
+version = "0.1.36"
 edition = "2021"
 description = "ATRDC SatDashboard — Rust 單機版（Windows x86_64 / ARM64）"
 license = "Proprietary"

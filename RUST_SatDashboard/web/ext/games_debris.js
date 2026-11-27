@@ -79,7 +79,9 @@
     var p = $("d-pick").value.split("|");
     return { norad: +($("d-q").value.trim() || p[0]) || 0, mass_kg: +$("d-m").value, n_frag: +$("d-n").value, collision: $("d-kind").value === "1",
       years: +$("d-y").value, accel: +$("d-acc").value, seed: +$("d-seed").value || 1,
-      solar: $("d-solar").value, epoch: $("d-epoch").value || undefined, payload_life: +$("d-plife").value || undefined };
+      solar: $("d-solar").value, epoch: $("d-epoch").value || undefined, payload_life: +$("d-plife").value || undefined,
+      frame: $("d-frame") ? $("d-frame").value : undefined, dv_sigma_max: $("d-dvm") ? +$("d-dvm").value : undefined,
+      ejecta: $("d-ejecta") ? $("d-ejecta").value : undefined };
   }
   HOOK.baseReq = baseReq;
   HOOK.post = function (req) {
@@ -135,7 +137,7 @@
       [T("碎片總數"), fmt(s.fragments_total) + (s.capped ? T("（達 30,000 上限，之後不再產生）") : "") + T("，最多 {0} 代", gens)],
       [T("{0} 年後仍在軌道", fmt(d.years, 1)), T("{0} 個（已再入 {1} 個）", fmt(s.alive_end), fmt(s.reentered || 0))],
       [T("碰撞（擲骰）"), T("{0} 次", fmt(s.collisions)) + (d.accel > 1 ? T("（碰撞誇張倍率 ×{0}）", fmt(d.accel)) : T("（寫實）"))],
-      [T("第一代碎片近似風險"), T("<b>{0} 次</b>（未加速情境下，第一代碎片撞上現有目錄物件的近似期望次數", num(g1)) + (d.accel > 1 ? T("；誇張模式下第一代碎片也會被撞毀，所以略偏低") : "") + T("）")],
+      [T("第一代碎片期望碰撞"), T("<b>{0} 次</b>（未加速情境下，第一代碎片撞上現有目錄物件的近似期望次數", num(g1)) + (d.accel > 1 ? T("；誇張模式下第一代碎片也會被撞毀，所以略偏低") : "") + T("；情境內的相對比較指標，不是實際碰撞機率或任務風險）")],
     ];
     if (d.accel > 1) rows.push([T("線性反推（偏高）"), T("{0} 次（全部期望值 ÷ 倍率；誇張模式多出的後代碎片也算進去，未補償連鎖偏差）", num(s.expected_linear != null ? s.expected_linear : s.expected_real))]);
     if (d.solar) {
@@ -145,8 +147,20 @@
     }
     if (s.payload_life) rows.push([T("在軌衛星"), T("平均 {0} 年後陸續失效：期間共 {1} 顆失效，之後依 TLE 阻力項衰減、不再避碰", s.payload_life, fmt(s.payload_failed || 0))]);
     if (s.cat_reentered != null) rows.push([T("目錄物件再入"), T("{0} 個（火箭體、碎片依 TLE 阻力項衰減；含被撞毀與決策移除）", fmt(s.cat_reentered))]);
+    var mo = s.model || {}, tags = [];
+    tags.push(mo.dv_truncated ? T("Δv：Cosmos 1408 校準（截斷，經驗修正）") : T("Δv：SBM 原始"));
+    tags.push(mo.frame === "cm" ? T("碎片速度：共同質心（理想化）") : T("碎片速度：各自母體"));
+    tags.push(mo.ejecta === "none" ? T("非完全解體：不產生碎片") : mo.ejecta === "fraction" ? T("非完全解體：固定比例 {0}%（非 SBM 標準）", +(mo.ejecta_frac * 100).toFixed(2)) : T("非完全解體：教學假設（非 SBM 標準）"));
+    if (mo.mass_rescale === false) tags.push(T("質量不縮放（驗證用）"));
+    tags.push(T("單一種子樣本"));
+    if (s.capped) tags.push(T("達碎片上限（連鎖被低估）"));
+    if (s.timed_out) tags.push(T("逾時提早結束"));
+    if (d.accel > 1) tags.push(T("碰撞誇張倍率 ×{0}", fmt(d.accel)));
+    rows.push([T("模型設定"), tags.map(function (x) { return "<span style='display:inline-block;border:1px solid var(--line);border-radius:4px;padding:0 5px;margin:1px 3px 1px 0'>" + x + "</span>"; }).join("")]);
     rows.push([T("計算"), T("{0} 秒（目錄 {1} 個物件）", d.elapsed_s.toFixed(1), fmt(d.n_catalog)) + (d.cached ? T("，<b>快取結果</b>（5 分鐘內相同參數）") : "")]);
-    var valid = d.years > 1 ? "<div style='color:#d29922;margin:2px 0'>" + T("📏 已驗證（Cosmos 1408 試射碎片，30 個種子中位數）：第 1 年的碎片存活比例與觀測一致（25.3%）；一年以後仍<b>略偏慢</b>（第 3 年 1.6%、觀測 0.9%；第 5 年 0.4%、觀測 0.2%），所以一年以上的在軌數與期望碰撞可能略偏高。碰撞模型的 Δv 長尾截斷是以這個事件校準的經驗修正；碰撞率尚未驗證。") + "</div>" : "";
+    var valid = d.years > 1 ? "<div style='color:#d29922;margin:2px 0'>" + ((s.model || {}).dv_truncated ?
+      T("📏 已驗證（Cosmos 1408 試射碎片，30 個種子中位數）：第 1 年的碎片存活比例與觀測一致（25.3%）；一年以後仍<b>略偏慢</b>（第 3 年 1.6%、觀測 0.9%；第 5 年 0.4%、觀測 0.2%），所以一年以上的在軌數與期望碰撞可能略偏高。碰撞模型的 Δv 長尾截斷是以這個事件校準的經驗修正；碰撞率尚未驗證。") :
+      T("📏 驗證狀態：本次使用 SBM 原始 Δv 分布。以 Cosmos 1408 試射碎片比較（30 個種子中位數），第 1 年存活 30.8%（觀測 25.3%）、第 3 年 5.0%（觀測 0.9%）、第 5 年 2.6%（觀測 0.2%），一年以上的在軌數與期望碰撞明顯偏高；改用「Cosmos 1408 校準」可較接近該事件，但那是單一事件的經驗修正。碰撞率尚未驗證。")) + "</div>" : "";
     if (d.years >= 5 && !s.payload_life) valid += "<div style='color:#d29922;margin:2px 0'>" + T("🛰 保守假設：在軌衛星（有效載荷）一律不衰減（假設會維持軌道或由同類補充）。實際上衛星會在任務結束後失效，所以 {0} 年的長期風險可能偏高；可在「在軌衛星」改選陸續失效的情境比較。", fmt(d.years, 0)) + "</div>";
     $("d-res").innerHTML = "<div style='color:#f2a73b;margin:2px 0'>" + T("⚠ 統計模擬，不是碰撞預報：同樣參數換一個亂數種子，碰撞次數就可能不同。") + "</div>" + valid +
       "<table class='kv'>" + rows.map(function (r) { return "<tr><td>" + r[0] + "</td><td>" + r[1] + "</td></tr>"; }).join("") + "</table>" +
@@ -217,7 +231,7 @@
     var on = res && res.accel > 1 && SDG.tab() === "debris";
     badge.style.display = on ? "block" : "none";
     var g1 = res && (res.summary.expected_gen1_real != null ? res.summary.expected_gen1_real : res.summary.expected_real);
-    if (on) badge.innerHTML = T("⚠ 誇張模式：碰撞截面放大 ×{0}，連鎖遠快於真實；未加速時第一代碎片近似風險 {1} 次", fmt(res.accel),
+    if (on) badge.innerHTML = T("⚠ 誇張模式：碰撞截面放大 ×{0}，連鎖遠快於真實；未加速時第一代碎片期望碰撞 {1} 次", fmt(res.accel),
       g1 < 0.01 ? g1.toExponential(1) : g1.toFixed(2));
   }
 

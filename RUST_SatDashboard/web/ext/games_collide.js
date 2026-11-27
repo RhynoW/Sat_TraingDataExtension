@@ -6,7 +6,9 @@
  *  - 解體：NASA 標準解體模型（Johnson et al. 2001），與碎片連鎖引擎（src/debris_engine.rs）相同的公式：
  *    能量質量比 EMR = ½·m小·v相對²／m大 > 40 J/g 為完全解體；碎片數 N(≥Lc) = 0.1·M^0.75·Lc^−1.71，
  *    完全解體時 M = 兩顆質量和，否則 M = m小·v相對²（kg、km/s）；面積質量比依尺寸的雙峰分布、
- *    Δv 對數常態（μ = 0.9·log₁₀(A/M) + 2.9、σ = 0.4，與引擎相同在 μ+1σ 截斷長尾）；各母體的碎片質量與動量守恆。
+ *    Δv 對數常態（μ = 0.9·log₁₀(A/M) + 2.9、σ = 0.4；預設不截斷＝SBM 原始，可選與引擎相同的 Cosmos 1408 校準：μ+1σ 以上重抽）；
+ *    各母體的碎片質量與動量守恆。非完全解體的拋出質量可選教學假設、固定比例或不產生碎片（都不是 SBM 標準）。
+ *  - 多種子：每個接近角跑 N 個種子，比較表列中位數與 5–95% 區間；圖表與 3D 為第一個種子的樣本。
  *  - 碎片的速度基準（可切換）：
  *    「各自母體」——每顆衛星的碎片沿用該衛星的速度再加 Δv（預設）。2009 年 Iridium 33–Cosmos 2251 碰撞後
  *    觀測到兩團碎片分別沿兩顆母體原本的軌道面散開，這個假設與觀測相符。
@@ -20,7 +22,7 @@
   "use strict";
   // ── 計算核心（純函式，供測試直接呼叫：window.COLLIDE_CORE）──────────────────
   var MU = 398600.4418, RE = 6378.137, J2 = 1.08262668e-3, TAU = 2 * Math.PI, D2R = Math.PI / 180;
-  var DV_K = 1.0, REENTRY_KM = 120, NMAX = 20000;
+  var REENTRY_KM = 120, NMAX = 20000;
   var LIFE = [[200, -1.6], [300, -0.7], [400, 0.2], [500, 1.0], [600, 1.6], [700, 2.1], [800, 2.5], [900, 2.8], [1000, 3.1], [1200, 3.5], [1500, 3.9], [2000, 4.3]];
 
   function Rng(seed) { this.s = BigInt.asUintN(64, BigInt(Math.max(1, Math.floor(seed)))); }
@@ -59,13 +61,13 @@
   function area(l) { return l < 0.00167 ? 0.540424 * l * l : 0.556945 * Math.pow(l, 2.0047077); }
 
   // 一個母體的碎片：n 個、尺寸 ≥ lc 依冪律（指數 1.71）抽樣，質量縮放到 mTotal、扣掉質量加權平均 Δv（動量守恆）
-  function fragments(rng, n, lc, mTotal) {
+  function fragments(rng, n, lc, mTotal, dvk) {
     var b = 1.71, lmax = Math.min(10, Math.max(0.1, Math.cbrt(mTotal / 100), lc * 1.01)), pmin = Math.pow(lmax / lc, -b), fr = [], i, k;
     for (i = 0; i < n; i++) {
       var u = pmin + (1 - pmin) * rng.next(), l = lc * Math.pow(u, -1 / b), am = amDist(rng, l), chi = Math.log10(am);
       var z = rng.normal(), tries = 0;
-      while (z > DV_K && tries < 50) { z = rng.normal(); tries++; }
-      var dvm = Math.pow(10, 0.9 * chi + 2.9 + 0.4 * Math.min(z, DV_K)) / 1000;   // km/s
+      while (z > dvk && tries < 50) { z = rng.normal(); tries++; }
+      var dvm = Math.pow(10, 0.9 * chi + 2.9 + 0.4 * Math.min(z, dvk)) / 1000;   // km/s
       fr.push({ l: l, am: am, mass: area(l) / am, dv: scale(rng.dir(), dvm) });
     }
     var ms = fr.reduce(function (s, f) { return s + f.mass; }, 0), s = mTotal / Math.max(ms, 1e-9), p = [0, 0, 0];
@@ -124,10 +126,12 @@
 
   function pct(arr, q) { if (!arr.length) return NaN; var s = arr.slice().sort(function (a, b) { return a - b; }); return s[Math.min(s.length - 1, Math.floor(q * s.length))]; }
 
-  /** p: { h, incA, lat, mA, mB, theta, lc（公尺）, frame: "parent" | "cm", seed } */
+  /** p: { h, incA, lat, mA, mB, theta, lc（公尺）, frame: "parent" | "cm", seed, dvk（Δv 截斷點，預設 Infinity＝SBM 原始）,
+   *       ejecta: "edu" | "fraction" | "none"（非完全解體拋出質量）, ejecta_frac } */
   function simulate(p) {
     var g = geometry(p.h, p.incA, p.lat, p.theta), rng = new Rng((p.seed || 7) * 1000 + Math.round(p.theta * 10));
     var mA = p.mA, mB = p.mB, lc = p.lc || 0.1, aBig = mA >= mB, mb = Math.max(mA, mB), ms = Math.min(mA, mB);
+    var dvk = p.dvk == null ? Infinity : p.dvk, ejm = p.ejecta || "edu";
     var vrel = norm(add(g.vA, g.vB, -1)), emr = 0.5 * ms * Math.pow(vrel * 1000, 2) / mb / 1000, cat = emr > 40;
     var vBig = aBig ? g.vA : g.vB, vSmall = aBig ? g.vB : g.vA, vcm = scale(add(scale(g.vA, mA), g.vB, mB), 1 / (mA + mB));
     var parts, M;
@@ -136,15 +140,16 @@
       parts = [{ who: "A", m: mA, v: g.vA }, { who: "B", m: mB, v: g.vB }];
     } else {
       M = ms * vrel * vrel;
-      var ej = Math.min(M / 100, mb * 0.5);   // 撞出的質量（與引擎相同）；小的一顆全毀，大的一顆受損但存活
-      parts = [{ who: aBig ? "B" : "A", m: ms, v: vSmall }, { who: aBig ? "A" : "B", m: ej, v: vBig }];
+      // 撞出的質量（與引擎的 ejecta 設定相同；都不是 SBM 標準）；小的一顆全毀，大的一顆受損但存活
+      var ej = ejm === "none" ? 0 : ejm === "fraction" ? mb * Math.min(0.5, Math.max(0, p.ejecta_frac == null ? 0.01 : p.ejecta_frac)) : Math.min(M / 100, mb * 0.5);
+      parts = ejm === "none" ? [] : [{ who: aBig ? "B" : "A", m: ms, v: vSmall }, { who: aBig ? "A" : "B", m: ej, v: vBig }].filter(function (x) { return x.m > 0; });
     }
     var mPart = parts.reduce(function (s, x) { return s + x.m; }, 0);
-    var nAll = 0.1 * Math.pow(M, 0.75) * Math.pow(lc, -1.71), w = Math.max(1, nAll / NMAX), frs = [];
+    var nAll = parts.length ? 0.1 * Math.pow(M, 0.75) * Math.pow(lc, -1.71) : 0, w = Math.max(1, nAll / NMAX), frs = [];
     parts.forEach(function (pt) {
       var n = Math.round(nAll * pt.m / mPart / w), base = p.frame === "cm" ? (cat ? vcm : vBig) : pt.v;
       if (n < 1) return;
-      fragments(rng, n, lc, pt.m).forEach(function (f) {
+      fragments(rng, n, lc, pt.m, dvk).forEach(function (f) {
         var el = elements(g.r, add(base, f.dv));
         if (!el) { frs.push({ who: pt.who, escape: true, am: f.am, dvm: f.dvm }); return; }
         el.who = pt.who; el.am = f.am; el.l = f.l; el.dvm = f.dvm; el.reentry = el.hp < REENTRY_KM;
@@ -171,7 +176,20 @@
       },
     };
   }
-  var CORE = { simulate: simulate, geometry: geometry, elements: elements, position: position, life: life, Rng: Rng };
+  // 多種子：同參數跑 n 個種子（seed, seed+1, …），回傳第一個種子的完整結果與各比例指標的中位數、5–95% 區間
+  var ENS_KEYS = ["reentry_now", "life_lt1", "life_gt25", "life_gt100", "cross_iss", "cross_550", "dv_med"];
+  function ensemble(p, n) {
+    var runs = [], k;
+    for (k = 0; k < Math.max(1, n); k++) runs.push(simulate(Object.assign({}, p, { seed: (p.seed || 7) + k })));
+    var r0 = runs[0], ens = { n: runs.length };
+    ENS_KEYS.concat(["hp_med", "ha_95"]).forEach(function (key) {
+      var v = runs.map(function (r) { return key === "hp_med" ? r.stats.hp[1] : key === "ha_95" ? r.stats.ha[1] : r.stats[key]; }).filter(Number.isFinite);
+      ens[key] = [pct(v, 0.05), pct(v, 0.5), pct(v, 0.95)];
+    });
+    r0.ens = ens;
+    return r0;
+  }
+  var CORE = { simulate: simulate, ensemble: ensemble, geometry: geometry, elements: elements, position: position, life: life, Rng: Rng };
   window.COLLIDE_CORE = CORE;
 
   // ── 介面 ─────────────────────────────────────────────────────────────────
@@ -183,7 +201,9 @@
   var COL = { A: "#58a6ff", B: "#f0883e" };
   var PRESETS = {
     iridium: { name: "Iridium 33–Cosmos 2251（2009，教學近似）", h: 789, incA: 86.4, lat: 72.5, mA: 560, mB: 900, angles: "10, 45, 90, 103, 135, 180",
-      note: "2009-02-10 於西伯利亞上空約 789 km 相撞，相對速度約 11.7 km/s（接近角約 103°）。Iridium 33 約 560 kg、Cosmos 2251 約 900 kg；實際編目碎片約 2,300 件。" },
+      note: "2009-02-10 於西伯利亞上空約 789 km 相撞，相對速度約 11.7 km/s（接近角約 103°）。Iridium 33 約 560 kg、Cosmos 2251 約 900 kg。" +
+        "量級檢查（不是模型驗證）：模型 ≥10 cm 約 1,200 件；SATCAT（Space-Track，2026-11-26 擷取）中國際編號 1993-036（Cosmos 2251）的碎片 1,716 件、" +
+        "1997-051（Iridium 33 所屬發射，可能含同次發射的其他碎片）656 件，含已再入者。口徑不同：編目門檻約 10 cm 但不精確、編目隨時間增加、國際編號歸屬不一定等於碰撞產生；尚未以已發表文獻作第二來源。" },
     leo550: { name: "兩顆 1,000 kg 衛星在 550 km（Starlink 殼層高度）", h: 550, incA: 53, lat: 30, mA: 1000, mB: 1000, angles: "10, 45, 90, 135, 180", note: "低軌壅擠高度；比較碎片多快被大氣拖下來。" },
     small: { name: "1 kg 碎片撞 1,000 kg 衛星（非完全解體）", h: 800, incA: 98, lat: 40, mA: 1000, mB: 1, angles: "1, 5, 30, 90, 180", note: "小碎片撞大衛星：接近角很小時能量不足以完全解體，只撞出部分碎片。" },
   };
@@ -195,7 +215,8 @@
     "碎片數依 NASA 標準解體模型；每塊碎片的速度＝母體速度＋解體 Δv，再換算成軌道。瀏覽器端計算。" +
     "<br>判讀重點：完全解體時，標準解體模型的碎片數只看兩顆質量和、Δv 只看碎片的面積質量比，<b>都不隨相對速度改變</b>；" +
     "接近角改變的是（1）能量是否達到完全解體門檻（小碎片撞大衛星、或接近角很小時才會差很多）、（2）B 的碎片雲落在哪個軌道面（傾角），" +
-    "也就是碎片會覆蓋多少種傾角與升交點、日後散成殼層的範圍、（3）若改用「共同質心」假設，迎頭相撞的碎片會大量落入大氣。</div>" +
+    "也就是碎片會覆蓋多少種傾角與升交點、日後散成殼層的範圍、（3）若改用「共同質心」假設，迎頭相撞的碎片會大量落入大氣。" +
+    "再入比例等數字在各角度之間的差異多半落在多種子的區間內，屬於抽樣雜訊，不是接近角的效應。本示範為教學與情境探索用，不是碰撞或碎片環境的預測。</div>" +
     "<div class='row'><label>情境</label><select id='cl-preset' style='flex:1'>" + Object.keys(PRESETS).map(function (k) { return "<option value='" + k + "'>" + PRESETS[k].name + "</option>"; }).join("") + "</select></div>" +
     "<div id='cl-note' class='hint'></div>" +
     "<div class='row'><label>碰撞高度</label>" + inp("cl-h", 789, 200, 2000, 10) + "<span class='hint'>km</span><label>A 傾角</label>" + inp("cl-i", 86.4, 0, 180, 0.1) + "<span class='hint'>°</span>" +
@@ -203,7 +224,10 @@
     "<div class='row'><label>A 質量</label>" + inp("cl-ma", 560, 0.1, 100000, 10, 84) + "<span class='hint'>kg</span><label>B 質量</label>" + inp("cl-mb", 900, 0.1, 100000, 10, 84) + "<span class='hint'>kg</span></div>" +
     "<div class='row'><label>接近角</label><input id='cl-ang' type='text' value='10, 45, 90, 103, 135, 180' style='flex:1;background:var(--bg);color:var(--hi);border:1px solid var(--line);border-radius:6px;padding:3px 6px'><span class='hint'>°，逗號分隔，最多 8 個</span></div>" +
     "<div class='row'><label>最小碎片</label><select id='cl-lc'><option value='0.1' selected>10 cm（可編目）</option><option value='0.05'>5 cm</option><option value='0.01'>1 cm（數量多，抽樣）</option></select>" +
-    "<label title='每塊碎片的速度以哪個速度為基準'>速度基準</label><select id='cl-frame'><option value='parent' selected>各自母體（符合 Iridium–Cosmos 觀測）</option><option value='cm'>共同質心（引擎連鎖碰撞的假設）</option></select></div>" +
+    "<label title='每塊碎片的速度以哪個速度為基準'>速度基準</label><select id='cl-frame'><option value='parent' selected>各自母體（符合 Iridium–Cosmos 觀測）</option><option value='cm'>共同質心（理想化）</option></select></div>" +
+    "<div class='row'><label>Δv 分布</label><select id='cl-dvm'><option value='inf' selected>SBM 原始（不截斷）</option><option value='1'>Cosmos 1408 校準（截斷 μ+1σ）</option></select>" +
+    "<label title='能量質量比 ≤ 40 J/g 時目標被打掉的質量（都不是 SBM 標準）'>非完全解體</label><select id='cl-ej'><option value='edu' selected>教學假設</option><option value='fraction'>目標質量 1%</option><option value='none'>不產生碎片</option></select>" +
+    "<label>種子數</label><select id='cl-ns'><option>1</option><option>10</option><option selected>30</option><option>100</option></select></div>" +
     "<div class='row act'><label>亂數種子</label>" + inp("cl-seed", 7, 1, 1e9, 1) + "<button class='go' id='cl-run'>計算</button><button id='cl-demo'>▶ 示範</button></div>" +
     "<div id='cl-res' class='hint'>按「計算」比較各接近角。</div>" +
     "<div class='row'><label>圖表角度</label><select id='cl-sel'></select></div>" +
@@ -229,8 +253,10 @@
     var ang = angles();
     if (!ang.length) { $("cl-res").textContent = "請輸入 0–180° 的接近角"; return; }
     var t = performance.now(), base = { h: Math.min(2000, Math.max(200, +$("cl-h").value)), incA: Math.min(180, Math.max(0, +$("cl-i").value)), lat: +$("cl-lat").value,
-      mA: Math.max(0.1, +$("cl-ma").value), mB: Math.max(0.1, +$("cl-mb").value), lc: +$("cl-lc").value, frame: $("cl-frame").value, seed: +$("cl-seed").value || 7 };
-    LAST = ang.map(function (a) { return simulate(Object.assign({}, base, { theta: a })); });
+      mA: Math.max(0.1, +$("cl-ma").value), mB: Math.max(0.1, +$("cl-mb").value), lc: +$("cl-lc").value, frame: $("cl-frame").value, seed: +$("cl-seed").value || 7,
+      dvk: $("cl-dvm").value === "inf" ? Infinity : +$("cl-dvm").value, ejecta: $("cl-ej").value };
+    var ns = Math.min(100, Math.max(1, +$("cl-ns").value || 1));
+    LAST = ang.map(function (a) { return ensemble(Object.assign({}, base, { theta: a }), ns); });
     table(performance.now() - t);
     var sel = $("cl-sel"), prev = sel.value;
     sel.innerHTML = LAST.map(function (r, i) { return "<option value='" + i + "'>" + r.p.theta + "°</option>"; }).join("");
@@ -238,8 +264,14 @@
     sel.value = keep >= 0 ? keep : Math.min(LAST.length - 1, LAST.findIndex(function (r) { return r.p.theta >= 90; }) < 0 ? 0 : LAST.findIndex(function (r) { return r.p.theta >= 90; }));
     plots(); show3d();
   }
+  // 比例指標：多種子時顯示「中位數［5–95%］」
+  function E(r, key) {
+    var e = r.ens;
+    if (!e || e.n < 2) return pctS(r.stats[key]);
+    return pctS(e[key][1]) + "<span style='color:#8b949e'>［" + pctS(e[key][0]) + "–" + pctS(e[key][2]) + "］</span>";
+  }
   function table(ms) {
-    var g0 = LAST[0].geom;
+    var g0 = LAST[0].geom, ns = LAST[0].ens ? LAST[0].ens.n : 1;
     var h = "<div style='overflow-x:auto'><table class='kv' style='white-space:nowrap'><tr><td>接近角</td><td>相對速度</td><td>能量質量比</td><td>結果</td><td>碎片 ≥" + (+$("cl-lc").value * 100) + " cm</td>" +
       "<td>B 傾角</td><td>A 碎片傾角 5–95%</td><td>B 碎片傾角 5–95%</td><td>近地點中位數</td><td>遠地點 95%</td><td>立即再入</td><td>1 年內再入</td><td>壽命 &gt;25 年</td><td>穿越 ISS 420 km</td><td>穿越 550 km</td></tr>";
     LAST.forEach(function (r, i) {
@@ -247,12 +279,14 @@
       h += "<tr data-cli='" + i + "' style='cursor:pointer'><td>" + r.p.theta + "°</td><td>" + r.vrel.toFixed(1) + " km/s</td><td>" + fmt(r.emr) + " J/g</td><td>" +
         (r.catastrophic ? "<b style='color:#ff7b72'>完全解體</b>" : "部分解體（" + r.survivor + " 受損存活）") + "</td><td>" + fmt(r.n_total) + "</td><td>" + r.geom.incB.toFixed(1) + "°</td><td>" +
         rng(s.inc_A) + "</td><td>" + rng(s.inc_B) + "</td><td>" + (isFinite(s.hp[1]) ? fmt(s.hp[1]) + " km" : "—") + "</td><td>" + (isFinite(s.ha[1]) ? fmt(s.ha[1]) + " km" : "—") + "</td><td>" +
-        pctS(s.reentry_now) + "</td><td>" + pctS(s.life_lt1) + "</td><td>" + pctS(s.life_gt25) + "</td><td>" + pctS(s.cross_iss) + "</td><td>" + pctS(s.cross_550) + "</td></tr>";
+        E(r, "reentry_now") + "</td><td>" + E(r, "life_lt1") + "</td><td>" + E(r, "life_gt25") + "</td><td>" + E(r, "cross_iss") + "</td><td>" + E(r, "cross_550") + "</td></tr>";
     });
     var w = LAST.some(function (r) { return r.weight > 1; });
     h += "</table></div><div class='hint' style='white-space:normal'>點表格列可切換下方圖表。碰撞點緯度 " + g0.lat.toFixed(1) + "°（不能超過 A 的傾角）、軌道速度 " + g0.v.toFixed(2) + " km/s。" +
       "百分比以全部碎片為分母；「穿越」指近地點低於、遠地點高於該高度，這些碎片會反覆穿過該高度的衛星群。" +
-      (w ? "碎片數超過 " + fmt(NMAX) + " 時抽樣計算，比例不受影響。" : "") + "計算 " + ms.toFixed(0) + " 毫秒。</div>";
+      (w ? "碎片數超過 " + fmt(NMAX) + " 時抽樣計算，比例不受影響。" : "") +
+      (ns > 1 ? "比例欄為 " + ns + " 個種子的中位數，括號內為 5–95% 區間；近地點、遠地點與傾角欄、下方圖表與 3D 為第一個種子的樣本。" : "<b>單一種子樣本</b>：各角度之間的小差異可能只是抽樣雜訊，建議用 30 個種子比較。") +
+      "Δv：" + ($("cl-dvm").value === "inf" ? "SBM 原始" : "Cosmos 1408 校準（經驗修正）") + "；速度基準：" + ($("cl-frame").value === "cm" ? "共同質心（理想化）" : "各自母體") + "。計算 " + ms.toFixed(0) + " 毫秒。</div>";
     $("cl-res").innerHTML = h;
     $("cl-res").querySelectorAll("tr[data-cli]").forEach(function (tr) { tr.onclick = function () { $("cl-sel").value = tr.dataset.cli; $("cl-sel").dataset.theta = LAST[+tr.dataset.cli].p.theta; plots(); show3d(); }; });
   }
@@ -325,7 +359,7 @@
   }
   function demo() {
     var wrap = host.closest("details"); if (wrap) wrap.open = true;
-    $("cl-preset").value = "iridium"; setPreset("iridium"); $("cl-frame").value = "parent"; $("cl-3d").checked = true; T3D = 86400;
+    $("cl-preset").value = "iridium"; setPreset("iridium"); $("cl-frame").value = "parent"; $("cl-dvm").value = "inf"; $("cl-ns").value = "30"; $("cl-3d").checked = true; T3D = 86400;
     $("cl-sel").dataset.theta = "103"; run();
     host.scrollIntoView({ block: "start", behavior: "smooth" });
     return Promise.resolve();
