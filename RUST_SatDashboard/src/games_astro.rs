@@ -18,7 +18,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use serde_json::json;
 
-use crate::games::{build_items, sgp4_state, GroupReq, Item, Obj};
+use crate::games::{build_items, check_groups, heavy_permit, sgp4_state, GroupReq, Item, Obj};
 use crate::index::SatInfo;
 use crate::physics::{gmst_rad, julian_date, Observer, R_EARTH_KM};
 use crate::state::AppState;
@@ -144,7 +144,20 @@ fn bad(msg: &str) -> Response {
 }
 
 pub async fn astro_api(State(st): State<Arc<AppState>>, Json(rq): Json<AstroReq>) -> Response {
-    tokio::task::spawn_blocking(move || run(&st, &rq)).await.unwrap_or_else(|_| bad("計算失敗"))
+    // 資安檢測 H-5：與星座壅擠相同的假想衛星總數與群組數檢查
+    if let Some(e) = rq.groups.as_deref().and_then(|g| check_groups(g).err()) {
+        return bad(e);
+    }
+    let permit = match heavy_permit() {
+        Ok(p) => p,
+        Err(r) => return r,
+    };
+    tokio::task::spawn_blocking(move || {
+        let _permit = permit;
+        run(&st, &rq)
+    })
+    .await
+    .unwrap_or_else(|_| bad("計算失敗"))
 }
 
 fn run(st: &Arc<AppState>, rq: &AstroReq) -> Response {

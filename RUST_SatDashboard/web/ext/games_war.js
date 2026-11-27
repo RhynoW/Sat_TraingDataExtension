@@ -78,6 +78,7 @@
   $("w-new").onclick = function () {
     S.role = $("w-role").value;
     api("/api/games/war/new", { ai_blue: $("w-ai-blue").value, ai_red: $("w-ai-red").value, scenario: $("w-scen").value }).then(function (d) {
+      if (d.error) { SDG.status(d.error); return; }
       S.id = d.id; S.tokens = d.tokens; S.token = d.tokens[S.role]; S.orders = []; S.prevTurn = null; S.noCoach = false;
       drawCables(d.cables_geo);
       var base = location.origin + "/games?war=" + d.id;
@@ -292,6 +293,7 @@
       watch: "AI：太空監視", evade: "AI：監視＋規避", spread: "AI：分散租用", imagery: "AI：重 GEO＋商業影像", avoid: "AI：均衡＋避碰" };
     var styles = ["balanced", "geo", "leo", "repair"].concat(isB(st.scenario) ? ["sensor", "hybrid"] : isC(st.scenario) ? ["watch", "evade", "spread"] : isD(st.scenario) ? ["imagery", "avoid"] : []);
     api("/api/games/war/mc", { runs: 300, blue: styles, red: red, scenario: st.scenario }).then(function (d) {
+      if (d.error) { var e0 = $("w-db-mc"); if (e0) e0.textContent = d.error; return; }
       var rows = d.results.map(function (r) { return { name: N[r.blue], v: r.mean_avail, ci: r.ci95 }; });
       rows.push({ name: "<b>你</b>", v: sc.mean_avail || 0, me: true });
       rows.sort(function (a, b) { return b.v - a.v; });
@@ -335,6 +337,7 @@
     var sc = $("w-mc-scen").value, styles = ["balanced", "geo", "leo", "repair"].concat(isB(sc) ? ["sensor", "hybrid"] : isC(sc) ? ["watch", "evade", "spread"] : isD(sc) ? ["imagery", "avoid"] : []);
     api("/api/games/war/mc", { runs: +$("w-runs").value, blue: styles, red: $("w-mc-red").value, scenario: sc }).then(function (d) {
       btn.disabled = false;
+      if (d.error) { $("w-mc-res").textContent = d.error; return; }
       var N = { balanced: "均衡", geo: "重 GEO", leo: "重低軌", repair: "重修纜", sensor: "重感測", hybrid: "均衡＋備援", watch: "太空監視", evade: "監視＋規避", spread: "分散租用", imagery: "重 GEO＋商業影像", avoid: "均衡＋避碰" },
         b = isB(d.scenario), c = isC(d.scenario), dd = isD(d.scenario);
       var best = d.results.slice().sort(function (a, b) { return b.mean_avail - a.mean_avail; })[0];

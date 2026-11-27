@@ -8,6 +8,8 @@
 //! - 百萬顆：假想星座總數上限 100 萬顆（FCC 2026-11-25 核准 SpaceX 軌道資料中心最多 100 萬顆）；
 //!   殼層縮放以 u64 與上限檢查計算（資安檢測 H-6：原本 u32 相乘可溢位繞過上限）。
 //!   長期風險與管控的統計模型見 games_mega.rs（背景族群）與 web/ext/games_mega.js（計算核心）。
+//! - 重運算並行上限（資安檢測 H-5／H-7）：星座壅擠、天文夢魘、兵推蒙地卡羅與 AI 對 AI 推演
+//!   同時最多 HEAVY_MAX 個，超過回 503，避免多個請求占滿 CPU 讓整個服務停擺。
 
 use std::sync::Arc;
 
@@ -128,6 +130,43 @@ pub(crate) const MAX_SYNTHETIC: u64 = 1_000_000;
 const MAX_PLANES: u32 = 5000;
 const MAX_PER_PLANE: u32 = 5000;
 const MAX_SHELLS: usize = 64;
+
+/// 假想群組請求的入口檢查（星座壅擠與天文夢魘共用；資安檢測 H-5）
+pub(crate) fn check_groups(groups: &[GroupReq]) -> Result<(), &'static str> {
+    let total: u64 = groups.iter().filter(|g| g.synthetic).map(|g| g.total as u64).sum();
+    if total > MAX_SYNTHETIC {
+        return Err("假想衛星總數上限 100 萬顆");
+    }
+    if groups.len() > 16 || groups.iter().any(|g| g.shells.as_ref().is_some_and(|v| v.len() > MAX_SHELLS)) {
+        return Err("群組或自訂殼層數量過多");
+    }
+    Ok(())
+}
+
+/// 同時進行的重運算上限（各計算內部已用 rayon 平行化，多開只會互搶 CPU）
+const HEAVY_MAX: usize = 2;
+static HEAVY_RUNNING: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+
+/// 重運算許可：離開作用域（含 panic）時自動歸還
+pub(crate) struct HeavyPermit(());
+impl Drop for HeavyPermit {
+    fn drop(&mut self) {
+        HEAVY_RUNNING.fetch_sub(1, std::sync::atomic::Ordering::AcqRel);
+    }
+}
+
+/// 取得重運算許可；已達上限時回傳可直接回應的 503
+pub(crate) fn heavy_permit() -> Result<HeavyPermit, Response> {
+    use std::sync::atomic::Ordering;
+    // 先占位再檢查；超過上限就交由 HeavyPermit 的 drop 歸還
+    let permit = HeavyPermit(());
+    if HEAVY_RUNNING.fetch_add(1, Ordering::AcqRel) < HEAVY_MAX {
+        Ok(permit)
+    } else {
+        drop(permit);
+        Err((StatusCode::SERVICE_UNAVAILABLE, Json(json!({"error": "伺服器正在進行其他大量計算，請稍候再試"}))).into_response())
+    }
+}
 
 fn group_by_key(k: &str) -> Option<(usize, &'static Group)> {
     GROUPS.iter().enumerate().find(|(_, g)| g.key == k)
@@ -627,14 +666,18 @@ async fn crowd(State(st): State<Arc<AppState>>, Json(rq): Json<CrowdReq>) -> Res
     let step_s = rq.step_s.unwrap_or(60.0).clamp(10.0, 600.0);
     let d_km = rq.d_km.unwrap_or(20.0).clamp(2.0, 100.0);
     let skip = rq.skip.unwrap_or(1).min(2);
-    let total: u64 = rq.groups.iter().filter(|g| g.synthetic).map(|g| g.total as u64).sum();
-    if total > MAX_SYNTHETIC {
-        return bad("假想衛星總數上限 100 萬顆");
+    if let Err(e) = check_groups(&rq.groups) {
+        return bad(e);
     }
-    if rq.groups.len() > 16 || rq.groups.iter().any(|g| g.shells.as_ref().is_some_and(|v| v.len() > MAX_SHELLS)) {
-        return bad("群組或自訂殼層數量過多");
+    if rq.watch.as_ref().is_some_and(|w| w.len() > 1000) {
+        return bad("watch 最多 1000 筆");
     }
+    let permit = match heavy_permit() {
+        Ok(p) => p,
+        Err(r) => return r,
+    };
     tokio::task::spawn_blocking(move || {
+        let _permit = permit;
         let t_start = std::time::Instant::now();
         let idx = st.index();
         let sats: Vec<&SatInfo> = idx.sats.values().filter(|s| s.prop.is_some()).collect();
@@ -689,5 +732,27 @@ mod tests {
             .map(|k| GroupReq { key: k.to_string(), synthetic: true, total: 1_000_000, shells: None }).collect();
         let (items, _) = build_items(&[], &reqs);
         assert!(items.len() as u64 <= MAX_SYNTHETIC + MAX_SYNTHETIC / 100, "{}", items.len());
+    }
+
+    #[test]
+    fn group_checks_and_heavy_limit() {
+        // H-5：入口檢查（天文夢魘與星座壅擠共用）
+        let g = |total: u32, shells: Option<Vec<Shell>>| GroupReq { key: "starlink".into(), synthetic: true, total, shells };
+        assert!(check_groups(&[g(u32::MAX, None)]).is_err());
+        assert!(check_groups(&[g(600_000, None), g(600_000, None)]).is_err());
+        assert!(check_groups(&[g(1000, Some(vec![(550.0, 53.0, 10, 10); 65]))]).is_err());
+        assert!(check_groups(&vec![g(1, None); 17]).is_err());
+        assert!(check_groups(&[g(1_000_000, None)]).is_ok());
+        // 真實目錄（synthetic=false）不計入總數
+        assert!(check_groups(&[GroupReq { key: "starlink".into(), synthetic: false, total: u32::MAX, shells: None }]).is_ok());
+        // H-5／H-7：重運算並行上限，歸還後可再取得
+        let a = heavy_permit().ok().unwrap();
+        let b = heavy_permit().ok().unwrap();
+        assert!(heavy_permit().is_err());
+        drop(a);
+        let c = heavy_permit().ok().unwrap();
+        assert!(heavy_permit().is_err());
+        drop((b, c));
+        assert_eq!(HEAVY_RUNNING.load(std::sync::atomic::Ordering::Acquire), 0);
     }
 }

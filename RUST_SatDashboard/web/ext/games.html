@@ -261,6 +261,7 @@ button.flash{animation:flash 1s ease-in-out 4}
     <h3>🏅 成就</h3>
     <div id="d-ach" class="hint"></div>
     <label class="chk"><input type="checkbox" id="d-bg">顯示目錄背景（灰點，瀏覽器端 SGP4）</label>
+    <details id="collide-wrap" style="margin-top:12px;border-top:1px solid var(--line);padding-top:8px"><summary style="cursor:pointer;font-weight:600">💫 兩顆衛星相撞：接近角與碎片軌道分布</summary><div id="collide-panel"></div></details>
     <div class="hint" style="margin-top:8px">模型：NASA 標準解體模型（碎片數由尺寸冪律反推最小尺寸；面積質量比、Δv 依模型分布抽樣；質量與動量守恆）。傳播用克卜勒根數＋J2 長期項；碎片依面積質量比、目錄中的火箭體與碎片依 TLE 阻力項 B* 換算的面積質量比，以 Vallado 指數大氣衰減，近地點低於 120 km 視為再入（有效載荷假設會維持軌道，不衰減）。碰撞以 KD-tree 快照估計：配對碰撞率＝相對速度÷(4d/3)×(R₁+R₂)²/d²；能量質量比 > 40 J/g 為完全解體。目錄物件的尺寸與質量依類別取代表值。<b>碰撞誇張倍率</b>只放大碰撞截面；判讀真實風險請看「第一代碎片近似風險」。清理、移除火箭體、避碰三張決策卡都是教學簡化；歷史案例為教學近似，不是事件重演。參考：Kessler &amp; Cour-Palais（1978，碰撞率）、Johnson et al.（2001，NASA 標準解體模型）、Vallado（大氣與 SGP4）、King-Hele（阻力衰減）。</div>
     </div>
     <div id="tab-asat" hidden>
@@ -354,6 +355,7 @@ button.flash{animation:flash 1s ease-in-out 4}
 <script src="/ext/games_balloon.js?v=__BUILD__"></script>
 <script src="/ext/games_debris.js?v=__BUILD__"></script>
 <script src="/ext/games_debris_game.js?v=__BUILD__"></script>
+<script src="/ext/games_collide.js?v=__BUILD__"></script>
 <script src="/ext/games_asat.js?v=__BUILD__"></script>
 <script src="/ext/games_astro.js?v=__BUILD__"></script>
 <script src="/ext/games_war.js?v=__BUILD__"></script>

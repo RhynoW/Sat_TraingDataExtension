@@ -34,6 +34,10 @@ use crate::{assets, state::AppState};
 /// 第 8 回合（48 小時）後持平：延長窗口（turns > 8）時不再外推危機初期的需求成長（假設）；8 回合內與原本相同
 fn demand(t: u32) -> f64 { 150.0 + 5.0 * t.min(8) as f64 }
 const MAX_TURNS: u32 = 8;
+/// 參數覆寫的回合數上限（資安檢測 H-7）：56 回合＝14 天，為延伸篇所用 7 天窗口的兩倍
+const TURNS_CAP: u32 = 56;
+/// 蒙地卡羅一次最多比較的藍方策略數（目前內建 11 種）
+const MC_MAX_BLUE: usize = 16;
 const AP: i32 = 5;
 const LEO_PER_TERM: f64 = 0.02;
 /// 想定 A：開戰前已在使用的商用低軌終端（示意）
@@ -266,7 +270,8 @@ impl Clone for Rng {
 }
 
 impl War {
-    fn new_p(seed: u64, ai_blue: Option<String>, ai_red: Option<String>, scenario: &str, p: Params) -> War {
+    fn new_p(seed: u64, ai_blue: Option<String>, ai_red: Option<String>, scenario: &str, mut p: Params) -> War {
+        p.turns = p.turns.clamp(1, TURNS_CAP); // 資安檢測 H-7：回合數由請求覆寫，必須有上限
         let scenario = scen_name(scenario).to_string();
         let mut w = War {
             rng: Rng(seed ^ 0xA5A5_1234), turn: 0, cables: CABLES.clone(), geo: 5.0, geo_pending: 0.0, leo_terms: 0.0, leo_pending: 0.0,
@@ -848,10 +853,26 @@ pub async fn war_new(State(_st): State<Arc<AppState>>, Json(rq): Json<NewReq>) -
     let mut tokens = HashMap::new();
     for (i, r) in ["blue", "red", "white"].iter().enumerate() { tokens.insert(r.to_string(), token(seed, 0x1000 + i as u64)); }
     let mut war = War::new_p(seed, rq.ai_blue.filter(|s| !s.is_empty()), rq.ai_red.filter(|s| !s.is_empty()), &rq.scenario, rq.params);
-    war.ready();
-    // 雙方都是 AI（白方觀戰）：沒有人會再送命令推進回合，直接跑完全局
+    // 雙方都是 AI（白方觀戰）：沒有人會再送命令推進回合，直接跑完全局。
+    // 資安檢測 H-7：在 spawn_blocking 執行並受重運算並行上限管制，不占住 async worker
     if war.ai_blue.is_some() && war.ai_red.is_some() {
-        while !war.over { war.ready(); }
+        let permit = match crate::games::heavy_permit() {
+            Ok(p) => p,
+            Err(r) => return r,
+        };
+        war = match tokio::task::spawn_blocking(move || {
+            let _permit = permit;
+            war.ready();
+            while !war.over { war.ready(); }
+            war
+        })
+        .await
+        {
+            Ok(w) => w,
+            Err(_) => return bad("計算失敗"),
+        };
+    } else {
+        war.ready();
     }
     let geo: Vec<Value> = war.cables.iter().map(|c| json!({"name": c.name, "intl": c.intl, "coords": c.coords})).collect();
     let mut s = SESS.lock();
@@ -904,12 +925,21 @@ pub struct McReq { runs: Option<u32>, blue: Vec<String>, red: String, #[serde(de
 /// `params` 覆寫示意參數（敏感度分析）；`per_game: true` 時另回傳每局結果（欄位為陣列，第 k 個元素對應種子 1000+k），供配對差值與分位數使用
 pub async fn war_mc(Json(rq): Json<McReq>) -> Response {
     let runs = rq.runs.unwrap_or(200).clamp(10, 2000);
+    if rq.blue.is_empty() || rq.blue.len() > MC_MAX_BLUE {
+        return bad("藍方策略需 1–16 種");
+    }
+    let permit = match crate::games::heavy_permit() {
+        Ok(p) => p,
+        Err(r) => return r,
+    };
     let red = rq.red.clone();
     let scen = rq.scenario.clone();
     let params = rq.params.clone();
     let per_game = rq.per_game;
+    let blue = rq.blue.clone();
     let res = tokio::task::spawn_blocking(move || {
-        rq.blue.iter().map(|b| {
+        let _permit = permit;
+        blue.iter().map(|b| {
             let mut means = Vec::new();
             let mut low = 0;
             let mut esc = 0.0;
@@ -970,8 +1000,26 @@ pub async fn war_mc(Json(rq): Json<McReq>) -> Response {
     let p = &rq.params;
     let params = json!({"a_wipe": p.a_wipe, "red_ban": p.red_ban, "b_pnt_jammed": p.b_pnt_jammed, "b_sar_p": p.b_sar_p, "c_p_strike": p.c_p_strike,
         "c_p_strike_tracked": p.c_p_strike_tracked, "c_track_p": p.c_track_p, "c_attrib_p": p.c_attrib_p, "c_evade_p": p.c_evade_p,
-        "c_evade_dip": p.c_evade_dip, "d_img_factor": p.d_img_factor, "d_red_pref": p.d_red_pref, "turns": p.turns, "geo_jam": p.geo_jam,
+        "c_evade_dip": p.c_evade_dip, "d_img_factor": p.d_img_factor, "d_red_pref": p.d_red_pref, "turns": p.turns.clamp(1, TURNS_CAP), "geo_jam": p.geo_jam,
         "geo_outage_p": p.geo_outage_p, "red_aggr": p.red_aggr, "red_target": p.red_target, "d_switch_p": p.d_switch_p, "d_switch_delay": p.d_switch_delay,
         "c_attrib_rep": p.c_attrib_rep, "c_misattrib_p": p.c_misattrib_p});
     Json(json!({"runs": runs, "red": rq.red, "scenario": scenario, "params": params, "results": res})).into_response()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn turns_capped() {
+        // 資安檢測 H-7：回合數覆寫有上限，AI 對 AI 一定會在上限內結束
+        for (req, want) in [(u32::MAX, TURNS_CAP), (0, 1), (28, 28), (MAX_TURNS, MAX_TURNS)] {
+            let p = Params { turns: req, ..Params::default() };
+            let mut w = War::new_p(1, Some("balanced".into()), Some("balanced".into()), "a", p);
+            assert_eq!(w.p.turns, want);
+            let mut n = 0;
+            while !w.over && n <= TURNS_CAP + 1 { w.ready(); n += 1; }
+            assert!(w.over, "turns={req} 未在上限內結束");
+        }
+    }
 }
